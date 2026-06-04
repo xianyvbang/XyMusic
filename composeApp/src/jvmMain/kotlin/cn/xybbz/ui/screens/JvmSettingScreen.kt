@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -18,29 +18,58 @@
 
 package cn.xybbz.ui.screens
 
-
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import cn.xybbz.common.utils.Log
+import androidx.compose.ui.unit.sp
+import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.copyTextToClipboard
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.localdata.data.setting.XySettings
+import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.router.About
 import cn.xybbz.router.CacheLimit
 import cn.xybbz.router.ConnectionManagement
@@ -50,68 +79,77 @@ import cn.xybbz.router.LanguageConfig
 import cn.xybbz.router.MemoryManagement
 import cn.xybbz.router.ProxyConfig
 import cn.xybbz.router.StreamingQuality
-import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
-import cn.xybbz.ui.components.SettingItemComponent
+import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.popup.MenuItemDefaultData
-import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.about
+import xymusic_kmp.composeapp.generated.resources.album_24px
 import xymusic_kmp.composeapp.generated.resources.album_playback_history
 import xymusic_kmp.composeapp.generated.resources.allow_simultaneous_playback
+import xymusic_kmp.composeapp.generated.resources.av_timer_24px
 import xymusic_kmp.composeapp.generated.resources.broadcast_while_down
 import xymusic_kmp.composeapp.generated.resources.cache_limit
 import xymusic_kmp.composeapp.generated.resources.cache_location
 import xymusic_kmp.composeapp.generated.resources.check_24px
+import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
 import xymusic_kmp.composeapp.generated.resources.connection_management
 import xymusic_kmp.composeapp.generated.resources.copy_success
 import xymusic_kmp.composeapp.generated.resources.customize_lyric_settings
+import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.download_max_list
 import xymusic_kmp.composeapp.generated.resources.enabled_sync_play_progress
+import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
+import xymusic_kmp.composeapp.generated.resources.http_24px
+import xymusic_kmp.composeapp.generated.resources.info_24px
 import xymusic_kmp.composeapp.generated.resources.interface_settings
-import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.language
+import xymusic_kmp.composeapp.generated.resources.music_note_24px
 import xymusic_kmp.composeapp.generated.resources.online_music_quality
 import xymusic_kmp.composeapp.generated.resources.poxy_config
+import xymusic_kmp.composeapp.generated.resources.queue_music_24px
 import xymusic_kmp.composeapp.generated.resources.settings
+import xymusic_kmp.composeapp.generated.resources.settings_24px
+import xymusic_kmp.composeapp.generated.resources.signal_cellular_alt_24px
 import xymusic_kmp.composeapp.generated.resources.song_cache_location
 import xymusic_kmp.composeapp.generated.resources.storage_management
+import xymusic_kmp.composeapp.generated.resources.volume_up_24px
+
+private val JvmSettingContentMaxWidth = 1080.dp
+private val JvmSettingSidebarMinWidth = 320.dp
+private val JvmSettingActionCardWidth = 154.dp
+private val JvmSettingIconSize = 32.dp
 
 /**
  * 设置页面
  */
-@OptIn(
-    ExperimentalMaterial3Api::class,
-)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun JvmSettingScreen(
     settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModel>()
 ) {
-
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
-
-    var ifShowMaxConcurrentDownloads by remember {
-        mutableStateOf(false)
-    }
-
-    LaunchedEffect(Unit) {
-        Log.i("=====", "MusicSettingScreen: ")
-    }
-
-    val copySuccess = stringResource(Res.string.copy_success)
+    val settings = settingsViewModel.settingDataNow
     val cacheFilePath by settingsViewModel.settingsManager.cacheFilePath.collectAsState()
     val songStoragePath = settingsViewModel.songStoragePath
+    val copySuccess = stringResource(Res.string.copy_success)
+    val cacheLimitLabel = cacheUpperLimitOptions()
+        .firstOrNull { it.limit == settings.cacheUpperLimit }
+        ?.message
+        ?: settings.cacheUpperLimit.name
+    val selectedQuality = TranscodeAudioBitRateType
+        .getTranscodeAudioBitRate(settings.wifiNetworkAudioBitRate)
+        .audioBitRateStr
+    val dataSourceLabel = settings.dataSourceType?.title ?: "未连接"
 
     XyColumnScreen {
         TopAppBarComponent(
@@ -119,238 +157,955 @@ fun JvmSettingScreen(
                 TopAppBarTitle(
                     title = stringResource(Res.string.settings)
                 )
-            })
+            }
+        )
 
-        LazyColumnNotComponent(
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-            contentPadding = PaddingValues()
+        JvmLazyListComponent(
+            modifier = Modifier.fillMaxSize(),
+            pagingItems = null,
+            contentPadding = PaddingValues(
+                horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
+                vertical = XyTheme.dimens.innerVerticalPadding + XyTheme.dimens.outerVerticalPadding * 2
+            ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+            lazyColumnBottom = null
         ) {
             item {
-                JvmSettingRoundedSurfaceColumn {
-                    MusicSettingSwitchItemComponent(
-                        title = stringResource(Res.string.broadcast_while_down),
-                        ifChecked = settingsViewModel.settingDataNow.ifEnableEdgeDownload,
-                        true,
-                        { bol ->
-                            coroutineScope.launch {
-                                settingsViewModel.settingsManager.setIfEnableEdgeDownload(
-                                    bol
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = JvmSettingContentMaxWidth)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
+                ) {
+                    JvmSettingHeader(
+                        settings = settings,
+                        dataSourceLabel = dataSourceLabel,
+                        selectedQuality = selectedQuality,
+                    )
+
+                    JvmSettingOverview(
+                        settings = settings,
+                        cacheLimitLabel = cacheLimitLabel,
+                        onStorageClick = {
+                            navigator.navigate(MemoryManagement)
+                        },
+                    )
+
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
+                        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+                        itemVerticalAlignment = Alignment.Top,
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .widthIn(min = 460.dp)
+                                .weight(1.45f),
+                            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
+                        ) {
+                            JvmSettingSection(
+                                title = "播放与缓存",
+                                subtitle = "控制在线播放策略、缓存位置和跨设备播放行为。",
+                                badge = "核心",
+                            ) {
+                                JvmSettingSwitchRow(
+                                    icon = Res.drawable.download_24px,
+                                    title = stringResource(Res.string.broadcast_while_down),
+                                    description = "播放时缓存音频资源，弱网重播更稳定。",
+                                    checked = settings.ifEnableEdgeDownload,
+                                    onCheckedChange = { checked ->
+                                        coroutineScope.launch {
+                                            settingsViewModel.settingsManager.setIfEnableEdgeDownload(checked)
+                                        }
+                                    }
+                                )
+
+                                AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
+                                    JvmSettingNavigationRow(
+                                        icon = Res.drawable.folder_managed_24px,
+                                        title = stringResource(Res.string.cache_limit),
+                                        description = "设置播放缓存最大占用空间。",
+                                        value = cacheLimitLabel,
+                                        onClick = {
+                                            navigator.navigate(CacheLimit)
+                                        }
+                                    )
+                                }
+
+                                JvmSettingNavigationRow(
+                                    icon = Res.drawable.music_note_24px,
+                                    title = stringResource(Res.string.online_music_quality),
+                                    description = "选择 JVM 端在线音频品质与转码格式。",
+                                    value = "$selectedQuality · ${settings.transcodeFormat.uppercase()}",
+                                    onClick = {
+                                        navigator.navigate(StreamingQuality)
+                                    }
+                                )
+
+                                JvmSettingSwitchRow(
+                                    icon = Res.drawable.album_24px,
+                                    title = stringResource(Res.string.album_playback_history),
+                                    description = "记录专辑播放进度，便于下次继续。",
+                                    checked = settings.ifEnableAlbumHistory,
+                                    onCheckedChange = { checked ->
+                                        coroutineScope.launch {
+                                            settingsViewModel.settingsManager.setIfEnableAlbumHistory(checked)
+                                        }
+                                    }
+                                )
+
+                                JvmSettingSwitchRow(
+                                    icon = Res.drawable.volume_up_24px,
+                                    title = stringResource(Res.string.allow_simultaneous_playback),
+                                    description = "保留系统音频焦点，不主动打断其他声音。",
+                                    checked = settings.ifHandleAudioFocus,
+                                    onCheckedChange = { checked ->
+                                        coroutineScope.launch {
+                                            settingsViewModel.settingsManager.setIfHandleAudioFocus(checked)
+                                        }
+                                    }
+                                )
+
+                                JvmSettingSwitchRow(
+                                    icon = Res.drawable.av_timer_24px,
+                                    title = stringResource(Res.string.enabled_sync_play_progress),
+                                    description = "向服务端同步当前播放位置。",
+                                    checked = settings.ifEnableSyncPlayProgress,
+                                    onCheckedChange = { checked ->
+                                        coroutineScope.launch {
+                                            settingsViewModel.setSyncPlayProgressEnabled(checked)
+                                        }
+                                    }
+                                )
+
+                                JvmSettingPathRow(
+                                    icon = Res.drawable.folder_managed_24px,
+                                    title = stringResource(Res.string.cache_location),
+                                    path = cacheFilePath,
+                                    onClick = {
+                                        if (cacheFilePath.isNotBlank()) {
+                                            copyTextToClipboard(cacheFilePath)
+                                            MessageUtils.sendPopTip(copySuccess)
+                                        }
+                                    }
+                                )
+                            }
+
+                            JvmSettingSection(
+                                title = "下载与存储",
+                                subtitle = "下载并发、歌曲缓存路径与本地空间管理。",
+                                badge = "本机",
+                            ) {
+                                JvmSettingDownloadRow(
+                                    selected = settings.maxConcurrentDownloads,
+                                    onSelected = { maxConcurrentDownloads ->
+                                        coroutineScope.launch {
+                                            settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
+                                        }
+                                    }
+                                )
+
+                                JvmSettingPathRow(
+                                    icon = Res.drawable.queue_music_24px,
+                                    title = stringResource(Res.string.song_cache_location),
+                                    path = songStoragePath,
+                                    onClick = {
+                                        if (songStoragePath.isNotBlank()) {
+                                            copyTextToClipboard(songStoragePath)
+                                            MessageUtils.sendPopTip(copySuccess)
+                                        }
+                                    }
+                                )
+
+                                JvmSettingNavigationRow(
+                                    icon = Res.drawable.folder_managed_24px,
+                                    title = stringResource(Res.string.storage_management),
+                                    description = "查看缓存占用并清理本地文件。",
+                                    value = "打开存储管理",
+                                    onClick = {
+                                        navigator.navigate(MemoryManagement)
+                                    }
                                 )
                             }
                         }
-                    )
 
-                    AnimatedVisibility(visible = settingsViewModel.settingDataNow.ifEnableEdgeDownload) {
-                        SettingItemComponent(title = stringResource(Res.string.cache_limit)) {
-                            navigator.navigate(CacheLimit)
-                        }
-                    }
-
-                    SettingItemComponent(title = stringResource(Res.string.online_music_quality)) {
-                        navigator.navigate(StreamingQuality)
-                    }
-
-                    MusicSettingSwitchItemComponent(
-                        title = stringResource(Res.string.album_playback_history),
-                        ifChecked = settingsViewModel.settingDataNow.ifEnableAlbumHistory
-                    ) { bol ->
-                        coroutineScope.launch {
-                            settingsViewModel.settingsManager.setIfEnableAlbumHistory(
-                                bol
-                            )
-                        }
-                    }
-
-                    MusicSettingSwitchItemComponent(
-                        title = stringResource(Res.string.allow_simultaneous_playback),
-                        ifChecked = settingsViewModel.settingDataNow.ifHandleAudioFocus
-                    ) { bol ->
-                        coroutineScope.launch {
-                            settingsViewModel.settingsManager.setIfHandleAudioFocus(
-                                bol
-                            )
-                        }
-                    }
-
-                    MusicSettingSwitchItemComponent(
-                        title = stringResource(Res.string.enabled_sync_play_progress),
-                        ifChecked = settingsViewModel.settingDataNow.ifEnableSyncPlayProgress
-                    ) { bol ->
-                        coroutineScope.launch {
-                            settingsViewModel.setSyncPlayProgressEnabled(
-                                bol
-                            )
-                        }
-                    }
-
-                    SettingItemComponent(
-                        title = stringResource(Res.string.cache_location),
-                        bottomInfo = cacheFilePath,
-                        maxLines = Int.MAX_VALUE,
-                        painter = null
-                    ) {
-                        if (cacheFilePath.isNotBlank()) {
-                            copyTextToClipboard(cacheFilePath)
-                            MessageUtils.sendPopTip(copySuccess)
-                        }
-
-                    }
-
-                }
-            }
-            item {
-                JvmSettingRoundedSurfaceColumn {
-                    SettingItemComponent(title = stringResource(Res.string.connection_management)) {
-                        navigator.navigate(ConnectionManagement)
-                    }
-                }
-            }
-
-            item {
-                JvmSettingRoundedSurfaceColumn {
-                    SettingItemComponent(
-                        title = stringResource(Res.string.download_max_list),
-                        info = settingsViewModel.settingDataNow.maxConcurrentDownloads.toString(),
-                        painter = Res.drawable.keyboard_arrow_down_24px,
-                        trailingContent = {
-                            XyDropdownMenu(
-                                onIfShowMenu = { ifShowMaxConcurrentDownloads },
-                                onSetIfShowMenu = { ifShowMaxConcurrentDownloads = it },
-                                modifier = Modifier
-                                    .width(200.dp),
-                                itemDataList = listOf(
-                                    MenuItemDefaultData(
-                                        title = "1", leadingIcon = {
-                                            if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 1)
-                                                Icon(
-                                                    painter = painterResource(Res.drawable.check_24px),
-                                                    contentDescription = stringResource(
-                                                        Res.string.download_max_list
-                                                    ) + "1"
-                                                )
-                                        },
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                ifShowMaxConcurrentDownloads = false
-                                                settingsViewModel.setMaxConcurrentDownloads(
-                                                    1
-                                                )
-                                            }.invokeOnCompletion {
-
-                                            }
-
-                                        }),
-                                    MenuItemDefaultData(
-                                        title = "3", leadingIcon = {
-                                            if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 3)
-                                                Icon(
-                                                    painter = painterResource(Res.drawable.check_24px),
-                                                    contentDescription = stringResource(
-                                                        Res.string.download_max_list
-                                                    ) + "3"
-                                                )
-                                        },
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                ifShowMaxConcurrentDownloads = false
-                                                settingsViewModel.setMaxConcurrentDownloads(
-                                                    3
-                                                )
-                                            }.invokeOnCompletion {
-
-                                            }
-
-                                        }),
-                                    MenuItemDefaultData(
-                                        title = "5", leadingIcon = {
-                                            if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 5)
-                                                Icon(
-                                                    painter = painterResource(Res.drawable.check_24px),
-                                                    contentDescription = stringResource(
-                                                        Res.string.download_max_list
-                                                    ) + "5"
-                                                )
-                                        },
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                ifShowMaxConcurrentDownloads = false
-                                                settingsViewModel.setMaxConcurrentDownloads(
-                                                    5
-                                                )
-                                            }.invokeOnCompletion {
-
-                                            }
-
-                                        })
+                        Column(
+                            modifier = Modifier
+                                .widthIn(min = JvmSettingSidebarMinWidth)
+                                .weight(0.95f),
+                            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
+                        ) {
+                            JvmSettingSection(
+                                title = "连接",
+                                subtitle = "管理音乐服务地址和当前连接。",
+                                badge = "在线",
+                            ) {
+                                JvmSettingNavigationRow(
+                                    icon = Res.drawable.http_24px,
+                                    title = stringResource(Res.string.connection_management),
+                                    description = "切换或编辑 Jellyfin、Navidrome 等数据源。",
+                                    value = dataSourceLabel,
+                                    onClick = {
+                                        navigator.navigate(ConnectionManagement)
+                                    }
                                 )
-                            )
+
+                                JvmSettingNavigationRow(
+                                    icon = Res.drawable.signal_cellular_alt_24px,
+                                    title = stringResource(Res.string.poxy_config),
+                                    description = "配置服务访问代理和网络转发。",
+                                    value = "网络",
+                                    onClick = {
+                                        navigator.navigate(ProxyConfig)
+                                    }
+                                )
+                            }
+
+                            JvmSettingSection(
+                                title = "通用",
+                                subtitle = "界面、语言、自定义资源和应用信息。",
+                                badge = "偏好",
+                            ) {
+                                FlowRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                                ) {
+                                    JvmSettingActionCard(
+                                        icon = Res.drawable.settings_24px,
+                                        kicker = "显示",
+                                        title = stringResource(Res.string.interface_settings),
+                                        description = "主题、背景图片与桌面显示偏好。",
+                                        onClick = {
+                                            navigator.navigate(InterfaceSetting)
+                                        }
+                                    )
+                                    JvmSettingActionCard(
+                                        icon = Res.drawable.info_24px,
+                                        kicker = "本地化",
+                                        title = stringResource(Res.string.language),
+                                        description = "切换跟随系统或固定语言。",
+                                        onClick = {
+                                            navigator.navigate(LanguageConfig)
+                                        }
+                                    )
+                                    JvmSettingActionCard(
+                                        icon = Res.drawable.music_note_24px,
+                                        kicker = "资源",
+                                        title = stringResource(Res.string.customize_lyric_settings),
+                                        description = "自定义歌词与封面服务地址。",
+                                        onClick = {
+                                            navigator.navigate(CustomApi)
+                                        }
+                                    )
+                                    JvmSettingActionCard(
+                                        icon = Res.drawable.info_24px,
+                                        kicker = "应用",
+                                        title = stringResource(Res.string.about),
+                                        description = "版本信息、检查更新与项目说明。",
+                                        onClick = {
+                                            navigator.navigate(About)
+                                        }
+                                    )
+                                }
+
+                                JvmSettingNote(
+                                    text = "设置项保持原有路由和数据写入行为，桌面端只调整信息架构和视觉密度。"
+                                )
+                            }
                         }
-                    ) {
-                        ifShowMaxConcurrentDownloads = true
                     }
-
-                    SettingItemComponent(
-                        title = stringResource(Res.string.song_cache_location),
-                        bottomInfo = songStoragePath,
-                        maxLines = Int.MAX_VALUE,
-                        painter = null
-                    ) {
-                        if (songStoragePath.isNotBlank()) {
-                            copyTextToClipboard(songStoragePath)
-                            MessageUtils.sendPopTip(copySuccess)
-                        }
-                    }
-
-                }
-            }
-
-            item {
-                JvmSettingRoundedSurfaceColumn {
-
-                    SettingItemComponent(title = stringResource(Res.string.storage_management)) {
-                        navigator.navigate(MemoryManagement)
-                    }
-
-                    SettingItemComponent(
-                        title = stringResource(Res.string.customize_lyric_settings)
-                    ) {
-                        navigator.navigate(CustomApi)
-                    }
-
-                    SettingItemComponent(title = stringResource(Res.string.poxy_config)) {
-                        navigator.navigate(ProxyConfig)
-                    }
-
-                    SettingItemComponent(title = stringResource(Res.string.interface_settings)) {
-                        navigator.navigate(InterfaceSetting)
-                    }
-
-                    SettingItemComponent(title = stringResource(Res.string.language)) {
-                        navigator.navigate(LanguageConfig)
-                    }
-
-                    SettingItemComponent(title = stringResource(Res.string.about)) {
-                        //版本信息,检查更新
-                        navigator.navigate(About)
-                    }
-
                 }
             }
         }
     }
+}
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun JvmSettingHeader(
+    settings: XySettings,
+    dataSourceLabel: String,
+    selectedQuality: String,
+) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding * 2),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+        itemVerticalAlignment = Alignment.Bottom
+    ) {
+        Column(
+            modifier = Modifier
+                .widthIn(min = 320.dp)
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+        ) {
+            Text(
+                text = "桌面端设置",
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = stringResource(Res.string.settings),
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "把桌面端常用配置集中为更可扫读的设置中心：播放缓存、连接管理、下载队列、界面语言和扩展能力都保留当前入口。",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 22.sp
+            )
+        }
+
+        JvmSettingStatusCard(
+            modifier = Modifier.widthIn(min = 278.dp),
+            dataSourceLabel = dataSourceLabel,
+            selectedQuality = selectedQuality,
+            maxConcurrentDownloads = settings.maxConcurrentDownloads,
+        )
+    }
 }
 
 @Composable
-fun JvmSettingRoundedSurfaceColumn(content: @Composable ColumnScope.() -> Unit) {
-    RoundedSurfaceColumn(
-        contentPaddingValues = PaddingValues(
-            horizontal = XyTheme.dimens.outerHorizontalPadding
-        ),
-        content = content
+private fun JvmSettingStatusCard(
+    modifier: Modifier = Modifier,
+    dataSourceLabel: String,
+    selectedQuality: String,
+    maxConcurrentDownloads: Int,
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
+        ) {
+            JvmSettingStatusRow(label = "当前数据源", value = dataSourceLabel)
+            JvmSettingStatusRow(label = "在线品质", value = selectedQuality)
+            JvmSettingStatusRow(label = "下载并发", value = maxConcurrentDownloads.toString())
+        }
+    }
+}
+
+@Composable
+private fun JvmSettingStatusRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            modifier = Modifier.padding(start = XyTheme.dimens.contentPadding),
+            text = value,
+            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun JvmSettingOverview(
+    settings: XySettings,
+    cacheLimitLabel: String,
+    onStorageClick: () -> Unit,
+) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+    ) {
+        JvmSettingOverviewTile(
+            modifier = Modifier
+                .widthIn(min = 220.dp)
+                .weight(1f),
+            icon = Res.drawable.download_24px,
+            kicker = "播放缓存",
+            value = if (settings.ifEnableEdgeDownload) "边下边播已开启" else "边下边播已关闭",
+            sub = "缓存上限 · $cacheLimitLabel"
+        )
+        JvmSettingOverviewTile(
+            modifier = Modifier
+                .widthIn(min = 220.dp)
+                .weight(1f),
+            icon = Res.drawable.av_timer_24px,
+            kicker = "播放同步",
+            value = if (settings.ifEnableSyncPlayProgress) "进度同步已开启" else "进度同步已关闭",
+            sub = if (settings.ifEnableAlbumHistory) "播放历史 · 专辑启用" else "播放历史 · 专辑关闭"
+        )
+        JvmSettingOverviewTile(
+            modifier = Modifier
+                .widthIn(min = 220.dp)
+                .weight(1f),
+            icon = Res.drawable.folder_managed_24px,
+            kicker = "存储管理",
+            value = "打开存储管理",
+            sub = "真实占用在存储管理页查看",
+            onClick = onStorageClick,
+        )
+    }
+}
+
+@Composable
+private fun JvmSettingOverviewTile(
+    modifier: Modifier = Modifier,
+    icon: DrawableResource,
+    kicker: String,
+    value: String,
+    sub: String,
+    onClick: (() -> Unit)? = null,
+) {
+    val shape = RoundedCornerShape(XyTheme.dimens.corner)
+    val clickableModifier = if (onClick == null) {
+        Modifier
+    } else {
+        Modifier.clickable(onClick = onClick)
+    }
+    Surface(
+        modifier = modifier
+            .heightIn(min = 106.dp)
+            .then(clickableModifier),
+        shape = shape,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+        ) {
+            JvmSettingKicker(icon = icon, text = kicker)
+            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = sub,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun JvmSettingSection(
+    title: String,
+    subtitle: String,
+    badge: String,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(
+                XyTheme.dimens.innerHorizontalPadding + XyTheme.dimens.outerVerticalPadding / 2
+            ),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
+        ) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+                itemVerticalAlignment = Alignment.Top
+            ) {
+                Column(
+                    modifier = Modifier
+                        .widthIn(min = 220.dp)
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 20.sp
+                    )
+                }
+
+                JvmSettingBadge(text = badge)
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f))
+                    .border(
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)),
+                        RoundedCornerShape(XyTheme.dimens.corner)
+                    )
+            ) {
+                content()
+            }
+        }
+    }
+}
+
+@Composable
+private fun JvmSettingSwitchRow(
+    icon: DrawableResource,
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    JvmSettingBaseRow(
+        icon = icon,
+        title = title,
+        description = description,
+        onClick = {
+            onCheckedChange(!checked)
+        },
+        trailing = {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                    uncheckedBorderColor = Color.Transparent,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f)
+                )
+            )
+        }
     )
 }
 
+@Composable
+private fun JvmSettingNavigationRow(
+    icon: DrawableResource,
+    title: String,
+    description: String,
+    value: String,
+    onClick: () -> Unit,
+) {
+    JvmSettingBaseRow(
+        icon = icon,
+        title = title,
+        description = description,
+        onClick = onClick,
+        trailing = {
+            JvmSettingValuePill(value = value)
+            JvmSettingChevron()
+        }
+    )
+}
 
+@Composable
+private fun JvmSettingPathRow(
+    icon: DrawableResource,
+    title: String,
+    path: String,
+    onClick: () -> Unit,
+) {
+    JvmSettingBaseRow(
+        icon = icon,
+        title = title,
+        description = path.ifBlank { "路径尚未生成" },
+        descriptionStyle = JvmSettingRowDescriptionStyle.Path,
+        onClick = onClick,
+        trailing = {
+            JvmSettingValuePill(value = "点击复制")
+        }
+    )
+}
 
+@Composable
+private fun JvmSettingDownloadRow(
+    selected: Int,
+    onSelected: (Int) -> Unit,
+) {
+    JvmSettingBaseRow(
+        icon = Res.drawable.download_24px,
+        title = stringResource(Res.string.download_max_list),
+        description = "限制并行下载任务数量，避免占满带宽。",
+        trailing = {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+                    .border(
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+                        RoundedCornerShape(XyTheme.dimens.corner)
+                    )
+                    .padding(XyTheme.dimens.outerVerticalPadding / 2),
+                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                listOf(1, 3, 5).forEach { count ->
+                    JvmSettingDownloadSegment(
+                        value = count,
+                        selected = selected == count,
+                        onClick = {
+                            if (selected != count) {
+                                onSelected(count)
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    )
+}
+
+@Composable
+private fun JvmSettingDownloadSegment(
+    value: Int,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
+    Box(
+        modifier = Modifier
+            .height(34.dp)
+            .width(48.dp)
+            .clip(shape)
+            .background(
+                if (selected) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.26f)
+                } else {
+                    Color.Transparent
+                }
+            )
+            .selectable(
+                selected = selected,
+                role = Role.RadioButton,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = value.toString(),
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
+    }
+}
+
+@Composable
+private fun JvmSettingBaseRow(
+    icon: DrawableResource,
+    title: String,
+    description: String,
+    descriptionStyle: JvmSettingRowDescriptionStyle = JvmSettingRowDescriptionStyle.Normal,
+    onClick: (() -> Unit)? = null,
+    trailing: @Composable () -> Unit,
+) {
+    val clickableModifier = if (onClick == null) {
+        Modifier
+    } else {
+        Modifier.clickable(onClick = onClick)
+    }
+
+    FlowRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = XyTheme.dimens.itemHeight)
+            .then(clickableModifier)
+            .padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+                vertical = XyTheme.dimens.contentPadding
+            ),
+        horizontalArrangement = Arrangement.spacedBy(
+            space = XyTheme.dimens.contentPadding,
+            alignment = Alignment.Start
+        ),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+        itemVerticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier
+                .widthIn(min = 220.dp)
+                .weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            JvmSettingIcon(icon = icon)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = description,
+                    style = if (descriptionStyle == JvmSettingRowDescriptionStyle.Path) {
+                        MaterialTheme.typography.labelSmall
+                    } else {
+                        MaterialTheme.typography.bodySmall
+                    },
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = if (descriptionStyle == JvmSettingRowDescriptionStyle.Path) 2 else 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            trailing()
+        }
+    }
+}
+
+@Composable
+private fun JvmSettingActionCard(
+    icon: DrawableResource,
+    kicker: String,
+    title: String,
+    description: String,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(XyTheme.dimens.corner)
+    Column(
+        modifier = Modifier
+            .width(JvmSettingActionCardWidth)
+            .heightIn(min = 116.dp)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(
+                BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
+                shape
+            )
+            .clickable(onClick = onClick)
+            .padding(XyTheme.dimens.outerHorizontalPadding),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+    ) {
+        JvmSettingKicker(icon = icon, text = kicker)
+        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = description,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            lineHeight = 17.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun JvmSettingNote(text: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+                vertical = XyTheme.dimens.contentPadding
+            ),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            JvmSettingIcon(icon = Res.drawable.info_24px, selected = true)
+            Text(
+                modifier = Modifier.weight(1f),
+                text = text,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 20.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun JvmSettingKicker(icon: DrawableResource, text: String) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        JvmSettingIcon(icon = icon, size = 24.dp, selected = true)
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun JvmSettingIcon(
+    icon: DrawableResource,
+    size: Dp = JvmSettingIconSize,
+    selected: Boolean = false,
+) {
+    Box(
+        modifier = Modifier
+            .size(size)
+            .background(
+                color = if (selected) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
+                },
+                shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
+            )
+            .border(
+                BorderStroke(
+                    width = 1.dp,
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.26f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f)
+                    }
+                ),
+                shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            modifier = Modifier.size(size * 0.58f),
+            tint = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
+    }
+}
+
+@Composable
+private fun JvmSettingBadge(text: String) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+        contentColor = MaterialTheme.colorScheme.primary,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
+        )
+    ) {
+        Text(
+            modifier = Modifier.padding(
+                horizontal = XyTheme.dimens.contentPadding,
+                vertical = XyTheme.dimens.outerVerticalPadding
+            ),
+            text = text,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+        )
+    }
+}
+
+@Composable
+private fun JvmSettingValuePill(value: String) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+        )
+    ) {
+        Text(
+            modifier = Modifier
+                .widthIn(max = 180.dp)
+                .padding(
+                    horizontal = XyTheme.dimens.contentPadding,
+                    vertical = XyTheme.dimens.outerVerticalPadding / 2
+                ),
+            text = value,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun JvmSettingChevron() {
+    Box(
+        modifier = Modifier
+            .size(30.dp)
+            .background(
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+                shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
+            )
+            .border(
+                BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+                RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.chevron_right_24px),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+private enum class JvmSettingRowDescriptionStyle {
+    Normal,
+    Path,
+}
