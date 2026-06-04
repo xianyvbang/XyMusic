@@ -414,39 +414,15 @@ abstract class IDataSourceParentServer(
                 serverName = connectionConfig.serverName,
                 serverId = connectionConfig.serverId,
             )
-            if (loginType == LoginType.API || connectionConfig.accessToken.isNullOrBlank() || connectionConfig.ifForceLogin) {
-                emitAll(
-                    addClientAndLogin(
-                        clientLoginInfoReq = clientLoginInfoReq,
-                        connectionConfig = connectionConfig
-                    )
+            emitAll(
+                addClientAndLogin(
+                    clientLoginInfoReq = clientLoginInfoReq,
+                    connectionConfig = connectionConfig
                 )
-            } else {
-                resetLoginRetry()
-                emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
-                //保存客户端数据
-                initApiClient(
-                    address,
-                    connectionConfig.deviceId,
-                    username = connectionConfig.username,
-                    password = password
-                )
-                defaultParentApiClient.loginAfter(
-                    connectionConfig.accessToken,
-                    connectionConfig.userId,
-                    connectionConfig.navidromeExtendToken,
-                    connectionConfig.navidromeExtendSalt,
-                    clientLoginInfoReq = clientLoginInfoReq
-                )
-
-                defaultParentApiClient.pingAfter(connectionConfig.machineIdentifier)
-                emitAll(loginAfter(connectionConfig))
-            }
+            )
 
         }.flowOn(Dispatchers.IO).catch {
             Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}", it)
-            if (loginType == LoginType.TOKEN)
-                sendLoginCompleted(LoginStateType.FAILURE)
             when (it) {
                 is SocketTimeoutException -> {
                     emit(ClientLoginInfoState.ServiceTimeOutState)

@@ -67,7 +67,7 @@ interface IDataSourceServer : AutoCloseable, KoinComponent {
      * @return [Flow<ClientLoginInfoState>?]
      */
     suspend fun autoLogin(
-        loginType: LoginType = LoginType.TOKEN,
+        loginType: LoginType = LoginType.API,
         connectionConfig: ConnectionConfig? = null
     ): Flow<ClientLoginInfoState>?
 

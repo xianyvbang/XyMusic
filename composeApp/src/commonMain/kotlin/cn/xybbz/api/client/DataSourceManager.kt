@@ -354,11 +354,11 @@ open class DataSourceManager(
      * 调用后立即返回，登录进度通过 autoLoginRunning 和 autoLoginState 对外暴露。
      *
      * @param connectionConfig 要登录的连接配置。
-     * @param loginType 登录方式，默认使用 token 自动登录。
+     * @param loginType 登录方式，默认使用接口登录。
      */
     fun startAutoLogin(
         connectionConfig: ConnectionConfig,
-        loginType: LoginType = LoginType.TOKEN
+        loginType: LoginType = LoginType.API
     ) {
         // 保持旧的后台自动登录行为，但不阻塞调用方。
         scope.launch {
@@ -374,7 +374,7 @@ open class DataSourceManager(
      * @param connectionConfig 要登录的连接配置。
      */
     suspend fun loginConnection(
-        loginType: LoginType = LoginType.TOKEN,
+        loginType: LoginType = LoginType.API,
         connectionConfig: ConnectionConfig
     ) {
         // 统一封装登录前后回调，避免启动入口和手动切换连接重复写监听逻辑。
@@ -406,7 +406,7 @@ open class DataSourceManager(
      * 登陆服务端
      */
     suspend fun serverLogin(
-        loginType: LoginType = LoginType.TOKEN,
+        loginType: LoginType = LoginType.API,
         connectionConfig: ConnectionConfig?
     ) {
         // 手动刷新登录时先同步本地连接配置，避免 UI 和后续同步读取到旧连接上下文。

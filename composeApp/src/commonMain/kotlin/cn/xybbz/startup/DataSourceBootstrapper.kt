@@ -60,7 +60,7 @@ class DataSourceBootstrapper : KoinComponent {
             // 登录、播放器恢复、重登录监听都放到这里统一启动。
             startPlayerInitialization(dataSourceManager, db)
             startLoginEventBus(dataSourceManager, db)
-            dataSourceManager.loginConnection(LoginType.TOKEN, connectionConfig)
+            dataSourceManager.loginConnection(LoginType.API, connectionConfig)
         }
     }
 

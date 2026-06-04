@@ -25,10 +25,5 @@ enum class LoginType() {
     /**
      * 使用api登陆
      */
-    API,
-
-    /**
-     * 使用现有token
-     */
-    TOKEN
+    API
 }
