@@ -260,7 +260,6 @@ class SubsonicApiClient : DefaultParentApiClient() {
         logger.info { "服务器信息 $systemInfo 用户信息 $user" }
         return LoginSuccessData(
             userId = clientLoginInfoReq.username,
-            accessToken = clientLoginInfoReq.username,
             serverId = "",
             serverName = systemInfo.subsonicResponse.type,
             version = systemInfo.subsonicResponse.version,

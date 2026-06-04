@@ -237,12 +237,9 @@ class NavidromeApiClient : DefaultParentApiClient() {
         val serverVersion = systemInfo.subsonicResponse.serverVersion
         return LoginSuccessData(
             userId = responseData.id,
-            accessToken = responseData.token,
             serverId = "",
             serverName = systemInfo.subsonicResponse.type,
             version = serverVersion.ifBlank { systemInfo.subsonicResponse.version },
-            navidromeExtendToken = responseData.subsonicToken,
-            navidromeExtendSalt = responseData.subsonicSalt,
             ifEnabledDownload = user.subsonicResponse.user?.downloadRole ?: false,
             ifEnabledDelete = user.subsonicResponse.user?.adminRole ?: false
         )

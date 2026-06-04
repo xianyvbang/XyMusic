@@ -263,7 +263,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
         logger.info { "服务器信息 $systemInfo" }
         return LoginSuccessData(
             userId = responseData.user?.id,
-            accessToken = responseData.accessToken,
             serverId = responseData.serverId,
             serverName = systemInfo.serverName,
             version = systemInfo.version,

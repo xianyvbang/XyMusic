@@ -234,7 +234,6 @@ class EmbyApiClient : DefaultParentApiClient() {
 
         return LoginSuccessData(
             userId = responseData.user?.id,
-            accessToken = responseData.accessToken,
             serverId = responseData.serverId,
             serverName = systemInfo.serverName,
             version = systemInfo.version,

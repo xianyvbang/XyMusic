@@ -319,7 +319,6 @@ class PlexApiClient : DefaultParentApiClient() {
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
         var loginSuccessData = LoginSuccessData(
             userId = userId,
-            accessToken = createToken(),
             serverId = clientLoginInfoReq.serverId,
             serverName = clientLoginInfoReq.serverName,
             version = clientLoginInfoReq.serverVersion,
@@ -346,7 +345,6 @@ class PlexApiClient : DefaultParentApiClient() {
             }
         }
         return loginSuccessData.copy(
-            machineIdentifier = postPingSystem.mediaContainer?.machineIdentifier,
             ifEnabledDownload = postPingSystem.mediaContainer?.allowSync ?: false,
             ifEnabledDelete = postPingSystem.mediaContainer?.allowSync ?: false
         )
@@ -385,7 +383,6 @@ class PlexApiClient : DefaultParentApiClient() {
         )
         return LoginSuccessData(
             userId = userId,
-            accessToken = createToken(),
             serverId = clientLoginInfoReq.serverId,
             serverName = clientLoginInfoReq.serverName,
             version = clientLoginInfoReq.serverVersion,
