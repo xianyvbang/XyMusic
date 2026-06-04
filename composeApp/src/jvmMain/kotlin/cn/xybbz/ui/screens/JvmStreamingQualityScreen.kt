@@ -39,7 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.ui.components.JvmLazyListComponent
-import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.theme.XyTheme
@@ -50,7 +49,6 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.any_network
 import xymusic_kmp.composeapp.generated.resources.online_music_quality
 import xymusic_kmp.composeapp.generated.resources.transcoding_format
 
@@ -78,23 +76,6 @@ fun JvmStreamingQualityScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             lazyColumnBottom = null
         ) {
-
-            item {
-                JvmStreamingQualityPanel(
-                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
-                ) {
-                    MusicSettingSwitchItemComponent(
-                        title = stringResource(Res.string.any_network),
-                        ifChecked = streamingQualityViewModel.ifTranscoding,
-                    ) { bol ->
-                        coroutineScope.launch {
-                            streamingQualityViewModel.updateIfTranscoding(bol)
-                        }
-                    }
-                }
-
-            }
-
             item {
                 JvmStreamingQualityPanel(
                     title = stringResource(Res.string.online_music_quality)
