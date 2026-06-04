@@ -71,10 +71,6 @@ data class ConnectionConfig(
      */
     val username: String = "",
     /**
-     * 用户token
-     */
-    val accessToken: String? = "",
-    /**
      * 当前密码 加密存储
      */
     val currentPassword: String = "",
@@ -111,20 +107,6 @@ data class ConnectionConfig(
     val createTime: Long = Clock.System.now().toEpochMilliseconds(),
 
     /**
-     * navidrome扩展SubsonicToken
-     */
-    val navidromeExtendToken: String? = null,
-
-    /**
-     * navidrome扩展扩展SubsonicSalt
-     */
-    val navidromeExtendSalt: String? = null,
-
-    /**
-     * plex的机器标识符
-     */
-    val machineIdentifier: String? = null,
-    /**
      * 是否开启下载功能
      */
     val ifEnabledDownload: Boolean,
@@ -132,8 +114,4 @@ data class ConnectionConfig(
      * 是否开启删除功能
      */
     val ifEnabledDelete: Boolean,
-    /**
-     * 是否下次登录的时候强制登录
-     */
-    val ifForceLogin: Boolean,
 )

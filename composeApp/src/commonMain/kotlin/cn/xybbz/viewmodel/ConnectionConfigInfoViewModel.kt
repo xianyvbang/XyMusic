@@ -145,8 +145,7 @@ class ConnectionConfigInfoViewModel(
             key = encryptAES.aesKey,
             name = connectionName,
             username = username,
-            address = address,
-            ifForceLogin = (ifPasswordChange || ifUsernameChange || ifAddressChange) && getConnectionId() != connectionId
+            address = address
         )
         connectionConfig = updatedConfig
         dataSourceManager.updateConnectionConfig(updatedConfig)

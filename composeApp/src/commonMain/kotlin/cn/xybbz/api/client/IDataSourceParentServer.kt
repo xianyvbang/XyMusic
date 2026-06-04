@@ -233,8 +233,6 @@ abstract class IDataSourceParentServer(
             } else {
                 throw ServiceException(getString(Res.string.server_version_cannot_be_obtained))
             }
-            val accessToken =
-                responseData.accessToken
             val userId =
                 responseData.userId
 
@@ -248,17 +246,13 @@ abstract class IDataSourceParentServer(
                 type = getDataSourceType(),
                 userId = userId.toString(),
                 username = clientLoginInfoReq.username,
-                accessToken = accessToken,
                 currentPassword = encryptAES.aesData,
                 iv = encryptAES.aesIv,
                 key = encryptAES.aesKey,
                 serverVersion = version,
                 updateTime = Clock.System.now().toEpochMilliseconds(),
                 lastLoginTime = Clock.System.now().toEpochMilliseconds(),
-                deviceId = deviceId,
-                navidromeExtendToken = responseData.navidromeExtendToken,
-                navidromeExtendSalt = responseData.navidromeExtendSalt,
-                machineIdentifier = responseData.machineIdentifier
+                deviceId = deviceId
             ) ?: ConnectionConfig(
                 serverId = responseData.serverId ?: "",
                 serverName = responseData.serverName ?: "",
@@ -267,18 +261,13 @@ abstract class IDataSourceParentServer(
                 type = getDataSourceType(),
                 userId = userId.toString(),
                 username = clientLoginInfoReq.username,
-                accessToken = accessToken,
                 currentPassword = encryptAES.aesData,
                 iv = encryptAES.aesIv,
                 key = encryptAES.aesKey,
                 serverVersion = version,
                 deviceId = deviceId,
-                navidromeExtendToken = responseData.navidromeExtendToken,
-                navidromeExtendSalt = responseData.navidromeExtendSalt,
-                machineIdentifier = responseData.machineIdentifier,
                 ifEnabledDownload = responseData.ifEnabledDownload,
-                ifEnabledDelete = responseData.ifEnabledDelete,
-                ifForceLogin = false
+                ifEnabledDelete = responseData.ifEnabledDelete
             )
             this@IDataSourceParentServer.connectionConfig = tmpConfig
             popTipHint?.dismiss()
