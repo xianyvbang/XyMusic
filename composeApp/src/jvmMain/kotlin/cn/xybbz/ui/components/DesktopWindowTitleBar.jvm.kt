@@ -300,6 +300,7 @@ private fun DesktopTitleActions(
                     .height(XyTheme.dimens.itemHeight * .8f)
                     .desktopTitleBarHitTarget(hitTestOwner, "ConnectionMenu")
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                    .background(colors.iconButtonBackground)
                     .jvmHoverDebounceClickable { ifShowConnectionMenu = true }
                     .padding(
                         horizontal = XyTheme.dimens.innerHorizontalPadding,

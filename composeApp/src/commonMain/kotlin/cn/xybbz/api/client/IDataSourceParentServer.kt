@@ -252,7 +252,9 @@ abstract class IDataSourceParentServer(
                 serverVersion = version,
                 updateTime = Clock.System.now().toEpochMilliseconds(),
                 lastLoginTime = Clock.System.now().toEpochMilliseconds(),
-                deviceId = deviceId
+                deviceId = deviceId,
+                ifEnabledDownload = responseData.ifEnabledDownload,
+                ifEnabledDelete = responseData.ifEnabledDelete
             ) ?: ConnectionConfig(
                 serverId = responseData.serverId ?: "",
                 serverName = responseData.serverName ?: "",
