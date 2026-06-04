@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XyMusic JVM 设置页预览</title>
+    <style>
+        :root {
+            --accent: #0470E6;
+            --accent-soft: rgba(4, 112, 230, 0.16);
+            --accent-border: rgba(4, 112, 230, 0.72);
+            --bg: #1A1A1A;
+            --surface: #2F2F2F;
+            --surface-low: #242424;
+            --surface-high: #363636;
+            --surface-hover: #3C3C3C;
+            --line: rgba(255, 255, 255, 0.10);
+            --line-strong: rgba(255, 255, 255, 0.16);
+            --text: #EBEEF1;
+            --muted: #A7A7A7;
+            --dim: #727272;
+            --danger: #E76F51;
+            --warm: #E9C46A;
+            --teal: #2A9D8F;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            color: var(--text);
+            background: var(--bg);
+            font-family: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+            overflow: hidden;
+            letter-spacing: 0;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .app-shell {
+            display: grid;
+            grid-template-columns: 248px minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr) 88px;
+            grid-template-areas:
+                "sidebar main"
+                "player player";
+            height: 100vh;
+            min-width: 880px;
+            background:
+                linear-gradient(180deg, rgba(4, 112, 230, 0.09), rgba(26, 26, 26, 0) 260px),
+                var(--bg);
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+            padding: 18px 12px 12px;
+            background: #111111;
+            border-right: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 44px;
+            padding: 0 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), #31A8FF);
+            box-shadow: 0 8px 20px rgba(4, 112, 230, 0.28);
+        }
+
+        .brand-mark::before {
+            content: "";
+            width: 12px;
+            height: 16px;
+            border-right: 4px solid #FFFFFF;
+            border-bottom: 4px solid #FFFFFF;
+            border-radius: 0 0 8px 0;
+            transform: rotate(8deg);
+        }
+
+        .nav-panel,
+        .library-panel {
+            border-radius: var(--radius);
+            background: var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .nav-panel {
+            padding: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            height: 42px;
+            padding: 0 12px;
+            color: var(--muted);
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            text-align: left;
+            cursor: default;
+        }
+
+        .nav-item.active {
+            color: var(--text);
+            background: var(--surface-high);
+        }
+
+        .nav-icon {
+            display: grid;
+            place-items: center;
+            width: 22px;
+            height: 22px;
+            color: currentColor;
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .library-panel {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .library-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 36px;
+            padding: 0 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .library-list {
+            display: grid;
+            gap: 6px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .library-row {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            min-width: 0;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .library-row.current {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .cover {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #274060, #2A9D8F);
+        }
+
+        .cover.alt {
+            background: linear-gradient(135deg, #5F4B8B, #E9C46A);
+        }
+
+        .cover.third {
+            background: linear-gradient(135deg, #183A37, #0470E6);
+        }
+
+        .line-title,
+        .line-sub {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .line-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .line-sub {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--dim);
+        }
+
+        .main {
+            grid-area: main;
+            min-width: 0;
+            margin: 8px 8px 0 8px;
+            border-radius: var(--radius);
+            background:
+                linear-gradient(180deg, rgba(4, 112, 230, 0.18), rgba(47, 47, 47, 0) 230px),
+                var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            padding: 0 24px;
+            background: rgba(31, 31, 31, 0.72);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(18px);
+        }
+
+        .window-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .round-button,
+        .icon-button {
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.24);
+        }
+
+        .round-button {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+        }
+
+        .icon-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+        }
+
+        .source-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            height: 36px;
+            padding: 0 12px 0 8px;
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .source-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--teal));
+        }
+
+        .content-scroll {
+            height: calc(100vh - 160px);
+            overflow: auto;
+        }
+
+        .content-scroll::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .content-scroll::-webkit-scrollbar-thumb {
+            border: 3px solid transparent;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.24);
+            background-clip: content-box;
+        }
+
+        .content {
+            width: min(1080px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 34px 0 42px;
+        }
+
+        .page-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 24px;
+            align-items: end;
+            margin-bottom: 24px;
+        }
+
+        .eyebrow {
+            margin-bottom: 10px;
+            color: #8FC4FF;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            line-height: 1.18;
+            font-weight: 750;
+            color: #FFFFFF;
+            letter-spacing: 0;
+        }
+
+        .summary {
+            margin: 10px 0 0;
+            max-width: 660px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .status-card {
+            display: grid;
+            gap: 10px;
+            min-width: 278px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .status-value {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .overview-tile {
+            min-width: 0;
+            min-height: 106px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: var(--surface-high);
+            border: 1px solid var(--line);
+        }
+
+        .overview-kicker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .overview-icon {
+            display: grid;
+            place-items: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.20);
+            border: 1px solid rgba(4, 112, 230, 0.26);
+        }
+
+        .overview-value {
+            overflow: hidden;
+            margin-top: 16px;
+            color: #FFFFFF;
+            font-size: 22px;
+            line-height: 1.1;
+            font-weight: 780;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .overview-sub {
+            overflow: hidden;
+            margin-top: 8px;
+            color: var(--dim);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .settings-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.95fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .settings-stack {
+            display: grid;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: var(--radius);
+            background: rgba(47, 47, 47, 0.82);
+            border: 1px solid var(--line);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+        }
+
+        .section-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            margin: 0;
+            font-size: 17px;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .badge {
+            flex: 0 0 auto;
+            padding: 6px 10px;
+            border-radius: 999px;
+            color: #BBD9FF;
+            background: rgba(4, 112, 230, 0.12);
+            border: 1px solid rgba(4, 112, 230, 0.28);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .settings-list {
+            display: grid;
+            overflow: hidden;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .setting-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+            min-height: 62px;
+            width: 100%;
+            padding: 12px 14px;
+            color: var(--text);
+            background: transparent;
+            border: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            text-align: left;
+        }
+
+        .setting-row:last-child {
+            border-bottom: 0;
+        }
+
+        .setting-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .setting-main {
+            min-width: 0;
+        }
+
+        .setting-title-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .setting-icon {
+            display: grid;
+            flex: 0 0 auto;
+            place-items: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            color: #DCEEFF;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .setting-title {
+            overflow: hidden;
+            color: #FFFFFF;
+            font-size: 14px;
+            line-height: 1.35;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .setting-desc,
+        .path-text {
+            overflow: hidden;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .path-text {
+            max-width: 100%;
+            color: var(--dim);
+            font-family: "Cascadia Mono", Consolas, monospace;
+        }
+
+        .setting-trailing {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .value-pill {
+            display: inline-flex;
+            align-items: center;
+            max-width: 180px;
+            height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            color: #DCEEFF;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .value-pill span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chevron {
+            display: grid;
+            place-items: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            color: var(--muted);
+            background: rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .switch {
+            position: relative;
+            width: 46px;
+            height: 26px;
+            flex: 0 0 auto;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            cursor: pointer;
+            transition: background-color 160ms ease;
+        }
+
+        .switch::before {
+            content: "";
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #FFFFFF;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.24);
+            transition: transform 160ms ease;
+        }
+
+        .switch.on {
+            background: var(--accent);
+            box-shadow: 0 8px 18px rgba(4, 112, 230, 0.24);
+        }
+
+        .switch.on::before {
+            transform: translateX(20px);
+        }
+
+        .segmented {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            padding: 6px;
+            border-radius: var(--radius);
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .segment {
+            height: 34px;
+            min-width: 0;
+            padding: 0 12px;
+            border: 0;
+            border-radius: 8px;
+            color: var(--muted);
+            background: transparent;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .segment.active {
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.26);
+            box-shadow: inset 0 0 0 1px rgba(4, 112, 230, 0.24);
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .action-card {
+            min-width: 0;
+            min-height: 116px;
+            padding: 16px;
+            border-radius: var(--radius);
+            color: var(--text);
+            background: var(--surface-high);
+            border: 1px solid var(--line);
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+        }
+
+        .action-card:hover {
+            transform: translateY(-1px);
+            background: var(--surface-hover);
+            border-color: var(--line-strong);
+        }
+
+        .action-kicker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 18px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .action-title {
+            margin-top: 18px;
+            color: #FFFFFF;
+            font-size: 20px;
+            line-height: 1.15;
+            font-weight: 780;
+        }
+
+        .action-desc {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .note-row {
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .note-icon {
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.20);
+            border: 1px solid rgba(4, 112, 230, 0.26);
+        }
+
+        .toast {
+            position: fixed;
+            right: 24px;
+            bottom: 108px;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: #FFFFFF;
+            background: rgba(36, 36, 36, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+            backdrop-filter: blur(18px);
+            font-size: 13px;
+        }
+
+        .toast.show {
+            display: flex;
+        }
+
+        .player {
+            grid-area: player;
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(360px, 520px) minmax(220px, 1fr);
+            gap: 18px;
+            align-items: center;
+            padding: 12px 18px;
+            background: #121212;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .now-playing {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .album-art {
+            width: 54px;
+            height: 54px;
+            border-radius: 8px;
+            background:
+                linear-gradient(135deg, rgba(42, 157, 143, 0.92), rgba(4, 112, 230, 0.86)),
+                #333333;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+        }
+
+        .player-title {
+            overflow: hidden;
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .player-subtitle {
+            overflow: hidden;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .transport {
+            display: grid;
+            gap: 10px;
+            justify-items: center;
+        }
+
+        .transport-buttons {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .transport-button {
+            display: grid;
+            place-items: center;
+            width: 28px;
+            height: 28px;
+            color: var(--muted);
+            background: transparent;
+            border: 0;
+        }
+
+        .play-button {
+            display: grid;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            color: #FFFFFF;
+            background: var(--accent);
+            border: 0;
+            border-radius: 50%;
+            box-shadow: 0 10px 24px rgba(4, 112, 230, 0.28);
+        }
+
+        .progress {
+            display: grid;
+            grid-template-columns: 40px minmax(0, 1fr) 40px;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+            color: var(--dim);
+            font-size: 11px;
+        }
+
+        .bar {
+            height: 5px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .bar-fill {
+            height: 100%;
+            width: 38%;
+            border-radius: inherit;
+            background: var(--accent);
+        }
+
+        .player-tools {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .volume {
+            width: min(120px, 32%);
+        }
+
+        @media (max-width: 1180px) {
+            .app-shell {
+                grid-template-columns: 218px minmax(0, 1fr);
+            }
+
+            .content {
+                width: calc(100% - 36px);
+            }
+
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .action-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .page-head {
+                grid-template-columns: 1fr;
+            }
+
+            .status-card {
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 920px) {
+            body {
+                overflow: auto;
+            }
+
+            .app-shell {
+                min-width: 0;
+                height: auto;
+                min-height: 100vh;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto minmax(0, 1fr) 88px;
+                grid-template-areas:
+                    "sidebar"
+                    "main"
+                    "player";
+            }
+
+            .sidebar {
+                flex-direction: row;
+                align-items: center;
+                overflow: hidden;
+                border-right: 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            }
+
+            .brand {
+                flex: 0 0 auto;
+            }
+
+            .nav-panel {
+                display: flex;
+                flex: 1;
+                min-width: 0;
+            }
+
+            .nav-item {
+                justify-content: center;
+                min-width: 42px;
+                padding: 0 10px;
+            }
+
+            .nav-item span:not(.nav-icon) {
+                display: none;
+            }
+
+            .library-panel {
+                display: none;
+            }
+
+            .main {
+                margin: 8px;
+            }
+
+            .content-scroll {
+                height: auto;
+                overflow: visible;
+            }
+
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .setting-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .setting-trailing {
+                justify-content: flex-start;
+            }
+
+            .player {
+                grid-template-columns: minmax(0, 1fr) auto;
+            }
+
+            .transport {
+                display: none;
+            }
+
+            .player-tools {
+                min-width: 150px;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .topbar {
+                padding: 0 12px;
+            }
+
+            .source-pill {
+                display: none;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .content {
+                width: calc(100% - 24px);
+                padding-top: 24px;
+            }
+
+            .section {
+                padding: 16px;
+            }
+
+            .section-head {
+                display: grid;
+            }
+
+            .segmented {
+                grid-template-columns: 1fr;
+            }
+
+            .player-tools {
+                display: none;
+            }
+
+            .player {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" aria-label="桌面导航">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span>XyMusic</span>
+        </div>
+
+        <nav class="nav-panel" aria-label="主导航">
+            <button class="nav-item" type="button">
+                <span class="nav-icon" aria-hidden="true">⌂</span>
+                <span>首页</span>
+            </button>
+            <button class="nav-item" type="button">
+                <span class="nav-icon" aria-hidden="true">♪</span>
+                <span>音乐库</span>
+            </button>
+            <button class="nav-item active" type="button">
+                <span class="nav-icon" aria-hidden="true">⚙</span>
+                <span>设置</span>
+            </button>
+        </nav>
+
+        <section class="library-panel" aria-label="播放列表">
+            <div class="library-header">
+                <span>最近播放</span>
+                <span aria-hidden="true">+</span>
+            </div>
+            <div class="library-list">
+                <div class="library-row current">
+                    <div class="cover"></div>
+                    <div>
+                        <div class="line-title">Daily Mix</div>
+                        <div class="line-sub">Navidrome · 48 首</div>
+                    </div>
+                </div>
+                <div class="library-row">
+                    <div class="cover alt"></div>
+                    <div>
+                        <div class="line-title">夜间电台</div>
+                        <div class="line-sub">Jellyfin · 收藏</div>
+                    </div>
+                </div>
+                <div class="library-row">
+                    <div class="cover third"></div>
+                    <div>
+                        <div class="line-title">高解析度试听</div>
+                        <div class="line-sub">本地缓存</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="window-actions" aria-label="历史导航">
+                <button class="round-button" type="button" aria-label="返回">‹</button>
+                <button class="round-button" type="button" aria-label="前进">›</button>
+            </div>
+            <div class="window-actions">
+                <div class="source-pill">
+                    <span class="source-dot" aria-hidden="true"></span>
+                    <span>Navidrome · 在线</span>
+                </div>
+                <button class="icon-button" type="button" aria-label="搜索">⌕</button>
+                <button class="icon-button" type="button" aria-label="设置">⚙</button>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+            <div class="content">
+                <section class="page-head">
+                    <div>
+                        <div class="eyebrow">桌面端设置</div>
+                        <h1>设置</h1>
+                        <p class="summary">把桌面端常用配置集中为更可扫读的设置中心：播放缓存、连接管理、下载队列、界面语言和扩展能力都保留当前入口，只调整层级与视觉密度。</p>
+                    </div>
+                    <aside class="status-card" aria-label="当前配置摘要">
+                        <div class="status-row">
+                            <span>当前数据源</span>
+                            <span class="status-value">Navidrome</span>
+                        </div>
+                        <div class="status-row">
+                            <span>在线品质</span>
+                            <span class="status-value">不转码</span>
+                        </div>
+                        <div class="status-row">
+                            <span>下载并发</span>
+                            <span class="status-value" id="download-status">3</span>
+                        </div>
+                    </aside>
+                </section>
+
+                <section class="overview-grid" aria-label="配置概览">
+                    <div class="overview-tile">
+                        <div class="overview-kicker">
+                            <span class="overview-icon" aria-hidden="true">↧</span>
+                            播放缓存
+                        </div>
+                        <div class="overview-value" id="cache-summary">边下边播已开启</div>
+                        <div class="overview-sub">缓存上限 · 自动</div>
+                    </div>
+                    <div class="overview-tile">
+                        <div class="overview-kicker">
+                            <span class="overview-icon" aria-hidden="true">⇄</span>
+                            播放同步
+                        </div>
+                        <div class="overview-value" id="sync-summary">进度同步已开启</div>
+                        <div class="overview-sub">播放历史 · 专辑启用</div>
+                    </div>
+                    <div class="overview-tile">
+                        <div class="overview-kicker">
+                            <span class="overview-icon" aria-hidden="true">◎</span>
+                            存储占用
+                        </div>
+                        <div class="overview-value">18.6 GB</div>
+                        <div class="overview-sub">音乐缓存与播放缓存合计</div>
+                    </div>
+                </section>
+
+                <div class="settings-layout">
+                    <div class="settings-stack">
+                        <section class="section" aria-labelledby="playback-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="playback-title">播放与缓存</h2>
+                                    <p class="section-subtitle">控制在线播放策略、缓存位置和跨设备播放行为。</p>
+                                </div>
+                                <span class="badge">核心</span>
+                            </div>
+
+                            <div class="settings-list">
+                                <div class="setting-row">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">↧</span>
+                                            <span class="setting-title">边下边播</span>
+                                        </div>
+                                        <div class="setting-desc">播放时缓存音频资源，弱网重播更稳定。</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <button class="switch on" type="button" role="switch" aria-checked="true" data-switch="edge-download" aria-label="边下边播"></button>
+                                    </div>
+                                </div>
+
+                                <button class="setting-row" type="button" data-toast="打开缓存上限">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">◌</span>
+                                            <span class="setting-title">缓存上限</span>
+                                        </div>
+                                        <div class="setting-desc">设置播放缓存最大占用空间。</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <span class="value-pill"><span>自动</span></span>
+                                        <span class="chevron" aria-hidden="true">›</span>
+                                    </div>
+                                </button>
+
+                                <button class="setting-row" type="button" data-toast="打开在线音乐品质">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">♫</span>
+                                            <span class="setting-title">在线音乐品质</span>
+                                        </div>
+                                        <div class="setting-desc">选择 JVM 端在线音频品质与转码格式。</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <span class="value-pill"><span>不转码 · MP3</span></span>
+                                        <span class="chevron" aria-hidden="true">›</span>
+                                    </div>
+                                </button>
+
+                                <div class="setting-row">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">◷</span>
+                                            <span class="setting-title">专辑播放历史</span>
+                                        </div>
+                                        <div class="setting-desc">记录专辑播放进度，便于下次继续。</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <button class="switch on" type="button" role="switch" aria-checked="true" data-switch="album-history" aria-label="专辑播放历史"></button>
+                                    </div>
+                                </div>
+
+                                <div class="setting-row">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">◫</span>
+                                            <span class="setting-title">允许与其他应用同时播放</span>
+                                        </div>
+                                        <div class="setting-desc">保留系统音频焦点，不主动打断其他声音。</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <button class="switch on" type="button" role="switch" aria-checked="true" data-switch="audio-focus" aria-label="允许与其他应用同时播放"></button>
+                                    </div>
+                                </div>
+
+                                <div class="setting-row">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">⇄</span>
+                                            <span class="setting-title">同步播放进度</span>
+                                        </div>
+                                        <div class="setting-desc">向服务端同步当前播放位置。</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <button class="switch on" type="button" role="switch" aria-checked="true" data-switch="sync-progress" aria-label="同步播放进度"></button>
+                                    </div>
+                                </div>
+
+                                <button class="setting-row" type="button" data-toast="已复制播放缓存位置">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">□</span>
+                                            <span class="setting-title">播放缓存位置</span>
+                                        </div>
+                                        <div class="path-text">D:\androidPro\XyMusic-KMP_1\jvm-playback-cache</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <span class="value-pill"><span>点击复制</span></span>
+                                    </div>
+                                </button>
+                            </div>
+                        </section>
+
+                        <section class="section" aria-labelledby="download-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="download-title">下载与存储</h2>
+                                    <p class="section-subtitle">下载并发、歌曲缓存路径与本地空间管理。</p>
+                                </div>
+                                <span class="badge">本机</span>
+                            </div>
+
+                            <div class="settings-list">
+                                <div class="setting-row">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">≡</span>
+                                            <span class="setting-title">最大同时下载数量</span>
+                                        </div>
+                                        <div class="setting-desc">限制并行下载任务数量，避免占满带宽。</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <div class="segmented" aria-label="最大同时下载数量">
+                                            <button class="segment" type="button" data-download="1">1</button>
+                                            <button class="segment active" type="button" data-download="3">3</button>
+                                            <button class="segment" type="button" data-download="5">5</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="setting-row" type="button" data-toast="已复制歌曲缓存位置">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">▣</span>
+                                            <span class="setting-title">歌曲缓存位置</span>
+                                        </div>
+                                        <div class="path-text">D:\Music\XyMusic\song-storage</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <span class="value-pill"><span>点击复制</span></span>
+                                    </div>
+                                </button>
+
+                                <button class="setting-row" type="button" data-toast="打开存储管理">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">◎</span>
+                                            <span class="setting-title">存储管理</span>
+                                        </div>
+                                        <div class="setting-desc">查看缓存占用并清理本地文件。</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <span class="value-pill"><span>18.6 GB</span></span>
+                                        <span class="chevron" aria-hidden="true">›</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <aside class="settings-stack">
+                        <section class="section" aria-labelledby="connection-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="connection-title">连接</h2>
+                                    <p class="section-subtitle">管理音乐服务地址和当前连接。</p>
+                                </div>
+                                <span class="badge">在线</span>
+                            </div>
+
+                            <div class="settings-list">
+                                <button class="setting-row" type="button" data-toast="打开连接管理">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">⌁</span>
+                                            <span class="setting-title">连接管理</span>
+                                        </div>
+                                        <div class="setting-desc">切换或编辑 Navidrome / Jellyfin 等数据源。</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <span class="value-pill"><span>Navidrome</span></span>
+                                        <span class="chevron" aria-hidden="true">›</span>
+                                    </div>
+                                </button>
+
+                                <button class="setting-row" type="button" data-toast="打开代理设置">
+                                    <div class="setting-main">
+                                        <div class="setting-title-line">
+                                            <span class="setting-icon" aria-hidden="true">↔</span>
+                                            <span class="setting-title">代理设置</span>
+                                        </div>
+                                        <div class="setting-desc">配置服务访问代理和网络转发。</div>
+                                    </div>
+                                    <div class="setting-trailing">
+                                        <span class="value-pill"><span>关闭</span></span>
+                                        <span class="chevron" aria-hidden="true">›</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </section>
+
+                        <section class="section" aria-labelledby="general-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="general-title">通用</h2>
+                                    <p class="section-subtitle">界面、语言、自定义资源和应用信息。</p>
+                                </div>
+                                <span class="badge">偏好</span>
+                            </div>
+
+                            <div class="action-grid">
+                                <button class="action-card" type="button" data-toast="打开界面设置">
+                                    <span class="action-kicker">
+                                        <span class="overview-icon" aria-hidden="true">◐</span>
+                                        显示
+                                    </span>
+                                    <span class="action-title">界面设置</span>
+                                    <span class="action-desc">主题、背景图片与桌面显示偏好。</span>
+                                </button>
+                                <button class="action-card" type="button" data-toast="打开语言设置">
+                                    <span class="action-kicker">
+                                        <span class="overview-icon" aria-hidden="true">文</span>
+                                        本地化
+                                    </span>
+                                    <span class="action-title">语言</span>
+                                    <span class="action-desc">切换跟随系统或固定语言。</span>
+                                </button>
+                                <button class="action-card" type="button" data-toast="打开自定义歌词设置">
+                                    <span class="action-kicker">
+                                        <span class="overview-icon" aria-hidden="true">L</span>
+                                        资源
+                                    </span>
+                                    <span class="action-title">歌词接口</span>
+                                    <span class="action-desc">自定义歌词与封面服务地址。</span>
+                                </button>
+                                <button class="action-card" type="button" data-toast="打开关于页面">
+                                    <span class="action-kicker">
+                                        <span class="overview-icon" aria-hidden="true">i</span>
+                                        应用
+                                    </span>
+                                    <span class="action-title">关于</span>
+                                    <span class="action-desc">版本信息、检查更新与项目说明。</span>
+                                </button>
+                            </div>
+
+                            <div class="note-row">
+                                <div class="note-icon" aria-hidden="true">i</div>
+                                <div>这个预览只调整设置页的信息架构和桌面视觉风格，现有路由入口与设置项语义可以在后续 Compose 实现时继续保持。</div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="player" aria-label="播放控制栏">
+        <div class="now-playing">
+            <div class="album-art" aria-hidden="true"></div>
+            <div>
+                <div class="player-title">Blue Hour</div>
+                <div class="player-subtitle">XyMusic Preview · 设置页预览</div>
+            </div>
+        </div>
+
+        <div class="transport">
+            <div class="transport-buttons">
+                <button class="transport-button" type="button" aria-label="随机播放">⤨</button>
+                <button class="transport-button" type="button" aria-label="上一首">‹‹</button>
+                <button class="play-button" type="button" aria-label="播放">▶</button>
+                <button class="transport-button" type="button" aria-label="下一首">››</button>
+                <button class="transport-button" type="button" aria-label="循环播放">↻</button>
+            </div>
+            <div class="progress">
+                <span>1:24</span>
+                <div class="bar" aria-hidden="true"><div class="bar-fill"></div></div>
+                <span>3:41</span>
+            </div>
+        </div>
+
+        <div class="player-tools">
+            <span>列表</span>
+            <span>歌词</span>
+            <span>音量</span>
+            <div class="bar volume" aria-hidden="true"><div class="bar-fill" style="width: 68%;"></div></div>
+        </div>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+        <span class="overview-icon" aria-hidden="true">✓</span>
+        <span id="toast-text">已更新</span>
+    </div>
+</div>
+
+<script>
+    const toast = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
+    let toastTimer = null;
+
+    function showToast(text) {
+        toastText.textContent = text;
+        toast.classList.add("show");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => {
+            toast.classList.remove("show");
+        }, 1500);
+    }
+
+    document.querySelectorAll(".switch").forEach((switcher) => {
+        switcher.addEventListener("click", () => {
+            const checked = !switcher.classList.contains("on");
+            switcher.classList.toggle("on", checked);
+            switcher.setAttribute("aria-checked", checked ? "true" : "false");
+
+            if (switcher.dataset.switch === "edge-download") {
+                document.getElementById("cache-summary").textContent = checked ? "边下边播已开启" : "边下边播已关闭";
+            }
+
+            if (switcher.dataset.switch === "sync-progress") {
+                document.getElementById("sync-summary").textContent = checked ? "进度同步已开启" : "进度同步已关闭";
+            }
+
+            showToast(checked ? "已开启" : "已关闭");
+        });
+    });
+
+    document.querySelectorAll(".segment[data-download]").forEach((segment) => {
+        segment.addEventListener("click", () => {
+            document.querySelectorAll(".segment[data-download]").forEach((item) => {
+                item.classList.remove("active");
+            });
+            segment.classList.add("active");
+            document.getElementById("download-status").textContent = segment.dataset.download;
+            showToast(`下载并发已设为 ${segment.dataset.download}`);
+        });
+    });
+
+    document.querySelectorAll("[data-toast]").forEach((item) => {
+        item.addEventListener("click", () => showToast(item.dataset.toast));
+    });
+</script>
+</body>
+</html>
