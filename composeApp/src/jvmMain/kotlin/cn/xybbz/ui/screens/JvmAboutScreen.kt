@@ -88,6 +88,9 @@ import xymusic_kmp.composeapp.generated.resources.official_website
 import xymusic_kmp.composeapp.generated.resources.problem_feedback
 import xymusic_kmp.composeapp.generated.resources.settings_24px
 
+// 应用信息概览卡需要在关于页左栏内三项同排展示，最小宽度低于设置页概览卡。
+private val JvmAboutOverviewTileMinWidth = 140.dp
+
 /**
  * JVM 桌面端关于页面。
  *
@@ -224,7 +227,7 @@ private fun JvmAboutContent(
                 ) {
                     JvmSettingOverviewTile(
                         modifier = Modifier
-                            .widthIn(min = 180.dp)
+                            .widthIn(min = JvmAboutOverviewTileMinWidth)
                             .weight(1f),
                         icon = Res.drawable.info_24px,
                         kicker = "版本",
@@ -233,7 +236,7 @@ private fun JvmAboutContent(
                     )
                     JvmSettingOverviewTile(
                         modifier = Modifier
-                            .widthIn(min = 180.dp)
+                            .widthIn(min = JvmAboutOverviewTileMinWidth)
                             .weight(1f),
                         icon = Res.drawable.settings_24px,
                         kicker = "运行时",
@@ -242,13 +245,13 @@ private fun JvmAboutContent(
                     )
                     JvmSettingOverviewTile(
                         modifier = Modifier
-                            .widthIn(min = 180.dp)
+                            .widthIn(min = JvmAboutOverviewTileMinWidth)
                             .weight(1f),
                         icon = Res.drawable.music_note_24px,
                         kicker = "数据源",
                         value = dataSourceCountLabel,
                         sub = dataSourceTitles,
-                        subMaxLines = 2
+                        subMaxLines = 3
                     )
                 }
             }
