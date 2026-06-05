@@ -25,6 +25,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -121,14 +122,16 @@ import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.volume_up_24px
 
 private val JvmSettingContentMaxWidth = 1080.dp
-private val JvmSettingSidebarMinWidth = 320.dp
-private val JvmSettingActionCardWidth = 154.dp
+private val JvmSettingHeaderGridMinWidth = 760.dp
+private val JvmSettingOverviewGridMinWidth = 760.dp
+private val JvmSettingLayoutGridMinWidth = 860.dp
+private val JvmSettingActionGridMinWidth = 320.dp
+private val JvmSettingActionGridThreeColumnMinWidth = 620.dp
 private val JvmSettingIconSize = 32.dp
 
 /**
  * 设置页面
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun JvmSettingScreen(
     settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModel>()
@@ -181,18 +184,8 @@ fun JvmSettingScreen(
                         },
                     )
 
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
-                        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
-                        itemVerticalAlignment = Alignment.Top,
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .widthIn(min = 460.dp)
-                                .weight(1.45f),
-                            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
-                        ) {
+                    JvmSettingMainLayout(
+                        leftContent = {
                             JvmSettingSection(
                                 title = "播放与缓存",
                                 subtitle = "控制在线播放策略、缓存位置和跨设备播放行为。",
@@ -317,14 +310,8 @@ fun JvmSettingScreen(
                                     }
                                 )
                             }
-                        }
-
-                        Column(
-                            modifier = Modifier
-                                .widthIn(min = JvmSettingSidebarMinWidth)
-                                .weight(0.95f),
-                            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
-                        ) {
+                        },
+                        rightContent = {
                             JvmSettingSection(
                                 title = "连接",
                                 subtitle = "管理音乐服务地址和当前连接。",
@@ -356,59 +343,88 @@ fun JvmSettingScreen(
                                 subtitle = "界面、语言、自定义资源和应用信息。",
                                 badge = "偏好",
                             ) {
-                                FlowRow(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-                                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-                                ) {
-                                    JvmSettingActionCard(
-                                        icon = Res.drawable.settings_24px,
-                                        kicker = "显示",
-                                        title = stringResource(Res.string.interface_settings),
-                                        description = "主题、背景图片与桌面显示偏好。",
-                                        onClick = {
-                                            navigator.navigate(InterfaceSetting)
-                                        }
-                                    )
-                                    JvmSettingActionCard(
-                                        icon = Res.drawable.info_24px,
-                                        kicker = "本地化",
-                                        title = stringResource(Res.string.language),
-                                        description = "切换跟随系统或固定语言。",
-                                        onClick = {
-                                            navigator.navigate(LanguageConfig)
-                                        }
-                                    )
-                                    JvmSettingActionCard(
-                                        icon = Res.drawable.music_note_24px,
-                                        kicker = "资源",
-                                        title = stringResource(Res.string.customize_lyric_settings),
-                                        description = "自定义歌词与封面服务地址。",
-                                        onClick = {
-                                            navigator.navigate(CustomApi)
-                                        }
-                                    )
-                                    JvmSettingActionCard(
-                                        icon = Res.drawable.info_24px,
-                                        kicker = "应用",
-                                        title = stringResource(Res.string.about),
-                                        description = "版本信息、检查更新与项目说明。",
-                                        onClick = {
-                                            navigator.navigate(About)
-                                        }
-                                    )
-                                }
+                                JvmSettingActionGrid(
+                                    onInterfaceClick = {
+                                        navigator.navigate(InterfaceSetting)
+                                    },
+                                    onLanguageClick = {
+                                        navigator.navigate(LanguageConfig)
+                                    },
+                                    onCustomApiClick = {
+                                        navigator.navigate(CustomApi)
+                                    },
+                                    onAboutClick = {
+                                        navigator.navigate(About)
+                                    },
+                                )
 
                                 JvmSettingNote(
                                     text = "设置项保持原有路由和数据写入行为，桌面端只调整信息架构和视觉密度。"
                                 )
                             }
                         }
-                    }
+                    )
                 }
             }
         }
     }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun JvmSettingMainLayout(
+    leftContent: @Composable ColumnScope.() -> Unit,
+    rightContent: @Composable ColumnScope.() -> Unit,
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val gap = XyTheme.dimens.outerHorizontalPadding
+        val useTwoColumns = maxWidth >= JvmSettingLayoutGridMinWidth
+        val contentWidth = if (useTwoColumns) {
+            maxWidth - gap
+        } else {
+            maxWidth
+        }
+        val leftWeight = 1.45f
+        val rightWeight = 0.95f
+        val leftWidth = if (useTwoColumns) {
+            contentWidth * (leftWeight / (leftWeight + rightWeight))
+        } else {
+            maxWidth
+        }
+        val rightWidth = if (useTwoColumns) {
+            contentWidth - leftWidth
+        } else {
+            maxWidth
+        }
+
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(gap),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+            itemVerticalAlignment = Alignment.Top,
+        ) {
+            JvmSettingStack(
+                modifier = Modifier.width(leftWidth),
+                content = leftContent
+            )
+            JvmSettingStack(
+                modifier = Modifier.width(rightWidth),
+                content = rightContent
+            )
+        }
+    }
+}
+
+@Composable
+private fun JvmSettingStack(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+        content = content
+    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -418,37 +434,47 @@ private fun JvmSettingHeader(
     dataSourceLabel: String,
     selectedQuality: String,
 ) {
-    FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding * 2),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
-        itemVerticalAlignment = Alignment.Bottom
-    ) {
-        Column(
-            modifier = Modifier
-                .widthIn(min = 320.dp)
-                .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val gap = XyTheme.dimens.contentPadding * 2
+        val statusWidth = 278.dp
+        val useTwoColumns = maxWidth >= JvmSettingHeaderGridMinWidth
+        val headerTextWidth = if (useTwoColumns) {
+            maxWidth - statusWidth - gap
+        } else {
+            maxWidth
+        }
+        val statusCardWidth = if (useTwoColumns) statusWidth else maxWidth
+
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(gap),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+            itemVerticalAlignment = Alignment.Bottom
         ) {
-            Text(
-                text = stringResource(Res.string.settings),
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "把桌面端常用配置集中为更可扫读的设置中心：播放缓存、连接管理、下载队列、界面语言和扩展能力都保留当前入口。",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = 22.sp
+            Column(
+                modifier = Modifier.width(headerTextWidth),
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+            ) {
+                Text(
+                    text = stringResource(Res.string.settings),
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "把桌面端常用配置集中为更可扫读的设置中心：播放缓存、连接管理、下载队列、界面语言和扩展能力都保留当前入口。",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 22.sp
+                )
+            }
+
+            JvmSettingStatusCard(
+                modifier = Modifier.width(statusCardWidth),
+                dataSourceLabel = dataSourceLabel,
+                selectedQuality = selectedQuality,
+                maxConcurrentDownloads = settings.maxConcurrentDownloads,
             )
         }
-
-        JvmSettingStatusCard(
-            modifier = Modifier.widthIn(min = 278.dp),
-            dataSourceLabel = dataSourceLabel,
-            selectedQuality = selectedQuality,
-            maxConcurrentDownloads = settings.maxConcurrentDownloads,
-        )
     }
 }
 
@@ -512,39 +538,43 @@ private fun JvmSettingOverview(
     cacheLimitLabel: String,
     onStorageClick: () -> Unit,
 ) {
-    FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-    ) {
-        JvmSettingOverviewTile(
-            modifier = Modifier
-                .widthIn(min = 220.dp)
-                .weight(1f),
-            icon = Res.drawable.download_24px,
-            kicker = "播放缓存",
-            value = if (settings.ifEnableEdgeDownload) "边下边播已开启" else "边下边播已关闭",
-            sub = "缓存上限 · $cacheLimitLabel"
-        )
-        JvmSettingOverviewTile(
-            modifier = Modifier
-                .widthIn(min = 220.dp)
-                .weight(1f),
-            icon = Res.drawable.av_timer_24px,
-            kicker = "播放同步",
-            value = if (settings.ifEnableSyncPlayProgress) "进度同步已开启" else "进度同步已关闭",
-            sub = if (settings.ifEnableAlbumHistory) "播放历史 · 专辑启用" else "播放历史 · 专辑关闭"
-        )
-        JvmSettingOverviewTile(
-            modifier = Modifier
-                .widthIn(min = 220.dp)
-                .weight(1f),
-            icon = Res.drawable.folder_managed_24px,
-            kicker = "存储管理",
-            value = "打开存储管理",
-            sub = "真实占用在存储管理页查看",
-            onClick = onStorageClick,
-        )
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val gap = XyTheme.dimens.contentPadding
+        val useThreeColumns = maxWidth >= JvmSettingOverviewGridMinWidth
+        val tileWidth = if (useThreeColumns) {
+            (maxWidth - gap * 2) / 3f
+        } else {
+            maxWidth
+        }
+
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(gap),
+            verticalArrangement = Arrangement.spacedBy(gap),
+        ) {
+            JvmSettingOverviewTile(
+                modifier = Modifier.width(tileWidth),
+                icon = Res.drawable.download_24px,
+                kicker = "播放缓存",
+                value = if (settings.ifEnableEdgeDownload) "边下边播已开启" else "边下边播已关闭",
+                sub = "缓存上限 · $cacheLimitLabel"
+            )
+            JvmSettingOverviewTile(
+                modifier = Modifier.width(tileWidth),
+                icon = Res.drawable.av_timer_24px,
+                kicker = "播放同步",
+                value = if (settings.ifEnableSyncPlayProgress) "进度同步已开启" else "进度同步已关闭",
+                sub = if (settings.ifEnableAlbumHistory) "播放历史 · 专辑启用" else "播放历史 · 专辑关闭"
+            )
+            JvmSettingOverviewTile(
+                modifier = Modifier.width(tileWidth),
+                icon = Res.drawable.folder_managed_24px,
+                kicker = "存储管理",
+                value = "打开存储管理",
+                sub = "真实占用在存储管理页查看",
+                onClick = onStorageClick,
+            )
+        }
     }
 }
 
@@ -811,6 +841,68 @@ private fun JvmSettingDownloadSegment(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun JvmSettingActionGrid(
+    onInterfaceClick: () -> Unit,
+    onLanguageClick: () -> Unit,
+    onCustomApiClick: () -> Unit,
+    onAboutClick: () -> Unit,
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val gap = XyTheme.dimens.contentPadding
+        val columnCount = when {
+            maxWidth >= JvmSettingActionGridThreeColumnMinWidth -> 3
+            maxWidth >= JvmSettingActionGridMinWidth -> 2
+            else -> 1
+        }
+        val cardWidth = if (columnCount == 1) {
+            maxWidth
+        } else {
+            (maxWidth - gap * (columnCount - 1).toFloat()) / columnCount.toFloat()
+        }
+
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(gap),
+            verticalArrangement = Arrangement.spacedBy(gap),
+        ) {
+            JvmSettingActionCard(
+                modifier = Modifier.width(cardWidth),
+                icon = Res.drawable.settings_24px,
+                kicker = "显示",
+                title = stringResource(Res.string.interface_settings),
+                description = "主题、背景图片与桌面显示偏好。",
+                onClick = onInterfaceClick
+            )
+            JvmSettingActionCard(
+                modifier = Modifier.width(cardWidth),
+                icon = Res.drawable.info_24px,
+                kicker = "本地化",
+                title = stringResource(Res.string.language),
+                description = "切换跟随系统或固定语言。",
+                onClick = onLanguageClick
+            )
+            JvmSettingActionCard(
+                modifier = Modifier.width(cardWidth),
+                icon = Res.drawable.music_note_24px,
+                kicker = "资源",
+                title = stringResource(Res.string.customize_lyric_settings),
+                description = "自定义歌词与封面服务地址。",
+                onClick = onCustomApiClick
+            )
+            JvmSettingActionCard(
+                modifier = Modifier.width(cardWidth),
+                icon = Res.drawable.info_24px,
+                kicker = "应用",
+                title = stringResource(Res.string.about),
+                description = "版本信息、检查更新与项目说明。",
+                onClick = onAboutClick
+            )
+        }
+    }
+}
+
 @Composable
 private fun JvmSettingBaseRow(
     icon: DrawableResource,
@@ -886,6 +978,7 @@ private fun JvmSettingBaseRow(
 
 @Composable
 private fun JvmSettingActionCard(
+    modifier: Modifier = Modifier,
     icon: DrawableResource,
     kicker: String,
     title: String,
@@ -894,8 +987,7 @@ private fun JvmSettingActionCard(
 ) {
     val shape = RoundedCornerShape(XyTheme.dimens.corner)
     Column(
-        modifier = Modifier
-            .width(JvmSettingActionCardWidth)
+        modifier = modifier
             .heightIn(min = 116.dp)
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
