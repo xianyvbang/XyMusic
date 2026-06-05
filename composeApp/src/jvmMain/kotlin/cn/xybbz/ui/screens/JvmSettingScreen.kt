@@ -461,7 +461,7 @@ private fun JvmSettingStack(
 /**
  * 设置页头部区域。
  *
- * 宽屏展示“标题说明 + 状态卡”，窄屏时状态卡自然换到下一行。
+ * 宽屏展示“标题说明 + 状态卡”，并保持宽度与下方主体内容一致。
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -472,22 +472,24 @@ private fun JvmSettingHeader(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding * 2
+        // Header 和下方主体内容使用相同宽度上限，保证标题区左右边界对齐。
+        val headerWidth = minOf(maxWidth, JvmSettingMainContentMaxWidth)
         // 状态卡宽度固定，保证三行状态值在桌面端保持稳定扫描宽度。
         val statusWidth = 278.dp
         // 标题和状态卡同排展示的最小宽度。
         val useTwoColumns = maxWidth >= JvmSettingHeaderGridMinWidth
         val headerTextWidth = if (useTwoColumns) {
             // 同排时标题区域占用剩余宽度，给状态卡保留固定可读宽度。
-            maxWidth - statusWidth - gap
+            headerWidth - statusWidth - gap
         } else {
-            maxWidth
+            headerWidth
         }
         // 窄屏时状态卡铺满一整行，避免内容被压缩。
-        val statusCardWidth = if (useTwoColumns) statusWidth else maxWidth
+        val statusCardWidth = if (useTwoColumns) statusWidth else headerWidth
 
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(gap),
+            horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
             itemVerticalAlignment = Alignment.Bottom
         ) {
