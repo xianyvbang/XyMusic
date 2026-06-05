@@ -124,9 +124,12 @@ import xymusic_kmp.composeapp.generated.resources.volume_up_24px
 private val JvmSettingContentMaxWidth = 1080.dp
 private val JvmSettingHeaderGridMinWidth = 760.dp
 private val JvmSettingOverviewGridMinWidth = 760.dp
+private val JvmSettingOverviewContentMaxWidth = 936.dp
 private val JvmSettingLayoutGridMinWidth = 860.dp
+private val JvmSettingMainContentMaxWidth = 960.dp
 private val JvmSettingActionGridMinWidth = 320.dp
-private val JvmSettingActionGridThreeColumnMinWidth = 620.dp
+private val JvmSettingActionCardCompactWidth = 154.dp
+private val JvmSettingActionCardWideWidth = 168.dp
 private val JvmSettingIconSize = 32.dp
 
 /**
@@ -379,10 +382,11 @@ private fun JvmSettingMainLayout(
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.outerHorizontalPadding
         val useTwoColumns = maxWidth >= JvmSettingLayoutGridMinWidth
+        val layoutWidth = minOf(maxWidth, JvmSettingMainContentMaxWidth)
         val contentWidth = if (useTwoColumns) {
-            maxWidth - gap
+            layoutWidth - gap
         } else {
-            maxWidth
+            layoutWidth
         }
         val leftWeight = 1.45f
         val rightWeight = 0.95f
@@ -399,7 +403,7 @@ private fun JvmSettingMainLayout(
 
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(gap),
+            horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
             itemVerticalAlignment = Alignment.Top,
         ) {
@@ -541,15 +545,16 @@ private fun JvmSettingOverview(
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
         val useThreeColumns = maxWidth >= JvmSettingOverviewGridMinWidth
+        val contentWidth = minOf(maxWidth, JvmSettingOverviewContentMaxWidth)
         val tileWidth = if (useThreeColumns) {
-            (maxWidth - gap * 2) / 3f
+            (contentWidth - gap * 2) / 3f
         } else {
             maxWidth
         }
 
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(gap),
+            horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(gap),
         ) {
             JvmSettingOverviewTile(
@@ -852,19 +857,19 @@ private fun JvmSettingActionGrid(
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
         val columnCount = when {
-            maxWidth >= JvmSettingActionGridThreeColumnMinWidth -> 3
-            maxWidth >= JvmSettingActionGridMinWidth -> 2
+            maxWidth >= JvmSettingActionCardWideWidth * 3f + gap * 2f -> 3
+            maxWidth >= JvmSettingActionCardCompactWidth * 2f + gap -> 2
             else -> 1
         }
-        val cardWidth = if (columnCount == 1) {
-            maxWidth
-        } else {
-            (maxWidth - gap * (columnCount - 1).toFloat()) / columnCount.toFloat()
+        val cardWidth = when (columnCount) {
+            3 -> JvmSettingActionCardWideWidth
+            2 -> JvmSettingActionCardCompactWidth
+            else -> maxWidth
         }
 
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(gap),
+            horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(gap),
         ) {
             JvmSettingActionCard(
