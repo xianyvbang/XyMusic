@@ -80,11 +80,11 @@ import xymusic_kmp.composeapp.generated.resources.settings_24px
 /** 通用设置入口区域的最小宽度，低于该宽度时退化为单列卡片。 */
 private val JvmSettingActionGridMinWidth = 320.dp
 
-/** 通用入口卡片在右侧栏双列场景下使用的紧凑宽度。 */
-private val JvmSettingActionCardCompactWidth = 154.dp
+/** 通用入口卡片在右侧栏双列场景下使用的最小紧凑宽度。 */
+private val JvmSettingActionCardCompactWidth = 160.dp
 
 /** 通用入口卡片在宽屏三列场景下使用的宽度。 */
-private val JvmSettingActionCardWideWidth = 168.dp
+private val JvmSettingActionCardWideWidth = 184.dp
 
 /** 设置页统一图标容器尺寸。 */
 private val JvmSettingIconSize = 32.dp
@@ -555,16 +555,16 @@ internal fun JvmSettingActionGrid(
             // 极窄窗口保留单列，优先保证文字和点击区域完整。
             else -> 1
         }
-        // 宽屏使用固定紧凑卡片宽度，窄屏则铺满一行保证可点击区域。
+        // 两列时平分可用宽度，避免通用入口在右侧栏里显得过窄。
         val cardWidth = when (columnCount) {
             3 -> JvmSettingActionCardWideWidth
-            2 -> JvmSettingActionCardCompactWidth
+            2 -> (maxWidth - gap) / 2f
             else -> maxWidth
         }
 
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            // 固定卡片宽度后居中排列，避免最后一行靠左显得松散。
+            // 卡片宽度确定后居中排列，避免最后一行靠左显得松散。
             horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(gap),
         ) {
