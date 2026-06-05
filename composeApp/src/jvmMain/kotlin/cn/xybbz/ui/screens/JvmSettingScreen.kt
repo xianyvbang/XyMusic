@@ -103,8 +103,8 @@ private val JvmSettingContentMaxWidth = 1080.dp
 private val JvmSettingOverviewGridMinWidth = 760.dp
 // 主设置区从单列切换为左右两栏的最小宽度。
 private val JvmSettingLayoutGridMinWidth = 860.dp
-// 主设置区左右两栏的紧凑宽度上限，用来避免 item 横向过宽。
-private val JvmSettingMainContentMaxWidth = 960.dp
+// 主设置区左右两栏与页面主内容保持同宽，整体加宽后再分配左右空间。
+private val JvmSettingMainContentMaxWidth = 1080.dp
 
 /**
  * 设置页面
@@ -347,7 +347,7 @@ private fun JvmSettingMainLayout(
         val gap = XyTheme.dimens.outerHorizontalPadding
         // 可用宽度足够时才允许左右双栏，否则两个区域都按整行宽度排布。
         val useTwoColumns = maxWidth >= JvmSettingLayoutGridMinWidth
-        // 双栏整体不铺满所有可用空间，让每个设置分区保持更紧凑的阅读宽度。
+        // 双栏整体跟随页面主内容宽度，确保右栏加宽时不会挤压左栏。
         val layoutWidth = minOf(maxWidth, JvmSettingMainContentMaxWidth)
         val contentWidth = if (useTwoColumns) {
             // 双栏时需要预留两栏之间的间距，否则两栏总宽会超过 FlowRow 一行容量。
@@ -355,9 +355,9 @@ private fun JvmSettingMainLayout(
         } else {
             layoutWidth
         }
-        // 左右栏接近等宽，给连接与通用入口留出更舒展的空间。
-        val leftWeight = 1.20f
-        val rightWeight = 1.20f
+        // 左栏继续保持主栏层级，右栏在整体加宽后获得更舒展的空间。
+        val leftWeight = 1.30f
+        val rightWeight = 1.10f
         // 左栏承载播放、下载等高频设置，双栏时按更大比例分配宽度。
         val leftWidth = if (useTwoColumns) {
             contentWidth * (leftWeight / (leftWeight + rightWeight))
