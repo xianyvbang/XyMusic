@@ -282,7 +282,7 @@ private fun JvmLocalDownloadHeader(
     ) {
         XyTextLarge(
             text = stringResource(Res.string.local_and_download),
-            color = desktopColors.textPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.headlineMedium.copy(fontSize = 30.sp),
         )
@@ -346,7 +346,7 @@ private fun JvmLocalDownloadTabButton(
     ) {
         Text(
             text = label,
-            color = if (selected) desktopColors.theme else desktopColors.textPrimary,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
             maxLines = 1,
         )
@@ -356,7 +356,7 @@ private fun JvmLocalDownloadTabButton(
                 .width(26.dp)
                 .height(3.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(if (selected) desktopColors.theme else Color.Transparent),
+                .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent),
         )
     }
 }
@@ -371,7 +371,7 @@ private fun JvmDownloadToolbarButton(
         modifier = Modifier
             .height(JvmDownloadToolbarButtonHeight)
             .clip(RoundedCornerShape(JvmDownloadToolbarButtonHeight / 2))
-            .background(desktopColors.bgHover.copy(alpha = 0.86f))
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.86f))
             .jvmHoverDebounceClickable(onClick = onClick)
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -380,12 +380,12 @@ private fun JvmDownloadToolbarButton(
         Icon(
             painter = painterResource(icon),
             contentDescription = text,
-            tint = desktopColors.textPrimary,
+            tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(18.dp),
         )
         Text(
             text = text,
-            color = desktopColors.textPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
             maxLines = 1,
         )
@@ -404,17 +404,17 @@ private fun JvmDownloadTableHeader() {
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            JvmDownloadTableCell("歌名/歌手", JvmDownloadSongColumnWidth, desktopColors.textSecondary)
+            JvmDownloadTableCell("歌名/歌手", JvmDownloadSongColumnWidth, MaterialTheme.colorScheme.onSurfaceVariant)
             JvmDownloadTableSpacer(JvmDownloadActionsColumnWidth)
-            JvmDownloadTableCell("进度", JvmDownloadProgressColumnWidth, desktopColors.textSecondary)
+            JvmDownloadTableCell("进度", JvmDownloadProgressColumnWidth, MaterialTheme.colorScheme.onSurfaceVariant)
             JvmDownloadTableCell(
                 "大小",
                 JvmDownloadSizeColumnWidth,
-                desktopColors.textSecondary,
+                MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.End,
             )
         }
-        HorizontalDivider(color = desktopColors.divider.copy(alpha = 0.45f))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
     }
 }
 
@@ -427,7 +427,7 @@ private fun JvmDownloadTableRow(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
-    val rowBackgroundColor = desktopColors.bgHover.copy(alpha = if (hovered) 0.78f else 0.54f)
+    val rowBackgroundColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = if (hovered) 0.78f else 0.54f)
 
     Row(
         modifier = Modifier
@@ -462,7 +462,7 @@ private fun JvmDownloadTableRow(
         JvmDownloadTableCell(
             text = jvmDownloadSizeText(task),
             width = JvmDownloadSizeColumnWidth,
-            color = desktopColors.textSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.End,
         )
     }
@@ -492,7 +492,7 @@ private fun JvmDownloadTitleCell(task: XyDownload) {
         ) {
             Text(
                 text = title,
-                color = desktopColors.textPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -502,7 +502,7 @@ private fun JvmDownloadTitleCell(task: XyDownload) {
                 text = artistText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = desktopColors.textSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
             )
         }
@@ -520,8 +520,8 @@ private fun JvmDownloadCover(coverUrl: String?) {
             .background(
                 Brush.linearGradient(
                     listOf(
-                        desktopColors.theme.copy(alpha = 0.75f),
-                        desktopColors.bgHover,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.75f),
+                        MaterialTheme.colorScheme.surfaceContainerHighest,
                     )
                 )
             ),
@@ -531,7 +531,7 @@ private fun JvmDownloadCover(coverUrl: String?) {
             Icon(
                 painter = painterResource(Res.drawable.music_note_24px),
                 contentDescription = null,
-                tint = desktopColors.textPrimary,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(20.dp),
             )
         } else {
@@ -559,8 +559,8 @@ private fun JvmDownloadProgressCell(task: XyDownload) {
                 .fillMaxWidth()
                 .height(4.dp),
             progress = { progress },
-            color = desktopColors.theme,
-            trackColor = desktopColors.bgHover.copy(alpha = 0.72f),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.72f),
             drawStopIndicator = {
                 drawStopIndicator(
                     drawScope = this,
@@ -641,7 +641,7 @@ private fun JvmDownloadActionButton(
             painter = painterResource(icon),
             contentDescription = contentDescription,
             modifier = Modifier.size(JvmDownloadActionIconSize),
-            tint = desktopColors.textSecondary,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -694,7 +694,7 @@ private fun jvmDownloadStatusColor(status: DownloadStatus): Color {
         DownloadStatus.DOWNLOADING -> MaterialTheme.colorScheme.primary
         DownloadStatus.FAILED -> MaterialTheme.colorScheme.error
         DownloadStatus.COMPLETED -> MaterialTheme.colorScheme.tertiary
-        else -> desktopColors.textSecondary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 }
 

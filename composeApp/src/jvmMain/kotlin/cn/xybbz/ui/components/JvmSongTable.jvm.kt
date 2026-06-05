@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.style.TextAlign
 import androidx.paging.compose.LazyPagingItems
@@ -13,7 +14,6 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.ui.screens.desktopColors
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
 import kotlinx.coroutines.flow.Flow
@@ -163,7 +163,7 @@ internal fun SongTableHeader(
                 vertical = XyTheme.dimens.outerVerticalPadding
             )
         ) {
-            SongTableCell("标题", SongTableDefaults.titleWidth, desktopColors.textSecondary)
+            SongTableCell("标题", SongTableDefaults.titleWidth, MaterialTheme.colorScheme.onSurfaceVariant)
             if (columns.showFavoriteColumn) {
                 SongTableSpacer(SongTableDefaults.favoriteWidth)
             }
@@ -171,16 +171,16 @@ internal fun SongTableHeader(
                 SongTableSpacer(SongTableDefaults.actionsWidth)
             }
             if (columns.showAlbumColumn) {
-                SongTableCell("专辑", SongTableDefaults.albumWidth, desktopColors.textSecondary)
+                SongTableCell("专辑", SongTableDefaults.albumWidth, MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (columns.showMetaColumn) {
-                SongTableCell("添加时间", SongTableDefaults.metaWidth, desktopColors.textSecondary)
+                SongTableCell("添加时间", SongTableDefaults.metaWidth, MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (columns.showDurationColumn) {
                 SongTableCell(
                     "时长",
                     SongTableDefaults.durationWidth,
-                    desktopColors.textSecondary,
+                    MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.End
                 )
             }
@@ -188,6 +188,6 @@ internal fun SongTableHeader(
                 SongTableSpacer(SongTableDefaults.selectionWidth)
             }
         }
-        HorizontalDivider(color = desktopColors.divider)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
 }

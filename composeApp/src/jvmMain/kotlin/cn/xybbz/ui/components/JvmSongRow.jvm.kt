@@ -50,7 +50,6 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
-import cn.xybbz.ui.screens.desktopColors
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.XyImage
@@ -172,7 +171,7 @@ internal fun SongRow(
         musicId = music.itemId,
         currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
     )
-    val rowBackgroundColor = if (rowIfPlay) desktopColors.bgHover else Color.Transparent
+    val rowBackgroundColor = if (rowIfPlay) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent
     val menuItems = rememberSongRowContextMenuItems(
         music = music,
         onPlay = onClick,
@@ -230,7 +229,7 @@ internal fun SongRow(
                 SongTableCell(
                     text = albumText,
                     width = SongTableDefaults.albumWidth,
-                    color = desktopColors.textSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     onClick = onOpenAlbum,
                 )
             }
@@ -238,14 +237,14 @@ internal fun SongRow(
                 SongTableCell(
                     text = metaText,
                     width = SongTableDefaults.metaWidth,
-                    color = desktopColors.textSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             if (columns.showDurationColumn) {
                 SongTableCell(
                     text = durationText,
                     width = SongTableDefaults.durationWidth,
-                    color = desktopColors.textSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.End
                 )
             }
@@ -432,7 +431,7 @@ private fun SongContextMenuIcon(iconRes: DrawableResource) {
         painter = painterResource(iconRes),
         contentDescription = null,
         modifier = Modifier.size(20.dp),
-        tint = desktopColors.textSecondary,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
@@ -464,7 +463,7 @@ private fun SongTitleCell(
         Column(verticalArrangement = Arrangement.Center) {
             XyText(
                 text = music.name,
-                color = if (ifPlay) desktopColors.theme else desktopColors.textPrimary,
+                color = if (ifPlay) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -499,7 +498,7 @@ private fun SongFavoriteCell(
             onClick = onClick,
             iconModifier = Modifier.size(SongTableDefaults.actionIconSize),
             favoriteTint = songFavoriteTint,
-            normalTint = desktopColors.textSecondary,
+            normalTint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -595,7 +594,7 @@ private fun HoverActionIcon(
             painter = painterResource(iconRes),
             contentDescription = null,
             modifier = Modifier.size(SongTableDefaults.actionIconSize),
-            tint = if (enabled) desktopColors.textSecondary else desktopColors.textSecondary.copy(
+            tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(
                 alpha = 0.38f
             ),
         )
@@ -623,7 +622,7 @@ private fun SongCover(
             Icon(
                 painter = painterResource(Res.drawable.music_note_24px),
                 contentDescription = null,
-                tint = desktopColors.textPrimary,
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         } else {
             XyImage(
