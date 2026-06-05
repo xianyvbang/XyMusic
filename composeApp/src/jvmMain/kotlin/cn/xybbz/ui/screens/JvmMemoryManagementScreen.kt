@@ -60,6 +60,8 @@ import androidx.compose.ui.unit.sp
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.Log
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.JvmSettingActionEntry
+import cn.xybbz.ui.components.JvmSettingActionGrid
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
@@ -770,6 +772,44 @@ private fun JvmMemoryQuickCleanSection(
     val musicCache = storageItems.getOrNull(0)
     val temporaryCache = storageItems.getOrNull(1)
     val database = storageItems.getOrNull(2)
+    // 快速清理复用设置页“通用”入口卡片，保证高度、宽度计算和 hover 动效完全一致。
+    val quickCleanEntries = listOf(
+        JvmSettingActionEntry(
+            icon = Res.drawable.delete_24px,
+            kicker = "安全",
+            title = "${clearTitle}${musicCache?.title.orEmpty()}",
+            description = musicCache.clearDescription("释放歌曲缓存，后续播放时可重新缓存。"),
+            enabled = musicCache.hasStorage(),
+            color = MaterialTheme.colorScheme.primary,
+            onClick = onClearMusicCache,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.download_24px,
+            kicker = "安全",
+            title = "${clearTitle}${temporaryCache?.title.orEmpty()}",
+            description = temporaryCache.clearDescription("释放播放临时文件，不影响核心应用数据。"),
+            enabled = temporaryCache.hasStorage(),
+            color = MaterialTheme.colorScheme.tertiary,
+            onClick = onClearTemporaryCache,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.delete_24px,
+            kicker = "确认",
+            title = "${clearTitle}${database?.title.orEmpty()}",
+            description = database.clearDescription("重置本地数据库数据，执行前会再次确认。"),
+            enabled = database.hasStorage(),
+            color = MaterialTheme.colorScheme.error,
+            onClick = onClearDatabase,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.folder_managed_24px,
+            kicker = "位置",
+            title = "调整缓存路径",
+            description = "选择歌曲缓存目录，适合把缓存移动到空间更充足的磁盘。",
+            color = MaterialTheme.colorScheme.secondary,
+            onClick = onOpenPath,
+        ),
+    )
 
     JvmSettingSection(
         title = "快速清理",
@@ -777,59 +817,7 @@ private fun JvmMemoryQuickCleanSection(
         badge = clearTitle,
         contentContainerEnabled = false,
     ) {
-        JvmSettingFlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-        ) {
-            JvmMemoryActionCard(
-                modifier = Modifier
-                    .widthIn(min = 176.dp)
-                    .weight(1f),
-                icon = Res.drawable.delete_24px,
-                color = MaterialTheme.colorScheme.primary,
-                kicker = "安全",
-                title = "${clearTitle}${musicCache?.title.orEmpty()}",
-                description = musicCache.clearDescription("释放歌曲缓存，后续播放时可重新缓存。"),
-                enabled = musicCache.hasStorage(),
-                onClick = onClearMusicCache,
-            )
-            JvmMemoryActionCard(
-                modifier = Modifier
-                    .widthIn(min = 176.dp)
-                    .weight(1f),
-                icon = Res.drawable.download_24px,
-                color = MaterialTheme.colorScheme.tertiary,
-                kicker = "安全",
-                title = "${clearTitle}${temporaryCache?.title.orEmpty()}",
-                description = temporaryCache.clearDescription("释放播放临时文件，不影响核心应用数据。"),
-                enabled = temporaryCache.hasStorage(),
-                onClick = onClearTemporaryCache,
-            )
-            JvmMemoryActionCard(
-                modifier = Modifier
-                    .widthIn(min = 176.dp)
-                    .weight(1f),
-                icon = Res.drawable.delete_24px,
-                color = MaterialTheme.colorScheme.error,
-                kicker = "确认",
-                title = "${clearTitle}${database?.title.orEmpty()}",
-                description = database.clearDescription("重置本地数据库数据，执行前会再次确认。"),
-                enabled = database.hasStorage(),
-                onClick = onClearDatabase,
-            )
-            JvmMemoryActionCard(
-                modifier = Modifier
-                    .widthIn(min = 176.dp)
-                    .weight(1f),
-                icon = Res.drawable.folder_managed_24px,
-                color = MaterialTheme.colorScheme.secondary,
-                kicker = "位置",
-                title = "调整缓存路径",
-                description = "选择歌曲缓存目录，适合把缓存移动到空间更充足的磁盘。",
-                onClick = onOpenPath,
-            )
-        }
+        JvmSettingActionGrid(actionEntries = quickCleanEntries)
     }
 }
 
@@ -892,74 +880,6 @@ private fun JvmMemoryPathSection(
                 value = if (isDefaultCachePath) "已默认" else "恢复",
                 enabled = !isDefaultCachePath,
                 onClick = onRestoreDefaultPath,
-            )
-        }
-    }
-}
-
-/**
- * 快速清理动作卡片。
- *
- * @param modifier 外部布局修饰符。
- * @param icon 卡片图标资源。
- * @param color 卡片强调色。
- * @param kicker 卡片顶部短标签。
- * @param title 动作标题。
- * @param description 动作说明。
- * @param enabled 是否允许点击；禁用时会降低透明度且不绑定点击事件。
- * @param onClick 点击动作。
- */
-@Composable
-private fun JvmMemoryActionCard(
-    modifier: Modifier = Modifier,
-    icon: DrawableResource,
-    color: Color,
-    kicker: String,
-    title: String,
-    description: String,
-    enabled: Boolean = true,
-    onClick: () -> Unit,
-) {
-    // 禁用卡片只改变视觉和点击行为，不改变布局尺寸，避免卡片网格跳动。
-    val contentAlpha = if (enabled) 1f else 0.44f
-    val clickableModifier = if (enabled) {
-        Modifier.clickable(onClick = onClick)
-    } else {
-        Modifier
-    }
-
-    Surface(
-        modifier = modifier
-            .heightIn(min = 132.dp)
-            .then(clickableModifier),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 0.055f else 0.035f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 0.08f else 0.05f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(XyTheme.dimens.contentPadding),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-        ) {
-            JvmMemoryKicker(
-                icon = icon,
-                text = kicker,
-                color = color.copy(alpha = contentAlpha),
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
-                lineHeight = 17.sp
             )
         }
     }

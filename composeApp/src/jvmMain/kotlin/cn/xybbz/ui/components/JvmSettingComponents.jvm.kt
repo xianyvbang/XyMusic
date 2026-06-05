@@ -111,13 +111,17 @@ private val JvmSettingIconSize = 32.dp
  * @param kicker 卡片小标题。
  * @param title 卡片主标题。
  * @param description 卡片说明。
+ * @param enabled 是否允许点击和 hover 上移动效，禁用时保持占位尺寸不变。
+ * @param color 卡片强调色；为空时使用主题主色，设置页默认保持统一主色样式。
  * @param onClick 卡片点击事件。
  */
-private data class JvmSettingActionEntry(
+internal data class JvmSettingActionEntry(
     val icon: DrawableResource,
     val kicker: String,
     val title: String,
     val description: String,
+    val enabled: Boolean = true,
+    val color: Color? = null,
     val onClick: () -> Unit,
 )
 
@@ -647,26 +651,16 @@ private fun JvmSettingDownloadSegment(
 /**
  * 通用设置入口卡片网格。
  *
- * @param onInterfaceClick 界面设置入口点击事件。
- * @param onLanguageClick 语言设置入口点击事件。
- * @param onCustomApiClick 自定义资源入口点击事件。
- * @param onAboutClick 关于页面入口点击事件。
+ * @param actionEntries 需要渲染的入口卡片数据，调用方只负责提供文案、颜色和点击动作。
+ * @param modifier 外层布局修饰符，用来承接不同页面的宽度约束。
  */
 @Composable
 internal fun JvmSettingActionGrid(
-    onInterfaceClick: () -> Unit,
-    onLanguageClick: () -> Unit,
-    onCustomApiClick: () -> Unit,
-    onAboutClick: () -> Unit,
+    actionEntries: List<JvmSettingActionEntry>,
+    modifier: Modifier = Modifier,
 ) {
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        val actionEntries = jvmSettingActionEntries(
-            onInterfaceClick = onInterfaceClick,
-            onLanguageClick = onLanguageClick,
-            onCustomApiClick = onCustomApiClick,
-            onAboutClick = onAboutClick,
-        )
         // 两列布局至少满足卡片自身宽度，也不能低于设置页约定的通用入口最小宽度。
         val twoColumnMinWidth = maxOf(
             JvmSettingActionGridMinWidth,
@@ -701,6 +695,32 @@ internal fun JvmSettingActionGrid(
             }
         }
     }
+}
+
+/**
+ * 设置页通用入口卡片网格。
+ *
+ * @param onInterfaceClick 界面设置入口点击事件。
+ * @param onLanguageClick 语言设置入口点击事件。
+ * @param onCustomApiClick 自定义资源入口点击事件。
+ * @param onAboutClick 关于页面入口点击事件。
+ */
+@Composable
+internal fun JvmSettingActionGrid(
+    onInterfaceClick: () -> Unit,
+    onLanguageClick: () -> Unit,
+    onCustomApiClick: () -> Unit,
+    onAboutClick: () -> Unit,
+) {
+    // 设置页仍然只关心四个固定入口，通用网格负责真正的宽度计算和卡片渲染。
+    JvmSettingActionGrid(
+        actionEntries = jvmSettingActionEntries(
+            onInterfaceClick = onInterfaceClick,
+            onLanguageClick = onLanguageClick,
+            onCustomApiClick = onCustomApiClick,
+            onAboutClick = onAboutClick,
+        )
+    )
 }
 
 /**
@@ -843,9 +863,19 @@ private fun JvmSettingActionCard(
     val shape = RoundedCornerShape(XyTheme.dimens.corner)
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
+    val cardHovered = actionEntry.enabled && hovered
+    val contentAlpha = if (actionEntry.enabled) 1f else 0.44f
+    val clickableModifier = if (actionEntry.enabled) {
+        Modifier.jvmHoverDebounceClickable(
+            interactionSource = interactionSource,
+            onClick = actionEntry.onClick
+        )
+    } else {
+        Modifier
+    }
     // 复用专辑卡片的 hover 上移动效，只做视觉偏移，不改变 FlowRow 的布局尺寸。
     val liftOffset by animateDpAsState(
-        targetValue = if (hovered) JvmSettingActionCardLiftOffset else 0.dp,
+        targetValue = if (cardHovered) JvmSettingActionCardLiftOffset else 0.dp,
         animationSpec = tween(durationMillis = 160),
         label = "setting_action_card_lift_offset",
     )
@@ -856,10 +886,7 @@ private fun JvmSettingActionCard(
                 min = JvmSettingActionCardHeight,
                 max = JvmSettingActionCardHeight
             )
-            .jvmHoverDebounceClickable(
-                interactionSource = interactionSource,
-                onClick = actionEntry.onClick
-            )
+            .then(clickableModifier)
     ) {
         Column(
             modifier = Modifier
@@ -874,19 +901,24 @@ private fun JvmSettingActionCard(
                 .padding(XyTheme.dimens.outerHorizontalPadding),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
         ) {
-            JvmSettingKicker(icon = actionEntry.icon, text = actionEntry.kicker)
+            JvmSettingKicker(
+                icon = actionEntry.icon,
+                text = actionEntry.kicker,
+                color = actionEntry.color,
+                contentAlpha = contentAlpha,
+            )
             Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
             Text(
                 text = actionEntry.title,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = actionEntry.description,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
                 lineHeight = 17.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -947,18 +979,31 @@ internal fun JvmSettingNote(text: String) {
  *
  * @param icon 小标题图标。
  * @param text 小标题文本。
+ * @param color 小标题图标强调色；为空时使用主题主色。
+ * @param contentAlpha 禁用态内容透明度，避免额外包裹透明层影响布局。
  */
 @Composable
-private fun JvmSettingKicker(icon: DrawableResource, text: String) {
+private fun JvmSettingKicker(
+    icon: DrawableResource,
+    text: String,
+    color: Color? = null,
+    contentAlpha: Float = 1f,
+) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        JvmSettingIcon(icon = icon, size = 24.dp, selected = true)
+        JvmSettingIcon(
+            icon = icon,
+            size = 24.dp,
+            selected = true,
+            color = color,
+            contentAlpha = contentAlpha,
+        )
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -971,21 +1016,28 @@ private fun JvmSettingKicker(icon: DrawableResource, text: String) {
  * @param icon 图标资源。
  * @param size 外层容器尺寸。
  * @param selected 是否使用主色强调样式。
+ * @param color 选中态强调色；为空时使用主题主色。
+ * @param contentAlpha 图标整体内容透明度，用于禁用态。
  */
 @Composable
 private fun JvmSettingIcon(
     icon: DrawableResource,
     size: Dp = JvmSettingIconSize,
     selected: Boolean = false,
+    color: Color? = null,
+    contentAlpha: Float = 1f,
 ) {
+    // 统一计算强调色，设置页不传色值时仍然沿用 Material 主题主色。
+    val accentColor = color ?: MaterialTheme.colorScheme.primary
+
     Box(
         modifier = Modifier
             .size(size)
             .background(
                 color = if (selected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                    accentColor.copy(alpha = 0.18f * contentAlpha)
                 } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f * contentAlpha)
                 },
                 shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
             )
@@ -993,9 +1045,9 @@ private fun JvmSettingIcon(
                 BorderStroke(
                     width = 1.dp,
                     color = if (selected) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.26f)
+                        accentColor.copy(alpha = 0.26f * contentAlpha)
                     } else {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f)
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f * contentAlpha)
                     }
                 ),
                 shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
@@ -1007,9 +1059,9 @@ private fun JvmSettingIcon(
             contentDescription = null,
             modifier = Modifier.size(size * 0.58f),
             tint = if (selected) {
-                MaterialTheme.colorScheme.primary
+                accentColor.copy(alpha = contentAlpha)
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha)
             }
         )
     }
