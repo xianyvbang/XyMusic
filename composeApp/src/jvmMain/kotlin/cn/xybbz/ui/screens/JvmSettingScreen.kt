@@ -43,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -323,6 +324,8 @@ fun JvmSettingScreen(
                                 title = "通用",
                                 subtitle = "界面、语言、自定义资源和应用信息。",
                                 badge = "偏好",
+                                contentContainerColor = Color.Transparent,
+                                contentContainerBorderColor = Color.Transparent,
                             ) {
                                 JvmSettingActionGrid(
                                     onInterfaceClick = {

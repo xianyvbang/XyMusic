@@ -154,6 +154,8 @@ internal fun JvmSettingOverviewTile(
  * @param title 分组标题。
  * @param subtitle 分组说明，用来解释该组设置的范围。
  * @param badge 分组右侧标签。
+ * @param contentContainerColor 分组内容区背景色，默认保留设置行的浅色容器。
+ * @param contentContainerBorderColor 分组内容区边框色，透明内容区可同步传透明避免出现嵌套边框。
  * @param content 分组内部的设置行内容。
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -162,6 +164,8 @@ internal fun JvmSettingSection(
     title: String,
     subtitle: String,
     badge: String,
+    contentContainerColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
+    contentContainerBorderColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(
@@ -211,9 +215,9 @@ internal fun JvmSettingSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f))
+                    .background(contentContainerColor)
                     .border(
-                        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)),
+                        BorderStroke(1.dp, contentContainerBorderColor),
                         RoundedCornerShape(XyTheme.dimens.corner)
                     )
             ) {
@@ -599,7 +603,7 @@ private fun JvmSettingActionCard(
         modifier = modifier
             .heightIn(min = 116.dp)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .border(
                 BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
                 shape
