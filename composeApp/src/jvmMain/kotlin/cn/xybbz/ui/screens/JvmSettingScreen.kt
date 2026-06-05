@@ -355,9 +355,9 @@ private fun JvmSettingMainLayout(
         } else {
             layoutWidth
         }
-        // 左栏仍保持主栏层级，右栏加宽以容纳连接与通用入口内容。
-        val leftWeight = 1.30f
-        val rightWeight = 1.10f
+        // 左右栏接近等宽，给连接与通用入口留出更舒展的空间。
+        val leftWeight = 1.20f
+        val rightWeight = 1.20f
         // 左栏承载播放、下载等高频设置，双栏时按更大比例分配宽度。
         val leftWidth = if (useTwoColumns) {
             contentWidth * (leftWeight / (leftWeight + rightWeight))
