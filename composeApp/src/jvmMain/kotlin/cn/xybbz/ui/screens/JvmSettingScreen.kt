@@ -137,8 +137,8 @@ fun JvmSettingScreen(
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
-                // 状态卡保持紧凑宽度，避免挤占标题说明的阅读空间。
-                modifier = Modifier.widthIn(min = 248.dp),
+                // 状态卡固定紧凑宽度，避免 FlowRow 按内部文本自然宽度把它挤到第二行。
+                modifier = Modifier.width(248.dp),
                 dataSourceLabel = dataSourceLabel,
                 selectedQuality = selectedQuality,
                 maxConcurrentDownloads = settings.maxConcurrentDownloads,

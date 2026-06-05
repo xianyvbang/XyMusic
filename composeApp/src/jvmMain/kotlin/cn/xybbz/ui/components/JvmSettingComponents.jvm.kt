@@ -346,7 +346,7 @@ internal fun JvmSettingPageHeader(
         val gap = XyTheme.dimens.contentPadding * 2
         // 设置首页需要和下方主体同宽，在线音乐品质页则沿用外层内容宽度。
         val headerWidth = contentMaxWidth?.let { maxWidth -> minOf(this.maxWidth, maxWidth) }
-        val flowModifier = if (headerWidth == null) {
+        val rowModifier = if (headerWidth == null) {
             Modifier.fillMaxWidth()
         } else {
             Modifier
@@ -354,16 +354,14 @@ internal fun JvmSettingPageHeader(
                 .align(Alignment.Center)
         }
 
-        JvmSettingFlowRow(
-            modifier = flowModifier,
+        Row(
+            modifier = rowModifier,
             horizontalArrangement = Arrangement.spacedBy(gap),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
-            itemVerticalAlignment = Alignment.Bottom
+            verticalAlignment = Alignment.Bottom
         ) {
             Column(
                 modifier = Modifier
-                    // 标题说明保留最小可读宽度，再吃掉同一行剩余空间。
-                    .widthIn(min = 320.dp)
+                    // 标题说明只吃状态卡之外的剩余空间，保证头部摘要始终在同一行。
                     .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
             ) {
