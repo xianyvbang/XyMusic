@@ -57,7 +57,8 @@ import cn.xybbz.router.LanguageConfig
 import cn.xybbz.router.MemoryManagement
 import cn.xybbz.router.ProxyConfig
 import cn.xybbz.router.StreamingQuality
-import cn.xybbz.ui.components.JvmSettingActionGrid
+import cn.xybbz.ui.components.JvmSettingActionEntry
+import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.components.JvmSettingDownloadRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingNavigationRow
@@ -75,6 +76,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.about
 import xymusic_kmp.composeapp.generated.resources.album_24px
 import xymusic_kmp.composeapp.generated.resources.album_playback_history
 import xymusic_kmp.composeapp.generated.resources.allow_simultaneous_playback
@@ -84,15 +86,20 @@ import xymusic_kmp.composeapp.generated.resources.cache_limit
 import xymusic_kmp.composeapp.generated.resources.cache_location
 import xymusic_kmp.composeapp.generated.resources.connection_management
 import xymusic_kmp.composeapp.generated.resources.copy_success
+import xymusic_kmp.composeapp.generated.resources.customize_lyric_settings
 import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.enabled_sync_play_progress
 import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
 import xymusic_kmp.composeapp.generated.resources.http_24px
+import xymusic_kmp.composeapp.generated.resources.info_24px
+import xymusic_kmp.composeapp.generated.resources.interface_settings
+import xymusic_kmp.composeapp.generated.resources.language
 import xymusic_kmp.composeapp.generated.resources.music_note_24px
 import xymusic_kmp.composeapp.generated.resources.online_music_quality
 import xymusic_kmp.composeapp.generated.resources.poxy_config
 import xymusic_kmp.composeapp.generated.resources.queue_music_24px
 import xymusic_kmp.composeapp.generated.resources.settings
+import xymusic_kmp.composeapp.generated.resources.settings_24px
 import xymusic_kmp.composeapp.generated.resources.signal_cellular_alt_24px
 import xymusic_kmp.composeapp.generated.resources.song_cache_location
 import xymusic_kmp.composeapp.generated.resources.storage_management
@@ -326,6 +333,74 @@ fun JvmSettingScreen(
             }
         )
     }
+}
+
+/**
+ * 设置页通用入口卡片网格。
+ *
+ * @param onInterfaceClick 界面设置入口点击事件。
+ * @param onLanguageClick 语言设置入口点击事件。
+ * @param onCustomApiClick 自定义资源入口点击事件。
+ * @param onAboutClick 关于页面入口点击事件。
+ */
+@Composable
+private fun JvmSettingActionGrid(
+    onInterfaceClick: () -> Unit,
+    onLanguageClick: () -> Unit,
+    onCustomApiClick: () -> Unit,
+    onAboutClick: () -> Unit,
+) {
+    // 设置页只关心四个固定入口，通用网格负责真正的宽度计算和卡片渲染。
+    JvmSettingActionEntryGrid(
+        actionEntries = jvmSettingActionEntries(
+            onInterfaceClick = onInterfaceClick,
+            onLanguageClick = onLanguageClick,
+            onCustomApiClick = onCustomApiClick,
+            onAboutClick = onAboutClick,
+        )
+    )
+}
+
+/**
+ * 组装设置页右栏“通用”分组中的四个入口卡片。
+ */
+@Composable
+private fun jvmSettingActionEntries(
+    onInterfaceClick: () -> Unit,
+    onLanguageClick: () -> Unit,
+    onCustomApiClick: () -> Unit,
+    onAboutClick: () -> Unit,
+): List<JvmSettingActionEntry> {
+    return listOf(
+        JvmSettingActionEntry(
+            icon = Res.drawable.settings_24px,
+            kicker = "显示",
+            title = stringResource(Res.string.interface_settings),
+            description = "主题、背景图片与桌面显示偏好。",
+            onClick = onInterfaceClick,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.info_24px,
+            kicker = "本地化",
+            title = stringResource(Res.string.language),
+            description = "切换跟随系统或固定语言。",
+            onClick = onLanguageClick,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.music_note_24px,
+            kicker = "资源",
+            title = stringResource(Res.string.customize_lyric_settings),
+            description = "自定义歌词与封面服务地址。",
+            onClick = onCustomApiClick,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.info_24px,
+            kicker = "应用",
+            title = stringResource(Res.string.about),
+            description = "版本信息、检查更新与项目说明。",
+            onClick = onAboutClick,
+        ),
+    )
 }
 
 @Composable

@@ -75,16 +75,9 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.about
 import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
-import xymusic_kmp.composeapp.generated.resources.customize_lyric_settings
 import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.download_max_list
-import xymusic_kmp.composeapp.generated.resources.info_24px
-import xymusic_kmp.composeapp.generated.resources.interface_settings
-import xymusic_kmp.composeapp.generated.resources.language
-import xymusic_kmp.composeapp.generated.resources.music_note_24px
-import xymusic_kmp.composeapp.generated.resources.settings_24px
 
 /** JVM 设置类页面主体最大宽度，设置页、关于页和存储管理页共用。 */
 internal val JvmSettingPageContentMaxWidth = 1080.dp
@@ -400,6 +393,7 @@ internal fun JvmSettingPageHeader(
  * @param kicker 概览项的小标题，用来提示信息类型。
  * @param value 概览项的主状态文案。
  * @param sub 概览项的辅助说明。
+ * @param subMaxLines 辅助说明最多展示的行数。
  * @param onClick 可选点击事件；为空时卡片只展示信息。
  */
 @Composable
@@ -409,6 +403,7 @@ internal fun JvmSettingOverviewTile(
     kicker: String,
     value: String,
     sub: String,
+    subMaxLines: Int = 1,
     onClick: (() -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(XyTheme.dimens.corner)
@@ -447,7 +442,7 @@ internal fun JvmSettingOverviewTile(
                 text = sub,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
+                maxLines = subMaxLines,
                 overflow = TextOverflow.Ellipsis
             )
         }
@@ -780,74 +775,6 @@ internal fun JvmSettingActionGrid(
             }
         }
     }
-}
-
-/**
- * 设置页通用入口卡片网格。
- *
- * @param onInterfaceClick 界面设置入口点击事件。
- * @param onLanguageClick 语言设置入口点击事件。
- * @param onCustomApiClick 自定义资源入口点击事件。
- * @param onAboutClick 关于页面入口点击事件。
- */
-@Composable
-internal fun JvmSettingActionGrid(
-    onInterfaceClick: () -> Unit,
-    onLanguageClick: () -> Unit,
-    onCustomApiClick: () -> Unit,
-    onAboutClick: () -> Unit,
-) {
-    // 设置页仍然只关心四个固定入口，通用网格负责真正的宽度计算和卡片渲染。
-    JvmSettingActionGrid(
-        actionEntries = jvmSettingActionEntries(
-            onInterfaceClick = onInterfaceClick,
-            onLanguageClick = onLanguageClick,
-            onCustomApiClick = onCustomApiClick,
-            onAboutClick = onAboutClick,
-        )
-    )
-}
-
-/**
- * 组装通用入口的四个卡片配置，避免每个卡片在网格里重复声明文案和点击逻辑。
- */
-@Composable
-private fun jvmSettingActionEntries(
-    onInterfaceClick: () -> Unit,
-    onLanguageClick: () -> Unit,
-    onCustomApiClick: () -> Unit,
-    onAboutClick: () -> Unit,
-): List<JvmSettingActionEntry> {
-    return listOf(
-        JvmSettingActionEntry(
-            icon = Res.drawable.settings_24px,
-            kicker = "显示",
-            title = stringResource(Res.string.interface_settings),
-            description = "主题、背景图片与桌面显示偏好。",
-            onClick = onInterfaceClick,
-        ),
-        JvmSettingActionEntry(
-            icon = Res.drawable.info_24px,
-            kicker = "本地化",
-            title = stringResource(Res.string.language),
-            description = "切换跟随系统或固定语言。",
-            onClick = onLanguageClick,
-        ),
-        JvmSettingActionEntry(
-            icon = Res.drawable.music_note_24px,
-            kicker = "资源",
-            title = stringResource(Res.string.customize_lyric_settings),
-            description = "自定义歌词与封面服务地址。",
-            onClick = onCustomApiClick,
-        ),
-        JvmSettingActionEntry(
-            icon = Res.drawable.info_24px,
-            kicker = "应用",
-            title = stringResource(Res.string.about),
-            description = "版本信息、检查更新与项目说明。",
-            onClick = onAboutClick,
-        ),
-    )
 }
 
 /**
