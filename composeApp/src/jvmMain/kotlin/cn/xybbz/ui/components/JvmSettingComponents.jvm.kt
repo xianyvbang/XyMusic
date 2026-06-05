@@ -82,10 +82,10 @@ import xymusic_kmp.composeapp.generated.resources.settings_24px
 private val JvmSettingActionGridMinWidth = 320.dp
 
 /** 通用入口卡片在右侧栏双列场景下使用的最小紧凑宽度。 */
-private val JvmSettingActionCardCompactWidth = 160.dp
+private val JvmSettingActionCardCompactWidth = 154.dp
 
-/** 通用入口卡片在宽屏三列场景下使用的宽度。 */
-private val JvmSettingActionCardWideWidth = 184.dp
+/** 通用入口卡片在双列场景下允许的最大宽度，避免右栏加宽后卡片被拉得过宽。 */
+private val JvmSettingActionCardMaxWidth = 196.dp
 
 /** 设置页统一图标容器尺寸。 */
 private val JvmSettingIconSize = 32.dp
@@ -578,19 +578,18 @@ internal fun JvmSettingActionGrid(
             JvmSettingActionCardCompactWidth * 2f + gap
         )
         // 根据紧凑卡片宽度判断能放几列，避免卡片被强制拉伸。
-        val columnCount = when {
-            // 宽度足够时放三列，适合主体区域变单栏后的横向空间。
-            maxWidth >= JvmSettingActionCardWideWidth * 3f + gap * 2f -> 3
-            // 右侧栏常规宽度下放两列，对应预览稿的 2x2 卡片布局。
-            maxWidth >= twoColumnMinWidth -> 2
+        val columnCount = if (maxWidth >= twoColumnMinWidth) {
+            // 通用入口固定最多两列，四个入口在宽度足够时保持 2x2 排布。
+            2
+        } else {
             // 极窄窗口保留单列，优先保证文字和点击区域完整。
-            else -> 1
+            1
         }
-        // 两列时平分可用宽度，避免通用入口在右侧栏里显得过窄。
-        val cardWidth = when (columnCount) {
-            3 -> JvmSettingActionCardWideWidth
-            2 -> (maxWidth - gap) / 2f
-            else -> maxWidth
+        val cardWidth = if (columnCount == 2) {
+            // 双列时随可用宽度收缩，并用上限避免右栏加宽后卡片过宽。
+            minOf((maxWidth - gap) / 2f, JvmSettingActionCardMaxWidth)
+        } else {
+            maxWidth
         }
 
         JvmSettingFlowRow(
