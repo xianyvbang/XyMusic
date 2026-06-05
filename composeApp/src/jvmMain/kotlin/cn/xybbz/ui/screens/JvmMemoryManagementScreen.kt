@@ -38,7 +38,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -68,8 +67,6 @@ import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberJvmFileKitDialogSettings
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.toExistingPlatformDirectoryOrNull
@@ -120,9 +117,6 @@ import kotlin.math.roundToInt
  *
  * @param memoryManagementViewModel 存储管理 ViewModel，提供存储占用、缓存路径和清理操作。
  */
-@OptIn(
-    ExperimentalMaterial3Api::class,
-)
 @Composable
 fun JvmMemoryManagementScreen(
     memoryManagementViewModel: MemoryManagementViewModel = koinViewModel<MemoryManagementViewModel>()
@@ -249,14 +243,7 @@ fun JvmMemoryManagementScreen(
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3,
-        ),
-        topBar = {
-            TopAppBarComponent(
-                title = {
-                    TopAppBarTitle(title = storageManagementTitle)
-                }
-            )
-        }
+        )
     ) {
         JvmMemoryContent(
             title = storageManagementTitle,

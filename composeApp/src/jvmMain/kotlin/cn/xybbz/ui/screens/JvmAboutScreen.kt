@@ -34,8 +34,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -62,8 +60,6 @@ import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.AboutViewModel
@@ -72,7 +68,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.about
 import xymusic_kmp.composeapp.generated.resources.add_link_24px
 import xymusic_kmp.composeapp.generated.resources.app_icon_info
 import xymusic_kmp.composeapp.generated.resources.app_name
@@ -98,10 +93,6 @@ private val JvmAboutOverviewTileMinWidth = 140.dp
  *
  * @param aboutViewModel 关于页 ViewModel，提供平台版本信息。
  */
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3ExpressiveApi::class,
-)
 @Composable
 fun JvmAboutScreen(
     aboutViewModel: AboutViewModel = koinViewModel<AboutViewModel>()
@@ -113,7 +104,6 @@ fun JvmAboutScreen(
 
     // 资源文案集中读取，下面的内容编排只负责展示和事件转发。
     val appName = stringResource(Res.string.app_name)
-    val aboutTitle = stringResource(Res.string.about)
     val currentVersionTitle = stringResource(Res.string.current_version)
     val problemFeedbackTitle = stringResource(Res.string.problem_feedback)
     val officialWebsiteTitle = stringResource(Res.string.official_website)
@@ -133,14 +123,7 @@ fun JvmAboutScreen(
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3
-        ),
-        topBar = {
-            TopAppBarComponent(
-                title = {
-                    TopAppBarTitle(title = aboutTitle)
-                }
-            )
-        }
+        )
     ) {
         JvmAboutContent(
             appName = appName,
