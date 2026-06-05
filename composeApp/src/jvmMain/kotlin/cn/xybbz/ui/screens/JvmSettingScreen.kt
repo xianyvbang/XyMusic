@@ -23,7 +23,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -64,10 +63,12 @@ import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingPageHeader
+import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingPathRow
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingSwitchRow
+import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
@@ -97,14 +98,8 @@ import xymusic_kmp.composeapp.generated.resources.song_cache_location
 import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.volume_up_24px
 
-// 设置页整体内容的最大宽度，避免桌面宽屏上阅读线过长。
-private val JvmSettingContentMaxWidth = 1080.dp
 // 概览区从单列切换为三列卡片的最小宽度。
 private val JvmSettingOverviewGridMinWidth = 760.dp
-// 主设置区从单列切换为左右两栏的最小宽度。
-private val JvmSettingLayoutGridMinWidth = 860.dp
-// 主设置区左右两栏与页面主内容保持同宽，整体加宽后再分配左右空间。
-private val JvmSettingMainContentMaxWidth = 1080.dp
 
 /**
  * 设置页面
@@ -128,11 +123,11 @@ fun JvmSettingScreen(
         .audioBitRateStr
     val dataSourceLabel = settings.dataSourceType?.title ?: "未连接"
 
-    JvmSettingPageScaffold(contentMaxWidth = JvmSettingContentMaxWidth) {
+    JvmSettingPageScaffold(contentMaxWidth = JvmSettingPageContentMaxWidth) {
         JvmSettingPageHeader(
             title = stringResource(Res.string.settings),
             description = "把桌面端常用配置集中为更可扫读的设置中心：播放缓存、连接管理、下载队列、界面语言和扩展能力都保留当前入口。",
-            contentMaxWidth = JvmSettingMainContentMaxWidth,
+            contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
                 // 状态卡保持紧凑宽度，避免挤占标题说明的阅读空间。
@@ -151,7 +146,7 @@ fun JvmSettingScreen(
             },
         )
 
-        JvmSettingMainLayout(
+        JvmSettingTwoPaneContent(
             leftContent = {
                 JvmSettingSection(
                     title = "播放与缓存",
@@ -333,80 +328,6 @@ fun JvmSettingScreen(
     }
 }
 
-/**
- * 设置主体的响应式布局。
- *
- * 宽屏时保持预览稿的左侧主栏 + 右侧侧栏结构，窄屏时交给 FlowRow 自动换成单列。
- */
-@Composable
-private fun JvmSettingMainLayout(
-    leftContent: @Composable ColumnScope.() -> Unit,
-    rightContent: @Composable ColumnScope.() -> Unit,
-) {
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val gap = XyTheme.dimens.outerHorizontalPadding
-        // 可用宽度足够时才允许左右双栏，否则两个区域都按整行宽度排布。
-        val useTwoColumns = maxWidth >= JvmSettingLayoutGridMinWidth
-        // 双栏整体跟随页面主内容宽度，确保右栏加宽时不会挤压左栏。
-        val layoutWidth = minOf(maxWidth, JvmSettingMainContentMaxWidth)
-        val contentWidth = if (useTwoColumns) {
-            // 双栏时需要预留两栏之间的间距，否则两栏总宽会超过 FlowRow 一行容量。
-            layoutWidth - gap
-        } else {
-            layoutWidth
-        }
-        // 左栏继续保持主栏层级，右栏在整体加宽后获得更舒展的空间。
-        val leftWeight = 1.30f
-        val rightWeight = 1.10f
-        // 左栏承载播放、下载等高频设置，双栏时按更大比例分配宽度。
-        val leftWidth = if (useTwoColumns) {
-            contentWidth * (leftWeight / (leftWeight + rightWeight))
-        } else {
-            // 单列时让左侧内容独占整行，交由 FlowRow 放在右侧内容之前。
-            maxWidth
-        }
-        // 右栏承载连接、通用入口，宽度使用剩余空间保证两栏总宽精确。
-        val rightWidth = if (useTwoColumns) {
-            contentWidth - leftWidth
-        } else {
-            // 单列时右侧内容也独占整行，形成纵向阅读顺序。
-            maxWidth
-        }
-
-        JvmSettingFlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            // 子项宽度被收紧后居中排列，避免在宽屏上贴左显得失衡。
-            horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
-            itemVerticalAlignment = Alignment.Top,
-        ) {
-            JvmSettingStack(
-                modifier = Modifier.width(leftWidth),
-                content = leftContent
-            )
-            JvmSettingStack(
-                modifier = Modifier.width(rightWidth),
-                content = rightContent
-            )
-        }
-    }
-}
-
-/**
- * 主设置区中的纵向分组容器，用于承载左栏或右栏的多个 section。
- */
-@Composable
-private fun JvmSettingStack(
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
-        content = content
-    )
-}
-
 @Composable
 private fun JvmSettingStatusCard(
     modifier: Modifier = Modifier,
@@ -476,7 +397,7 @@ private fun JvmSettingOverview(
         // 三张概览卡只有在足够宽时才同排，避免卡片文字被挤压。
         val useThreeColumns = maxWidth >= JvmSettingOverviewGridMinWidth
         // 概览区和下方主体使用同一个宽度基准，保证三张 item 总宽与下面内容对齐。
-        val contentWidth = minOf(maxWidth, JvmSettingMainContentMaxWidth)
+        val contentWidth = minOf(maxWidth, JvmSettingPageContentMaxWidth)
         val tileWidth = if (useThreeColumns) {
             // 三列时扣除两个横向间距，再平均分配每张卡片宽度。
             (contentWidth - gap * 2) / 3f

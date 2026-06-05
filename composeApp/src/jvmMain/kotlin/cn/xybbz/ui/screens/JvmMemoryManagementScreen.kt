@@ -64,9 +64,10 @@ import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingPageHeader
+import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
-import cn.xybbz.ui.components.JvmSettingResponsiveRow
 import cn.xybbz.ui.components.JvmSettingSection
+import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberJvmFileKitDialogSettings
@@ -110,13 +111,6 @@ import xymusic_kmp.composeapp.generated.resources.warning
 import java.io.File
 import java.util.Locale
 import kotlin.math.roundToInt
-
-/**
- * JVM 存储管理页内容区域的最大宽度。
- *
- * 预览稿以桌面端居中内容为主，这里限制最大宽度，避免宽屏下卡片被拉得过散。
- */
-private val JvmMemoryContentMaxWidth = 1080.dp
 
 /**
  * JVM 桌面端存储管理页面。
@@ -251,7 +245,7 @@ fun JvmMemoryManagementScreen(
 
     JvmSettingPageScaffold(
         modifier = Modifier.fillMaxSize(),
-        contentMaxWidth = JvmMemoryContentMaxWidth,
+        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3,
@@ -328,7 +322,7 @@ private fun JvmMemoryContent(
 ) {
     Column(
         modifier = Modifier
-            .widthIn(max = JvmMemoryContentMaxWidth)
+            .widthIn(max = JvmSettingPageContentMaxWidth)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
     ) {
@@ -342,41 +336,33 @@ private fun JvmMemoryContent(
         // 四个概览卡片横向铺开，窄屏时由通用 FlowRow 自动换行。
         JvmMemoryOverview(storageItems = storageItems)
 
-        // 主体区域参考预览稿：左侧空间分布更宽，右侧放高频操作和路径信息。
-        JvmSettingResponsiveRow(
-            breakpoint = 900.dp,
-            leftWeight = 1.35f,
-            rightWeight = 0.85f,
-            left = {
+        // 主体区域统一采用设置页的左主栏 + 右侧栏比例，右侧快速清理获得同等宽度。
+        JvmSettingTwoPaneContent(
+            leftContent = {
                 JvmMemoryDistributionSection(
                     storageItems = storageItems,
                     totalBytes = totalBytes,
                     totalSizeText = totalSizeText,
                 )
             },
-            right = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
-                ) {
-                    JvmMemoryQuickCleanSection(
-                        storageItems = storageItems,
-                        clearTitle = clearTitle,
-                        onClearMusicCache = onClearMusicCache,
-                        onClearTemporaryCache = onClearTemporaryCache,
-                        onClearDatabase = onClearDatabase,
-                        onOpenPath = onOpenPath,
-                    )
-                    JvmMemoryPathSection(
-                        cachePath = cachePath,
-                        cachePathMode = cachePathMode,
-                        isDefaultCachePath = isDefaultCachePath,
-                        adjustTitle = adjustTitle,
-                        restoreDefaultTitle = restoreDefaultTitle,
-                        onOpenPath = onOpenPath,
-                        onRestoreDefaultPath = onRestoreDefaultPath,
-                    )
-                }
+            rightContent = {
+                JvmMemoryQuickCleanSection(
+                    storageItems = storageItems,
+                    clearTitle = clearTitle,
+                    onClearMusicCache = onClearMusicCache,
+                    onClearTemporaryCache = onClearTemporaryCache,
+                    onClearDatabase = onClearDatabase,
+                    onOpenPath = onOpenPath,
+                )
+                JvmMemoryPathSection(
+                    cachePath = cachePath,
+                    cachePathMode = cachePathMode,
+                    isDefaultCachePath = isDefaultCachePath,
+                    adjustTitle = adjustTitle,
+                    restoreDefaultTitle = restoreDefaultTitle,
+                    onOpenPath = onOpenPath,
+                    onRestoreDefaultPath = onRestoreDefaultPath,
+                )
             }
         )
     }

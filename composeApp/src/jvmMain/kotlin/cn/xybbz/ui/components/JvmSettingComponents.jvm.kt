@@ -86,6 +86,18 @@ import xymusic_kmp.composeapp.generated.resources.language
 import xymusic_kmp.composeapp.generated.resources.music_note_24px
 import xymusic_kmp.composeapp.generated.resources.settings_24px
 
+/** JVM 设置类页面主体最大宽度，设置页、关于页和存储管理页共用。 */
+internal val JvmSettingPageContentMaxWidth = 1080.dp
+
+/** JVM 设置类页面从单列切换为左右两栏的最小宽度。 */
+private val JvmSettingTwoPaneBreakpoint = 860.dp
+
+/** JVM 设置类页面宽屏时左侧主栏权重，以设置页主体布局为基准。 */
+private const val JvmSettingTwoPaneLeftWeight = 1.30f
+
+/** JVM 设置类页面宽屏时右侧侧栏权重，以设置页主体布局为基准。 */
+private const val JvmSettingTwoPaneRightWeight = 1.10f
+
 /** 通用设置入口区域的最小宽度，低于该宽度时退化为单列卡片。 */
 private val JvmSettingActionGridMinWidth = 320.dp
 
@@ -245,6 +257,79 @@ internal fun JvmSettingResponsiveRow(
             }
         }
     }
+}
+
+/**
+ * JVM 设置类页面的统一双栏内容布局。
+ *
+ * 宽屏时使用设置页的左主栏 + 右侧栏比例；窄屏时左右内容按上下顺序铺满整行。
+ *
+ * @param modifier 外层修饰符。
+ * @param contentMaxWidth 双栏内容最大宽度。
+ * @param breakpoint 小于该宽度时改为上下堆叠。
+ * @param leftContent 左侧主栏内容。
+ * @param rightContent 右侧侧栏内容。
+ */
+@Composable
+internal fun JvmSettingTwoPaneContent(
+    modifier: Modifier = Modifier,
+    contentMaxWidth: Dp = JvmSettingPageContentMaxWidth,
+    breakpoint: Dp = JvmSettingTwoPaneBreakpoint,
+    leftContent: @Composable ColumnScope.() -> Unit,
+    rightContent: @Composable ColumnScope.() -> Unit,
+) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val gap = XyTheme.dimens.outerHorizontalPadding
+        val useTwoColumns = maxWidth >= breakpoint
+        val layoutWidth = minOf(maxWidth, contentMaxWidth)
+        val totalWeight = JvmSettingTwoPaneLeftWeight + JvmSettingTwoPaneRightWeight
+        val contentWidth = if (useTwoColumns) {
+            layoutWidth - gap
+        } else {
+            layoutWidth
+        }
+        val leftWidth = if (useTwoColumns) {
+            contentWidth * (JvmSettingTwoPaneLeftWeight / totalWeight)
+        } else {
+            maxWidth
+        }
+        val rightWidth = if (useTwoColumns) {
+            contentWidth - leftWidth
+        } else {
+            maxWidth
+        }
+
+        JvmSettingFlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+            itemVerticalAlignment = Alignment.Top,
+        ) {
+            JvmSettingPaneStack(
+                modifier = Modifier.width(leftWidth),
+                content = leftContent
+            )
+            JvmSettingPaneStack(
+                modifier = Modifier.width(rightWidth),
+                content = rightContent
+            )
+        }
+    }
+}
+
+/**
+ * 统一双栏布局中的纵向分组容器。
+ */
+@Composable
+private fun JvmSettingPaneStack(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+        content = content
+    )
 }
 
 /**

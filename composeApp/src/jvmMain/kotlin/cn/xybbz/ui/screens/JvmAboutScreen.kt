@@ -55,9 +55,10 @@ import androidx.compose.ui.unit.sp
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
+import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
-import cn.xybbz.ui.components.JvmSettingResponsiveRow
 import cn.xybbz.ui.components.JvmSettingSection
+import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
@@ -84,9 +85,6 @@ import xymusic_kmp.composeapp.generated.resources.official_website
 import xymusic_kmp.composeapp.generated.resources.problem_feedback
 import xymusic_kmp.composeapp.generated.resources.settings_24px
 
-// 关于页主体最大宽度，交给 JVM 设置类页面通用外壳统一约束。
-private val JvmAboutContentMaxWidth = 1080.dp
-
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3ExpressiveApi::class,
@@ -111,7 +109,7 @@ fun JvmAboutScreen(
 
     JvmSettingPageScaffold(
         modifier = Modifier.fillMaxWidth(),
-        contentMaxWidth = JvmAboutContentMaxWidth,
+        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3
@@ -162,7 +160,7 @@ private fun JvmAboutContent(
 ) {
     Column(
         modifier = Modifier
-            .widthIn(max = JvmAboutContentMaxWidth)
+            .widthIn(max = JvmSettingPageContentMaxWidth)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
     ) {
@@ -172,9 +170,8 @@ private fun JvmAboutContent(
             versionInfo = versionInfo
         )
 
-        JvmSettingResponsiveRow(
-            breakpoint = 880.dp,
-            left = {
+        JvmSettingTwoPaneContent(
+            leftContent = {
                 JvmSettingSection(
                     title = "应用信息",
                     subtitle = "版本、运行环境和支持的数据源集中展示。",
@@ -217,7 +214,7 @@ private fun JvmAboutContent(
                     }
                 }
             },
-            right = {
+            rightContent = {
                 JvmSettingSection(
                     title = "更新",
                     subtitle = "检查更新放在明显位置，但不打断设置浏览。",
@@ -254,9 +251,8 @@ private fun JvmAboutContent(
             }
         )
 
-        JvmSettingResponsiveRow(
-            breakpoint = 880.dp,
-            left = {
+        JvmSettingTwoPaneContent(
+            leftContent = {
                 JvmSettingSection(
                     title = "项目入口",
                     subtitle = "常用外部入口采用设置行样式，和主设置页的可点击项保持一致。",
@@ -288,7 +284,7 @@ private fun JvmAboutContent(
                     }
                 }
             },
-            right = {
+            rightContent = {
                 JvmSettingSection(
                     title = "技术栈",
                     subtitle = "简洁列出核心依赖，方便排查桌面端问题。",
@@ -327,11 +323,8 @@ private fun JvmAboutHero(
     appIconInfo: String,
     versionInfo: String,
 ) {
-    JvmSettingResponsiveRow(
-        breakpoint = 880.dp,
-        leftWeight = 1.55f,
-        rightWeight = 0.75f,
-        left = {
+    JvmSettingTwoPaneContent(
+        leftContent = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(XyTheme.dimens.corner),
@@ -384,7 +377,7 @@ private fun JvmAboutHero(
                 }
             }
         },
-        right = {
+        rightContent = {
             JvmAboutStatusCard(
                 versionInfo = versionInfo
             )
