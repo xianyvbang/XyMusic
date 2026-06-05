@@ -153,23 +153,32 @@ internal fun JvmSettingFlowRow(
  *
  * @param modifier 传给内部列表的修饰符。
  * @param contentMaxWidth 页面主体最大宽度，用来控制桌面宽屏阅读线。
+ * @param contentPadding 列表内容内边距。
+ * @param verticalArrangement 列表条目之间的纵向间距。
+ * @param topBar 页面顶部栏；为空时不显示。
  * @param content 页面主体内容，默认按设置页统一纵向间距排列。
  */
 @Composable
 internal fun JvmSettingPageScaffold(
     modifier: Modifier = Modifier,
     contentMaxWidth: Dp,
+    contentPadding: PaddingValues = PaddingValues(
+        horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
+    ),
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(
+        XyTheme.dimens.outerVerticalPadding * 2
+    ),
+    topBar: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     XyColumnScreen {
+        topBar?.invoke()
         JvmLazyListComponent(
             modifier = modifier.fillMaxSize(),
             pagingItems = null,
-            contentPadding = PaddingValues(
-                horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
-            ),
+            contentPadding = contentPadding,
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+            verticalArrangement = verticalArrangement,
             lazyColumnBottom = null
         ) {
             item {
@@ -180,6 +189,55 @@ internal fun JvmSettingPageScaffold(
                     verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
                     content = content
                 )
+            }
+        }
+    }
+}
+
+/**
+ * JVM 设置类页面的通用左右响应式布局。
+ *
+ * @param modifier 外层修饰符。
+ * @param breakpoint 小于该宽度时改为上下堆叠。
+ * @param leftWeight 宽屏时左侧权重。
+ * @param rightWeight 宽屏时右侧权重。
+ * @param horizontalGap 宽屏左右栏间距。
+ * @param verticalGap 窄屏上下区块间距。
+ * @param left 左侧内容。
+ * @param right 右侧内容。
+ */
+@Composable
+internal fun JvmSettingResponsiveRow(
+    modifier: Modifier = Modifier,
+    breakpoint: Dp,
+    leftWeight: Float = 1f,
+    rightWeight: Float = 1f,
+    horizontalGap: Dp = XyTheme.dimens.outerHorizontalPadding,
+    verticalGap: Dp = XyTheme.dimens.outerVerticalPadding * 2,
+    left: @Composable () -> Unit,
+    right: @Composable () -> Unit,
+) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        if (maxWidth < breakpoint) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(verticalGap)
+            ) {
+                left()
+                right()
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(horizontalGap),
+                verticalAlignment = Alignment.Top
+            ) {
+                Box(modifier = Modifier.weight(leftWeight)) {
+                    left()
+                }
+                Box(modifier = Modifier.weight(rightWeight)) {
+                    right()
+                }
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -18,9 +18,10 @@
 
 package cn.xybbz.ui.screens
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -28,220 +29,579 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.ExperimentalTextApi
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.Log
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.JvmSettingFlowRow
+import cn.xybbz.ui.components.JvmSettingPageHeader
+import cn.xybbz.ui.components.JvmSettingPageScaffold
+import cn.xybbz.ui.components.JvmSettingResponsiveRow
+import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberJvmFileKitDialogSettings
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.toExistingPlatformDirectoryOrNull
-import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.RoundedSurfaceColumn
-import cn.xybbz.ui.xy.XyButton
-import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.MemoryManagementViewModel
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.absolutePath
 import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.adjust
 import xymusic_kmp.composeapp.generated.resources.audio_cache
 import xymusic_kmp.composeapp.generated.resources.audio_cache_description
-import xymusic_kmp.composeapp.generated.resources.adjust
 import xymusic_kmp.composeapp.generated.resources.cache_path
+import xymusic_kmp.composeapp.generated.resources.check_24px
 import xymusic_kmp.composeapp.generated.resources.clear
 import xymusic_kmp.composeapp.generated.resources.confirm_delete_database
 import xymusic_kmp.composeapp.generated.resources.database_data
 import xymusic_kmp.composeapp.generated.resources.database_data_description
+import xymusic_kmp.composeapp.generated.resources.delete_24px
+import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.essential_data
 import xymusic_kmp.composeapp.generated.resources.essential_data_description
-import xymusic_kmp.composeapp.generated.resources.path
+import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
+import xymusic_kmp.composeapp.generated.resources.info_24px
+import xymusic_kmp.composeapp.generated.resources.music_note_24px
+import xymusic_kmp.composeapp.generated.resources.queue_music_24px
 import xymusic_kmp.composeapp.generated.resources.restore_default
+import xymusic_kmp.composeapp.generated.resources.settings_24px
 import xymusic_kmp.composeapp.generated.resources.storage_management
+import xymusic_kmp.composeapp.generated.resources.temporary_cache
+import xymusic_kmp.composeapp.generated.resources.temporary_cache_description
 import xymusic_kmp.composeapp.generated.resources.warning
 import java.io.File
-import kotlin.math.PI
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.hypot
+import java.util.Locale
 import kotlin.math.roundToInt
-import kotlin.math.sin
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * JVM 存储管理页内容区域的最大宽度。
+ *
+ * 预览稿以桌面端居中内容为主，这里限制最大宽度，避免宽屏下卡片被拉得过散。
+ */
+private val JvmMemoryContentMaxWidth = 1080.dp
+
+/**
+ * JVM 桌面端存储管理页面。
+ *
+ * 页面负责把 [MemoryManagementViewModel] 中的缓存、数据库和应用数据占用转换成可扫读的卡片、
+ * 进度条和操作入口；清理、恢复默认路径、选择缓存目录等实际行为仍由 ViewModel 处理。
+ *
+ * @param memoryManagementViewModel 存储管理 ViewModel，提供存储占用、缓存路径和清理操作。
+ */
+@OptIn(
+    ExperimentalMaterial3Api::class,
+)
 @Composable
 fun JvmMemoryManagementScreen(
     memoryManagementViewModel: MemoryManagementViewModel = koinViewModel<MemoryManagementViewModel>()
 ) {
-
+    // 页面用到的资源文案集中读取，避免同一资源在多个子组件中重复解析。
     val warning = stringResource(Res.string.warning)
+    val storageManagementTitle = stringResource(Res.string.storage_management)
     val audioCacheTitle = stringResource(Res.string.audio_cache)
+    val temporaryCacheTitle = stringResource(Res.string.temporary_cache)
     val databaseDataTitle = stringResource(Res.string.database_data)
     val essentialDataTitle = stringResource(Res.string.essential_data)
     val cachePathTitle = stringResource(Res.string.cache_path)
-    // 缓存目录选择器是 suspend API，点击按钮后通过页面协程启动。
+    val clearTitle = stringResource(Res.string.clear)
+    val adjustTitle = stringResource(Res.string.adjust)
+    val restoreDefaultTitle = stringResource(Res.string.restore_default)
+
+    // 目录选择器是 suspend API，点击路径操作后需要使用页面协程启动。
     val coroutineScope = rememberCoroutineScope()
-    // 缓存目录选择器绑定桌面主窗口，避免系统弹窗出现在应用窗口后方。
+    // 绑定 JVM 主窗口的 FileKit 设置，避免系统目录选择弹窗出现在应用窗口后方。
     val cacheDirectoryDialogSettings = rememberJvmFileKitDialogSettings("选择缓存路径")
-    val chartSegments = listOf(
-        JvmStorageChartSegment(
-            title = audioCacheTitle,
-            sizeBytes = memoryManagementViewModel.musicCacheSize.toStorageBytes(),
-            color = MaterialTheme.colorScheme.primary,
-            labelColor = MaterialTheme.colorScheme.onPrimary,
-        ),
-        JvmStorageChartSegment(
-            title = databaseDataTitle,
-            sizeBytes = memoryManagementViewModel.databaseSize.toStorageBytes(),
-            color = MaterialTheme.colorScheme.error,
-            labelColor = MaterialTheme.colorScheme.onError,
-        ),
-        JvmStorageChartSegment(
-            title = essentialDataTitle,
-            sizeBytes = memoryManagementViewModel.appDataSize.toStorageBytes(),
-            color = MaterialTheme.colorScheme.tertiary,
-            labelColor = MaterialTheme.colorScheme.onTertiary,
-        ),
-    )
 
-
-    LaunchedEffect(Unit) {
-        memoryManagementViewModel.logStorageInfo()
-    }
-    XyColumnScreen {
-        TopAppBarComponent(
-            title = {
-                Text(
-                    text = stringResource(Res.string.storage_management),
-                    fontWeight = FontWeight.W900,
-                    style = MaterialTheme.typography.headlineSmall,
-                )
+    // 打开缓存路径弹窗：弹窗内的“调整”会继续拉起系统目录选择器，“恢复默认”直接调用 ViewModel。
+    fun showCachePathDialog() {
+        showJvmCachePathDialog(
+            title = cachePathTitle,
+            cachePath = memoryManagementViewModel.musicCachePath,
+            isDefaultPath = memoryManagementViewModel.isDefaultMusicCachePath,
+            onChoosePath = {
+                coroutineScope.launch {
+                    // 用户取消选择时返回 null，此时不修改当前缓存路径。
+                    chooseJvmCacheDirectory(
+                        currentPath = memoryManagementViewModel.musicCachePath,
+                        dialogSettings = cacheDirectoryDialogSettings,
+                    )?.let { selectedPath ->
+                        memoryManagementViewModel.changeMusicCacheDirectory(selectedPath)
+                    }
+                }
+            },
+            onRestoreDefault = {
+                memoryManagementViewModel.restoreDefaultMusicCacheDirectory()
             }
         )
+    }
 
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.Top,
-        ) {
-            JvmStorageDonutChart(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                segments = chartSegments,
+    // 数据库清理属于高风险操作，必须先弹出确认框，再交给 ViewModel 清理数据库与相关状态。
+    fun confirmClearDatabase() {
+        AlertDialogObject(
+            title = warning,
+            content = {
+                XyTextSub(
+                    text = stringResource(Res.string.confirm_delete_database),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            ifWarning = true,
+            onConfirmation = {
+                memoryManagementViewModel.clearDatabaseData()
+            }
+        ).show()
+    }
+
+    // 将 ViewModel 暴露的字符串尺寸、可清理动作、颜色和图标统一整理为页面展示模型。
+    val storageItems = listOf(
+        JvmStorageDisplayItem(
+            title = audioCacheTitle,
+            description = stringResource(Res.string.audio_cache_description),
+            sizeText = memoryManagementViewModel.musicCacheSize,
+            sizeBytes = memoryManagementViewModel.musicCacheSize.toStorageBytes(),
+            icon = Res.drawable.music_note_24px,
+            color = MaterialTheme.colorScheme.primary,
+            meta = "可重新缓存",
+            onClear = { memoryManagementViewModel.clearMusicCache() },
+        ),
+        JvmStorageDisplayItem(
+            title = temporaryCacheTitle,
+            description = stringResource(Res.string.temporary_cache_description),
+            sizeText = memoryManagementViewModel.cacheSize,
+            sizeBytes = memoryManagementViewModel.cacheSize.toStorageBytes(),
+            icon = Res.drawable.queue_music_24px,
+            color = MaterialTheme.colorScheme.tertiary,
+            meta = "播放临时文件",
+            onClear = { memoryManagementViewModel.clearAllCache() },
+        ),
+        JvmStorageDisplayItem(
+            title = databaseDataTitle,
+            description = stringResource(Res.string.database_data_description),
+            sizeText = memoryManagementViewModel.databaseSize,
+            sizeBytes = memoryManagementViewModel.databaseSize.toStorageBytes(),
+            icon = Res.drawable.settings_24px,
+            color = MaterialTheme.colorScheme.error,
+            meta = "清理前确认",
+            onClear = ::confirmClearDatabase,
+        ),
+        JvmStorageDisplayItem(
+            title = essentialDataTitle,
+            description = stringResource(Res.string.essential_data_description),
+            sizeText = memoryManagementViewModel.appDataSize,
+            sizeBytes = memoryManagementViewModel.appDataSize.toStorageBytes(),
+            icon = Res.drawable.info_24px,
+            color = MaterialTheme.colorScheme.secondary,
+            meta = "核心应用数据",
+        ),
+    )
+    // 总占用用于头部状态和空间分布进度条的比例计算。
+    val totalBytes = storageItems.sumOf { it.sizeBytes }
+    // 可清理占用只统计带清理动作的条目，核心应用数据不计入可清理容量。
+    val clearableBytes = storageItems
+        .filter { it.onClear != null }
+        .sumOf { it.sizeBytes }
+    // 将字节数重新格式化为更适合顶部状态卡展示的容量文本。
+    val totalSizeText = totalBytes.toStorageLabel()
+    val clearableSizeText = clearableBytes.toStorageLabel()
+    // 路径状态用于提示当前是默认缓存目录还是用户自定义目录。
+    val cachePathMode = if (memoryManagementViewModel.isDefaultMusicCachePath) "默认路径" else "自定义路径"
+
+    LaunchedEffect(Unit) {
+        // 进入页面时刷新一次平台存储信息，避免显示上一次页面打开时的旧数据。
+        memoryManagementViewModel.logStorageInfo()
+    }
+
+    JvmSettingPageScaffold(
+        modifier = Modifier.fillMaxSize(),
+        contentMaxWidth = JvmMemoryContentMaxWidth,
+        contentPadding = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
+            vertical = XyTheme.dimens.outerVerticalPadding * 3,
+        ),
+        topBar = {
+            TopAppBarComponent(
+                title = {
+                    TopAppBarTitle(title = storageManagementTitle)
+                }
             )
+        }
+    ) {
+        JvmMemoryContent(
+            title = storageManagementTitle,
+            storageItems = storageItems,
+            totalBytes = totalBytes,
+            totalSizeText = totalSizeText,
+            clearableSizeText = clearableSizeText,
+            cachePath = memoryManagementViewModel.musicCachePath,
+            cachePathMode = cachePathMode,
+            isDefaultCachePath = memoryManagementViewModel.isDefaultMusicCachePath,
+            clearTitle = clearTitle,
+            adjustTitle = adjustTitle,
+            restoreDefaultTitle = restoreDefaultTitle,
+            onClearMusicCache = { memoryManagementViewModel.clearMusicCache() },
+            onClearTemporaryCache = { memoryManagementViewModel.clearAllCache() },
+            onClearDatabase = ::confirmClearDatabase,
+            onOpenPath = ::showCachePathDialog,
+            onRestoreDefaultPath = { memoryManagementViewModel.restoreDefaultMusicCacheDirectory() },
+        )
+    }
+}
 
-            LazyColumnNotComponent(
+/**
+ * 存储管理页主体内容。
+ *
+ * 这里只负责组织页面信息架构：顶部说明、概览卡片、空间分布、快速清理和存储位置。
+ *
+ * @param title 页面标题。
+ * @param storageItems 已整理好的存储展示条目。
+ * @param totalBytes 总占用字节数，用于计算各分类占比。
+ * @param totalSizeText 总占用容量文本。
+ * @param clearableSizeText 可清理容量文本。
+ * @param cachePath 当前歌曲缓存目录。
+ * @param cachePathMode 缓存路径状态，默认路径或自定义路径。
+ * @param isDefaultCachePath 当前缓存路径是否为默认路径。
+ * @param clearTitle 清理按钮文案。
+ * @param adjustTitle 调整路径文案。
+ * @param restoreDefaultTitle 恢复默认路径文案。
+ * @param onClearMusicCache 清理歌曲缓存回调。
+ * @param onClearTemporaryCache 清理临时缓存回调。
+ * @param onClearDatabase 清理数据库回调，调用方负责确认逻辑。
+ * @param onOpenPath 打开缓存路径弹窗回调。
+ * @param onRestoreDefaultPath 恢复默认缓存路径回调。
+ */
+@Composable
+private fun JvmMemoryContent(
+    title: String,
+    storageItems: List<JvmStorageDisplayItem>,
+    totalBytes: Double,
+    totalSizeText: String,
+    clearableSizeText: String,
+    cachePath: String,
+    cachePathMode: String,
+    isDefaultCachePath: Boolean,
+    clearTitle: String,
+    adjustTitle: String,
+    restoreDefaultTitle: String,
+    onClearMusicCache: () -> Unit,
+    onClearTemporaryCache: () -> Unit,
+    onClearDatabase: () -> Unit,
+    onOpenPath: () -> Unit,
+    onRestoreDefaultPath: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .widthIn(max = JvmMemoryContentMaxWidth)
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
+    ) {
+        JvmMemoryHeader(
+            title = title,
+            totalSize = totalSizeText,
+            clearableSize = clearableSizeText,
+            cachePathMode = cachePathMode,
+        )
+
+        // 四个概览卡片横向铺开，窄屏时由通用 FlowRow 自动换行。
+        JvmMemoryOverview(storageItems = storageItems)
+
+        // 主体区域参考预览稿：左侧空间分布更宽，右侧放高频操作和路径信息。
+        JvmSettingResponsiveRow(
+            breakpoint = 900.dp,
+            leftWeight = 1.35f,
+            rightWeight = 0.85f,
+            left = {
+                JvmMemoryDistributionSection(
+                    storageItems = storageItems,
+                    totalBytes = totalBytes,
+                    totalSizeText = totalSizeText,
+                )
+            },
+            right = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
+                ) {
+                    JvmMemoryQuickCleanSection(
+                        storageItems = storageItems,
+                        clearTitle = clearTitle,
+                        onClearMusicCache = onClearMusicCache,
+                        onClearTemporaryCache = onClearTemporaryCache,
+                        onClearDatabase = onClearDatabase,
+                        onOpenPath = onOpenPath,
+                    )
+                    JvmMemoryPathSection(
+                        cachePath = cachePath,
+                        cachePathMode = cachePathMode,
+                        isDefaultCachePath = isDefaultCachePath,
+                        adjustTitle = adjustTitle,
+                        restoreDefaultTitle = restoreDefaultTitle,
+                        onOpenPath = onOpenPath,
+                        onRestoreDefaultPath = onRestoreDefaultPath,
+                    )
+                }
+            }
+        )
+    }
+}
+
+/**
+ * 页面头部区域。
+ *
+ * 左侧显示页面标题和说明，右侧状态卡汇总本地占用、可清理容量和缓存路径模式。
+ *
+ * @param title 页面标题。
+ * @param totalSize 总占用容量文本。
+ * @param clearableSize 可清理容量文本。
+ * @param cachePathMode 缓存路径模式。
+ */
+@Composable
+private fun JvmMemoryHeader(
+    title: String,
+    totalSize: String,
+    clearableSize: String,
+    cachePathMode: String,
+) {
+    JvmSettingPageHeader(
+        title = title,
+        description = "查看歌曲缓存、临时缓存、数据库和应用数据的真实占用，并把清理与路径操作集中在一个页面。",
+    ) {
+        JvmMemoryStatusCard(
+            modifier = Modifier.widthIn(min = 278.dp),
+            totalSize = totalSize,
+            clearableSize = clearableSize,
+            cachePathMode = cachePathMode,
+        )
+    }
+}
+
+/**
+ * 头部右侧状态卡。
+ *
+ * @param modifier 外部布局修饰符。
+ * @param totalSize 总占用容量文本。
+ * @param clearableSize 可清理容量文本。
+ * @param cachePathMode 缓存路径模式。
+ */
+@Composable
+private fun JvmMemoryStatusCard(
+    modifier: Modifier = Modifier,
+    totalSize: String,
+    clearableSize: String,
+    cachePathMode: String,
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
+        ) {
+            JvmMemoryStatusRow(label = "本地占用", value = totalSize)
+            JvmMemoryStatusRow(label = "可清理", value = clearableSize)
+            JvmMemoryStatusRow(label = "缓存路径", value = cachePathMode)
+        }
+    }
+}
+
+/**
+ * 状态卡内的单行键值信息。
+ *
+ * @param label 左侧标签。
+ * @param value 右侧值。
+ */
+@Composable
+private fun JvmMemoryStatusRow(
+    label: String,
+    value: String,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * 存储概览卡片区域。
+ *
+ * @param storageItems 存储展示条目列表，每个条目渲染为一个概览卡片。
+ */
+@Composable
+private fun JvmMemoryOverview(storageItems: List<JvmStorageDisplayItem>) {
+    JvmSettingFlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+    ) {
+        storageItems.forEach { item ->
+            JvmMemoryMetricTile(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                contentPadding = PaddingValues(
-                    vertical = XyTheme.dimens.outerVerticalPadding,
-                ),
-                horizontalAlignment = Alignment.End,
-            ) {
-                item {
-                    JvmMemoryManagementItem(
-                        modifier = Modifier.widthIn(max = 520.dp),
-                        cacheSize = memoryManagementViewModel.musicCacheSize,
-                        onClick = { memoryManagementViewModel.clearMusicCache() },
-                        onPathClick = {
-                            showJvmCachePathDialog(
-                                title = cachePathTitle,
-                                cachePath = memoryManagementViewModel.musicCachePath,
-                                isDefaultPath = memoryManagementViewModel.isDefaultMusicCachePath,
-                                onChoosePath = {
-                                    coroutineScope.launch {
-                                        // 用户点击“调整”后打开系统目录选择器，取消选择时不修改缓存路径。
-                                        chooseJvmCacheDirectory(
-                                            currentPath = memoryManagementViewModel.musicCachePath,
-                                            dialogSettings = cacheDirectoryDialogSettings,
-                                        )?.let { selectedPath ->
-                                            memoryManagementViewModel.changeMusicCacheDirectory(selectedPath)
-                                        }
-                                    }
-                                },
-                                onRestoreDefault = {
-                                    memoryManagementViewModel.restoreDefaultMusicCacheDirectory()
-                                }
-                            )
-                        },
-                        text = audioCacheTitle,
-                        describe = stringResource(Res.string.audio_cache_description)
+                    .widthIn(min = 220.dp)
+                    .weight(1f),
+                item = item,
+            )
+        }
+    }
+}
+
+/**
+ * 单个存储概览卡片。
+ *
+ * @param modifier 外部布局修饰符。
+ * @param item 存储展示条目。
+ */
+@Composable
+private fun JvmMemoryMetricTile(
+    modifier: Modifier = Modifier,
+    item: JvmStorageDisplayItem,
+) {
+    Surface(
+        modifier = modifier.heightIn(min = 108.dp),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                // 使用分类色做非常轻的顶部氛围，保持与预览稿的层次感一致。
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            item.color.copy(alpha = 0.10f),
+                            Color.Transparent
+                        )
                     )
-                }
-                item {
-                    JvmMemoryManagementItem(
-                        modifier = Modifier.widthIn(max = 520.dp),
-                        cacheSize = memoryManagementViewModel.databaseSize,
-                        onClick = {
-                            AlertDialogObject(
-                                title = warning,
-                                content = {
-                                    XyTextSub(
-                                        text = stringResource(Res.string.confirm_delete_database),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                },
-                                ifWarning = true,
-                                onConfirmation = {
-                                    memoryManagementViewModel.clearDatabaseData()
-                                }
-                            ).show()
-                        },
-                        text = databaseDataTitle,
-                        describe = stringResource(Res.string.database_data_description)
-                    )
-                }
-                item {
-                    JvmMemoryManagementItem(
-                        modifier = Modifier.widthIn(max = 520.dp),
-                        cacheSize = memoryManagementViewModel.appDataSize,
-                        text = essentialDataTitle,
-                        describe = stringResource(Res.string.essential_data_description),
-                        ifShowButton = false
+                )
+                .padding(XyTheme.dimens.outerHorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+        ) {
+            JvmMemoryKicker(
+                icon = item.icon,
+                text = item.title,
+                color = item.color,
+            )
+            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+            Text(
+                text = item.sizeText,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = item.meta,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+/**
+ * 空间分布区域。
+ *
+ * @param storageItems 存储展示条目列表。
+ * @param totalBytes 总占用字节数，用于每一行进度条占比。
+ * @param totalSizeText 总占用容量文本，用于标题徽标。
+ */
+@Composable
+private fun JvmMemoryDistributionSection(
+    storageItems: List<JvmStorageDisplayItem>,
+    totalBytes: Double,
+    totalSizeText: String,
+) {
+    JvmSettingSection(
+        title = "空间分布",
+        subtitle = "每一类数据都显示用途、占用和清理风险，方便快速判断是否需要释放空间。",
+        badge = "总计 $totalSizeText",
+        contentContainerEnabled = false,
+        qualityNote = "清理歌曲缓存和临时缓存只影响可重新生成的数据；数据库清理会先弹出确认。",
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f))
+                .border(
+                    BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)),
+                    RoundedCornerShape(XyTheme.dimens.corner)
+                )
+        ) {
+            storageItems.forEachIndexed { index, item ->
+                // 每个分类都用同一套行组件展示名称、说明、进度条和容量。
+                JvmMemoryStorageRow(
+                    item = item,
+                    totalBytes = totalBytes,
+                )
+                if (index != storageItems.lastIndex) {
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f))
                     )
                 }
             }
@@ -250,97 +610,570 @@ fun JvmMemoryManagementScreen(
 }
 
 /**
- * 存储管理项
- * @param [modifier] 修饰语
- * @param [cacheSize] 缓存大小
- * @param [onClick] 点击时
- * @param [text] 文本
- * @param [describe] 描述
+ * 空间分布列表中的一行。
+ *
+ * @param item 存储展示条目。
+ * @param totalBytes 总占用字节数，用于计算当前条目的百分比。
  */
 @Composable
-fun JvmMemoryManagementItem(
-    modifier: Modifier = Modifier,
-    cacheSize: String,
-    text: String,
-    describe: String,
-    ifShowButton: Boolean = true,
-    onClick: (() -> Unit)? = null,
-    onPathClick: (() -> Unit)? = null,
+private fun JvmMemoryStorageRow(
+    item: JvmStorageDisplayItem,
+    totalBytes: Double,
 ) {
-    RoundedSurfaceColumn(
-        modifier = modifier.heightIn(min = 132.dp),
-        horizontalAlignment = Alignment.Start
+    // 总占用为 0 时直接显示空进度，避免除以 0。
+    val progress = if (totalBytes <= 0.0) {
+        0f
+    } else {
+        (item.sizeBytes / totalBytes).toFloat().coerceIn(0f, 1f)
+    }
+    // 非 0 的小占用保留最小可见进度，避免在 UI 上看起来完全没有数据。
+    val visibleProgress = if (progress > 0f) progress.coerceAtLeast(0.03f) else 0f
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(XyTheme.dimens.contentPadding)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = XyTheme.dimens.innerHorizontalPadding,
-                    top = XyTheme.dimens.innerVerticalPadding,
-                    end = XyTheme.dimens.innerHorizontalPadding,
-                    bottom = XyTheme.dimens.innerVerticalPadding / 2,
-                ),
-        ) {
+        if (maxWidth < 620.dp) {
+            // 窄宽度下改为纵向排布，避免名称、进度条和容量互相挤压。
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
             ) {
-                XyText(
-                    text = text,
-                    style = MaterialTheme.typography.titleMedium,
+                JvmMemoryStorageRowTitle(item = item)
+                JvmMemoryProgressBar(
+                    progress = visibleProgress,
+                    color = item.color,
                 )
-                XyTextSub(
-                    modifier = Modifier,
-                    text = cacheSize,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                Text(
+                    text = item.sizeText,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
-            if (ifShowButton)
-                Column(
-                    horizontalAlignment = Alignment.End,
-                ) {
-                    XyButton(
-                        modifier = Modifier,
-                        enabled = cacheSize != "0B",
-                        onClick = { onClick?.invoke() },
-                        text = stringResource(Res.string.clear),
-                        textStyle = MaterialTheme.typography.titleMedium,
-                    )
-                    onPathClick?.let { pathClick ->
-                        TextButton(
-                            modifier = Modifier.jvmHoverDebounceClickable(),
-                            onClick = pathClick,
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.path),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        }
-                    }
-                }
+        } else {
+            // 宽屏下保持预览稿的横向表格感，便于快速比较不同分类。
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                JvmMemoryStorageRowTitle(
+                    modifier = Modifier.width(180.dp),
+                    item = item,
+                )
+                JvmMemoryProgressBar(
+                    modifier = Modifier.weight(1f),
+                    progress = visibleProgress,
+                    color = item.color,
+                )
+                Text(
+                    modifier = Modifier.width(84.dp),
+                    text = item.sizeText,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.End,
+                )
+            }
         }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = XyTheme.dimens.innerHorizontalPadding,
-                    top = XyTheme.dimens.innerVerticalPadding / 2,
-                    end = XyTheme.dimens.innerHorizontalPadding,
-                    bottom = XyTheme.dimens.innerVerticalPadding,
-                ),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
+    }
+}
+
+/**
+ * 空间分布行的标题区域。
+ *
+ * @param modifier 外部布局修饰符。
+ * @param item 存储展示条目。
+ */
+@Composable
+private fun JvmMemoryStorageRowTitle(
+    modifier: Modifier = Modifier,
+    item: JvmStorageDisplayItem,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        JvmMemorySmallIcon(
+            icon = item.icon,
+            color = item.color,
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
         ) {
-            XyTextSub(
-                text = describe,
-                style = MaterialTheme.typography.bodyMedium,
-                overflow = TextOverflow.Visible
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = item.description,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
+    }
+}
 
+/**
+ * 存储占比进度条。
+ *
+ * @param modifier 外部布局修饰符。
+ * @param progress 当前占比，范围 0f 到 1f。
+ * @param color 进度条颜色。
+ */
+@Composable
+private fun JvmMemoryProgressBar(
+    modifier: Modifier = Modifier,
+    progress: Float,
+    color: Color,
+) {
+    LinearProgressIndicator(
+        progress = { progress },
+        modifier = modifier
+            .fillMaxWidth()
+            .height(8.dp)
+            .clip(RoundedCornerShape(999.dp)),
+        color = color,
+        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+    )
+}
+
+/**
+ * 快速清理区域。
+ *
+ * @param storageItems 存储展示条目列表，按页面固定顺序读取歌曲缓存、临时缓存和数据库。
+ * @param clearTitle 清理按钮文案。
+ * @param onClearMusicCache 清理歌曲缓存回调。
+ * @param onClearTemporaryCache 清理临时缓存回调。
+ * @param onClearDatabase 清理数据库回调。
+ * @param onOpenPath 打开缓存路径弹窗回调。
+ */
+@Composable
+private fun JvmMemoryQuickCleanSection(
+    storageItems: List<JvmStorageDisplayItem>,
+    clearTitle: String,
+    onClearMusicCache: () -> Unit,
+    onClearTemporaryCache: () -> Unit,
+    onClearDatabase: () -> Unit,
+    onOpenPath: () -> Unit,
+) {
+    // storageItems 的顺序在入口处固定，这里只提取快速清理需要的前三类。
+    val musicCache = storageItems.getOrNull(0)
+    val temporaryCache = storageItems.getOrNull(1)
+    val database = storageItems.getOrNull(2)
+
+    JvmSettingSection(
+        title = "快速清理",
+        subtitle = "高频动作集中成卡片，清理前能看到会释放哪一类数据。",
+        badge = clearTitle,
+        contentContainerEnabled = false,
+    ) {
+        JvmSettingFlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        ) {
+            JvmMemoryActionCard(
+                modifier = Modifier
+                    .widthIn(min = 176.dp)
+                    .weight(1f),
+                icon = Res.drawable.delete_24px,
+                color = MaterialTheme.colorScheme.primary,
+                kicker = "安全",
+                title = "${clearTitle}${musicCache?.title.orEmpty()}",
+                description = musicCache.clearDescription("释放歌曲缓存，后续播放时可重新缓存。"),
+                enabled = musicCache.hasStorage(),
+                onClick = onClearMusicCache,
+            )
+            JvmMemoryActionCard(
+                modifier = Modifier
+                    .widthIn(min = 176.dp)
+                    .weight(1f),
+                icon = Res.drawable.download_24px,
+                color = MaterialTheme.colorScheme.tertiary,
+                kicker = "安全",
+                title = "${clearTitle}${temporaryCache?.title.orEmpty()}",
+                description = temporaryCache.clearDescription("释放播放临时文件，不影响核心应用数据。"),
+                enabled = temporaryCache.hasStorage(),
+                onClick = onClearTemporaryCache,
+            )
+            JvmMemoryActionCard(
+                modifier = Modifier
+                    .widthIn(min = 176.dp)
+                    .weight(1f),
+                icon = Res.drawable.delete_24px,
+                color = MaterialTheme.colorScheme.error,
+                kicker = "确认",
+                title = "${clearTitle}${database?.title.orEmpty()}",
+                description = database.clearDescription("重置本地数据库数据，执行前会再次确认。"),
+                enabled = database.hasStorage(),
+                onClick = onClearDatabase,
+            )
+            JvmMemoryActionCard(
+                modifier = Modifier
+                    .widthIn(min = 176.dp)
+                    .weight(1f),
+                icon = Res.drawable.folder_managed_24px,
+                color = MaterialTheme.colorScheme.secondary,
+                kicker = "位置",
+                title = "调整缓存路径",
+                description = "选择歌曲缓存目录，适合把缓存移动到空间更充足的磁盘。",
+                onClick = onOpenPath,
+            )
+        }
+    }
+}
+
+/**
+ * 存储位置区域。
+ *
+ * @param cachePath 当前歌曲缓存目录。
+ * @param cachePathMode 缓存路径状态，默认路径或自定义路径。
+ * @param isDefaultCachePath 当前缓存路径是否为默认路径。
+ * @param adjustTitle 调整路径文案。
+ * @param restoreDefaultTitle 恢复默认路径文案。
+ * @param onOpenPath 打开缓存路径弹窗回调。
+ * @param onRestoreDefaultPath 恢复默认缓存路径回调。
+ */
+@Composable
+private fun JvmMemoryPathSection(
+    cachePath: String,
+    cachePathMode: String,
+    isDefaultCachePath: Boolean,
+    adjustTitle: String,
+    restoreDefaultTitle: String,
+    onOpenPath: () -> Unit,
+    onRestoreDefaultPath: () -> Unit,
+) {
+    JvmSettingSection(
+        title = "存储位置",
+        subtitle = "缓存路径单独展示，调整和恢复默认路径都保留原有桌面端逻辑。",
+        badge = cachePathMode,
+        contentContainerEnabled = false,
+        qualityNote = "选择新路径后会刷新存储信息；取消系统目录选择器不会修改当前缓存位置。",
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f))
+                .border(
+                    BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)),
+                    RoundedCornerShape(XyTheme.dimens.corner)
+                )
+        ) {
+            JvmMemorySettingRow(
+                icon = Res.drawable.folder_managed_24px,
+                title = "歌曲缓存位置",
+                description = cachePath.ifBlank { "使用默认缓存目录" },
+                value = adjustTitle,
+                onClick = onOpenPath,
+            )
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f))
+            )
+            JvmMemorySettingRow(
+                icon = Res.drawable.check_24px,
+                title = restoreDefaultTitle,
+                // 已经是默认目录时禁用恢复操作，只保留状态提示。
+                description = if (isDefaultCachePath) "当前已经使用默认缓存目录。" else "恢复到应用默认的歌曲缓存目录。",
+                value = if (isDefaultCachePath) "已默认" else "恢复",
+                enabled = !isDefaultCachePath,
+                onClick = onRestoreDefaultPath,
+            )
+        }
+    }
+}
+
+/**
+ * 快速清理动作卡片。
+ *
+ * @param modifier 外部布局修饰符。
+ * @param icon 卡片图标资源。
+ * @param color 卡片强调色。
+ * @param kicker 卡片顶部短标签。
+ * @param title 动作标题。
+ * @param description 动作说明。
+ * @param enabled 是否允许点击；禁用时会降低透明度且不绑定点击事件。
+ * @param onClick 点击动作。
+ */
+@Composable
+private fun JvmMemoryActionCard(
+    modifier: Modifier = Modifier,
+    icon: DrawableResource,
+    color: Color,
+    kicker: String,
+    title: String,
+    description: String,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    // 禁用卡片只改变视觉和点击行为，不改变布局尺寸，避免卡片网格跳动。
+    val contentAlpha = if (enabled) 1f else 0.44f
+    val clickableModifier = if (enabled) {
+        Modifier.clickable(onClick = onClick)
+    } else {
+        Modifier
+    }
+
+    Surface(
+        modifier = modifier
+            .heightIn(min = 132.dp)
+            .then(clickableModifier),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 0.055f else 0.035f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 0.08f else 0.05f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(XyTheme.dimens.contentPadding),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+        ) {
+            JvmMemoryKicker(
+                icon = icon,
+                text = kicker,
+                color = color.copy(alpha = contentAlpha),
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
+                lineHeight = 17.sp
+            )
+        }
+    }
+}
+
+/**
+ * 存储位置设置行。
+ *
+ * @param icon 行图标资源。
+ * @param title 行标题。
+ * @param description 行说明或路径。
+ * @param value 右侧徽标文案。
+ * @param enabled 是否允许点击。
+ * @param onClick 点击动作。
+ */
+@Composable
+private fun JvmMemorySettingRow(
+    icon: DrawableResource,
+    title: String,
+    description: String,
+    value: String,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    // 路径恢复行在默认路径状态下会禁用，这里统一处理禁用态透明度和点击行为。
+    val contentAlpha = if (enabled) 1f else 0.48f
+    val clickableModifier = if (enabled) {
+        Modifier.clickable(onClick = onClick)
+    } else {
+        Modifier
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp)
+            .then(clickableModifier)
+            .padding(
+                horizontal = XyTheme.dimens.contentPadding,
+                vertical = XyTheme.dimens.outerVerticalPadding
+            ),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        JvmMemorySmallIcon(
+            icon = icon,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = contentAlpha),
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        JvmMemoryBadge(
+            text = value,
+            alpha = contentAlpha,
+        )
+    }
+}
+
+/**
+ * 带小图标的短标签。
+ *
+ * @param icon 图标资源。
+ * @param text 标签文本。
+ * @param color 图标强调色。
+ */
+@Composable
+private fun JvmMemoryKicker(
+    icon: DrawableResource,
+    text: String,
+    color: Color,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        JvmMemorySmallIcon(
+            icon = icon,
+            color = color,
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * 小尺寸图标容器。
+ *
+ * @param icon 图标资源。
+ * @param color 图标和容器强调色。
+ */
+@Composable
+private fun JvmMemorySmallIcon(
+    icon: DrawableResource,
+    color: Color,
+) {
+    Surface(
+        modifier = Modifier.size(32.dp),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        color = color.copy(alpha = 0.16f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = color.copy(alpha = 0.26f)
+        )
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                modifier = Modifier.size(18.dp),
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = color
+            )
+        }
+    }
+}
+
+/**
+ * 胶囊徽标。
+ *
+ * @param text 徽标文本。
+ * @param alpha 整体透明度，用于禁用态。
+ */
+@Composable
+private fun JvmMemoryBadge(
+    text: String,
+    alpha: Float = 1f,
+) {
+    Surface(
+        shape = RoundedCornerShape(999.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f * alpha),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f * alpha)
+        )
+    ) {
+        Text(
+            modifier = Modifier.padding(
+                horizontal = XyTheme.dimens.contentPadding,
+                vertical = XyTheme.dimens.outerVerticalPadding / 2,
+            ),
+            text = text,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * 存储展示条目。
+ *
+ * @property title 分类标题。
+ * @property description 分类说明。
+ * @property sizeText ViewModel 提供的容量文本。
+ * @property sizeBytes 容量文本解析后的字节数，用于排序、汇总和进度条占比。
+ * @property icon 分类图标资源。
+ * @property color 分类强调色。
+ * @property meta 概览卡片的辅助标签。
+ * @property onClear 清理动作；为空时表示该分类不能在页面中清理。
+ */
+private data class JvmStorageDisplayItem(
+    val title: String,
+    val description: String,
+    val sizeText: String,
+    val sizeBytes: Double,
+    val icon: DrawableResource,
+    val color: Color,
+    val meta: String,
+    val onClear: (() -> Unit)? = null,
+)
+
+/**
+ * 判断存储条目是否有可清理或可展示的非零占用。
+ *
+ * @return 占用大于 0 时返回 true。
+ */
+private fun JvmStorageDisplayItem?.hasStorage(): Boolean {
+    return this?.sizeBytes?.let { it > 0.0 } == true
+}
+
+/**
+ * 生成快速清理卡片说明。
+ *
+ * @param fallback 当前分类的默认清理说明。
+ * @return 根据是否有占用生成“当前占用”或“当前无需清理”的说明。
+ */
+private fun JvmStorageDisplayItem?.clearDescription(fallback: String): String {
+    val item = this ?: return fallback
+    return if (item.sizeBytes > 0.0) {
+        "当前占用 ${item.sizeText}，${fallback.replaceFirstChar { it.lowercase(Locale.getDefault()) }}"
+    } else {
+        "当前无需清理，${fallback.replaceFirstChar { it.lowercase(Locale.getDefault()) }}"
     }
 }
 
@@ -363,6 +1196,7 @@ private fun showJvmCachePathDialog(
     AlertDialogObject(
         title = title,
         content = {
+            // 路径可能很长，允许完整换行显示，避免省略后用户无法确认当前目录。
             XyTextSub(
                 modifier = Modifier.widthIn(max = 420.dp),
                 text = cachePath,
@@ -371,6 +1205,7 @@ private fun showJvmCachePathDialog(
             )
         },
         onDismissRequest = {
+            // 该弹窗的 dismiss 按钮被用作“调整”，点击后再打开系统目录选择器。
             onChoosePath()
         },
         onConfirmation = onRestoreDefault,
@@ -391,7 +1226,7 @@ private suspend fun chooseJvmCacheDirectory(
     currentPath: String,
     dialogSettings: io.github.vinceglb.filekit.dialogs.FileKitDialogSettings,
 ): String? {
-    // 优先定位到当前缓存目录；当前目录无效时回退到音乐目录或用户主目录。
+    // 优先定位到当前缓存目录；当前路径无效时回退到系统音乐目录或用户主目录。
     val initialDirectory = currentPath
         .takeIf { it.isNotBlank() }
         ?.let(::File)
@@ -399,7 +1234,7 @@ private suspend fun chooseJvmCacheDirectory(
         ?: defaultJvmCacheDirectoryChooserDirectory()
             .toExistingPlatformDirectoryOrNull()
 
-    // 原生目录选择器异常只记录日志，避免存储管理页因为平台弹窗失败而崩溃。
+    // 平台目录选择器异常只记录日志，避免设置页因为系统弹窗失败而崩溃。
     return runCatching {
         FileKit.openDirectoryPicker(
             directory = initialDirectory,
@@ -421,369 +1256,55 @@ private fun defaultJvmCacheDirectoryChooserDirectory(): File {
     return if (musicDir.exists()) musicDir else userHome
 }
 
-private data class JvmStorageChartSegment(
-    val title: String,
-    val sizeBytes: Float,
-    val color: Color,
-    val labelColor: Color,
-)
-
-@Composable
-private fun JvmStorageDonutChart(
-    modifier: Modifier = Modifier,
-    segments: List<JvmStorageChartSegment>,
-) {
-    RoundedSurfaceColumn(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(y = (-36).dp)
-                .padding(
-                    start = XyTheme.dimens.innerHorizontalPadding,
-                    top = XyTheme.dimens.innerVerticalPadding,
-                    end = XyTheme.dimens.innerHorizontalPadding,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            val chartSize = if (maxWidth < 280.dp) maxWidth else 280.dp
-
-            Box(
-                modifier = Modifier.size(chartSize),
-                contentAlignment = Alignment.Center,
-            ) {
-                JvmStorageDonutCanvas(
-                    modifier = Modifier.fillMaxSize(),
-                    segments = segments,
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = XyTheme.dimens.innerHorizontalPadding,
-                    top = XyTheme.dimens.innerVerticalPadding,
-                    end = XyTheme.dimens.innerHorizontalPadding,
-                    bottom = XyTheme.dimens.innerVerticalPadding,
-                ),
-            horizontalArrangement = Arrangement.spacedBy(
-                space = XyTheme.dimens.innerHorizontalPadding / 3,
-                alignment = Alignment.CenterHorizontally,
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            segments.forEach { segment ->
-                JvmStorageDonutLegendItem(
-                    segment = segment,
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalTextApi::class)
-@Composable
-private fun JvmStorageDonutCanvas(
-    modifier: Modifier = Modifier,
-    segments: List<JvmStorageChartSegment>,
-) {
-    val trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f)
-    val labelTextMeasurer = rememberTextMeasurer()
-    val labelTextStyle = MaterialTheme.typography.titleMedium.copy(
-        fontWeight = FontWeight.Bold,
-    )
-    val visibleSegments = segments.filter { it.sizeBytes > 0f }
-    var hoveredSegmentIndex by remember { mutableStateOf<Int?>(null) }
-    val hoverProgresses = MutableList(visibleSegments.size) { 0f }
-
-    for (index in visibleSegments.indices) {
-        val progress by animateFloatAsState(
-            targetValue = if (hoveredSegmentIndex == index) 1f else 0f,
-            animationSpec = spring(
-                dampingRatio = 0.72f,
-                stiffness = 360f,
-            ),
-            label = "storageDonutHoverProgress$index",
-        )
-        hoverProgresses[index] = progress
-    }
-
-    Canvas(
-        modifier = modifier.pointerInput(visibleSegments) {
-            awaitPointerEventScope {
-                while (true) {
-                    val event = awaitPointerEvent()
-                    val pointer = event.changes.firstOrNull()?.position
-                    hoveredSegmentIndex = when {
-                        event.type == PointerEventType.Exit -> null
-                        pointer == null -> null
-                        else -> findHoveredStorageSegment(
-                            pointer = pointer,
-                            canvasSize = size,
-                            segments = visibleSegments,
-                        )
-                    }
-                }
-            }
-        }
-    ) {
-        val outerDiameter = size.minDimension
-        if (outerDiameter <= 0f) return@Canvas
-
-        val holeRatio = 0.34f
-        val center = Offset(size.width / 2f, size.height / 2f)
-        val maxOuterExpansion = outerDiameter * 0.04f
-        val baseOuterRadius = outerDiameter / 2f - maxOuterExpansion
-        val innerRadius = outerDiameter * holeRatio / 2f
-
-        val totalBytes = visibleSegments.fold(0f) { total, segment ->
-            total + segment.sizeBytes
-        }
-
-        if (totalBytes <= 0f) {
-            val centerlineRadius = (baseOuterRadius + innerRadius) / 2f
-            drawArc(
-                color = trackColor,
-                startAngle = -90f,
-                sweepAngle = 360f,
-                useCenter = false,
-                topLeft = Offset(
-                    x = center.x - centerlineRadius,
-                    y = center.y - centerlineRadius,
-                ),
-                size = Size(
-                    width = centerlineRadius * 2f,
-                    height = centerlineRadius * 2f,
-                ),
-                style = Stroke(
-                    width = baseOuterRadius - innerRadius,
-                    cap = StrokeCap.Butt,
-                ),
-            )
-            return@Canvas
-        }
-
-        val arcs = buildList {
-            var nextStartAngle = -90f
-            visibleSegments.forEachIndexed { index, segment ->
-                val sweepAngle = segment.sizeBytes / totalBytes * 360f
-                add(
-                    JvmStorageChartArc(
-                        segmentIndex = index,
-                        startAngle = nextStartAngle,
-                        sweepAngle = sweepAngle,
-                    )
-                )
-                nextStartAngle += sweepAngle
-            }
-        }
-
-        fun drawStorageArc(
-            arc: JvmStorageChartArc,
-            progress: Float,
-        ) {
-            val segment = visibleSegments[arc.segmentIndex]
-            val outerRadius = baseOuterRadius + maxOuterExpansion * progress
-            val centerlineRadius = (outerRadius + innerRadius) / 2f
-            val strokeWidth = outerRadius - innerRadius
-            val overlapAngle = if (visibleSegments.size > 1) 0.2f else 0f
-
-            drawArc(
-                color = segment.color,
-                startAngle = arc.startAngle,
-                sweepAngle = (arc.sweepAngle + overlapAngle).coerceAtMost(360f),
-                useCenter = false,
-                topLeft = Offset(
-                    x = center.x - centerlineRadius,
-                    y = center.y - centerlineRadius,
-                ),
-                size = Size(
-                    width = centerlineRadius * 2f,
-                    height = centerlineRadius * 2f,
-                ),
-                style = Stroke(
-                    width = strokeWidth,
-                    cap = StrokeCap.Butt,
-                ),
-            )
-        }
-
-        fun drawStorageLabel(
-            arc: JvmStorageChartArc,
-            progress: Float,
-        ) {
-            val segment = visibleSegments[arc.segmentIndex]
-            val labelText = formatStoragePercentLabel(
-                sizeBytes = segment.sizeBytes,
-                totalBytes = totalBytes,
-            )
-            if (labelText.isEmpty()) return
-
-            val outerRadius = baseOuterRadius + maxOuterExpansion * progress
-            val labelRadius = (outerRadius + innerRadius) / 2f
-            val availableThickness = outerRadius - innerRadius
-            val availableArcLength = labelRadius * (arc.sweepAngle * PI.toFloat() / 180f)
-            val labelHorizontalPadding = 8.dp.toPx()
-            val labelVerticalPadding = 4.dp.toPx()
-            val labelFontSize = (18f + 3f * progress).sp
-            val textLayoutResult = labelTextMeasurer.measure(
-                text = AnnotatedString(labelText),
-                style = labelTextStyle.copy(
-                    color = segment.labelColor,
-                    fontSize = labelFontSize,
-                ),
-            )
-
-            if (textLayoutResult.size.width + labelHorizontalPadding > availableArcLength) return
-            if (textLayoutResult.size.height + labelVerticalPadding > availableThickness) return
-
-            val centerAngle = (arc.startAngle + arc.sweepAngle / 2f) * PI.toFloat() / 180f
-            val labelCenter = Offset(
-                x = center.x + cos(centerAngle) * labelRadius,
-                y = center.y + sin(centerAngle) * labelRadius,
-            )
-
-            drawText(
-                textLayoutResult = textLayoutResult,
-                topLeft = Offset(
-                    x = labelCenter.x - textLayoutResult.size.width / 2f,
-                    y = labelCenter.y - textLayoutResult.size.height / 2f,
-                ),
-            )
-        }
-
-        arcs
-            .filter { arc -> hoverProgresses.getOrElse(arc.segmentIndex) { 0f } <= 0.001f }
-            .forEach { arc -> drawStorageArc(arc, 0f) }
-
-        arcs
-            .filter { arc -> hoverProgresses.getOrElse(arc.segmentIndex) { 0f } > 0.001f }
-            .forEach { arc ->
-                drawStorageArc(
-                    arc = arc,
-                    progress = hoverProgresses.getOrElse(arc.segmentIndex) { 0f },
-                )
-            }
-
-        arcs
-            .filter { arc -> hoverProgresses.getOrElse(arc.segmentIndex) { 0f } <= 0.001f }
-            .forEach { arc -> drawStorageLabel(arc, 0f) }
-
-        arcs
-            .filter { arc -> hoverProgresses.getOrElse(arc.segmentIndex) { 0f } > 0.001f }
-            .forEach { arc ->
-                drawStorageLabel(
-                    arc = arc,
-                    progress = hoverProgresses.getOrElse(arc.segmentIndex) { 0f },
-                )
-            }
-    }
-}
-
-private data class JvmStorageChartArc(
-    val segmentIndex: Int,
-    val startAngle: Float,
-    val sweepAngle: Float,
-)
-
-private fun formatStoragePercentLabel(
-    sizeBytes: Float,
-    totalBytes: Float,
-): String {
-    if (sizeBytes <= 0f || totalBytes <= 0f) return ""
-
-    val percent = sizeBytes / totalBytes * 100f
-    return if (percent < 1f) {
-        "<1%"
-    } else {
-        "${percent.roundToInt()}%"
-    }
-}
-
-private fun findHoveredStorageSegment(
-    pointer: Offset,
-    canvasSize: IntSize,
-    segments: List<JvmStorageChartSegment>,
-): Int? {
-    val visibleSegments = segments.filter { it.sizeBytes > 0f }
-    val totalBytes = visibleSegments.fold(0f) { total, segment ->
-        total + segment.sizeBytes
-    }
-    if (totalBytes <= 0f) return null
-
-    val minDimension = minOf(canvasSize.width, canvasSize.height).toFloat()
-    val center = Offset(canvasSize.width / 2f, canvasSize.height / 2f)
-    val distance = hypot(
-        x = pointer.x - center.x,
-        y = pointer.y - center.y,
-    )
-    val outerRadius = minDimension / 2f
-    val innerRadius = outerRadius * 0.34f
-    if (distance !in innerRadius..outerRadius) return null
-
-    val angle = ((Math.toDegrees(
-        atan2(
-            y = pointer.y - center.y,
-            x = pointer.x - center.x,
-        ).toDouble()
-    ) + 450.0) % 360.0).toFloat()
-
-    var startAngle = 0f
-    visibleSegments.forEachIndexed { index, segment ->
-        val sweepAngle = segment.sizeBytes / totalBytes * 360f
-        if (angle in startAngle..(startAngle + sweepAngle)) {
-            return index
-        }
-        startAngle += sweepAngle
-    }
-
-    return visibleSegments.lastIndex.takeIf { visibleSegments.isNotEmpty() }
-}
-
-@Composable
-private fun JvmStorageDonutLegendItem(
-    modifier: Modifier = Modifier,
-    segment: JvmStorageChartSegment,
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Canvas(modifier = Modifier.size(12.dp)) {
-            drawRect(color = segment.color)
-        }
-        Spacer(modifier = Modifier.width(XyTheme.dimens.innerHorizontalPadding / 3))
-        XyTextSub(
-            text = segment.title,
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 1,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-    }
-}
-
-private fun String.toStorageBytes(): Float {
+/**
+ * 将容量文本解析为字节数。
+ *
+ * ViewModel 当前暴露的是格式化后的文本，例如 12.4MB、1GB 或 0B；页面需要数值做汇总和进度条占比，
+ * 因此在 UI 层进行轻量解析。
+ *
+ * @return 解析后的字节数；解析失败时返回 0。
+ */
+private fun String.toStorageBytes(): Double {
     val text = trim()
-    if (text.isEmpty()) return 0f
+    if (text.isEmpty()) return 0.0
 
+    // 容量文本由数字和单位组成，先截取数字部分，再根据单位换算。
     val numberText = text.takeWhile { it.isDigit() || it == '.' }
-    val value = numberText.toFloatOrNull() ?: return 0f
+    val value = numberText.toDoubleOrNull() ?: return 0.0
     val unit = text.drop(numberText.length).trim().uppercase()
     val multiplier = when (unit) {
-        "PB" -> 1024f * 1024f * 1024f * 1024f * 1024f
-        "TB" -> 1024f * 1024f * 1024f * 1024f
-        "GB" -> 1024f * 1024f * 1024f
-        "MB" -> 1024f * 1024f
-        "KB" -> 1024f
-        else -> 1f
+        "PB" -> 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0
+        "TB" -> 1024.0 * 1024.0 * 1024.0 * 1024.0
+        "GB" -> 1024.0 * 1024.0 * 1024.0
+        "MB" -> 1024.0 * 1024.0
+        "KB" -> 1024.0
+        else -> 1.0
     }
     return value * multiplier
 }
 
+/**
+ * 将字节数格式化为页面展示容量。
+ *
+ * @return 带单位的容量文本，例如 0B、42MB、1.5GB。
+ */
+private fun Double.toStorageLabel(): String {
+    if (this <= 0.0) return "0B"
 
+    val units = listOf("B", "KB", "MB", "GB", "TB", "PB")
+    var value = this
+    var unitIndex = 0
+    // 按 1024 进位找到最适合阅读的容量单位。
+    while (value >= 1024.0 && unitIndex < units.lastIndex) {
+        value /= 1024.0
+        unitIndex++
+    }
 
+    // 10 以上或接近整数时不保留小数；小容量精确到一位小数，减少状态卡宽度压力。
+    val numberText = if (value >= 10.0 || (value - value.roundToInt()).let { it < 0.05 && it > -0.05 }) {
+        String.format(Locale.US, "%.0f", value)
+    } else {
+        String.format(Locale.US, "%.1f", value)
+    }
+    return "$numberText${units[unitIndex]}"
+}
