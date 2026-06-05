@@ -259,6 +259,7 @@ internal fun JvmSettingOverviewTile(
  * @param contentContainerEnabled 是否为内容区包一层容器；卡片网格类内容可关闭。
  * @param contentContainerColor 分组内容区背景色，默认保留设置行的浅色容器。
  * @param contentContainerBorderColor 分组内容区边框色，透明内容区可同步传透明避免出现嵌套边框。
+ * @param qualityNote 分组底部提示文案；为空或空白时不显示。
  * @param content 分组内部的设置行内容。
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -271,6 +272,7 @@ internal fun JvmSettingSection(
     contentContainerEnabled: Boolean = true,
     contentContainerColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
     contentContainerBorderColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
+    qualityNote: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(
@@ -332,6 +334,10 @@ internal fun JvmSettingSection(
                 }
             } else {
                 content()
+            }
+
+            if (!qualityNote.isNullOrBlank()) {
+                JvmSettingNote(text = qualityNote)
             }
         }
     }
@@ -766,7 +772,18 @@ internal fun JvmSettingNote(text: String) {
             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            JvmSettingIcon(icon = Res.drawable.info_24px, selected = true)
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "i",
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
             Text(
                 modifier = Modifier.weight(1f),
                 text = text,

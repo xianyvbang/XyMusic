@@ -112,6 +112,7 @@ fun JvmStreamingQualityScreen(
             badge = "当前：全网络同步",
             titleMinWidth = 240.dp,
             contentContainerEnabled = false,
+            qualityNote = "选择任一品质后，桌面端会继续同时更新 Wi-Fi 与移动网络两套码率设置。",
         ) {
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -138,10 +139,6 @@ fun JvmStreamingQualityScreen(
                     )
                 }
             }
-
-            JvmStreamingQualityNote(
-                text = "选择任一品质后，桌面端会继续同时更新 Wi-Fi 与移动网络两套码率设置。"
-            )
         }
 
         JvmSettingSection(
@@ -405,47 +402,6 @@ private fun JvmStreamingQualityChip(text: String) {
             text = text,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
         )
-    }
-}
-
-@Composable
-private fun JvmStreamingQualityNote(text: String) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
-                vertical = XyTheme.dimens.contentPadding
-            ),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), RoundedCornerShape(10.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "i",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = 20.sp
-            )
-        }
     }
 }
 

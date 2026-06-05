@@ -63,7 +63,6 @@ import cn.xybbz.router.StreamingQuality
 import cn.xybbz.ui.components.JvmSettingActionGrid
 import cn.xybbz.ui.components.JvmSettingDownloadRow
 import cn.xybbz.ui.components.JvmSettingNavigationRow
-import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
@@ -313,6 +312,7 @@ fun JvmSettingScreen(
                     badge = "偏好",
                     contentContainerColor = Color.Transparent,
                     contentContainerBorderColor = Color.Transparent,
+                    qualityNote = "设置项保持原有路由和数据写入行为，桌面端只调整信息架构和视觉密度。",
                 ) {
                     JvmSettingActionGrid(
                         onInterfaceClick = {
@@ -327,10 +327,6 @@ fun JvmSettingScreen(
                         onAboutClick = {
                             navigator.navigate(About)
                         },
-                    )
-
-                    JvmSettingNote(
-                        text = "设置项保持原有路由和数据写入行为，桌面端只调整信息架构和视觉密度。"
                     )
                 }
             }
