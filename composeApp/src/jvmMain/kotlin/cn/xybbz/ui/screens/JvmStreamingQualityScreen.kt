@@ -34,7 +34,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -62,6 +61,8 @@ import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
+import cn.xybbz.ui.components.JvmSettingStatusCard
+import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.StreamingQualityViewModel
 import kotlinx.coroutines.launch
@@ -97,10 +98,12 @@ fun JvmStreamingQualityScreen(
             title = pageTitle,
             description = "选择桌面端播放时使用的在线音频品质和服务端转码格式。当前桌面端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。",
         ) {
-            JvmStreamingQualityStatusCard(
-                modifier = Modifier.widthIn(min = 248.dp),
-                selectedQuality = selectedQuality.audioBitRateStr,
-                selectedFormat = selectedFormatLabel,
+            JvmSettingStatusCard(
+                items = listOf(
+                    JvmSettingStatusCardItem(label = "播放品质", value = selectedQuality.audioBitRateStr),
+                    JvmSettingStatusCardItem(label = "转码格式", value = selectedFormatLabel),
+                    JvmSettingStatusCardItem(label = "应用范围", value = "全网络"),
+                )
             )
         }
 
@@ -170,52 +173,6 @@ fun JvmStreamingQualityScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun JvmStreamingQualityStatusCard(
-    modifier: Modifier = Modifier,
-    selectedQuality: String,
-    selectedFormat: String,
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-        ) {
-            JvmStreamingQualityStatusRow(label = "播放品质", value = selectedQuality)
-            JvmStreamingQualityStatusRow(label = "转码格式", value = selectedFormat)
-            JvmStreamingQualityStatusRow(label = "应用范围", value = "全网络")
-        }
-    }
-}
-
-@Composable
-private fun JvmStreamingQualityStatusRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface
-        )
     }
 }
 

@@ -66,6 +66,8 @@ import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
+import cn.xybbz.ui.components.JvmSettingStatusCard
+import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.components.rememberJvmFileKitDialogSettings
 import cn.xybbz.ui.components.show
@@ -376,80 +378,14 @@ private fun JvmMemoryHeader(
         title = title,
         description = "查看歌曲缓存、临时缓存、数据库和应用数据的真实占用，并把清理与路径操作集中在一个页面。",
     ) {
-        JvmMemoryStatusCard(
-            modifier = Modifier.widthIn(min = 278.dp),
-            totalSize = totalSize,
-            clearableSize = clearableSize,
-            cachePathMode = cachePathMode,
-        )
-    }
-}
-
-/**
- * 头部右侧状态卡。
- *
- * @param modifier 外部布局修饰符。
- * @param totalSize 总占用容量文本。
- * @param clearableSize 可清理容量文本。
- * @param cachePathMode 缓存路径模式。
- */
-@Composable
-private fun JvmMemoryStatusCard(
-    modifier: Modifier = Modifier,
-    totalSize: String,
-    clearableSize: String,
-    cachePathMode: String,
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-        ) {
-            JvmMemoryStatusRow(label = "本地占用", value = totalSize)
-            JvmMemoryStatusRow(label = "可清理", value = clearableSize)
-            JvmMemoryStatusRow(label = "缓存路径", value = cachePathMode)
-        }
-    }
-}
-
-/**
- * 状态卡内的单行键值信息。
- *
- * @param label 左侧标签。
- * @param value 右侧值。
- */
-@Composable
-private fun JvmMemoryStatusRow(
-    label: String,
-    value: String,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            modifier = Modifier.weight(1f),
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+        JvmSettingStatusCard(
+            width = 278.dp,
+            prominentValue = true,
+            items = listOf(
+                JvmSettingStatusCardItem(label = "本地占用", value = totalSize),
+                JvmSettingStatusCardItem(label = "可清理", value = clearableSize),
+                JvmSettingStatusCardItem(label = "缓存路径", value = cachePathMode),
+            )
         )
     }
 }

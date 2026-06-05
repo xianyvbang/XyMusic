@@ -19,19 +19,10 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,8 +30,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
@@ -68,6 +57,8 @@ import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingPathRow
 import cn.xybbz.ui.components.JvmSettingSection
+import cn.xybbz.ui.components.JvmSettingStatusCard
+import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
@@ -137,11 +128,11 @@ fun JvmSettingScreen(
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
-                // 状态卡固定紧凑宽度，避免 FlowRow 按内部文本自然宽度把它挤到第二行。
-                modifier = Modifier.width(248.dp),
-                dataSourceLabel = dataSourceLabel,
-                selectedQuality = selectedQuality,
-                maxConcurrentDownloads = settings.maxConcurrentDownloads,
+                items = listOf(
+                    JvmSettingStatusCardItem(label = "当前数据源", value = dataSourceLabel),
+                    JvmSettingStatusCardItem(label = "在线品质", value = selectedQuality),
+                    JvmSettingStatusCardItem(label = "下载并发", value = settings.maxConcurrentDownloads.toString()),
+                )
             )
         }
 
@@ -401,59 +392,6 @@ private fun jvmSettingActionEntries(
             onClick = onAboutClick,
         ),
     )
-}
-
-@Composable
-private fun JvmSettingStatusCard(
-    modifier: Modifier = Modifier,
-    dataSourceLabel: String,
-    selectedQuality: String,
-    maxConcurrentDownloads: Int,
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-        ) {
-            JvmSettingStatusRow(label = "当前数据源", value = dataSourceLabel)
-            JvmSettingStatusRow(label = "在线品质", value = selectedQuality)
-            JvmSettingStatusRow(label = "下载并发", value = maxConcurrentDownloads.toString())
-        }
-    }
-}
-
-@Composable
-private fun JvmSettingStatusRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            modifier = Modifier.weight(1f),
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            modifier = Modifier.padding(start = XyTheme.dimens.contentPadding),
-            text = value,
-            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
 }
 
 /**

@@ -82,6 +82,9 @@ import xymusic_kmp.composeapp.generated.resources.download_max_list
 /** JVM 设置类页面主体最大宽度，设置页、关于页和存储管理页共用。 */
 internal val JvmSettingPageContentMaxWidth = 1080.dp
 
+/** JVM 设置类页面头部状态卡的默认固定宽度。 */
+private val JvmSettingStatusCardDefaultWidth = 248.dp
+
 /** JVM 设置类页面从单列切换为左右两栏的最小宽度。 */
 private val JvmSettingTwoPaneBreakpoint = 860.dp
 
@@ -380,6 +383,85 @@ internal fun JvmSettingPageHeader(
 
             statusContent()
         }
+    }
+}
+
+/**
+ * JVM 设置类页面头部右侧状态摘要项。
+ */
+internal data class JvmSettingStatusCardItem(
+    val label: String,
+    val value: String,
+)
+
+/**
+ * JVM 设置类页面头部右侧状态摘要卡。
+ *
+ * 卡片使用固定宽度，避免子项的 fillMaxWidth 在 Row 测量时把头部右侧内容撑满整行。
+ */
+@Composable
+internal fun JvmSettingStatusCard(
+    modifier: Modifier = Modifier,
+    width: Dp = JvmSettingStatusCardDefaultWidth,
+    items: List<JvmSettingStatusCardItem>,
+    prominentValue: Boolean = false,
+) {
+    Surface(
+        modifier = modifier.width(width),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
+        ) {
+            items.forEach { item ->
+                JvmSettingStatusCardRow(
+                    label = item.label,
+                    value = item.value,
+                    prominentValue = prominentValue,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun JvmSettingStatusCardRow(
+    label: String,
+    value: String,
+    prominentValue: Boolean,
+) {
+    val valueStyle = if (prominentValue) {
+        MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+    } else {
+        MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = value,
+            style = valueStyle,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
