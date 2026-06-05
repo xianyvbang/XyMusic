@@ -87,6 +87,9 @@ private val JvmSettingActionCardCompactWidth = 154.dp
 /** 通用入口卡片在双列场景下允许的最大宽度，避免右栏加宽后卡片被拉得过宽。 */
 private val JvmSettingActionCardMaxWidth = 196.dp
 
+/** 通用入口卡片固定高度，保证四个入口在 FlowRow 中等高排列。 */
+private val JvmSettingActionCardHeight = 148.dp
+
 /** 设置页统一图标容器尺寸。 */
 private val JvmSettingIconSize = 32.dp
 
@@ -740,7 +743,10 @@ private fun JvmSettingActionCard(
     val shape = RoundedCornerShape(XyTheme.dimens.corner)
     Column(
         modifier = modifier
-            .heightIn(min = 116.dp)
+            .heightIn(
+                min = JvmSettingActionCardHeight,
+                max = JvmSettingActionCardHeight
+            )
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .border(
