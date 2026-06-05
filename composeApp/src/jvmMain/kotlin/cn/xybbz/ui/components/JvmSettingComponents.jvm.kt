@@ -154,6 +154,8 @@ internal fun JvmSettingOverviewTile(
  * @param title 分组标题。
  * @param subtitle 分组说明，用来解释该组设置的范围。
  * @param badge 分组右侧标签。
+ * @param titleMinWidth 标题说明区域的最小宽度，不同页面可按排版密度调整。
+ * @param contentContainerEnabled 是否为内容区包一层容器；卡片网格类内容可关闭。
  * @param contentContainerColor 分组内容区背景色，默认保留设置行的浅色容器。
  * @param contentContainerBorderColor 分组内容区边框色，透明内容区可同步传透明避免出现嵌套边框。
  * @param content 分组内部的设置行内容。
@@ -164,6 +166,8 @@ internal fun JvmSettingSection(
     title: String,
     subtitle: String,
     badge: String,
+    titleMinWidth: Dp = 220.dp,
+    contentContainerEnabled: Boolean = true,
     contentContainerColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
     contentContainerBorderColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
     content: @Composable ColumnScope.() -> Unit,
@@ -191,7 +195,7 @@ internal fun JvmSettingSection(
             ) {
                 Column(
                     modifier = Modifier
-                        .widthIn(min = 220.dp)
+                        .widthIn(min = titleMinWidth)
                         .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
                 ) {
@@ -211,16 +215,21 @@ internal fun JvmSettingSection(
                 JvmSettingBadge(text = badge)
             }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .background(contentContainerColor)
-                    .border(
-                        BorderStroke(1.dp, contentContainerBorderColor),
-                        RoundedCornerShape(XyTheme.dimens.corner)
-                    )
-            ) {
+            // 设置页普通行需要统一浅色容器，卡片网格类内容则直接使用 section 的留白。
+            if (contentContainerEnabled) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                        .background(contentContainerColor)
+                        .border(
+                            BorderStroke(1.dp, contentContainerBorderColor),
+                            RoundedCornerShape(XyTheme.dimens.corner)
+                        )
+                ) {
+                    content()
+                }
+            } else {
                 content()
             }
         }

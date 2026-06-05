@@ -26,7 +26,6 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -63,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.ui.components.JvmLazyListComponent
+import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.StreamingQualityViewModel
@@ -120,10 +120,12 @@ fun JvmStreamingQualityScreen(
                         selectedFormat = selectedFormatLabel,
                     )
 
-                    JvmStreamingQualitySection(
+                    JvmSettingSection(
                         title = "播放品质",
                         subtitle = "桌面端保持一组品质选择，写入时同步更新 Wi-Fi 与移动网络码率。",
                         badge = "当前：全网络同步",
+                        titleMinWidth = 240.dp,
+                        contentContainerEnabled = false,
                     ) {
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
@@ -156,10 +158,12 @@ fun JvmStreamingQualityScreen(
                         )
                     }
 
-                    JvmStreamingQualitySection(
+                    JvmSettingSection(
                         title = transcodeFormatTitle,
                         subtitle = "格式列表来自服务端支持项，并补齐客户端可显示的默认格式。",
                         badge = "服务端能力",
+                        titleMinWidth = 240.dp,
+                        contentContainerEnabled = false,
                     ) {
                         if (streamingQualityViewModel.transcodeAudioBitRateType.isEmpty()) {
                             JvmStreamingQualityEmptyState(text = "正在读取服务端支持的转码格式…")
@@ -236,79 +240,6 @@ private fun JvmStreamingQualityHeader(
             selectedQuality = selectedQuality,
             selectedFormat = selectedFormat,
         )
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun JvmStreamingQualitySection(
-    title: String,
-    subtitle: String,
-    badge: String,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(
-                XyTheme.dimens.innerHorizontalPadding + XyTheme.dimens.outerVerticalPadding / 2
-            ),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
-        ) {
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-                itemVerticalAlignment = Alignment.Top
-            ) {
-                Column(
-                    modifier = Modifier
-                        .widthIn(min = 240.dp)
-                        .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
-                ) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 20.sp
-                    )
-                }
-
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
-                    )
-                ) {
-                    Text(
-                        modifier = Modifier.padding(
-                            horizontal = XyTheme.dimens.contentPadding,
-                            vertical = XyTheme.dimens.outerVerticalPadding
-                        ),
-                        text = badge,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                    )
-                }
-            }
-
-            content()
-        }
     }
 }
 
