@@ -18,10 +18,14 @@
 
 package cn.xybbz.ui.components
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -37,6 +41,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -51,6 +56,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,6 +68,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import org.jetbrains.compose.resources.DrawableResource
@@ -90,8 +98,28 @@ private val JvmSettingActionCardMaxWidth = 196.dp
 /** 通用入口卡片固定高度，保证四个入口在 FlowRow 中等高排列。 */
 private val JvmSettingActionCardHeight = 148.dp
 
+/** 通用入口卡片移入时的上移距离，保持与专辑卡片 hover 反馈一致。 */
+private val JvmSettingActionCardLiftOffset = (-6).dp
+
 /** 设置页统一图标容器尺寸。 */
 private val JvmSettingIconSize = 32.dp
+
+/**
+ * 通用入口卡片的渲染数据。
+ *
+ * @param icon 卡片小标题图标。
+ * @param kicker 卡片小标题。
+ * @param title 卡片主标题。
+ * @param description 卡片说明。
+ * @param onClick 卡片点击事件。
+ */
+private data class JvmSettingActionEntry(
+    val icon: DrawableResource,
+    val kicker: String,
+    val title: String,
+    val description: String,
+    val onClick: () -> Unit,
+)
 
 /**
  * JVM 设置页统一换行容器。
@@ -575,6 +603,12 @@ internal fun JvmSettingActionGrid(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
+        val actionEntries = jvmSettingActionEntries(
+            onInterfaceClick = onInterfaceClick,
+            onLanguageClick = onLanguageClick,
+            onCustomApiClick = onCustomApiClick,
+            onAboutClick = onAboutClick,
+        )
         // 两列布局至少满足卡片自身宽度，也不能低于设置页约定的通用入口最小宽度。
         val twoColumnMinWidth = maxOf(
             JvmSettingActionGridMinWidth,
@@ -601,40 +635,56 @@ internal fun JvmSettingActionGrid(
             horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(gap),
         ) {
-            JvmSettingActionCard(
-                modifier = Modifier.width(cardWidth),
-                icon = Res.drawable.settings_24px,
-                kicker = "显示",
-                title = stringResource(Res.string.interface_settings),
-                description = "主题、背景图片与桌面显示偏好。",
-                onClick = onInterfaceClick
-            )
-            JvmSettingActionCard(
-                modifier = Modifier.width(cardWidth),
-                icon = Res.drawable.info_24px,
-                kicker = "本地化",
-                title = stringResource(Res.string.language),
-                description = "切换跟随系统或固定语言。",
-                onClick = onLanguageClick
-            )
-            JvmSettingActionCard(
-                modifier = Modifier.width(cardWidth),
-                icon = Res.drawable.music_note_24px,
-                kicker = "资源",
-                title = stringResource(Res.string.customize_lyric_settings),
-                description = "自定义歌词与封面服务地址。",
-                onClick = onCustomApiClick
-            )
-            JvmSettingActionCard(
-                modifier = Modifier.width(cardWidth),
-                icon = Res.drawable.info_24px,
-                kicker = "应用",
-                title = stringResource(Res.string.about),
-                description = "版本信息、检查更新与项目说明。",
-                onClick = onAboutClick
-            )
+            actionEntries.forEach { actionEntry ->
+                JvmSettingActionCard(
+                    modifier = Modifier.width(cardWidth),
+                    actionEntry = actionEntry
+                )
+            }
         }
     }
+}
+
+/**
+ * 组装通用入口的四个卡片配置，避免每个卡片在网格里重复声明文案和点击逻辑。
+ */
+@Composable
+private fun jvmSettingActionEntries(
+    onInterfaceClick: () -> Unit,
+    onLanguageClick: () -> Unit,
+    onCustomApiClick: () -> Unit,
+    onAboutClick: () -> Unit,
+): List<JvmSettingActionEntry> {
+    return listOf(
+        JvmSettingActionEntry(
+            icon = Res.drawable.settings_24px,
+            kicker = "显示",
+            title = stringResource(Res.string.interface_settings),
+            description = "主题、背景图片与桌面显示偏好。",
+            onClick = onInterfaceClick,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.info_24px,
+            kicker = "本地化",
+            title = stringResource(Res.string.language),
+            description = "切换跟随系统或固定语言。",
+            onClick = onLanguageClick,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.music_note_24px,
+            kicker = "资源",
+            title = stringResource(Res.string.customize_lyric_settings),
+            description = "自定义歌词与封面服务地址。",
+            onClick = onCustomApiClick,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.info_24px,
+            kicker = "应用",
+            title = stringResource(Res.string.about),
+            description = "版本信息、检查更新与项目说明。",
+            onClick = onAboutClick,
+        ),
+    )
 }
 
 /**
@@ -725,55 +775,65 @@ private fun JvmSettingBaseRow(
  * 通用设置入口卡片。
  *
  * @param modifier 外层网格传入的宽度修饰。
- * @param icon 卡片小标题图标。
- * @param kicker 卡片小标题。
- * @param title 卡片主标题。
- * @param description 卡片说明。
- * @param onClick 卡片点击事件。
+ * @param actionEntry 单个入口卡片的展示文案、图标和点击事件。
  */
 @Composable
 private fun JvmSettingActionCard(
     modifier: Modifier = Modifier,
-    icon: DrawableResource,
-    kicker: String,
-    title: String,
-    description: String,
-    onClick: () -> Unit,
+    actionEntry: JvmSettingActionEntry,
 ) {
     val shape = RoundedCornerShape(XyTheme.dimens.corner)
-    Column(
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    // 复用专辑卡片的 hover 上移动效，只做视觉偏移，不改变 FlowRow 的布局尺寸。
+    val liftOffset by animateDpAsState(
+        targetValue = if (hovered) JvmSettingActionCardLiftOffset else 0.dp,
+        animationSpec = tween(durationMillis = 160),
+        label = "setting_action_card_lift_offset",
+    )
+
+    Box(
         modifier = modifier
             .heightIn(
                 min = JvmSettingActionCardHeight,
                 max = JvmSettingActionCardHeight
             )
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(
-                BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
-                shape
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                onClick = actionEntry.onClick
             )
-            .clickable(onClick = onClick)
-            .padding(XyTheme.dimens.outerHorizontalPadding),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
     ) {
-        JvmSettingKicker(icon = icon, text = kicker)
-        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = description,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            lineHeight = 17.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
+        Column(
+            modifier = Modifier
+                .offset(y = liftOffset)
+                .fillMaxSize()
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                .border(
+                    BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
+                    shape
+                )
+                .padding(XyTheme.dimens.outerHorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+        ) {
+            JvmSettingKicker(icon = actionEntry.icon, text = actionEntry.kicker)
+            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+            Text(
+                text = actionEntry.title,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = actionEntry.description,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 17.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
