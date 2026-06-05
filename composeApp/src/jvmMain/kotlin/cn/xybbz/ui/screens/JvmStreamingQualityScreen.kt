@@ -26,8 +26,6 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -60,6 +58,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
+import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -79,7 +78,6 @@ private val QualityOptionHeight = 176.dp
 private val FormatOptionWidth = 220.dp
 private val FormatOptionHeight = 164.dp
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun JvmStreamingQualityScreen(
     streamingQualityViewModel: StreamingQualityViewModel = koinViewModel<StreamingQualityViewModel>(),
@@ -114,11 +112,7 @@ fun JvmStreamingQualityScreen(
             contentContainerEnabled = false,
             qualityNote = "选择任一品质后，桌面端会继续同时更新 Wi-Fi 与移动网络两套码率设置。",
         ) {
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            ) {
+            JvmSettingFlowRow {
                 TranscodeAudioBitRateType.entries.forEach { quality ->
                     JvmStreamingQualityOptionCard(
                         modifier = Modifier
@@ -151,11 +145,7 @@ fun JvmStreamingQualityScreen(
             if (streamingQualityViewModel.transcodeAudioBitRateType.isEmpty()) {
                 JvmStreamingQualityEmptyState(text = "正在读取服务端支持的转码格式…")
             } else {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-                ) {
+                JvmSettingFlowRow {
                     streamingQualityViewModel.transcodeAudioBitRateType.forEach { format ->
                         val targetFormat = format.targetFormat
                         val title = format.name.ifBlank { targetFormat.uppercase() }

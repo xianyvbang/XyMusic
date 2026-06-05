@@ -24,8 +24,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -62,6 +60,7 @@ import cn.xybbz.router.ProxyConfig
 import cn.xybbz.router.StreamingQuality
 import cn.xybbz.ui.components.JvmSettingActionGrid
 import cn.xybbz.ui.components.JvmSettingDownloadRow
+import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingPageHeader
@@ -339,7 +338,6 @@ fun JvmSettingScreen(
  *
  * 宽屏时保持预览稿的左侧主栏 + 右侧侧栏结构，窄屏时交给 FlowRow 自动换成单列。
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun JvmSettingMainLayout(
     leftContent: @Composable ColumnScope.() -> Unit,
@@ -375,7 +373,7 @@ private fun JvmSettingMainLayout(
             maxWidth
         }
 
-        FlowRow(
+        JvmSettingFlowRow(
             modifier = Modifier.fillMaxWidth(),
             // 子项宽度被收紧后居中排列，避免在宽屏上贴左显得失衡。
             horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
@@ -467,7 +465,6 @@ private fun JvmSettingStatusRow(label: String, value: String) {
  *
  * 宽屏时保持三张卡片一行，窄屏时每张卡片独占一行。
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun JvmSettingOverview(
     settings: XySettings,
@@ -488,7 +485,7 @@ private fun JvmSettingOverview(
             maxWidth
         }
 
-        FlowRow(
+        JvmSettingFlowRow(
             modifier = Modifier.fillMaxWidth(),
             // 卡片不再铺满整行时居中摆放，视觉上更接近预览稿。
             horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),

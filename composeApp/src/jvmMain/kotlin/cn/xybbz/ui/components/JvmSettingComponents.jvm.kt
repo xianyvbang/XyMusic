@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -90,6 +91,33 @@ private val JvmSettingActionCardWideWidth = 184.dp
 private val JvmSettingIconSize = 32.dp
 
 /**
+ * JVM 设置页统一换行容器。
+ *
+ * @param modifier 外层修饰符，默认铺满父级宽度。
+ * @param horizontalArrangement 横向间距和对齐方式。
+ * @param verticalArrangement 纵向间距。
+ * @param itemVerticalAlignment 每个 item 在所在行内的垂直对齐方式。
+ * @param content 容器内的可换行内容。
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun JvmSettingFlowRow(
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+    itemVerticalAlignment: Alignment.Vertical = Alignment.Top,
+    content: @Composable FlowRowScope.() -> Unit,
+) {
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = horizontalArrangement,
+        verticalArrangement = verticalArrangement,
+        itemVerticalAlignment = itemVerticalAlignment,
+        content = content
+    )
+}
+
+/**
  * JVM 设置类页面的通用列表外壳。
  *
  * @param modifier 传给内部列表的修饰符。
@@ -135,7 +163,6 @@ internal fun JvmSettingPageScaffold(
  * @param contentMaxWidth 可选的头部宽度上限；为空时铺满当前内容宽度。
  * @param statusContent 右侧状态摘要卡片。
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun JvmSettingPageHeader(
     modifier: Modifier = Modifier,
@@ -156,7 +183,7 @@ internal fun JvmSettingPageHeader(
                 .align(Alignment.Center)
         }
 
-        FlowRow(
+        JvmSettingFlowRow(
             modifier = flowModifier,
             horizontalArrangement = Arrangement.spacedBy(gap),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
@@ -262,7 +289,6 @@ internal fun JvmSettingOverviewTile(
  * @param qualityNote 分组底部提示文案；为空或空白时不显示。
  * @param content 分组内部的设置行内容。
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun JvmSettingSection(
     title: String,
@@ -290,7 +316,7 @@ internal fun JvmSettingSection(
             ),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
         ) {
-            FlowRow(
+            JvmSettingFlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
                 verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
@@ -537,7 +563,6 @@ private fun JvmSettingDownloadSegment(
  * @param onCustomApiClick 自定义资源入口点击事件。
  * @param onAboutClick 关于页面入口点击事件。
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun JvmSettingActionGrid(
     onInterfaceClick: () -> Unit,
@@ -568,7 +593,7 @@ internal fun JvmSettingActionGrid(
             else -> maxWidth
         }
 
-        FlowRow(
+        JvmSettingFlowRow(
             modifier = Modifier.fillMaxWidth(),
             // 卡片宽度确定后居中排列，避免最后一行靠左显得松散。
             horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
@@ -620,7 +645,6 @@ internal fun JvmSettingActionGrid(
  * @param onClick 可选整行点击事件。
  * @param trailing 行尾控件内容。
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun JvmSettingBaseRow(
     icon: DrawableResource,
@@ -637,7 +661,7 @@ private fun JvmSettingBaseRow(
         Modifier.clickable(onClick = onClick)
     }
 
-    FlowRow(
+    JvmSettingFlowRow(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = XyTheme.dimens.itemHeight)
