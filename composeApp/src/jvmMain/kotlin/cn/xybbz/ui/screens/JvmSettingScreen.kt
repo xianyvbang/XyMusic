@@ -26,9 +26,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -47,7 +45,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.copyTextToClipboard
@@ -63,17 +60,17 @@ import cn.xybbz.router.LanguageConfig
 import cn.xybbz.router.MemoryManagement
 import cn.xybbz.router.ProxyConfig
 import cn.xybbz.router.StreamingQuality
-import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.JvmSettingActionGrid
 import cn.xybbz.ui.components.JvmSettingDownloadRow
 import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingOverviewTile
+import cn.xybbz.ui.components.JvmSettingPageHeader
+import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingPathRow
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -133,226 +130,214 @@ fun JvmSettingScreen(
         .audioBitRateStr
     val dataSourceLabel = settings.dataSourceType?.title ?: "未连接"
 
-    XyColumnScreen {
-        JvmLazyListComponent(
-            modifier = Modifier.fillMaxSize(),
-            pagingItems = null,
-            contentPadding = PaddingValues(
-                horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
-//                vertical = XyTheme.dimens.innerVerticalPadding + XyTheme.dimens.outerVerticalPadding * 2
-            ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
-            lazyColumnBottom = null
+    JvmSettingPageScaffold(contentMaxWidth = JvmSettingContentMaxWidth) {
+        JvmSettingPageHeader(
+            title = stringResource(Res.string.settings),
+            description = "把桌面端常用配置集中为更可扫读的设置中心：播放缓存、连接管理、下载队列、界面语言和扩展能力都保留当前入口。",
+            contentMaxWidth = JvmSettingMainContentMaxWidth,
         ) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .widthIn(max = JvmSettingContentMaxWidth)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
+            JvmSettingStatusCard(
+                // 状态卡保持紧凑宽度，避免挤占标题说明的阅读空间。
+                modifier = Modifier.widthIn(min = 248.dp),
+                dataSourceLabel = dataSourceLabel,
+                selectedQuality = selectedQuality,
+                maxConcurrentDownloads = settings.maxConcurrentDownloads,
+            )
+        }
+
+        JvmSettingOverview(
+            settings = settings,
+            cacheLimitLabel = cacheLimitLabel,
+            onStorageClick = {
+                navigator.navigate(MemoryManagement)
+            },
+        )
+
+        JvmSettingMainLayout(
+            leftContent = {
+                JvmSettingSection(
+                    title = "播放与缓存",
+                    subtitle = "控制在线播放策略、缓存位置和跨设备播放行为。",
+                    badge = "核心",
                 ) {
-                    JvmSettingHeader(
-                        settings = settings,
-                        dataSourceLabel = dataSourceLabel,
-                        selectedQuality = selectedQuality,
+                    JvmSettingSwitchRow(
+                        icon = Res.drawable.download_24px,
+                        title = stringResource(Res.string.broadcast_while_down),
+                        description = "播放时缓存音频资源，弱网重播更稳定。",
+                        checked = settings.ifEnableEdgeDownload,
+                        onCheckedChange = { checked ->
+                            coroutineScope.launch {
+                                settingsViewModel.settingsManager.setIfEnableEdgeDownload(checked)
+                            }
+                        }
                     )
 
-                    JvmSettingOverview(
-                        settings = settings,
-                        cacheLimitLabel = cacheLimitLabel,
-                        onStorageClick = {
-                            navigator.navigate(MemoryManagement)
-                        },
+                    AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
+                        JvmSettingNavigationRow(
+                            icon = Res.drawable.folder_managed_24px,
+                            title = stringResource(Res.string.cache_limit),
+                            description = "设置播放缓存最大占用空间。",
+                            value = cacheLimitLabel,
+                            onClick = {
+                                navigator.navigate(CacheLimit)
+                            }
+                        )
+                    }
+
+                    JvmSettingNavigationRow(
+                        icon = Res.drawable.music_note_24px,
+                        title = stringResource(Res.string.online_music_quality),
+                        description = "选择桌面端在线音频品质与转码格式。",
+                        value = "$selectedQuality · ${settings.transcodeFormat.uppercase()}",
+                        onClick = {
+                            navigator.navigate(StreamingQuality)
+                        }
                     )
 
-                    JvmSettingMainLayout(
-                        leftContent = {
-                            JvmSettingSection(
-                                title = "播放与缓存",
-                                subtitle = "控制在线播放策略、缓存位置和跨设备播放行为。",
-                                badge = "核心",
-                            ) {
-                                JvmSettingSwitchRow(
-                                    icon = Res.drawable.download_24px,
-                                    title = stringResource(Res.string.broadcast_while_down),
-                                    description = "播放时缓存音频资源，弱网重播更稳定。",
-                                    checked = settings.ifEnableEdgeDownload,
-                                    onCheckedChange = { checked ->
-                                        coroutineScope.launch {
-                                            settingsViewModel.settingsManager.setIfEnableEdgeDownload(checked)
-                                        }
-                                    }
-                                )
-
-                                AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
-                                    JvmSettingNavigationRow(
-                                        icon = Res.drawable.folder_managed_24px,
-                                        title = stringResource(Res.string.cache_limit),
-                                        description = "设置播放缓存最大占用空间。",
-                                        value = cacheLimitLabel,
-                                        onClick = {
-                                            navigator.navigate(CacheLimit)
-                                        }
-                                    )
-                                }
-
-                                JvmSettingNavigationRow(
-                                    icon = Res.drawable.music_note_24px,
-                                    title = stringResource(Res.string.online_music_quality),
-                                    description = "选择桌面端在线音频品质与转码格式。",
-                                    value = "$selectedQuality · ${settings.transcodeFormat.uppercase()}",
-                                    onClick = {
-                                        navigator.navigate(StreamingQuality)
-                                    }
-                                )
-
-                                JvmSettingSwitchRow(
-                                    icon = Res.drawable.album_24px,
-                                    title = stringResource(Res.string.album_playback_history),
-                                    description = "记录专辑播放进度，便于下次继续。",
-                                    checked = settings.ifEnableAlbumHistory,
-                                    onCheckedChange = { checked ->
-                                        coroutineScope.launch {
-                                            settingsViewModel.settingsManager.setIfEnableAlbumHistory(checked)
-                                        }
-                                    }
-                                )
-
-                                JvmSettingSwitchRow(
-                                    icon = Res.drawable.volume_up_24px,
-                                    title = stringResource(Res.string.allow_simultaneous_playback),
-                                    description = "保留系统音频焦点，不主动打断其他声音。",
-                                    checked = settings.ifHandleAudioFocus,
-                                    onCheckedChange = { checked ->
-                                        coroutineScope.launch {
-                                            settingsViewModel.settingsManager.setIfHandleAudioFocus(checked)
-                                        }
-                                    }
-                                )
-
-                                JvmSettingSwitchRow(
-                                    icon = Res.drawable.av_timer_24px,
-                                    title = stringResource(Res.string.enabled_sync_play_progress),
-                                    description = "向服务端同步当前播放位置。",
-                                    checked = settings.ifEnableSyncPlayProgress,
-                                    onCheckedChange = { checked ->
-                                        coroutineScope.launch {
-                                            settingsViewModel.setSyncPlayProgressEnabled(checked)
-                                        }
-                                    }
-                                )
-
-                                JvmSettingPathRow(
-                                    icon = Res.drawable.folder_managed_24px,
-                                    title = stringResource(Res.string.cache_location),
-                                    path = cacheFilePath,
-                                    onClick = {
-                                        if (cacheFilePath.isNotBlank()) {
-                                            copyTextToClipboard(cacheFilePath)
-                                            MessageUtils.sendPopTip(copySuccess)
-                                        }
-                                    }
-                                )
+                    JvmSettingSwitchRow(
+                        icon = Res.drawable.album_24px,
+                        title = stringResource(Res.string.album_playback_history),
+                        description = "记录专辑播放进度，便于下次继续。",
+                        checked = settings.ifEnableAlbumHistory,
+                        onCheckedChange = { checked ->
+                            coroutineScope.launch {
+                                settingsViewModel.settingsManager.setIfEnableAlbumHistory(checked)
                             }
+                        }
+                    )
 
-                            JvmSettingSection(
-                                title = "下载与存储",
-                                subtitle = "下载并发、歌曲缓存路径与本地空间管理。",
-                                badge = "本机",
-                            ) {
-                                JvmSettingDownloadRow(
-                                    selected = settings.maxConcurrentDownloads,
-                                    onSelected = { maxConcurrentDownloads ->
-                                        coroutineScope.launch {
-                                            settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
-                                        }
-                                    }
-                                )
-
-                                JvmSettingPathRow(
-                                    icon = Res.drawable.queue_music_24px,
-                                    title = stringResource(Res.string.song_cache_location),
-                                    path = songStoragePath,
-                                    onClick = {
-                                        if (songStoragePath.isNotBlank()) {
-                                            copyTextToClipboard(songStoragePath)
-                                            MessageUtils.sendPopTip(copySuccess)
-                                        }
-                                    }
-                                )
-
-                                JvmSettingNavigationRow(
-                                    icon = Res.drawable.folder_managed_24px,
-                                    title = stringResource(Res.string.storage_management),
-                                    description = "查看缓存占用并清理本地文件。",
-                                    value = "打开存储管理",
-                                    onClick = {
-                                        navigator.navigate(MemoryManagement)
-                                    }
-                                )
+                    JvmSettingSwitchRow(
+                        icon = Res.drawable.volume_up_24px,
+                        title = stringResource(Res.string.allow_simultaneous_playback),
+                        description = "保留系统音频焦点，不主动打断其他声音。",
+                        checked = settings.ifHandleAudioFocus,
+                        onCheckedChange = { checked ->
+                            coroutineScope.launch {
+                                settingsViewModel.settingsManager.setIfHandleAudioFocus(checked)
                             }
-                        },
-                        rightContent = {
-                            JvmSettingSection(
-                                title = "连接",
-                                subtitle = "管理音乐服务地址和当前连接。",
-                                badge = "在线",
-                            ) {
-                                JvmSettingNavigationRow(
-                                    icon = Res.drawable.http_24px,
-                                    title = stringResource(Res.string.connection_management),
-                                    description = "切换或编辑 Jellyfin、Navidrome 等数据源。",
-                                    value = dataSourceLabel,
-                                    onClick = {
-                                        navigator.navigate(ConnectionManagement)
-                                    }
-                                )
+                        }
+                    )
 
-                                JvmSettingNavigationRow(
-                                    icon = Res.drawable.signal_cellular_alt_24px,
-                                    title = stringResource(Res.string.poxy_config),
-                                    description = "配置服务访问代理和网络转发。",
-                                    value = "网络",
-                                    onClick = {
-                                        navigator.navigate(ProxyConfig)
-                                    }
-                                )
+                    JvmSettingSwitchRow(
+                        icon = Res.drawable.av_timer_24px,
+                        title = stringResource(Res.string.enabled_sync_play_progress),
+                        description = "向服务端同步当前播放位置。",
+                        checked = settings.ifEnableSyncPlayProgress,
+                        onCheckedChange = { checked ->
+                            coroutineScope.launch {
+                                settingsViewModel.setSyncPlayProgressEnabled(checked)
                             }
+                        }
+                    )
 
-                            JvmSettingSection(
-                                title = "通用",
-                                subtitle = "界面、语言、自定义资源和应用信息。",
-                                badge = "偏好",
-                                contentContainerColor = Color.Transparent,
-                                contentContainerBorderColor = Color.Transparent,
-                            ) {
-                                JvmSettingActionGrid(
-                                    onInterfaceClick = {
-                                        navigator.navigate(InterfaceSetting)
-                                    },
-                                    onLanguageClick = {
-                                        navigator.navigate(LanguageConfig)
-                                    },
-                                    onCustomApiClick = {
-                                        navigator.navigate(CustomApi)
-                                    },
-                                    onAboutClick = {
-                                        navigator.navigate(About)
-                                    },
-                                )
-
-                                JvmSettingNote(
-                                    text = "设置项保持原有路由和数据写入行为，桌面端只调整信息架构和视觉密度。"
-                                )
+                    JvmSettingPathRow(
+                        icon = Res.drawable.folder_managed_24px,
+                        title = stringResource(Res.string.cache_location),
+                        path = cacheFilePath,
+                        onClick = {
+                            if (cacheFilePath.isNotBlank()) {
+                                copyTextToClipboard(cacheFilePath)
+                                MessageUtils.sendPopTip(copySuccess)
                             }
                         }
                     )
                 }
+
+                JvmSettingSection(
+                    title = "下载与存储",
+                    subtitle = "下载并发、歌曲缓存路径与本地空间管理。",
+                    badge = "本机",
+                ) {
+                    JvmSettingDownloadRow(
+                        selected = settings.maxConcurrentDownloads,
+                        onSelected = { maxConcurrentDownloads ->
+                            coroutineScope.launch {
+                                settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
+                            }
+                        }
+                    )
+
+                    JvmSettingPathRow(
+                        icon = Res.drawable.queue_music_24px,
+                        title = stringResource(Res.string.song_cache_location),
+                        path = songStoragePath,
+                        onClick = {
+                            if (songStoragePath.isNotBlank()) {
+                                copyTextToClipboard(songStoragePath)
+                                MessageUtils.sendPopTip(copySuccess)
+                            }
+                        }
+                    )
+
+                    JvmSettingNavigationRow(
+                        icon = Res.drawable.folder_managed_24px,
+                        title = stringResource(Res.string.storage_management),
+                        description = "查看缓存占用并清理本地文件。",
+                        value = "打开存储管理",
+                        onClick = {
+                            navigator.navigate(MemoryManagement)
+                        }
+                    )
+                }
+            },
+            rightContent = {
+                JvmSettingSection(
+                    title = "连接",
+                    subtitle = "管理音乐服务地址和当前连接。",
+                    badge = "在线",
+                ) {
+                    JvmSettingNavigationRow(
+                        icon = Res.drawable.http_24px,
+                        title = stringResource(Res.string.connection_management),
+                        description = "切换或编辑 Jellyfin、Navidrome 等数据源。",
+                        value = dataSourceLabel,
+                        onClick = {
+                            navigator.navigate(ConnectionManagement)
+                        }
+                    )
+
+                    JvmSettingNavigationRow(
+                        icon = Res.drawable.signal_cellular_alt_24px,
+                        title = stringResource(Res.string.poxy_config),
+                        description = "配置服务访问代理和网络转发。",
+                        value = "网络",
+                        onClick = {
+                            navigator.navigate(ProxyConfig)
+                        }
+                    )
+                }
+
+                JvmSettingSection(
+                    title = "通用",
+                    subtitle = "界面、语言、自定义资源和应用信息。",
+                    badge = "偏好",
+                    contentContainerColor = Color.Transparent,
+                    contentContainerBorderColor = Color.Transparent,
+                ) {
+                    JvmSettingActionGrid(
+                        onInterfaceClick = {
+                            navigator.navigate(InterfaceSetting)
+                        },
+                        onLanguageClick = {
+                            navigator.navigate(LanguageConfig)
+                        },
+                        onCustomApiClick = {
+                            navigator.navigate(CustomApi)
+                        },
+                        onAboutClick = {
+                            navigator.navigate(About)
+                        },
+                    )
+
+                    JvmSettingNote(
+                        text = "设置项保持原有路由和数据写入行为，桌面端只调整信息架构和视觉密度。"
+                    )
+                }
             }
-        }
+        )
     }
 }
+
 /**
  * 设置主体的响应式布局。
  *
@@ -426,62 +411,6 @@ private fun JvmSettingStack(
         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
         content = content
     )
-}
-
-/**
- * 设置页头部区域。
- *
- * 宽屏展示“标题说明 + 状态卡”，并保持宽度与下方主体内容一致。
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun JvmSettingHeader(
-    settings: XySettings,
-    dataSourceLabel: String,
-    selectedQuality: String,
-) {
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val gap = XyTheme.dimens.contentPadding * 2
-        // Header 和下方主体内容使用相同宽度上限，保证标题区左右边界对齐。
-        val headerWidth = minOf(maxWidth, JvmSettingMainContentMaxWidth)
-
-        FlowRow(
-            modifier = Modifier
-                .width(headerWidth)
-                .align(Alignment.Center),
-            horizontalArrangement = Arrangement.spacedBy(gap),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
-            itemVerticalAlignment = Alignment.Bottom
-        ) {
-            Column(
-                modifier = Modifier
-                    // 参考在线音乐品质页标题列：保留最小可读宽度，再吃掉同一行的剩余空间。
-                    .widthIn(min = 320.dp)
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-            ) {
-                Text(
-                    text = stringResource(Res.string.settings),
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "把桌面端常用配置集中为更可扫读的设置中心：播放缓存、连接管理、下载队列、界面语言和扩展能力都保留当前入口。",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 22.sp
-                )
-            }
-
-            JvmSettingStatusCard(
-                // 参考在线音乐品质页状态卡宽度，让右侧摘要保持紧凑。
-                modifier = Modifier.widthIn(min = 248.dp),
-                dataSourceLabel = dataSourceLabel,
-                selectedQuality = selectedQuality,
-                maxConcurrentDownloads = settings.maxConcurrentDownloads,
-            )
-        }
-    }
 }
 
 @Composable

@@ -29,9 +29,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -59,6 +61,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyColumnScreen
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -85,6 +88,104 @@ private val JvmSettingActionCardWideWidth = 168.dp
 
 /** 设置页统一图标容器尺寸。 */
 private val JvmSettingIconSize = 32.dp
+
+/**
+ * JVM 设置类页面的通用列表外壳。
+ *
+ * @param modifier 传给内部列表的修饰符。
+ * @param contentMaxWidth 页面主体最大宽度，用来控制桌面宽屏阅读线。
+ * @param content 页面主体内容，默认按设置页统一纵向间距排列。
+ */
+@Composable
+internal fun JvmSettingPageScaffold(
+    modifier: Modifier = Modifier,
+    contentMaxWidth: Dp,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    XyColumnScreen {
+        JvmLazyListComponent(
+            modifier = modifier.fillMaxSize(),
+            pagingItems = null,
+            contentPadding = PaddingValues(
+                horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
+            ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+            lazyColumnBottom = null
+        ) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = contentMaxWidth)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+                    content = content
+                )
+            }
+        }
+    }
+}
+
+/**
+ * JVM 设置类页面的通用头部。
+ *
+ * @param modifier 头部外层修饰符。
+ * @param title 页面标题。
+ * @param description 页面说明文案。
+ * @param contentMaxWidth 可选的头部宽度上限；为空时铺满当前内容宽度。
+ * @param statusContent 右侧状态摘要卡片。
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun JvmSettingPageHeader(
+    modifier: Modifier = Modifier,
+    title: String,
+    description: String,
+    contentMaxWidth: Dp? = null,
+    statusContent: @Composable () -> Unit,
+) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val gap = XyTheme.dimens.contentPadding * 2
+        // 设置首页需要和下方主体同宽，在线音乐品质页则沿用外层内容宽度。
+        val headerWidth = contentMaxWidth?.let { maxWidth -> minOf(this.maxWidth, maxWidth) }
+        val flowModifier = if (headerWidth == null) {
+            Modifier.fillMaxWidth()
+        } else {
+            Modifier
+                .width(headerWidth)
+                .align(Alignment.Center)
+        }
+
+        FlowRow(
+            modifier = flowModifier,
+            horizontalArrangement = Arrangement.spacedBy(gap),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+            itemVerticalAlignment = Alignment.Bottom
+        ) {
+            Column(
+                modifier = Modifier
+                    // 标题说明保留最小可读宽度，再吃掉同一行剩余空间。
+                    .widthIn(min = 320.dp)
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 22.sp
+                )
+            }
+
+            statusContent()
+        }
+    }
+}
 
 /**
  * 设置概览卡片。

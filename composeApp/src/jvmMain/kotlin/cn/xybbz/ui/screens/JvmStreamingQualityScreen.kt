@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,10 +60,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
-import cn.xybbz.ui.components.JvmLazyListComponent
+import cn.xybbz.ui.components.JvmSettingPageHeader
+import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.StreamingQualityViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -95,151 +94,95 @@ fun JvmStreamingQualityScreen(
         ?.name
         ?: streamingQualityViewModel.transcodeFormat.uppercase()
 
-    XyColumnScreen {
-        JvmLazyListComponent(
-            modifier = Modifier.fillMaxSize(),
-            pagingItems = null,
-            contentPadding = PaddingValues(
-                horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
-//                vertical = XyTheme.dimens.innerVerticalPadding + XyTheme.dimens.outerVerticalPadding * 2
-            ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
-            lazyColumnBottom = null
+    JvmSettingPageScaffold(contentMaxWidth = 1060.dp) {
+        JvmSettingPageHeader(
+            title = pageTitle,
+            description = "选择桌面端播放时使用的在线音频品质和服务端转码格式。当前桌面端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。",
         ) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .widthIn(max = 1060.dp)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
-                ) {
-                    JvmStreamingQualityHeader(
-                        title = pageTitle,
-                        selectedQuality = selectedQuality.audioBitRateStr,
-                        selectedFormat = selectedFormatLabel,
-                    )
+            JvmStreamingQualityStatusCard(
+                modifier = Modifier.widthIn(min = 248.dp),
+                selectedQuality = selectedQuality.audioBitRateStr,
+                selectedFormat = selectedFormatLabel,
+            )
+        }
 
-                    JvmSettingSection(
-                        title = "播放品质",
-                        subtitle = "桌面端保持一组品质选择，写入时同步更新 Wi-Fi 与移动网络码率。",
-                        badge = "当前：全网络同步",
-                        titleMinWidth = 240.dp,
-                        contentContainerEnabled = false,
-                    ) {
-                        FlowRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-                            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-                        ) {
-                            TranscodeAudioBitRateType.entries.forEach { quality ->
-                                JvmStreamingQualityOptionCard(
-                                    modifier = Modifier
-                                        .width(QualityOptionWidth),
-                                    kicker = quality.kickerText(),
-                                    title = quality.audioBitRateStr,
-                                    description = quality.descriptionText(),
-                                    footLabel = quality.levelText(),
-                                    footValue = quality.audioBitRate.toString(),
-                                    selected = selectedQuality == quality,
-                                    cardHeight = QualityOptionHeight,
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            streamingQualityViewModel.updateWifiNetworkAudioBitRate(quality)
-                                            streamingQualityViewModel.updateMobileNetworkAudioBitRate(quality)
-                                        }
-                                    }
-                                )
+        JvmSettingSection(
+            title = "播放品质",
+            subtitle = "桌面端保持一组品质选择，写入时同步更新 Wi-Fi 与移动网络码率。",
+            badge = "当前：全网络同步",
+            titleMinWidth = 240.dp,
+            contentContainerEnabled = false,
+        ) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            ) {
+                TranscodeAudioBitRateType.entries.forEach { quality ->
+                    JvmStreamingQualityOptionCard(
+                        modifier = Modifier
+                            .width(QualityOptionWidth),
+                        kicker = quality.kickerText(),
+                        title = quality.audioBitRateStr,
+                        description = quality.descriptionText(),
+                        footLabel = quality.levelText(),
+                        footValue = quality.audioBitRate.toString(),
+                        selected = selectedQuality == quality,
+                        cardHeight = QualityOptionHeight,
+                        onClick = {
+                            coroutineScope.launch {
+                                streamingQualityViewModel.updateWifiNetworkAudioBitRate(quality)
+                                streamingQualityViewModel.updateMobileNetworkAudioBitRate(quality)
                             }
                         }
+                    )
+                }
+            }
 
-                        JvmStreamingQualityNote(
-                            text = "选择任一品质后，桌面端会继续同时更新 Wi-Fi 与移动网络两套码率设置。"
-                        )
-                    }
+            JvmStreamingQualityNote(
+                text = "选择任一品质后，桌面端会继续同时更新 Wi-Fi 与移动网络两套码率设置。"
+            )
+        }
 
-                    JvmSettingSection(
-                        title = transcodeFormatTitle,
-                        subtitle = "格式列表来自服务端支持项，并补齐客户端可显示的默认格式。",
-                        badge = "服务端能力",
-                        titleMinWidth = 240.dp,
-                        contentContainerEnabled = false,
-                    ) {
-                        if (streamingQualityViewModel.transcodeAudioBitRateType.isEmpty()) {
-                            JvmStreamingQualityEmptyState(text = "正在读取服务端支持的转码格式…")
-                        } else {
-                            FlowRow(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-                                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-                            ) {
-                                streamingQualityViewModel.transcodeAudioBitRateType.forEach { format ->
-                                    val targetFormat = format.targetFormat
-                                    val title = format.name.ifBlank { targetFormat.uppercase() }
-                                    JvmStreamingQualityOptionCard(
-                                        modifier = Modifier
-                                            .width(FormatOptionWidth),
-                                        kicker = targetFormat.formatKickerText(),
-                                        title = title,
-                                        description = targetFormat.formatDescriptionText(),
-                                        footLabel = "targetFormat",
-                                        footValue = targetFormat,
-                                        selected = streamingQualityViewModel.transcodeFormat == targetFormat,
-                                        chip = title,
-                                        cardHeight = FormatOptionHeight,
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                streamingQualityViewModel.updateTranscodeFormat(targetFormat)
-                                            }
-                                        }
-                                    )
+        JvmSettingSection(
+            title = transcodeFormatTitle,
+            subtitle = "格式列表来自服务端支持项，并补齐客户端可显示的默认格式。",
+            badge = "服务端能力",
+            titleMinWidth = 240.dp,
+            contentContainerEnabled = false,
+        ) {
+            if (streamingQualityViewModel.transcodeAudioBitRateType.isEmpty()) {
+                JvmStreamingQualityEmptyState(text = "正在读取服务端支持的转码格式…")
+            } else {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                ) {
+                    streamingQualityViewModel.transcodeAudioBitRateType.forEach { format ->
+                        val targetFormat = format.targetFormat
+                        val title = format.name.ifBlank { targetFormat.uppercase() }
+                        JvmStreamingQualityOptionCard(
+                            modifier = Modifier
+                                .width(FormatOptionWidth),
+                            kicker = targetFormat.formatKickerText(),
+                            title = title,
+                            description = targetFormat.formatDescriptionText(),
+                            footLabel = "targetFormat",
+                            footValue = targetFormat,
+                            selected = streamingQualityViewModel.transcodeFormat == targetFormat,
+                            chip = title,
+                            cardHeight = FormatOptionHeight,
+                            onClick = {
+                                coroutineScope.launch {
+                                    streamingQualityViewModel.updateTranscodeFormat(targetFormat)
                                 }
                             }
-                        }
+                        )
                     }
                 }
             }
         }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun JvmStreamingQualityHeader(
-    title: String,
-    selectedQuality: String,
-    selectedFormat: String,
-) {
-    FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding * 2),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
-        itemVerticalAlignment = Alignment.Bottom
-    ) {
-        Column(
-            modifier = Modifier
-                .widthIn(min = 320.dp)
-                .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "选择桌面端播放时使用的在线音频品质和服务端转码格式。当前桌面端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = 22.sp
-            )
-        }
-
-        JvmStreamingQualityStatusCard(
-            modifier = Modifier.widthIn(min = 248.dp),
-            selectedQuality = selectedQuality,
-            selectedFormat = selectedFormat,
-        )
     }
 }
 
