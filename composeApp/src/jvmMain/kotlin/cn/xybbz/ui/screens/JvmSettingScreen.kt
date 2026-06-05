@@ -121,15 +121,25 @@ import xymusic_kmp.composeapp.generated.resources.song_cache_location
 import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.volume_up_24px
 
+// 设置页整体内容的最大宽度，避免桌面宽屏上阅读线过长。
 private val JvmSettingContentMaxWidth = 1080.dp
+// 标题区从单列切换为“标题 + 状态卡”双列的最小宽度。
 private val JvmSettingHeaderGridMinWidth = 760.dp
+// 概览区从单列切换为三列卡片的最小宽度。
 private val JvmSettingOverviewGridMinWidth = 760.dp
+// 概览区卡片组的紧凑宽度上限，用来缩小每个概览 item。
 private val JvmSettingOverviewContentMaxWidth = 936.dp
+// 主设置区从单列切换为左右两栏的最小宽度。
 private val JvmSettingLayoutGridMinWidth = 860.dp
+// 主设置区左右两栏的紧凑宽度上限，用来避免 item 横向过宽。
 private val JvmSettingMainContentMaxWidth = 960.dp
+// 通用入口卡片从单列切换为两列的最小宽度。
 private val JvmSettingActionGridMinWidth = 320.dp
+// 通用入口两列布局时的卡片宽度。
 private val JvmSettingActionCardCompactWidth = 154.dp
+// 通用入口三列布局时的卡片宽度。
 private val JvmSettingActionCardWideWidth = 168.dp
+// 设置项图标的统一尺寸。
 private val JvmSettingIconSize = 32.dp
 
 /**
@@ -373,6 +383,11 @@ fun JvmSettingScreen(
     }
 }
 
+/**
+ * 设置主体的响应式布局。
+ *
+ * 宽屏时保持预览稿的左侧主栏 + 右侧侧栏结构，窄屏时交给 FlowRow 自动换成单列。
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun JvmSettingMainLayout(
@@ -381,28 +396,37 @@ private fun JvmSettingMainLayout(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.outerHorizontalPadding
+        // 可用宽度足够时才允许左右双栏，否则两个区域都按整行宽度排布。
         val useTwoColumns = maxWidth >= JvmSettingLayoutGridMinWidth
+        // 双栏整体不铺满所有可用空间，让每个设置分区保持更紧凑的阅读宽度。
         val layoutWidth = minOf(maxWidth, JvmSettingMainContentMaxWidth)
         val contentWidth = if (useTwoColumns) {
+            // 双栏时需要预留两栏之间的间距，否则两栏总宽会超过 FlowRow 一行容量。
             layoutWidth - gap
         } else {
             layoutWidth
         }
+        // 沿用预览稿左栏更宽、右栏更窄的信息层级比例。
         val leftWeight = 1.45f
         val rightWeight = 0.95f
+        // 左栏承载播放、下载等高频设置，双栏时按更大比例分配宽度。
         val leftWidth = if (useTwoColumns) {
             contentWidth * (leftWeight / (leftWeight + rightWeight))
         } else {
+            // 单列时让左侧内容独占整行，交由 FlowRow 放在右侧内容之前。
             maxWidth
         }
+        // 右栏承载连接、通用入口，宽度使用剩余空间保证两栏总宽精确。
         val rightWidth = if (useTwoColumns) {
             contentWidth - leftWidth
         } else {
+            // 单列时右侧内容也独占整行，形成纵向阅读顺序。
             maxWidth
         }
 
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
+            // 子项宽度被收紧后居中排列，避免在宽屏上贴左显得失衡。
             horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
             itemVerticalAlignment = Alignment.Top,
@@ -419,6 +443,9 @@ private fun JvmSettingMainLayout(
     }
 }
 
+/**
+ * 主设置区中的纵向分组容器，用于承载左栏或右栏的多个 section。
+ */
 @Composable
 private fun JvmSettingStack(
     modifier: Modifier = Modifier,
@@ -431,6 +458,11 @@ private fun JvmSettingStack(
     )
 }
 
+/**
+ * 设置页头部区域。
+ *
+ * 宽屏展示“标题说明 + 状态卡”，窄屏时状态卡自然换到下一行。
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun JvmSettingHeader(
@@ -440,13 +472,17 @@ private fun JvmSettingHeader(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding * 2
+        // 状态卡宽度固定，保证三行状态值在桌面端保持稳定扫描宽度。
         val statusWidth = 278.dp
+        // 标题和状态卡同排展示的最小宽度。
         val useTwoColumns = maxWidth >= JvmSettingHeaderGridMinWidth
         val headerTextWidth = if (useTwoColumns) {
+            // 同排时标题区域占用剩余宽度，给状态卡保留固定可读宽度。
             maxWidth - statusWidth - gap
         } else {
             maxWidth
         }
+        // 窄屏时状态卡铺满一整行，避免内容被压缩。
         val statusCardWidth = if (useTwoColumns) statusWidth else maxWidth
 
         FlowRow(
@@ -535,6 +571,11 @@ private fun JvmSettingStatusRow(label: String, value: String) {
     }
 }
 
+/**
+ * 设置概览卡片区。
+ *
+ * 宽屏时保持三张卡片一行，窄屏时每张卡片独占一行。
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun JvmSettingOverview(
@@ -544,16 +585,21 @@ private fun JvmSettingOverview(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
+        // 三张概览卡只有在足够宽时才同排，避免卡片文字被挤压。
         val useThreeColumns = maxWidth >= JvmSettingOverviewGridMinWidth
+        // 概览区整体收紧后再均分，达到“减小每个 item 宽度”的效果。
         val contentWidth = minOf(maxWidth, JvmSettingOverviewContentMaxWidth)
         val tileWidth = if (useThreeColumns) {
+            // 三列时扣除两个横向间距，再平均分配每张卡片宽度。
             (contentWidth - gap * 2) / 3f
         } else {
+            // 单列时铺满可用宽度，避免窄屏出现过窄卡片。
             maxWidth
         }
 
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
+            // 卡片不再铺满整行时居中摆放，视觉上更接近预览稿。
             horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(gap),
         ) {
@@ -846,6 +892,11 @@ private fun JvmSettingDownloadSegment(
     }
 }
 
+/**
+ * 通用设置入口卡片网格。
+ *
+ * 根据可用宽度在 1、2、3 列之间切换，同时保持 FlowRow 负责自动换行。
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun JvmSettingActionGrid(
@@ -856,11 +907,21 @@ private fun JvmSettingActionGrid(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
+        // 两列布局至少满足卡片自身宽度，也不能低于设置页约定的通用入口最小宽度。
+        val twoColumnMinWidth = maxOf(
+            JvmSettingActionGridMinWidth,
+            JvmSettingActionCardCompactWidth * 2f + gap
+        )
+        // 根据紧凑卡片宽度判断能放几列，避免卡片被强制拉伸。
         val columnCount = when {
+            // 宽度足够时放三列，适合主体区域变单栏后的横向空间。
             maxWidth >= JvmSettingActionCardWideWidth * 3f + gap * 2f -> 3
-            maxWidth >= JvmSettingActionCardCompactWidth * 2f + gap -> 2
+            // 右侧栏常规宽度下放两列，对应预览稿的 2x2 卡片布局。
+            maxWidth >= twoColumnMinWidth -> 2
+            // 极窄窗口保留单列，优先保证文字和点击区域完整。
             else -> 1
         }
+        // 宽屏使用固定紧凑卡片宽度，窄屏则铺满一行保证可点击区域。
         val cardWidth = when (columnCount) {
             3 -> JvmSettingActionCardWideWidth
             2 -> JvmSettingActionCardCompactWidth
@@ -869,6 +930,7 @@ private fun JvmSettingActionGrid(
 
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
+            // 固定卡片宽度后居中排列，避免最后一行靠左显得松散。
             horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(gap),
         ) {
@@ -981,6 +1043,11 @@ private fun JvmSettingBaseRow(
     }
 }
 
+/**
+ * 通用设置入口卡片。
+ *
+ * 卡片宽度由外层 FlowRow 传入，避免卡片自己固定宽度后破坏响应式换行。
+ */
 @Composable
 private fun JvmSettingActionCard(
     modifier: Modifier = Modifier,
