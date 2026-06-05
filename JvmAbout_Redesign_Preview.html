@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XyMusic JVM 关于页面预览</title>
+    <style>
+        :root {
+            --accent: #0470E6;
+            --accent-border: rgba(4, 112, 230, 0.72);
+            --bg: #1A1A1A;
+            --surface-low: #242424;
+            --surface-high: #363636;
+            --surface-hover: #3C3C3C;
+            --line: rgba(255, 255, 255, 0.10);
+            --line-strong: rgba(255, 255, 255, 0.16);
+            --text: #EBEEF1;
+            --muted: #A7A7A7;
+            --dim: #727272;
+            --warm: #E9C46A;
+            --teal: #2A9D8F;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            color: var(--text);
+            background: var(--bg);
+            font-family: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+            overflow: hidden;
+            letter-spacing: 0;
+        }
+        button { font: inherit; }
+
+        .app-shell {
+            display: grid;
+            grid-template-columns: 248px minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr) 88px;
+            grid-template-areas: "sidebar main" "player player";
+            height: 100vh;
+            min-width: 880px;
+            background: linear-gradient(180deg, rgba(4, 112, 230, 0.09), rgba(26, 26, 26, 0) 260px), var(--bg);
+        }
+        .sidebar {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+            padding: 18px 12px 12px;
+            background: #111111;
+            border-right: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 44px;
+            padding: 0 12px;
+            color: #FFFFFF;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), #31A8FF);
+            box-shadow: 0 8px 20px rgba(4, 112, 230, 0.28);
+        }
+        .brand-mark::before {
+            content: "";
+            width: 12px;
+            height: 16px;
+            border-right: 4px solid #FFFFFF;
+            border-bottom: 4px solid #FFFFFF;
+            border-radius: 0 0 8px 0;
+            transform: rotate(8deg);
+        }
+        .nav-panel, .library-panel {
+            border-radius: var(--radius);
+            background: var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .nav-panel { padding: 8px; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            height: 42px;
+            padding: 0 12px;
+            color: var(--muted);
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .nav-item.active { color: var(--text); background: var(--surface-high); }
+        .nav-icon { display: grid; place-items: center; width: 22px; height: 22px; font-size: 15px; }
+        .library-panel { display: flex; flex: 1; min-height: 0; flex-direction: column; padding: 10px; }
+        .library-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 36px;
+            padding: 0 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .library-list { display: grid; gap: 6px; margin-top: 6px; overflow: hidden; }
+        .library-row {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .library-row.current { background: rgba(255, 255, 255, 0.05); }
+        .cover { width: 42px; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #274060, var(--teal)); }
+        .cover.alt { background: linear-gradient(135deg, #5F4B8B, var(--warm)); }
+        .cover.third { background: linear-gradient(135deg, #183A37, var(--accent)); }
+        .line-title, .line-sub, .setting-title, .setting-desc {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .line-title { color: #FFFFFF; font-size: 14px; font-weight: 700; }
+        .line-sub { margin-top: 4px; color: var(--dim); font-size: 12px; }
+
+        .main {
+            grid-area: main;
+            min-width: 0;
+            margin: 8px 8px 0;
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, rgba(4, 112, 230, 0.18), rgba(47, 47, 47, 0) 230px), var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            padding: 0 24px;
+            background: rgba(31, 31, 31, 0.72);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(18px);
+        }
+        .window-actions { display: flex; align-items: center; gap: 8px; }
+        .round-button, .icon-button {
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.24);
+        }
+        .round-button { width: 34px; height: 34px; border-radius: 50%; }
+        .icon-button { width: 36px; height: 36px; border-radius: 10px; }
+        .source-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 36px;
+            padding: 0 12px 0 8px;
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .source-dot { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--teal)); }
+        .content-scroll { height: calc(100vh - 160px); overflow: auto; }
+        .content-scroll::-webkit-scrollbar { width: 10px; }
+        .content-scroll::-webkit-scrollbar-thumb {
+            border: 3px solid transparent;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.24);
+            background-clip: content-box;
+        }
+        .content { width: min(1080px, calc(100% - 48px)); margin: 0 auto; padding: 34px 0 42px; }
+        .about-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 0.6fr);
+            gap: 18px;
+            align-items: stretch;
+            margin-bottom: 16px;
+        }
+        .hero-main, .section {
+            padding: 20px;
+            border-radius: var(--radius);
+            background: rgba(47, 47, 47, 0.82);
+            border: 1px solid var(--line);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+        }
+        .hero-main {
+            display: grid;
+            grid-template-columns: 84px minmax(0, 1fr);
+            gap: 18px;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(4,112,230,0.16), rgba(47,47,47,0.82)), rgba(47, 47, 47, 0.82);
+        }
+        .app-icon {
+            display: grid;
+            place-items: center;
+            width: 84px;
+            height: 84px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, var(--accent), #31A8FF);
+            box-shadow: 0 16px 36px rgba(4,112,230,0.34);
+        }
+        .app-icon::before {
+            content: "";
+            width: 30px;
+            height: 42px;
+            border-right: 9px solid #FFFFFF;
+            border-bottom: 9px solid #FFFFFF;
+            border-radius: 0 0 18px 0;
+            transform: rotate(8deg);
+        }
+        .eyebrow { margin-bottom: 10px; color: #8FC4FF; font-size: 13px; font-weight: 700; }
+        h1 { margin: 0; color: #FFFFFF; font-size: 34px; line-height: 1.16; font-weight: 780; letter-spacing: 0; }
+        .summary { margin: 10px 0 0; max-width: 660px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+        .status-card {
+            display: grid;
+            gap: 10px;
+            min-width: 0;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+        .status-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 13px; }
+        .status-value { color: var(--text); font-weight: 700; }
+        .layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr); gap: 16px; align-items: start; }
+        .stack { display: grid; gap: 16px; min-width: 0; }
+        .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 16px; }
+        .section-title { margin: 0; color: #FFFFFF; font-size: 17px; line-height: 1.35; font-weight: 700; }
+        .section-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+        .badge, .pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            color: #BBD9FF;
+            background: rgba(4, 112, 230, 0.12);
+            border: 1px solid rgba(4, 112, 230, 0.28);
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .metric, .action-card {
+            min-width: 0;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: var(--surface-high);
+            border: 1px solid var(--line);
+        }
+        .metric-kicker, .action-kicker { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; font-weight: 650; }
+        .metric-icon {
+            display: grid;
+            place-items: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.20);
+            border: 1px solid rgba(4, 112, 230, 0.26);
+        }
+        .metric-value { overflow: hidden; margin-top: 16px; color: #FFFFFF; font-size: 22px; line-height: 1.1; font-weight: 780; text-overflow: ellipsis; white-space: nowrap; }
+        .metric-sub { overflow: hidden; margin-top: 8px; color: var(--dim); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+        .action-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .action-card {
+            min-height: 116px;
+            color: var(--text);
+            text-align: left;
+            cursor: pointer;
+            transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+        }
+        .action-card:hover { transform: translateY(-1px); background: var(--surface-hover); border-color: var(--line-strong); }
+        .action-title { margin-top: 18px; color: #FFFFFF; font-size: 20px; line-height: 1.15; font-weight: 780; }
+        .action-desc { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+        .setting-list { display: grid; overflow: hidden; border-radius: var(--radius); background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.07); }
+        .setting-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+            min-height: 62px;
+            padding: 12px 14px;
+            color: var(--text);
+            background: transparent;
+            border: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            text-align: left;
+        }
+        .setting-row:last-child { border-bottom: 0; }
+        button.setting-row:hover { background: rgba(255,255,255,0.05); }
+        .setting-title-line { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .setting-icon { display: grid; flex: 0 0 auto; place-items: center; width: 32px; height: 32px; border-radius: 9px; color: #DCEEFF; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.09); }
+        .setting-title { color: #FFFFFF; font-size: 14px; font-weight: 700; }
+        .setting-desc { margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+        .setting-trailing { display: flex; align-items: center; gap: 10px; }
+        .note-row {
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .note-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; color: #FFFFFF; background: rgba(4, 112, 230, 0.20); border: 1px solid rgba(4, 112, 230, 0.26); }
+        .toast {
+            position: fixed;
+            right: 24px;
+            bottom: 108px;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: #FFFFFF;
+            background: rgba(36, 36, 36, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+            backdrop-filter: blur(18px);
+            font-size: 13px;
+        }
+        .toast.show { display: flex; }
+        .bar { height: 8px; overflow: hidden; border-radius: 999px; background: rgba(255, 255, 255, 0.13); }
+        .bar-fill { height: 100%; border-radius: inherit; background: var(--accent); }
+        .player {
+            grid-area: player;
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(360px, 520px) minmax(220px, 1fr);
+            gap: 18px;
+            align-items: center;
+            padding: 12px 18px;
+            background: #121212;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .now-playing { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 12px; align-items: center; min-width: 0; }
+        .album-art { width: 54px; height: 54px; border-radius: 8px; background: linear-gradient(135deg, rgba(233, 196, 106, 0.92), rgba(4, 112, 230, 0.86)); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28); }
+        .player-title { overflow: hidden; color: #FFFFFF; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+        .player-subtitle { overflow: hidden; margin-top: 5px; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+        .transport { display: grid; gap: 10px; justify-items: center; }
+        .transport-buttons { display: flex; align-items: center; gap: 14px; }
+        .transport-button { display: grid; place-items: center; width: 28px; height: 28px; color: var(--muted); background: transparent; border: 0; }
+        .play-button { display: grid; place-items: center; width: 36px; height: 36px; color: #FFFFFF; background: var(--accent); border: 0; border-radius: 50%; box-shadow: 0 10px 24px rgba(4, 112, 230, 0.28); }
+        .progress { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; align-items: center; width: 100%; color: var(--dim); font-size: 11px; }
+        .player-tools { display: flex; align-items: center; justify-content: flex-end; gap: 12px; color: var(--muted); font-size: 12px; }
+        .volume { width: min(120px, 32%); }
+
+        @media (max-width: 1180px) {
+            .app-shell { grid-template-columns: 218px minmax(0, 1fr); }
+            .content { width: calc(100% - 36px); }
+            .about-hero, .layout { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 920px) {
+            body { overflow: auto; }
+            .app-shell {
+                min-width: 0;
+                height: auto;
+                min-height: 100vh;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto minmax(0, 1fr) 88px;
+                grid-template-areas: "sidebar" "main" "player";
+            }
+            .sidebar { flex-direction: row; align-items: center; overflow: hidden; border-right: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+            .brand { flex: 0 0 auto; }
+            .nav-panel { display: flex; flex: 1; min-width: 0; }
+            .nav-item { justify-content: center; min-width: 42px; padding: 0 10px; }
+            .nav-item span:not(.nav-icon) { display: none; }
+            .library-panel { display: none; }
+            .main { margin: 8px; }
+            .content-scroll { height: auto; overflow: visible; }
+            .action-grid { grid-template-columns: 1fr; }
+            .player { grid-template-columns: minmax(0, 1fr) auto; }
+            .transport { display: none; }
+        }
+        @media (max-width: 560px) {
+            .topbar { padding: 0 12px; }
+            .source-pill { display: none; }
+            h1 { font-size: 28px; }
+            .content { width: calc(100% - 24px); padding-top: 24px; }
+            .section, .hero-main { padding: 16px; }
+            .hero-main, .metric-grid, .setting-row { grid-template-columns: 1fr; }
+            .setting-trailing { justify-content: flex-start; }
+            .app-icon { width: 72px; height: 72px; }
+            .player-tools { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" aria-label="桌面导航">
+        <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>XyMusic</span></div>
+        <nav class="nav-panel" aria-label="主导航">
+            <button class="nav-item" type="button"><span class="nav-icon" aria-hidden="true">⌂</span><span>首页</span></button>
+            <button class="nav-item" type="button"><span class="nav-icon" aria-hidden="true">♪</span><span>音乐库</span></button>
+            <button class="nav-item active" type="button"><span class="nav-icon" aria-hidden="true">⚙</span><span>设置</span></button>
+        </nav>
+        <section class="library-panel" aria-label="播放列表">
+            <div class="library-header"><span>最近播放</span><span aria-hidden="true">+</span></div>
+            <div class="library-list">
+                <div class="library-row current"><div class="cover"></div><div><div class="line-title">Daily Mix</div><div class="line-sub">Navidrome · 48 首</div></div></div>
+                <div class="library-row"><div class="cover alt"></div><div><div class="line-title">夜间电台</div><div class="line-sub">Jellyfin · 收藏</div></div></div>
+                <div class="library-row"><div class="cover third"></div><div><div class="line-title">高解析度试听</div><div class="line-sub">本地缓存</div></div></div>
+            </div>
+        </section>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="window-actions" aria-label="历史导航">
+                <button class="round-button" type="button" aria-label="返回">‹</button>
+                <button class="round-button" type="button" aria-label="前进">›</button>
+            </div>
+            <div class="window-actions">
+                <div class="source-pill"><span class="source-dot" aria-hidden="true"></span><span>Navidrome · 在线</span></div>
+                <button class="icon-button" type="button" aria-label="搜索">⌕</button>
+                <button class="icon-button" type="button" aria-label="设置">⚙</button>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+            <div class="content">
+                <section class="about-hero">
+                    <div class="hero-main">
+                        <div class="app-icon" aria-hidden="true"></div>
+                        <div>
+                            <div class="eyebrow">桌面端设置</div>
+                            <h1>XyMusic</h1>
+                            <p class="summary">跨平台音乐客户端，面向自托管音乐服务和本地桌面播放体验。关于页集中呈现版本、运行环境、项目入口和更新状态。</p>
+                        </div>
+                    </div>
+                    <aside class="status-card" aria-label="当前应用摘要">
+                        <div class="status-row"><span>当前版本</span><span class="status-value" id="version-status">1.0 JVM</span></div>
+                        <div class="status-row"><span>平台</span><span class="status-value">Windows Desktop</span></div>
+                        <div class="status-row"><span>更新状态</span><span class="status-value" id="update-status">未检查</span></div>
+                    </aside>
+                </section>
+
+                <div class="layout">
+                    <section class="section" aria-labelledby="system-title">
+                        <div class="section-head">
+                            <div>
+                                <h2 class="section-title" id="system-title">应用信息</h2>
+                                <p class="section-subtitle">将版本、构建和运行环境拆成可复制的信息块。</p>
+                            </div>
+                            <span class="badge">JVM Desktop</span>
+                        </div>
+                        <div class="metric-grid">
+                            <div class="metric"><div class="metric-kicker"><span class="metric-icon" aria-hidden="true">V</span>版本</div><div class="metric-value">1.0</div><div class="metric-sub">Android 版本号参考</div></div>
+                            <div class="metric"><div class="metric-kicker"><span class="metric-icon" aria-hidden="true">J</span>运行时</div><div class="metric-value">JVM</div><div class="metric-sub">Compose Multiplatform</div></div>
+                            <div class="metric"><div class="metric-kicker"><span class="metric-icon" aria-hidden="true">♪</span>数据源</div><div class="metric-value">5 类</div><div class="metric-sub">Navidrome / Jellyfin 等</div></div>
+                        </div>
+                        <div class="note-row">
+                            <div class="note-icon" aria-hidden="true">i</div>
+                            <div>桌面端可继续从 PlatformInfo 读取实现版本；这个页面只展示信息架构预览。</div>
+                        </div>
+                    </section>
+
+                    <aside class="stack">
+                        <section class="section" aria-labelledby="update-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="update-title">更新</h2>
+                                    <p class="section-subtitle">检查更新放在明显位置，但不打断设置浏览。</p>
+                                </div>
+                            </div>
+                            <div class="action-grid">
+                                <button class="action-card" type="button" id="update-button">
+                                    <span class="action-kicker"><span class="metric-icon" aria-hidden="true">↻</span>Release</span>
+                                    <div class="action-title">检查更新</div>
+                                    <div class="action-desc">获取最新桌面版本和更新说明。</div>
+                                </button>
+                                <button class="action-card" type="button" data-toast="将打开更新日志">
+                                    <span class="action-kicker"><span class="metric-icon" aria-hidden="true">≡</span>History</span>
+                                    <div class="action-title">更新日志</div>
+                                    <div class="action-desc">查看最近版本的改动记录。</div>
+                                </button>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+
+                <div class="layout" style="margin-top: 16px;">
+                    <section class="section" aria-labelledby="links-title">
+                        <div class="section-head">
+                            <div>
+                                <h2 class="section-title" id="links-title">项目入口</h2>
+                                <p class="section-subtitle">常用外部入口采用设置行样式，和主设置页的可点击项保持一致。</p>
+                            </div>
+                        </div>
+                        <div class="setting-list">
+                            <button class="setting-row" type="button" data-toast="将打开 GitHub 项目">
+                                <div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">⌁</span><span class="setting-title">GitHub 项目</span></div><div class="setting-desc">查看源码、Issue 和 Release。</div></div>
+                                <div class="setting-trailing"><span class="pill">打开</span></div>
+                            </button>
+                            <button class="setting-row" type="button" data-toast="将打开问题反馈">
+                                <div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">!</span><span class="setting-title">问题反馈</span></div><div class="setting-desc">提交桌面端问题、连接问题或功能建议。</div></div>
+                                <div class="setting-trailing"><span class="pill">反馈</span></div>
+                            </button>
+                            <button class="setting-row" type="button" data-toast="已复制诊断信息">
+                                <div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">□</span><span class="setting-title">复制诊断信息</span></div><div class="setting-desc">包含版本、平台、数据源类型和 JVM 运行时。</div></div>
+                                <div class="setting-trailing"><span class="pill">复制</span></div>
+                            </button>
+                        </div>
+                    </section>
+
+                    <aside class="stack">
+                        <section class="section" aria-labelledby="credits-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="credits-title">技术栈</h2>
+                                    <p class="section-subtitle">简洁列出核心依赖，不做冗长说明。</p>
+                                </div>
+                            </div>
+                            <div class="setting-list">
+                                <div class="setting-row"><div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">K</span><span class="setting-title">Kotlin Multiplatform</span></div><div class="setting-desc">共享业务逻辑与平台实现。</div></div><span class="pill">KMP</span></div>
+                                <div class="setting-row"><div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">C</span><span class="setting-title">Compose Multiplatform</span></div><div class="setting-desc">桌面端界面框架。</div></div><span class="pill">UI</span></div>
+                                <div class="setting-row"><div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">V</span><span class="setting-title">VLCJ / Media</span></div><div class="setting-desc">桌面端播放能力。</div></div><span class="pill">Audio</span></div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="player" aria-label="播放控制栏">
+        <div class="now-playing"><div class="album-art" aria-hidden="true"></div><div><div class="player-title">Blue Hour</div><div class="player-subtitle">XyMusic Preview · 关于</div></div></div>
+        <div class="transport">
+            <div class="transport-buttons"><button class="transport-button" type="button" aria-label="随机播放">⤨</button><button class="transport-button" type="button" aria-label="上一首">‹‹</button><button class="play-button" type="button" aria-label="播放">▶</button><button class="transport-button" type="button" aria-label="下一首">››</button><button class="transport-button" type="button" aria-label="循环播放">↻</button></div>
+            <div class="progress"><span>1:24</span><div class="bar" aria-hidden="true"><div class="bar-fill" style="width: 38%;"></div></div><span>3:41</span></div>
+        </div>
+        <div class="player-tools"><span>列表</span><span>歌词</span><span>音量</span><div class="bar volume" aria-hidden="true"><div class="bar-fill" style="width: 68%;"></div></div></div>
+    </footer>
+    <div class="toast" id="toast" role="status" aria-live="polite"><span class="note-icon" aria-hidden="true">✓</span><span id="toast-text">已更新</span></div>
+</div>
+<script>
+    const toast = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
+    let toastTimer = null;
+
+    function showToast(text) {
+        toastText.textContent = text;
+        toast.classList.add("show");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("show"), 1500);
+    }
+
+    document.querySelectorAll("[data-toast]").forEach((item) => {
+        item.addEventListener("click", () => showToast(item.dataset.toast));
+    });
+
+    document.getElementById("update-button").addEventListener("click", () => {
+        document.getElementById("update-status").textContent = "已是最新";
+        showToast("当前已是最新版本");
+    });
+</script>
+</body>
+</html>
