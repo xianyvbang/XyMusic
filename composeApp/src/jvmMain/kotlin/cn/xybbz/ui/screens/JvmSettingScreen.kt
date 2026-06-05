@@ -355,9 +355,9 @@ private fun JvmSettingMainLayout(
         } else {
             layoutWidth
         }
-        // 沿用预览稿左栏更宽、右栏更窄的信息层级比例。
-        val leftWeight = 1.45f
-        val rightWeight = 0.95f
+        // 左栏仍保持主栏层级，右栏加宽以容纳连接与通用入口内容。
+        val leftWeight = 1.30f
+        val rightWeight = 1.10f
         // 左栏承载播放、下载等高频设置，双栏时按更大比例分配宽度。
         val leftWidth = if (useTwoColumns) {
             contentWidth * (leftWeight / (leftWeight + rightWeight))
