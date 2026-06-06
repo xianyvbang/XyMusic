@@ -6,13 +6,8 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import cn.xybbz.ui.screens.CacheLimitScreen
 import cn.xybbz.ui.screens.ConnectionScreen
-import cn.xybbz.ui.screens.CustomApiScreen
-import cn.xybbz.ui.screens.DailyRecommendScreen
-import cn.xybbz.ui.screens.DownloadScreen
 import cn.xybbz.ui.screens.HomeScreen
-import cn.xybbz.ui.screens.InterfaceSettingScreen
 import cn.xybbz.ui.screens.JvmAboutScreen
 import cn.xybbz.ui.screens.JvmAlbumInfoScreen
 import cn.xybbz.ui.screens.JvmAlbumScreen
@@ -27,6 +22,7 @@ import cn.xybbz.ui.screens.JvmDownloadScreen
 import cn.xybbz.ui.screens.JvmFavoriteScreen
 import cn.xybbz.ui.screens.JvmGenresInfoScreen
 import cn.xybbz.ui.screens.JvmGenresScreen
+import cn.xybbz.ui.screens.JvmInterfaceSettingScreen
 import cn.xybbz.ui.screens.JvmLanguageConfigScreen
 import cn.xybbz.ui.screens.JvmLocalScreen
 import cn.xybbz.ui.screens.JvmMemoryManagementScreen
@@ -36,9 +32,7 @@ import cn.xybbz.ui.screens.JvmSearchScreen
 import cn.xybbz.ui.screens.JvmSetBackgroundImageScreen
 import cn.xybbz.ui.screens.JvmSettingScreen
 import cn.xybbz.ui.screens.JvmStreamingQualityScreen
-import cn.xybbz.ui.screens.ProxyConfigScreen
 import cn.xybbz.ui.screens.SelectLibraryScreen
-import cn.xybbz.ui.screens.StreamingQualityScreen
 
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.desktopNode(noinline content: @Composable (T) -> Unit) {
     entry<T> {
@@ -60,13 +54,13 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<Artist> { JvmArtistScreen() }
     desktopNode<FavoriteList> { JvmFavoriteScreen() }
     desktopNode<AlbumInfo> { JvmAlbumInfoScreen(it.itemId, it.dataType) }
-    desktopNode<ArtistInfo> { JvmArtistInfoScreen(it.artistId,it.artistName) }
+    desktopNode<ArtistInfo> { JvmArtistInfoScreen(it.artistId, it.artistName) }
 
     desktopNode<Setting> { JvmSettingScreen() }
     desktopNode<ConnectionManagement> { JvmConnectionManagement() }
     desktopNode<ConnectionInfo> { JvmConnectionConfigInfoScreen(connectionId = it.connectionId) }
     desktopNode<MemoryManagement> { JvmMemoryManagementScreen() }
-    desktopNode<InterfaceSetting> { InterfaceSettingScreen(showBackButton = false) }
+    desktopNode<InterfaceSetting> { JvmInterfaceSettingScreen(showBackButton = false) }
     desktopNode<LanguageConfig> { JvmLanguageConfigScreen() }
     desktopNode<Genres> { JvmGenresScreen() }
     desktopNode<GenreInfo> { JvmGenresInfoScreen(genreId = it.genreId) }
