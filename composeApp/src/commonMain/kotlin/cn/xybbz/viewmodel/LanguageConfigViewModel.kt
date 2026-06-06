@@ -14,7 +14,7 @@ class LanguageConfigViewModel(
 ) : ViewModel() {
 
 
-    fun updateLanguageType(languageType: LanguageType) {
+    fun updateLanguageType(languageType: LanguageType?) {
         viewModelScope.launch {
             settingsManager.setLanguageTypeData(languageType)
         }

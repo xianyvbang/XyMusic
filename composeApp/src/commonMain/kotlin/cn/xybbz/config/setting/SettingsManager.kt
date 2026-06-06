@@ -273,9 +273,10 @@ class SettingsManager(
     /**
      * 更新语言设置
      */
-    suspend fun setLanguageTypeData(languageType: LanguageType) {
+    suspend fun setLanguageTypeData(languageType: LanguageType?) {
+        val resolvedLanguageType = languageType ?: languagePlatformManager.getSystemLanguageType()
         updateSettings { it.copy(languageType = languageType) }
-        updateLanguage(languageType)
+        updateLanguage(resolvedLanguageType)
     }
 
 
