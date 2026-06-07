@@ -106,6 +106,9 @@ private val JvmSettingActionCardMaxWidth = 196.dp
 /** 通用入口卡片固定高度，保证四个入口在 FlowRow 中等高排列。 */
 private val JvmSettingActionCardHeight = 148.dp
 
+/** 带底部状态文本的入口卡片需要额外高度，避免状态文字贴底被裁切。 */
+private val JvmSettingActionCardWithStatusHeight = 160.dp
+
 /** 通用入口卡片移入时的上移距离，保持与专辑卡片 hover 反馈一致。 */
 private val JvmSettingActionCardLiftOffset = (-6).dp
 
@@ -717,6 +720,7 @@ internal fun JvmSettingPathRow(
         title = title,
         description = path.ifBlank { "路径尚未生成" },
         descriptionStyle = JvmSettingRowDescriptionStyle.Path,
+        descriptionMaxLines = 2,
         onClick = onClick,
         trailing = {
             JvmSettingValuePill(value = "点击复制")
@@ -820,15 +824,22 @@ private fun JvmSettingDownloadSegment(
  * @param actionEntries 需要渲染的入口卡片数据，调用方只负责提供文案、颜色和点击动作。
  * @param modifier 外层布局修饰符，用来承接不同页面的宽度约束。
  * @param fillTwoColumnWidth 双列时是否让两张卡片平分整行宽度，默认沿用紧凑入口卡宽。
+ * @param cardHeight 卡片固定高度，默认沿用设置入口卡高度；带底部状态的卡片会自动抬高最小高度。
  */
 @Composable
 internal fun JvmSettingActionGrid(
     actionEntries: List<JvmSettingActionEntry>,
     modifier: Modifier = Modifier,
     fillTwoColumnWidth: Boolean = false,
+    cardHeight: Dp = JvmSettingActionCardHeight,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
+        val resolvedCardHeight = if (actionEntries.any { it.status != null }) {
+            maxOf(cardHeight, JvmSettingActionCardWithStatusHeight)
+        } else {
+            cardHeight
+        }
         // 两列布局至少满足卡片自身宽度，也不能低于设置页约定的通用入口最小宽度。
         val twoColumnMinWidth = maxOf(
             JvmSettingActionGridMinWidth,
@@ -867,7 +878,8 @@ internal fun JvmSettingActionGrid(
                         rowEntries.forEach { actionEntry ->
                             JvmSettingActionCard(
                                 modifier = Modifier.weight(1f),
-                                actionEntry = actionEntry
+                                actionEntry = actionEntry,
+                                cardHeight = resolvedCardHeight,
                             )
                         }
                         if (rowEntries.size == 1) {
@@ -886,7 +898,8 @@ internal fun JvmSettingActionGrid(
                 actionEntries.forEach { actionEntry ->
                     JvmSettingActionCard(
                         modifier = Modifier.width(cardWidth),
-                        actionEntry = actionEntry
+                        actionEntry = actionEntry,
+                        cardHeight = resolvedCardHeight,
                     )
                 }
             }
@@ -900,50 +913,68 @@ internal fun JvmSettingActionGrid(
  * @param icon 行首图标资源。
  * @param title 设置项标题。
  * @param description 设置项说明。
- * @param descriptionStyle 说明文本样式，路径类说明允许显示两行。
+ * @param descriptionStyle 说明文本样式。
+ * @param descriptionMaxLines 说明文本最大行数。
+ * @param descriptionOverflow 说明文本超出时的处理方式，可按场景选择换行展示或缩略点。
+ * @param enabled 是否启用点击和正常内容透明度。
+ * @param minHeight 行最小高度。
+ * @param horizontalPadding 行横向内边距。
+ * @param verticalPadding 行纵向内边距。
+ * @param iconSelected 是否使用强调色图标样式。
+ * @param iconColor 图标强调色；为空时使用默认主色。
+ * @param contentAlpha 内容透明度，禁用态默认降低透明度。
  * @param onClick 可选整行点击事件。
  * @param trailing 行尾控件内容。
  */
 @Composable
-private fun JvmSettingBaseRow(
+internal fun JvmSettingBaseRow(
     icon: DrawableResource,
     title: String,
     description: String,
     descriptionStyle: JvmSettingRowDescriptionStyle = JvmSettingRowDescriptionStyle.Normal,
+    descriptionMaxLines: Int = 1,
+    descriptionOverflow: TextOverflow = TextOverflow.Ellipsis,
+    enabled: Boolean = true,
+    minHeight: Dp = XyTheme.dimens.itemHeight,
+    horizontalPadding: Dp = XyTheme.dimens.outerHorizontalPadding,
+    verticalPadding: Dp = XyTheme.dimens.contentPadding,
+    iconSelected: Boolean = false,
+    iconColor: Color? = null,
+    contentAlpha: Float = if (enabled) 1f else 0.48f,
     onClick: (() -> Unit)? = null,
     trailing: @Composable () -> Unit,
 ) {
-    // 可点击行才附加 clickable，纯控件行保持默认语义。
-    val clickableModifier = if (onClick == null) {
-        Modifier
-    } else {
+    // 可点击且启用的行才附加 clickable，禁用行保持占位尺寸不变。
+    val clickableModifier = if (enabled && onClick != null) {
         Modifier.clickable(onClick = onClick)
+    } else {
+        Modifier
     }
 
-    JvmSettingFlowRow(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = XyTheme.dimens.itemHeight)
+            .heightIn(min = minHeight)
             .then(clickableModifier)
             .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
-                vertical = XyTheme.dimens.contentPadding
+                horizontal = horizontalPadding,
+                vertical = verticalPadding
             ),
-        horizontalArrangement = Arrangement.spacedBy(
-            space = XyTheme.dimens.contentPadding,
-            alignment = Alignment.Start
-        ),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-        itemVerticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
             modifier = Modifier
-                .widthIn(min = 220.dp)
                 .weight(1f),
             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            JvmSettingIcon(icon = icon)
+            JvmSettingIcon(
+                icon = icon,
+                selected = iconSelected,
+                color = iconColor,
+                contentAlpha = contentAlpha,
+            )
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
@@ -951,7 +982,7 @@ private fun JvmSettingBaseRow(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -962,9 +993,9 @@ private fun JvmSettingBaseRow(
                     } else {
                         MaterialTheme.typography.bodySmall
                     },
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = if (descriptionStyle == JvmSettingRowDescriptionStyle.Path) 2 else 1,
-                    overflow = TextOverflow.Ellipsis
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
+                    maxLines = descriptionMaxLines,
+                    overflow = descriptionOverflow
                 )
             }
         }
@@ -988,6 +1019,7 @@ private fun JvmSettingBaseRow(
 private fun JvmSettingActionCard(
     modifier: Modifier = Modifier,
     actionEntry: JvmSettingActionEntry,
+    cardHeight: Dp = JvmSettingActionCardHeight,
 ) {
     val shape = RoundedCornerShape(XyTheme.dimens.corner)
     val interactionSource = remember { MutableInteractionSource() }
@@ -1024,8 +1056,8 @@ private fun JvmSettingActionCard(
     Box(
         modifier = modifier
             .heightIn(
-                min = JvmSettingActionCardHeight,
-                max = JvmSettingActionCardHeight
+                min = cardHeight,
+                max = cardHeight
             )
             .then(clickableModifier)
     ) {
@@ -1037,7 +1069,6 @@ private fun JvmSettingActionCard(
                 .background(containerColor)
                 .border(BorderStroke(1.dp, borderColor), shape)
                 .padding(XyTheme.dimens.outerHorizontalPadding),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
         ) {
             JvmSettingKicker(
                 icon = actionEntry.icon,
@@ -1053,6 +1084,7 @@ private fun JvmSettingActionCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding / 2))
             Text(
                 text = actionEntry.description,
                 style = MaterialTheme.typography.labelSmall,
@@ -1302,7 +1334,7 @@ private fun JvmSettingChevron() {
 /**
  * 设置行说明文本的样式类型。
  */
-private enum class JvmSettingRowDescriptionStyle {
+internal enum class JvmSettingRowDescriptionStyle {
     /** 普通说明文本，单行展示。 */
     Normal,
 

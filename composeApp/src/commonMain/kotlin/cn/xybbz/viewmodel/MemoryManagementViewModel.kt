@@ -28,6 +28,8 @@ import cn.xybbz.common.utils.DatabaseUtils
 import cn.xybbz.common.utils.formatBytes
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.musicCacheSizeInfoFlow
+import cn.xybbz.config.music.refreshMusicCacheSize
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.storage.MemoryStorageInfo
 import cn.xybbz.config.storage.clearPlatformCache
@@ -72,12 +74,12 @@ class MemoryManagementViewModel(
 
     init {
         viewModelScope.launch {
-            downloadCacheController.allCacheSizeFlow.collect {
-                musicCacheSize = formatBytes(it)
+            downloadCacheController.musicCacheSizeInfoFlow().collect { sizeInfo ->
+                musicCacheSize = sizeInfo.label
             }
         }
         viewModelScope.launch {
-            refreshMusicCacheSize()
+            refreshMusicCacheUsage()
         }
         viewModelScope.launch {
             settingsManager.cacheFilePath.collect {
@@ -88,6 +90,7 @@ class MemoryManagementViewModel(
 
     fun logStorageInfo() {
         viewModelScope.launch {
+            refreshMusicCacheUsage()
             refreshStorageInfo()
         }
     }
@@ -97,12 +100,6 @@ class MemoryManagementViewModel(
             getMemoryStorageInfo(contextWrapper, db, downloadDb)
         }
         updateStorageInfo(storageInfo)
-    }
-
-    private suspend fun refreshMusicCacheSize() {
-        withContext(Dispatchers.IO) {
-            downloadCacheController.getCacheSize()
-        }
     }
 
     private fun updateStorageInfo(storageInfo: MemoryStorageInfo) {
@@ -116,6 +113,7 @@ class MemoryManagementViewModel(
             withContext(Dispatchers.IO) {
                 clearPlatformCache(contextWrapper)
             }
+            refreshMusicCacheUsage()
             refreshStorageInfo()
         }
     }
@@ -125,6 +123,7 @@ class MemoryManagementViewModel(
             withContext(Dispatchers.IO) {
                 downloadCacheController.clearCache()
             }
+            refreshMusicCacheUsage()
             refreshStorageInfo()
         }
     }
@@ -135,6 +134,7 @@ class MemoryManagementViewModel(
                 downloadCacheController.changeCacheDirectory(path)
             }
             updateMusicCachePathState()
+            refreshMusicCacheUsage()
             refreshStorageInfo()
         }
     }
@@ -145,6 +145,7 @@ class MemoryManagementViewModel(
                 downloadCacheController.restoreDefaultCacheDirectory()
             }
             updateMusicCachePathState()
+            refreshMusicCacheUsage()
             refreshStorageInfo()
         }
     }
@@ -165,5 +166,9 @@ class MemoryManagementViewModel(
     private fun updateMusicCachePathState() {
         musicCachePath = downloadCacheController.cacheDirectoryPath
         isDefaultMusicCachePath = downloadCacheController.isDefaultCacheDirectory
+    }
+
+    private suspend fun refreshMusicCacheUsage() {
+        downloadCacheController.refreshMusicCacheSize()
     }
 }

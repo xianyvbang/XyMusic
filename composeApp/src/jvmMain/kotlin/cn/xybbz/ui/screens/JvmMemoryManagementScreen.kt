@@ -21,7 +21,6 @@ package cn.xybbz.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -61,6 +60,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid
+import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
@@ -768,12 +768,20 @@ private fun JvmMemoryPathSection(
                     RoundedCornerShape(XyTheme.dimens.corner)
                 )
         ) {
-            JvmMemorySettingRow(
+            JvmSettingBaseRow(
                 icon = Res.drawable.folder_managed_24px,
                 title = "歌曲缓存位置",
                 description = cachePath.ifBlank { "使用默认缓存目录" },
-                value = adjustTitle,
+                descriptionMaxLines = 2,
+                descriptionOverflow = TextOverflow.Visible,
+                minHeight = 72.dp,
+                horizontalPadding = XyTheme.dimens.contentPadding,
+                verticalPadding = XyTheme.dimens.outerVerticalPadding,
+                iconSelected = true,
                 onClick = onOpenPath,
+                trailing = {
+                    JvmMemorySettingValueBadge(text = adjustTitle)
+                }
             )
             Spacer(
                 modifier = Modifier
@@ -781,86 +789,46 @@ private fun JvmMemoryPathSection(
                     .height(1.dp)
                     .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f))
             )
-            JvmMemorySettingRow(
+            val restorePathEnabled = !isDefaultCachePath
+            val restorePathContentAlpha = if (restorePathEnabled) 1f else 0.48f
+            JvmSettingBaseRow(
                 icon = Res.drawable.check_24px,
                 title = restoreDefaultTitle,
                 // 已经是默认目录时禁用恢复操作，只保留状态提示。
                 description = if (isDefaultCachePath) "当前已经使用默认缓存目录。" else "恢复到应用默认的歌曲缓存目录。",
-                value = if (isDefaultCachePath) "已默认" else "恢复",
-                enabled = !isDefaultCachePath,
+                enabled = restorePathEnabled,
+                minHeight = 72.dp,
+                horizontalPadding = XyTheme.dimens.contentPadding,
+                verticalPadding = XyTheme.dimens.outerVerticalPadding,
+                iconSelected = true,
+                contentAlpha = restorePathContentAlpha,
                 onClick = onRestoreDefaultPath,
+                trailing = {
+                    JvmMemorySettingValueBadge(
+                        text = if (isDefaultCachePath) "已默认" else "恢复",
+                        alpha = restorePathContentAlpha,
+                    )
+                }
             )
         }
     }
 }
 
 /**
- * 存储位置设置行。
+ * 存储位置设置行右侧值标签。
  *
- * @param icon 行图标资源。
- * @param title 行标题。
- * @param description 行说明或路径。
- * @param value 右侧徽标文案。
- * @param enabled 是否允许点击。
- * @param onClick 点击动作。
+ * @param text 标签文本。
+ * @param alpha 标签透明度。
  */
 @Composable
-private fun JvmMemorySettingRow(
-    icon: DrawableResource,
-    title: String,
-    description: String,
-    value: String,
-    enabled: Boolean = true,
-    onClick: () -> Unit,
+private fun JvmMemorySettingValueBadge(
+    text: String,
+    alpha: Float = 1f,
 ) {
-    // 路径恢复行在默认路径状态下会禁用，这里统一处理禁用态透明度和点击行为。
-    val contentAlpha = if (enabled) 1f else 0.48f
-    val clickableModifier = if (enabled) {
-        Modifier.clickable(onClick = onClick)
-    } else {
-        Modifier
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp)
-            .then(clickableModifier)
-            .padding(
-                horizontal = XyTheme.dimens.contentPadding,
-                vertical = XyTheme.dimens.outerVerticalPadding
-            ),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        JvmMemorySmallIcon(
-            icon = icon,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = contentAlpha),
-        )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-        JvmMemoryBadge(
-            text = value,
-            alpha = contentAlpha,
-        )
-    }
+    JvmMemoryBadge(
+        text = text,
+        alpha = alpha,
+    )
 }
 
 /**

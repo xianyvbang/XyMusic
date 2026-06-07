@@ -24,6 +24,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.common.utils.formatBytes
+import cn.xybbz.config.music.DownloadCacheCommonController
+import cn.xybbz.config.music.musicCacheSizeInfoFlow
+import cn.xybbz.config.music.refreshMusicCacheSize
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import kotlinx.coroutines.launch
@@ -31,7 +34,8 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class CacheLimitViewModel (
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    private val downloadCacheController: DownloadCacheCommonController,
 ) : ViewModel() {
 
     /**
@@ -46,6 +50,26 @@ class CacheLimitViewModel (
     var cacheSizeInfo by mutableStateOf("")
         private set
 
+    /**
+     * 音乐播放缓存真实占用字节数。
+     */
+    var musicCacheSizeBytes by mutableStateOf(0L)
+        private set
+
+    /**
+     * 音乐播放缓存真实占用展示文案。
+     */
+    var musicCacheSizeLabel by mutableStateOf("0B")
+        private set
+
+    init {
+        viewModelScope.launch {
+            downloadCacheController.musicCacheSizeInfoFlow().collect { sizeInfo ->
+                musicCacheSizeBytes = sizeInfo.bytes
+                musicCacheSizeLabel = sizeInfo.label
+            }
+        }
+    }
 
     fun setCacheUpperLimitData(data: CacheUpperLimitEnum) {
         cacheUpperLimit = data
@@ -62,5 +86,14 @@ class CacheLimitViewModel (
      */
     fun getAutomaticCacheSize() {
         cacheSizeInfo = formatBytes(settingsManager.maxBytesFlow.value)
+    }
+
+    /**
+     * 刷新音乐播放缓存真实占用。
+     */
+    fun refreshMusicCacheSize() {
+        viewModelScope.launch {
+            downloadCacheController.refreshMusicCacheSize()
+        }
     }
 }
