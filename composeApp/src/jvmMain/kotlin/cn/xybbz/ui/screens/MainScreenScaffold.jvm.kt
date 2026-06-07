@@ -155,7 +155,7 @@ actual fun MainScreenScaffold(
                         modifier = Modifier
                             .width(jvmRouterMenuWidth)
                             .fillMaxSize()
-                            .background(sidebarColors.background)
+//                            .background(sidebarColors.background)
                             .padding(end = XyTheme.dimens.contentPadding)
                     ) {
                         LazyColumnNotComponent(

@@ -13,8 +13,4 @@ actual fun ConnectionScreen(
         connectionUiType = connectionUiType,
         modifier = modifier,
     )
-    /*JvmConnectionScreen(
-        connectionUiType = connectionUiType,
-        modifier = modifier,
-    )*/
 }

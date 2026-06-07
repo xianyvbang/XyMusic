@@ -71,7 +71,7 @@ import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.components.rememberBackgroundImagePicker
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyButton
+import cn.xybbz.ui.xy.XyIconTextButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
@@ -85,6 +85,7 @@ import xymusic_kmp.composeapp.generated.resources.album_24px
 import xymusic_kmp.composeapp.generated.resources.background_image
 import xymusic_kmp.composeapp.generated.resources.background_image_setting
 import xymusic_kmp.composeapp.generated.resources.clear_image
+import xymusic_kmp.composeapp.generated.resources.close_24px
 import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
 import xymusic_kmp.composeapp.generated.resources.select_image
 import xymusic_kmp.composeapp.generated.resources.settings_24px
@@ -603,23 +604,26 @@ private fun JvmBackgroundActionPanel(
                 horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                XyButton(
+                XyIconTextButton(
                     modifier = Modifier.weight(1f),
                     onClick = composeClick(onClick = onSelectImage),
                     text = selectImageTitle,
+                    icon = Res.drawable.folder_managed_24px,
                     color = MaterialTheme.colorScheme.onPrimary,
                     backgroundColor = MaterialTheme.colorScheme.primary,
                 )
-                XyButton(
+                XyIconTextButton(
                     modifier = Modifier.weight(1f),
                     onClick = composeClick(onClick = onClearImage),
                     text = clearImageTitle,
+                    icon = Res.drawable.close_24px,
                     color = if (imageSelected) {
                         MaterialTheme.colorScheme.onSurface
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
                     backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
                     enabled = imageSelected,
                 )
             }
