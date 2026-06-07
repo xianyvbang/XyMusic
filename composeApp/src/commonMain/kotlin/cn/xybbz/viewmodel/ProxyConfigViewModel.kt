@@ -68,10 +68,11 @@ class ProxyConfigViewModel(
         }
     }
 
-    fun updateAddress(address: String) {
-        viewModelScope.launch {
-            addressValue = TextFieldValue(text = address, selection = TextRange(address.length))
-        }
+    /**
+     * 更新代理地址输入状态，保留光标、选区和输入法组合状态。
+     */
+    fun updateAddress(value: TextFieldValue) {
+        addressValue = value
     }
 
     fun saveConfig() {

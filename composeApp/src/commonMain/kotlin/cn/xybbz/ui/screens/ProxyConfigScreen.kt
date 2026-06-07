@@ -154,7 +154,7 @@ private fun ProxyConfigInput(
 @Composable
 fun ProxyConfigComponent(
     addressValue: TextFieldValue,
-    updateAddress: (String) -> Unit,
+    updateAddress: (TextFieldValue) -> Unit,
 ) {
 
     SettingRoundedSurfaceColumn {
@@ -169,8 +169,7 @@ fun ProxyConfigComponent(
                     ProxyConfigInput(
                         text = addressValue,
                         onChange = { newValue ->
-                            val newText = newValue.text
-                            updateAddress(newText)
+                            updateAddress(newValue)
                         },
                         hint = "127.0.0.1:19180"
                     )

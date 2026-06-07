@@ -177,15 +177,14 @@ private fun JvmProxyConfigInput(
 @Composable
 fun JvmProxyConfigComponent(
     addressValue: TextFieldValue,
-    updateAddress: (String) -> Unit,
+    updateAddress: (TextFieldValue) -> Unit,
 ) {
     JvmProxyConfigFormRow(label = stringResource(Res.string.proxy_address)) {
         JvmProxyConfigInput(
             modifier = Modifier.fillMaxWidth(),
             text = addressValue,
             onChange = { newValue ->
-                val newText = newValue.text
-                updateAddress(newText)
+                updateAddress(newValue)
             },
             hint = Constants.DEFAULT_PROXY_ADDRESS
         )
