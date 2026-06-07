@@ -54,13 +54,13 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid
+import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
-import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.AboutViewModel
 import org.jetbrains.compose.resources.DrawableResource
@@ -246,21 +246,21 @@ private fun JvmAboutContent(
                 contentContainerEnabled = false,
             ) {
                 JvmAboutSettingList {
-                    JvmAboutSettingRow(
+                    JvmAboutProjectEntryRow(
                         icon = Res.drawable.add_link_24px,
                         title = officialWebsiteTitle,
                         description = "查看项目主页、发布说明和文档入口。",
                         value = "打开",
                         onClick = onOfficialWebsite
                     )
-                    JvmAboutSettingRow(
+                    JvmAboutProjectEntryRow(
                         icon = Res.drawable.info_24px,
                         title = problemFeedbackTitle,
                         description = "提交桌面端问题、连接问题或功能建议。",
                         value = "反馈",
                         onClick = onProblemFeedback
                     )
-                    JvmAboutSettingRow(
+                    JvmAboutProjectEntryRow(
                         icon = Res.drawable.check_24px,
                         title = "复制诊断信息",
                         description = "包含版本、平台、数据源类型和 JVM 运行时。",
@@ -527,7 +527,7 @@ private fun JvmAboutSettingList(content: @Composable ColumnScope.() -> Unit) {
 }
 
 /**
- * 关于页可点击设置行。
+ * 关于页项目入口设置行。
  *
  * @param icon 行首图标。
  * @param title 行标题。
@@ -536,18 +536,21 @@ private fun JvmAboutSettingList(content: @Composable ColumnScope.() -> Unit) {
  * @param onClick 点击事件。
  */
 @Composable
-private fun JvmAboutSettingRow(
+private fun JvmAboutProjectEntryRow(
     icon: DrawableResource,
     title: String,
     description: String,
     value: String,
     onClick: () -> Unit,
 ) {
-    JvmAboutBaseRow(
-        modifier = Modifier.jvmHoverDebounceClickable(onClick = onClick),
+    JvmSettingBaseRow(
         icon = icon,
         title = title,
         description = description,
+        minHeight = 64.dp,
+        horizontalPadding = XyTheme.dimens.contentPadding,
+        verticalPadding = XyTheme.dimens.outerVerticalPadding,
+        onClick = onClick,
         trailing = {
             JvmAboutValuePill(value = value)
         }
