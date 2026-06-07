@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XyMusic JVM 媒体库选择页预览</title>
+    <style>
+        /* 页面变量：沿用 JVM 设置页的深色桌面壳层与蓝色强调色 */
+        :root {
+            --accent: #0470E6;
+            --accent-2: #2A9D8F;
+            --accent-soft: rgba(4, 112, 230, 0.16);
+            --accent-border: rgba(4, 112, 230, 0.72);
+            --bg: #1A1A1A;
+            --sidebar: #111111;
+            --surface: #2F2F2F;
+            --surface-low: #242424;
+            --surface-high: #363636;
+            --surface-hover: #3C3C3C;
+            --line: rgba(255, 255, 255, 0.10);
+            --line-strong: rgba(255, 255, 255, 0.16);
+            --text: #EBEEF1;
+            --muted: #A7A7A7;
+            --dim: #727272;
+            --success: #2A9D8F;
+            --warm: #E9C46A;
+            --danger: #E76F51;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            color: var(--text);
+            background: var(--bg);
+            font-family: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+            overflow: hidden;
+            letter-spacing: 0;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        /* 桌面应用壳层：参考设置页的侧栏、主区域和底部播放器结构 */
+        .app-shell {
+            display: grid;
+            grid-template-columns: 248px minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr) 88px;
+            grid-template-areas:
+                "sidebar main"
+                "player player";
+            height: 100vh;
+            min-width: 880px;
+            background:
+                linear-gradient(180deg, rgba(4, 112, 230, 0.09), rgba(26, 26, 26, 0) 260px),
+                var(--bg);
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+            padding: 18px 12px 12px;
+            background: var(--sidebar);
+            border-right: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 44px;
+            padding: 0 12px;
+            color: #FFFFFF;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), #31A8FF);
+            box-shadow: 0 8px 20px rgba(4, 112, 230, 0.28);
+        }
+
+        .brand-mark::before {
+            content: "";
+            width: 12px;
+            height: 16px;
+            border-right: 4px solid #FFFFFF;
+            border-bottom: 4px solid #FFFFFF;
+            border-radius: 0 0 8px 0;
+            transform: rotate(8deg);
+        }
+
+        .nav-panel,
+        .queue-panel {
+            border-radius: var(--radius);
+            background: var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .nav-panel {
+            padding: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            height: 42px;
+            padding: 0 12px;
+            color: var(--muted);
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            text-align: left;
+            cursor: default;
+        }
+
+        .nav-item.active {
+            color: var(--text);
+            background: var(--surface-high);
+        }
+
+        .nav-icon {
+            display: grid;
+            place-items: center;
+            width: 22px;
+            height: 22px;
+            color: currentColor;
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .queue-panel {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .queue-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 36px;
+            padding: 0 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .queue-list {
+            display: grid;
+            gap: 6px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .queue-row {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            min-width: 0;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .queue-row.current {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .cover {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #274060, #2A9D8F);
+        }
+
+        .cover.alt {
+            background: linear-gradient(135deg, #5F4B8B, #E9C46A);
+        }
+
+        .cover.third {
+            background: linear-gradient(135deg, #183A37, #0470E6);
+        }
+
+        .line-title,
+        .line-sub {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .line-title {
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 650;
+        }
+
+        .line-sub {
+            margin-top: 4px;
+            color: var(--dim);
+            font-size: 12px;
+        }
+
+        .main {
+            grid-area: main;
+            min-width: 0;
+            margin: 8px 8px 0 8px;
+            border-radius: var(--radius);
+            background:
+                linear-gradient(180deg, rgba(4, 112, 230, 0.18), rgba(47, 47, 47, 0) 230px),
+                var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            padding: 0 24px;
+            background: rgba(31, 31, 31, 0.72);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(18px);
+        }
+
+        .window-actions,
+        .topbar-tools {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .round-button,
+        .icon-button {
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.24);
+        }
+
+        .round-button {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+        }
+
+        .icon-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+        }
+
+        .icon-button:hover,
+        .round-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .source-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            height: 36px;
+            padding: 0 12px 0 8px;
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .source-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        }
+
+        .content-scroll {
+            height: calc(100vh - 160px);
+            overflow: auto;
+        }
+
+        .content-scroll::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .content-scroll::-webkit-scrollbar-thumb {
+            border: 3px solid transparent;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.24);
+            background-clip: content-box;
+        }
+
+        .content {
+            width: min(1080px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 34px 0 42px;
+        }
+
+        /* 页面头部：突出当前页面任务和连接状态 */
+        .page-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 24px;
+            align-items: end;
+            margin-bottom: 24px;
+        }
+
+        .eyebrow {
+            margin-bottom: 10px;
+            color: #8FC4FF;
+            font-size: 13px;
+            font-weight: 750;
+        }
+
+        h1 {
+            margin: 0;
+            color: #FFFFFF;
+            font-size: 32px;
+            line-height: 1.18;
+            font-weight: 780;
+            letter-spacing: 0;
+        }
+
+        .summary {
+            margin: 10px 0 0;
+            max-width: 660px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .status-card {
+            display: grid;
+            gap: 10px;
+            min-width: 278px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .status-value {
+            color: var(--text);
+            font-weight: 750;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .overview-tile {
+            min-width: 0;
+            min-height: 104px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: var(--surface-high);
+            border: 1px solid var(--line);
+        }
+
+        .overview-kicker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .overview-icon {
+            display: grid;
+            place-items: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.20);
+            border: 1px solid rgba(4, 112, 230, 0.26);
+        }
+
+        .overview-value {
+            overflow: hidden;
+            margin-top: 16px;
+            color: #FFFFFF;
+            font-size: 22px;
+            line-height: 1.1;
+            font-weight: 800;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .overview-sub {
+            overflow: hidden;
+            margin-top: 8px;
+            color: var(--dim);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 主内容：左侧选择列表，右侧当前范围摘要 */
+        .library-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .stack {
+            display: grid;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: var(--radius);
+            background: rgba(47, 47, 47, 0.82);
+            border: 1px solid var(--line);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+        }
+
+        .section-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            margin: 0;
+            color: #FFFFFF;
+            font-size: 17px;
+            line-height: 1.35;
+            font-weight: 750;
+        }
+
+        .section-subtitle {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .badge {
+            flex: 0 0 auto;
+            padding: 6px 10px;
+            border-radius: 999px;
+            color: #BBD9FF;
+            background: rgba(4, 112, 230, 0.12);
+            border: 1px solid rgba(4, 112, 230, 0.28);
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .badge.success {
+            color: #BFF5E8;
+            background: rgba(42, 157, 143, 0.12);
+            border-color: rgba(42, 157, 143, 0.28);
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .search-box {
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr);
+            align-items: center;
+            min-width: 0;
+            height: 42px;
+            border-radius: var(--radius);
+            color: var(--muted);
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .search-box input {
+            width: 100%;
+            min-width: 0;
+            height: 100%;
+            border: 0;
+            outline: 0;
+            color: var(--text);
+            background: transparent;
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .search-box input::placeholder {
+            color: var(--dim);
+        }
+
+        .segmented {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+            min-width: 186px;
+            padding: 6px;
+            border-radius: var(--radius);
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .segment {
+            height: 30px;
+            min-width: 0;
+            padding: 0 12px;
+            border: 0;
+            border-radius: 8px;
+            color: var(--muted);
+            background: transparent;
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .segment.active {
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.26);
+            box-shadow: inset 0 0 0 1px rgba(4, 112, 230, 0.24);
+        }
+
+        .library-list {
+            display: grid;
+            overflow: hidden;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .library-row {
+            display: grid;
+            grid-template-columns: 46px minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            min-height: 74px;
+            width: 100%;
+            padding: 12px 14px;
+            color: var(--text);
+            background: transparent;
+            border: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .library-row:last-child {
+            border-bottom: 0;
+        }
+
+        .library-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .library-row.selected {
+            background:
+                linear-gradient(90deg, rgba(4, 112, 230, 0.18), rgba(4, 112, 230, 0.04)),
+                rgba(255, 255, 255, 0.05);
+            box-shadow: inset 3px 0 0 var(--accent);
+        }
+
+        .library-avatar {
+            display: grid;
+            place-items: center;
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            color: #FFFFFF;
+            background:
+                radial-gradient(circle at 30% 26%, rgba(255, 255, 255, 0.38), transparent 30%),
+                linear-gradient(135deg, #274060, #2A9D8F);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .library-avatar.all {
+            background:
+                radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.44), transparent 28%),
+                linear-gradient(135deg, var(--accent), #31A8FF);
+        }
+
+        .library-avatar.warm {
+            background:
+                radial-gradient(circle at 30% 26%, rgba(255, 255, 255, 0.34), transparent 30%),
+                linear-gradient(135deg, #5F4B8B, #E9C46A);
+        }
+
+        .library-avatar.green {
+            background:
+                radial-gradient(circle at 30% 26%, rgba(255, 255, 255, 0.34), transparent 30%),
+                linear-gradient(135deg, #183A37, #2A9D8F);
+        }
+
+        .library-main {
+            min-width: 0;
+        }
+
+        .library-title-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .library-title {
+            overflow: hidden;
+            color: #FFFFFF;
+            font-size: 14px;
+            line-height: 1.35;
+            font-weight: 750;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .library-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .library-meta span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dot {
+            width: 4px;
+            height: 4px;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .type-pill,
+        .count-pill {
+            display: inline-flex;
+            align-items: center;
+            max-width: 160px;
+            height: 24px;
+            padding: 0 9px;
+            border-radius: 999px;
+            color: #DCEEFF;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .count-pill {
+            color: #BFF5E8;
+            background: rgba(42, 157, 143, 0.12);
+            border-color: rgba(42, 157, 143, 0.22);
+        }
+
+        .selector {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            flex: 0 0 auto;
+            border: 2px solid rgba(255, 255, 255, 0.34);
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        .selector.check {
+            border-radius: 7px;
+        }
+
+        .library-row.selected .selector {
+            border-color: var(--accent);
+            background: var(--accent);
+            box-shadow: 0 8px 18px rgba(4, 112, 230, 0.24);
+        }
+
+        .library-row.selected .selector::after {
+            content: "";
+            position: absolute;
+            left: 6px;
+            top: 3px;
+            width: 7px;
+            height: 12px;
+            border-right: 2px solid #FFFFFF;
+            border-bottom: 2px solid #FFFFFF;
+            transform: rotate(42deg);
+        }
+
+        .library-row.hidden {
+            display: none;
+        }
+
+        .empty-row {
+            display: none;
+            padding: 28px 18px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .empty-row.show {
+            display: block;
+        }
+
+        .selection-card {
+            display: grid;
+            gap: 14px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background:
+                linear-gradient(135deg, rgba(4, 112, 230, 0.12), rgba(42, 157, 143, 0.08)),
+                rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .selection-title {
+            margin: 0;
+            color: #FFFFFF;
+            font-size: 15px;
+            font-weight: 780;
+        }
+
+        .selection-value {
+            overflow: hidden;
+            color: #FFFFFF;
+            font-size: 26px;
+            line-height: 1.1;
+            font-weight: 820;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .selection-sub {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .selected-tag {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            color: #DCEEFF;
+            background: rgba(4, 112, 230, 0.16);
+            border: 1px solid rgba(4, 112, 230, 0.26);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .selected-tag span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .info-list {
+            display: grid;
+            overflow: hidden;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .info-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+            min-height: 58px;
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .info-row:last-child {
+            border-bottom: 0;
+        }
+
+        .info-label {
+            overflow: hidden;
+            color: var(--muted);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .info-value {
+            overflow: hidden;
+            max-width: 190px;
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 750;
+            text-align: right;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .note-row {
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .note-icon {
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.18);
+            border: 1px solid rgba(4, 112, 230, 0.26);
+        }
+
+        .toast {
+            position: fixed;
+            right: 24px;
+            bottom: 108px;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            max-width: min(360px, calc(100vw - 48px));
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: var(--text);
+            background: rgba(36, 36, 36, 0.96);
+            border: 1px solid var(--line-strong);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+        }
+
+        .toast.show {
+            display: flex;
+        }
+
+        /* 底部播放器：保持与参考页一致的桌面音乐应用氛围 */
+        .player {
+            grid-area: player;
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(360px, 520px) minmax(220px, 1fr);
+            gap: 18px;
+            align-items: center;
+            min-width: 0;
+            padding: 12px 18px;
+            background: #151515;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .now-playing {
+            display: grid;
+            grid-template-columns: 56px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .album-art {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            background:
+                radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.40), transparent 24%),
+                linear-gradient(135deg, #274060, #2A9D8F);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+        }
+
+        .player-title {
+            overflow: hidden;
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 750;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .player-subtitle {
+            overflow: hidden;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .transport {
+            display: grid;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .transport-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .transport-button,
+        .play-button {
+            display: grid;
+            place-items: center;
+            border: 0;
+            color: var(--text);
+            background: transparent;
+        }
+
+        .transport-button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            color: var(--muted);
+        }
+
+        .transport-button:hover {
+            color: #FFFFFF;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .play-button {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            color: #FFFFFF;
+            background: var(--accent);
+            box-shadow: 0 10px 22px rgba(4, 112, 230, 0.28);
+        }
+
+        .progress {
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr) 38px;
+            gap: 10px;
+            align-items: center;
+            color: var(--dim);
+            font-size: 11px;
+        }
+
+        .bar {
+            height: 5px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .bar-fill {
+            width: 38%;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        }
+
+        .player-tools {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            min-width: 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .volume {
+            width: 92px;
+        }
+
+        @media (max-width: 1180px) {
+            .app-shell {
+                grid-template-columns: 218px minmax(0, 1fr);
+            }
+
+            .content {
+                width: calc(100% - 36px);
+            }
+
+            .library-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .page-head {
+                grid-template-columns: 1fr;
+            }
+
+            .status-card {
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 920px) {
+            body {
+                overflow: auto;
+            }
+
+            .app-shell {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto minmax(0, 1fr) auto;
+                grid-template-areas:
+                    "sidebar"
+                    "main"
+                    "player";
+                height: auto;
+                min-width: 0;
+            }
+
+            .sidebar {
+                flex-direction: row;
+                align-items: center;
+                overflow: auto;
+                padding: 10px;
+            }
+
+            .brand {
+                flex: 0 0 auto;
+            }
+
+            .nav-panel {
+                display: flex;
+                flex: 0 0 auto;
+            }
+
+            .nav-item {
+                justify-content: center;
+                min-width: 42px;
+                padding: 0 10px;
+            }
+
+            .nav-item span:last-child {
+                display: none;
+            }
+
+            .queue-panel {
+                display: none;
+            }
+
+            .main {
+                margin: 0 8px;
+            }
+
+            .content-scroll {
+                height: auto;
+                overflow: visible;
+            }
+
+            .toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .segmented {
+                width: 100%;
+            }
+
+            .player {
+                grid-template-columns: minmax(0, 1fr) auto;
+            }
+
+            .transport {
+                display: none;
+            }
+
+            .player-tools {
+                min-width: 150px;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .topbar {
+                padding: 0 12px;
+            }
+
+            .source-pill span:last-child {
+                max-width: 128px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .content {
+                width: calc(100% - 24px);
+                padding-top: 24px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section {
+                padding: 16px;
+            }
+
+            .section-head {
+                display: grid;
+            }
+
+            .library-row {
+                grid-template-columns: 42px minmax(0, 1fr) auto;
+                padding: 12px;
+            }
+
+            .library-avatar {
+                width: 42px;
+                height: 42px;
+            }
+
+            .library-meta {
+                display: grid;
+                gap: 4px;
+            }
+
+            .dot {
+                display: none;
+            }
+
+            .player-tools {
+                display: none;
+            }
+
+            .player {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+            <div class="brand-mark" aria-hidden="true"></div>
+            <span>XyMusic</span>
+        </div>
+
+        <nav class="nav-panel" aria-label="页面导航">
+            <button class="nav-item" type="button">
+                <span class="nav-icon" aria-hidden="true">⌂</span>
+                <span>首页</span>
+            </button>
+            <button class="nav-item" type="button">
+                <span class="nav-icon" aria-hidden="true">♫</span>
+                <span>媒体库</span>
+            </button>
+            <button class="nav-item" type="button">
+                <span class="nav-icon" aria-hidden="true">◎</span>
+                <span>播放列表</span>
+            </button>
+            <button class="nav-item active" type="button">
+                <span class="nav-icon" aria-hidden="true">⚙</span>
+                <span>设置</span>
+            </button>
+        </nav>
+
+        <section class="queue-panel" aria-label="最近播放">
+            <div class="queue-header">
+                <span>最近播放</span>
+                <span aria-hidden="true">+</span>
+            </div>
+            <div class="queue-list">
+                <div class="queue-row current">
+                    <div class="cover" aria-hidden="true"></div>
+                    <div>
+                        <div class="line-title">Blue Hour</div>
+                        <div class="line-sub">Private Collection</div>
+                    </div>
+                </div>
+                <div class="queue-row">
+                    <div class="cover alt" aria-hidden="true"></div>
+                    <div>
+                        <div class="line-title">Night Drive</div>
+                        <div class="line-sub">Synthwave</div>
+                    </div>
+                </div>
+                <div class="queue-row">
+                    <div class="cover third" aria-hidden="true"></div>
+                    <div>
+                        <div class="line-title">Forest Tape</div>
+                        <div class="line-sub">Live Archive</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="window-actions">
+                <button class="round-button" type="button" aria-label="返回">‹</button>
+                <button class="round-button" type="button" aria-label="前进">›</button>
+            </div>
+            <div class="topbar-tools">
+                <div class="source-pill" title="Navidrome · 192.168.31.12">
+                    <span class="source-dot" aria-hidden="true"></span>
+                    <span>Navidrome · Home Server</span>
+                </div>
+                <button class="icon-button" type="button" aria-label="刷新媒体库">↻</button>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+            <div class="content">
+                <section class="page-head">
+                    <div>
+                        <div class="eyebrow">连接设置</div>
+                        <h1>媒体库选择</h1>
+                        <p class="summary">为当前连接指定可见的媒体库范围，专辑、歌曲、搜索和播放队列都会按照这个范围加载。</p>
+                    </div>
+                    <aside class="status-card" aria-label="连接状态">
+                        <div class="status-row">
+                            <span>数据源</span>
+                            <span class="status-value">Navidrome</span>
+                        </div>
+                        <div class="status-row">
+                            <span>连接</span>
+                            <span class="status-value">已同步</span>
+                        </div>
+                        <div class="status-row">
+                            <span>当前范围</span>
+                            <span class="status-value" id="status-scope">全部媒体库</span>
+                        </div>
+                    </aside>
+                </section>
+
+                <section class="overview-grid" aria-label="媒体库概览">
+                    <div class="overview-tile">
+                        <div class="overview-kicker">
+                            <span class="overview-icon" aria-hidden="true">▦</span>
+                            可选媒体库
+                        </div>
+                        <div class="overview-value">6 个</div>
+                        <div class="overview-sub">来自当前服务连接</div>
+                    </div>
+                    <div class="overview-tile">
+                        <div class="overview-kicker">
+                            <span class="overview-icon" aria-hidden="true">✓</span>
+                            已选择
+                        </div>
+                        <div class="overview-value" id="overview-selected">全部</div>
+                        <div class="overview-sub" id="overview-sub">不限制媒体库范围</div>
+                    </div>
+                    <div class="overview-tile">
+                        <div class="overview-kicker">
+                            <span class="overview-icon" aria-hidden="true">⇄</span>
+                            同步状态
+                        </div>
+                        <div class="overview-value">即时</div>
+                        <div class="overview-sub">变更后写入当前连接</div>
+                    </div>
+                </section>
+
+                <div class="library-layout">
+                    <div class="stack">
+                        <section class="section" aria-labelledby="library-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="library-title">媒体库列表</h2>
+                                    <p class="section-subtitle">全部媒体库为互斥选项；支持多媒体库的数据源可选择多个具体库。</p>
+                                </div>
+                                <span class="badge success" id="mode-badge">多选</span>
+                            </div>
+
+                            <div class="toolbar">
+                                <label class="search-box" aria-label="搜索媒体库">
+                                    <span class="overview-icon" aria-hidden="true">⌕</span>
+                                    <input id="search-input" type="search" placeholder="搜索媒体库名称或类型">
+                                </label>
+                                <div class="segmented" aria-label="选择模式">
+                                    <button class="segment" type="button" data-mode="single">单选</button>
+                                    <button class="segment active" type="button" data-mode="multi">多选</button>
+                                </div>
+                            </div>
+
+                            <div class="library-list" id="library-list">
+                                <button class="library-row selected" type="button" data-id="-1" data-name="全部媒体库" data-kind="系统" data-count="全部" data-all="true">
+                                    <span class="library-avatar all" aria-hidden="true">A</span>
+                                    <span class="library-main">
+                                        <span class="library-title-line">
+                                            <span class="library-title">全部媒体库</span>
+                                            <span class="type-pill">默认范围</span>
+                                        </span>
+                                        <span class="library-meta">
+                                            <span>不过滤任何音乐库</span>
+                                            <span class="dot"></span>
+                                            <span>服务端全部内容</span>
+                                        </span>
+                                    </span>
+                                    <span class="selector" aria-hidden="true"></span>
+                                </button>
+
+                                <button class="library-row" type="button" data-id="private" data-name="私人收藏" data-kind="音乐" data-count="4,218 首">
+                                    <span class="library-avatar" aria-hidden="true">私</span>
+                                    <span class="library-main">
+                                        <span class="library-title-line">
+                                            <span class="library-title">私人收藏</span>
+                                            <span class="count-pill">4,218 首</span>
+                                        </span>
+                                        <span class="library-meta">
+                                            <span>Music Library</span>
+                                            <span class="dot"></span>
+                                            <span>最近同步 2 分钟前</span>
+                                        </span>
+                                    </span>
+                                    <span class="selector" aria-hidden="true"></span>
+                                </button>
+
+                                <button class="library-row" type="button" data-id="lossless" data-name="无损专辑" data-kind="音乐" data-count="1,862 首">
+                                    <span class="library-avatar warm" aria-hidden="true">无</span>
+                                    <span class="library-main">
+                                        <span class="library-title-line">
+                                            <span class="library-title">无损专辑</span>
+                                            <span class="count-pill">1,862 首</span>
+                                        </span>
+                                        <span class="library-meta">
+                                            <span>FLAC / ALAC</span>
+                                            <span class="dot"></span>
+                                            <span>桌面端优先播放</span>
+                                        </span>
+                                    </span>
+                                    <span class="selector" aria-hidden="true"></span>
+                                </button>
+
+                                <button class="library-row" type="button" data-id="live" data-name="现场录音" data-kind="档案" data-count="428 首">
+                                    <span class="library-avatar green" aria-hidden="true">现</span>
+                                    <span class="library-main">
+                                        <span class="library-title-line">
+                                            <span class="library-title">现场录音</span>
+                                            <span class="count-pill">428 首</span>
+                                        </span>
+                                        <span class="library-meta">
+                                            <span>Live Archive</span>
+                                            <span class="dot"></span>
+                                            <span>独立封面与歌词</span>
+                                        </span>
+                                    </span>
+                                    <span class="selector" aria-hidden="true"></span>
+                                </button>
+
+                                <button class="library-row" type="button" data-id="podcast" data-name="播客与有声书" data-kind="播客" data-count="96 集">
+                                    <span class="library-avatar" aria-hidden="true">播</span>
+                                    <span class="library-main">
+                                        <span class="library-title-line">
+                                            <span class="library-title">播客与有声书</span>
+                                            <span class="count-pill">96 集</span>
+                                        </span>
+                                        <span class="library-meta">
+                                            <span>Podcast</span>
+                                            <span class="dot"></span>
+                                            <span>支持播放进度同步</span>
+                                        </span>
+                                    </span>
+                                    <span class="selector" aria-hidden="true"></span>
+                                </button>
+
+                                <button class="library-row" type="button" data-id="family" data-name="家庭共享" data-kind="共享" data-count="2,305 首">
+                                    <span class="library-avatar warm" aria-hidden="true">家</span>
+                                    <span class="library-main">
+                                        <span class="library-title-line">
+                                            <span class="library-title">家庭共享</span>
+                                            <span class="count-pill">2,305 首</span>
+                                        </span>
+                                        <span class="library-meta">
+                                            <span>Shared Library</span>
+                                            <span class="dot"></span>
+                                            <span>多人维护</span>
+                                        </span>
+                                    </span>
+                                    <span class="selector" aria-hidden="true"></span>
+                                </button>
+
+                                <div class="empty-row" id="empty-row">没有匹配的媒体库</div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <aside class="stack">
+                        <section class="section" aria-labelledby="selection-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="selection-title">当前生效范围</h2>
+                                    <p class="section-subtitle">用于连接详情页返回后展示和后续数据加载。</p>
+                                </div>
+                                <span class="badge" id="selection-count-badge">全部</span>
+                            </div>
+
+                            <div class="selection-card">
+                                <h3 class="selection-title">可见内容</h3>
+                                <div class="selection-value" id="selection-value">全部媒体库</div>
+                                <div class="selection-sub" id="selection-sub">使用服务端返回的完整媒体库范围。</div>
+                                <div class="selected-tags" id="selected-tags">
+                                    <span class="selected-tag"><span>全部媒体库</span></span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="section" aria-labelledby="connection-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="connection-title">连接信息</h2>
+                                    <p class="section-subtitle">选择结果会绑定到当前连接 ID。</p>
+                                </div>
+                                <span class="badge success">在线</span>
+                            </div>
+
+                            <div class="info-list">
+                                <div class="info-row">
+                                    <span class="info-label">连接 ID</span>
+                                    <span class="info-value">#1024</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">服务类型</span>
+                                    <span class="info-value">Navidrome</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">选择模式</span>
+                                    <span class="info-value" id="mode-value">多媒体库</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">写入字段</span>
+                                    <span class="info-value">libraryIds</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="section" aria-labelledby="rule-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="rule-title">选择规则</h2>
+                                    <p class="section-subtitle">与 ViewModel 的现有更新逻辑保持一致。</p>
+                                </div>
+                                <span class="badge">规则</span>
+                            </div>
+
+                            <div class="note-row">
+                                <div class="note-icon" aria-hidden="true">i</div>
+                                <div>选择全部媒体库时会清空其他具体媒体库；选择具体媒体库时会移除全部媒体库。</div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="player" aria-label="播放控制栏">
+        <div class="now-playing">
+            <div class="album-art" aria-hidden="true"></div>
+            <div>
+                <div class="player-title">Blue Hour</div>
+                <div class="player-subtitle">XyMusic Preview · 媒体库选择</div>
+            </div>
+        </div>
+
+        <div class="transport">
+            <div class="transport-buttons">
+                <button class="transport-button" type="button" aria-label="随机播放">⤨</button>
+                <button class="transport-button" type="button" aria-label="上一首">‹‹</button>
+                <button class="play-button" type="button" aria-label="播放">▶</button>
+                <button class="transport-button" type="button" aria-label="下一首">››</button>
+                <button class="transport-button" type="button" aria-label="循环播放">↻</button>
+            </div>
+            <div class="progress">
+                <span>1:24</span>
+                <div class="bar" aria-hidden="true"><div class="bar-fill"></div></div>
+                <span>3:41</span>
+            </div>
+        </div>
+
+        <div class="player-tools">
+            <span>列表</span>
+            <span>歌词</span>
+            <span>音量</span>
+            <div class="bar volume" aria-hidden="true"><div class="bar-fill" style="width: 68%;"></div></div>
+        </div>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+        <span class="overview-icon" aria-hidden="true">✓</span>
+        <span id="toast-text">已更新</span>
+    </div>
+</div>
+
+<script>
+    /* 页面状态：模拟 SelectLibraryViewModel 中 libraryIds 的选择结果 */
+    const state = {
+        mode: "multi",
+        selectedIds: new Set(["-1"])
+    };
+
+    const allId = "-1";
+    const rows = Array.from(document.querySelectorAll(".library-row"));
+    const toast = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
+    const searchInput = document.getElementById("search-input");
+    const emptyRow = document.getElementById("empty-row");
+    let toastTimer = null;
+
+    /* Toast 提示：用于确认选择和模式切换 */
+    function showToast(text) {
+        toastText.textContent = text;
+        toast.classList.add("show");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => {
+            toast.classList.remove("show");
+        }, 1500);
+    }
+
+    /* 选择逻辑：保持“全部媒体库”和具体媒体库互斥 */
+    function toggleLibrary(row) {
+        const id = row.dataset.id;
+        const isAll = id === allId;
+
+        if (state.mode === "single") {
+            if (state.selectedIds.has(id) && !isAll) {
+                state.selectedIds.clear();
+                state.selectedIds.add(allId);
+            } else {
+                state.selectedIds.clear();
+                state.selectedIds.add(id);
+            }
+        } else if (isAll) {
+            state.selectedIds.clear();
+            state.selectedIds.add(allId);
+        } else {
+            if (state.selectedIds.has(id)) {
+                state.selectedIds.delete(id);
+            } else {
+                state.selectedIds.add(id);
+            }
+            state.selectedIds.delete(allId);
+            if (state.selectedIds.size === 0) {
+                state.selectedIds.add(allId);
+            }
+        }
+
+        renderSelection();
+        showToast(`${row.dataset.name} 已${state.selectedIds.has(id) ? "选择" : "移除"}`);
+    }
+
+    /* 模式切换：单选时保留第一个具体媒体库或回到全部媒体库 */
+    function setMode(mode) {
+        state.mode = mode;
+        document.querySelectorAll(".segment[data-mode]").forEach((segment) => {
+            segment.classList.toggle("active", segment.dataset.mode === mode);
+        });
+
+        if (mode === "single" && state.selectedIds.size > 1) {
+            const firstSelected = Array.from(state.selectedIds).find((id) => id !== allId) || allId;
+            state.selectedIds.clear();
+            state.selectedIds.add(firstSelected);
+        }
+
+        renderSelection();
+        showToast(mode === "multi" ? "已切换为多媒体库" : "已切换为单媒体库");
+    }
+
+    /* 搜索过滤：按媒体库名称和类型过滤列表 */
+    function filterRows() {
+        const keyword = searchInput.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        rows.forEach((row) => {
+            const text = `${row.dataset.name} ${row.dataset.kind}`.toLowerCase();
+            const visible = text.includes(keyword);
+            row.classList.toggle("hidden", !visible);
+            if (visible) {
+                visibleCount += 1;
+            }
+        });
+
+        emptyRow.classList.toggle("show", visibleCount === 0);
+    }
+
+    /* 摘要渲染：同步右侧卡片和顶部概览 */
+    function renderSelection() {
+        const selectedRows = rows.filter((row) => state.selectedIds.has(row.dataset.id));
+        const allSelected = state.selectedIds.has(allId);
+        const selectedNames = selectedRows.map((row) => row.dataset.name);
+        const selectorClass = state.mode === "multi" ? "selector check" : "selector";
+
+        rows.forEach((row) => {
+            row.classList.toggle("selected", state.selectedIds.has(row.dataset.id));
+            row.querySelector(".selector").className = selectorClass;
+        });
+
+        document.getElementById("mode-badge").textContent = state.mode === "multi" ? "多选" : "单选";
+        document.getElementById("mode-value").textContent = state.mode === "multi" ? "多媒体库" : "单媒体库";
+        document.getElementById("selection-count-badge").textContent = allSelected ? "全部" : `${selectedRows.length} 个`;
+        document.getElementById("overview-selected").textContent = allSelected ? "全部" : `${selectedRows.length} 个`;
+        document.getElementById("overview-sub").textContent = allSelected ? "不限制媒体库范围" : selectedNames.join(" / ");
+        document.getElementById("status-scope").textContent = allSelected ? "全部媒体库" : `${selectedRows.length} 个媒体库`;
+        document.getElementById("selection-value").textContent = allSelected ? "全部媒体库" : selectedNames.join("、");
+        document.getElementById("selection-sub").textContent = allSelected
+            ? "使用服务端返回的完整媒体库范围。"
+            : "仅加载已选择媒体库中的音乐、专辑和播放内容。";
+
+        const tags = document.getElementById("selected-tags");
+        tags.innerHTML = "";
+        selectedRows.forEach((row) => {
+            const tag = document.createElement("span");
+            tag.className = "selected-tag";
+            tag.innerHTML = `<span>${row.dataset.name}</span>`;
+            tags.appendChild(tag);
+        });
+    }
+
+    rows.forEach((row) => {
+        row.addEventListener("click", () => toggleLibrary(row));
+    });
+
+    document.querySelectorAll(".segment[data-mode]").forEach((segment) => {
+        segment.addEventListener("click", () => setMode(segment.dataset.mode));
+    });
+
+    searchInput.addEventListener("input", filterRows);
+    renderSelection();
+</script>
+</body>
+</html>

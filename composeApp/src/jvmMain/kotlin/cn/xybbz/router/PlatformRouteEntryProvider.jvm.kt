@@ -29,10 +29,10 @@ import cn.xybbz.ui.screens.JvmMemoryManagementScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmProxyConfigScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
+import cn.xybbz.ui.screens.JvmSelectLibraryScreen
 import cn.xybbz.ui.screens.JvmSetBackgroundImageScreen
 import cn.xybbz.ui.screens.JvmSettingScreen
 import cn.xybbz.ui.screens.JvmStreamingQualityScreen
-import cn.xybbz.ui.screens.SelectLibraryScreen
 
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.desktopNode(noinline content: @Composable (T) -> Unit) {
     entry<T> {
@@ -67,7 +67,7 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<About> { JvmAboutScreen() }
     desktopNode<CacheLimit> { JvmCacheLimitScreen() }
     desktopNode<SelectLibrary> {
-        SelectLibraryScreen(
+        JvmSelectLibraryScreen(
             connectionId = it.connectionId,
             thisLibraryId = it.libraryIds,
             showBackButton = false
