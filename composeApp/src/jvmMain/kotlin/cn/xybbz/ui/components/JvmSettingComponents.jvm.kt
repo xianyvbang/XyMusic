@@ -143,6 +143,17 @@ internal data class JvmSettingActionEntry(
 )
 
 /**
+ * 通用设置入口卡片网格的排列方式。
+ */
+internal enum class JvmSettingActionGridArrangement {
+    /** 默认设置页网格，宽度足够时最多两列。 */
+    Grid,
+
+    /** 横向紧凑排列，宽度足够时尽量保持同一行。 */
+    Horizontal,
+}
+
+/**
  * JVM 设置页统一换行容器。
  *
  * @param modifier 外层修饰符，默认铺满父级宽度。
@@ -824,6 +835,7 @@ private fun JvmSettingDownloadSegment(
  * @param actionEntries 需要渲染的入口卡片数据，调用方只负责提供文案、颜色和点击动作。
  * @param modifier 外层布局修饰符，用来承接不同页面的宽度约束。
  * @param fillTwoColumnWidth 双列时是否让两张卡片平分整行宽度，默认沿用紧凑入口卡宽。
+ * @param arrangement 卡片排列方式，默认保持设置页的网格布局。
  * @param cardHeight 卡片固定高度，默认沿用设置入口卡高度；带底部状态的卡片会自动抬高最小高度。
  */
 @Composable
@@ -831,6 +843,7 @@ internal fun JvmSettingActionGrid(
     actionEntries: List<JvmSettingActionEntry>,
     modifier: Modifier = Modifier,
     fillTwoColumnWidth: Boolean = false,
+    arrangement: JvmSettingActionGridArrangement = JvmSettingActionGridArrangement.Grid,
     cardHeight: Dp = JvmSettingActionCardHeight,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -865,7 +878,22 @@ internal fun JvmSettingActionGrid(
             maxWidth
         }
 
-        if (columnCount == 2 && fillTwoColumnWidth) {
+        if (arrangement == JvmSettingActionGridArrangement.Horizontal) {
+            val horizontalCardWidth = minOf(maxWidth, JvmSettingActionCardCompactWidth)
+            JvmSettingFlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(gap),
+                verticalArrangement = Arrangement.spacedBy(gap),
+            ) {
+                actionEntries.forEach { actionEntry ->
+                    JvmSettingActionCard(
+                        modifier = Modifier.width(horizontalCardWidth),
+                        actionEntry = actionEntry,
+                        cardHeight = resolvedCardHeight,
+                    )
+                }
+            }
+        } else if (columnCount == 2 && fillTwoColumnWidth) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(gap),

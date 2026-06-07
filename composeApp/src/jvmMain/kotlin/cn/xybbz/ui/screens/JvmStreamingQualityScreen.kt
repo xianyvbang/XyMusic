@@ -19,45 +19,20 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
-import cn.xybbz.ui.components.JvmSettingFlowRow
+import cn.xybbz.ui.components.JvmSettingActionEntry
+import cn.xybbz.ui.components.JvmSettingActionGridArrangement
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -66,18 +41,17 @@ import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.StreamingQualityViewModel
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.check_24px
 import xymusic_kmp.composeapp.generated.resources.online_music_quality
+import xymusic_kmp.composeapp.generated.resources.settings_voice_24px
 import xymusic_kmp.composeapp.generated.resources.transcoding_format
+import xymusic_kmp.composeapp.generated.resources.volume_up_24px
+import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 
-private val QualityOptionWidth = 168.dp
-private val QualityOptionHeight = 176.dp
-private val FormatOptionWidth = 220.dp
-private val FormatOptionHeight = 164.dp
+private val QualityActionCardHeight = 160.dp
+private val FormatActionCardHeight = 160.dp
 
 @Composable
 fun JvmStreamingQualityScreen(
@@ -115,27 +89,27 @@ fun JvmStreamingQualityScreen(
             contentContainerEnabled = false,
             qualityNote = "选择任一品质后，桌面端会继续同时更新 Wi-Fi 与移动网络两套码率设置。",
         ) {
-            JvmSettingFlowRow {
-                TranscodeAudioBitRateType.entries.forEach { quality ->
-                    JvmStreamingQualityOptionCard(
-                        modifier = Modifier
-                            .width(QualityOptionWidth),
+            JvmSettingActionEntryGrid(
+                actionEntries = TranscodeAudioBitRateType.entries.map { quality ->
+                    JvmSettingActionEntry(
+                        icon = Res.drawable.volume_up_24px,
                         kicker = quality.kickerText(),
                         title = quality.audioBitRateStr,
                         description = quality.descriptionText(),
-                        footLabel = quality.levelText(),
-                        footValue = quality.audioBitRate.toString(),
                         selected = selectedQuality == quality,
-                        cardHeight = QualityOptionHeight,
+                        status = "${quality.levelText()} · ${quality.audioBitRate}",
+                        role = Role.RadioButton,
                         onClick = {
                             coroutineScope.launch {
                                 streamingQualityViewModel.updateWifiNetworkAudioBitRate(quality)
                                 streamingQualityViewModel.updateMobileNetworkAudioBitRate(quality)
                             }
-                        }
+                        },
                     )
-                }
-            }
+                },
+                arrangement = JvmSettingActionGridArrangement.Horizontal,
+                cardHeight = QualityActionCardHeight,
+            )
         }
 
         JvmSettingSection(
@@ -148,207 +122,30 @@ fun JvmStreamingQualityScreen(
             if (streamingQualityViewModel.transcodeAudioBitRateType.isEmpty()) {
                 JvmStreamingQualityEmptyState(text = "正在读取服务端支持的转码格式…")
             } else {
-                JvmSettingFlowRow {
-                    streamingQualityViewModel.transcodeAudioBitRateType.forEach { format ->
+                JvmSettingActionEntryGrid(
+                    actionEntries = streamingQualityViewModel.transcodeAudioBitRateType.map { format ->
                         val targetFormat = format.targetFormat
                         val title = format.name.ifBlank { targetFormat.uppercase() }
-                        JvmStreamingQualityOptionCard(
-                            modifier = Modifier
-                                .width(FormatOptionWidth),
+                        JvmSettingActionEntry(
+                            icon = Res.drawable.settings_voice_24px,
                             kicker = targetFormat.formatKickerText(),
                             title = title,
                             description = targetFormat.formatDescriptionText(),
-                            footLabel = "targetFormat",
-                            footValue = targetFormat,
                             selected = streamingQualityViewModel.transcodeFormat == targetFormat,
-                            chip = title,
-                            cardHeight = FormatOptionHeight,
+                            status = "targetFormat · $targetFormat",
+                            role = Role.RadioButton,
                             onClick = {
                                 coroutineScope.launch {
                                     streamingQualityViewModel.updateTranscodeFormat(targetFormat)
                                 }
-                            }
+                            },
                         )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun JvmStreamingQualityOptionCard(
-    modifier: Modifier = Modifier,
-    kicker: String,
-    title: String,
-    description: String,
-    footLabel: String,
-    footValue: String,
-    selected: Boolean,
-    chip: String? = null,
-    cardHeight: Dp,
-    onClick: () -> Unit,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
-    val shape = RoundedCornerShape(XyTheme.dimens.corner)
-    val colorScheme = MaterialTheme.colorScheme
-    val containerColor = when {
-        selected -> colorScheme.primary.copy(alpha = if (XyTheme.configs.isDarkTheme) 0.18f else 0.10f)
-        hovered -> colorScheme.surfaceContainerHigh
-        else -> colorScheme.surfaceContainerLowest
-    }
-    val borderColor = if (selected) {
-        colorScheme.primary.copy(alpha = 0.72f)
-    } else {
-        colorScheme.onSurface.copy(alpha = if (hovered) 0.16f else 0.10f)
-    }
-
-    Box(
-        modifier = modifier
-            .height(cardHeight)
-            .clip(shape)
-            .background(containerColor)
-            .border(BorderStroke(1.dp, borderColor), shape)
-            .pointerHoverIcon(PointerIcon.Hand)
-            .selectable(
-                selected = selected,
-                role = Role.RadioButton,
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            )
-            .padding(XyTheme.dimens.outerHorizontalPadding)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (chip == null) {
-                    JvmStreamingQualityMeter(active = selected || hovered)
-                } else {
-                    JvmStreamingQualityChip(text = chip)
-                }
-                Text(
-                    text = kicker,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Text(
-                modifier = Modifier.padding(
-                    top = XyTheme.dimens.outerHorizontalPadding + XyTheme.dimens.outerVerticalPadding / 2
-                ),
-                text = title,
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                modifier = Modifier.padding(top = XyTheme.dimens.outerVerticalPadding),
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = 19.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = XyTheme.dimens.outerVerticalPadding * 2),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    modifier = Modifier.weight(1f),
-                    text = footLabel,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    modifier = Modifier.padding(start = XyTheme.dimens.outerVerticalPadding),
-                    text = footValue,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    },
+                    arrangement = JvmSettingActionGridArrangement.Horizontal,
+                    cardHeight = FormatActionCardHeight,
                 )
             }
         }
-
-        if (selected) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(18.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.check_24px),
-                    contentDescription = null,
-                    modifier = Modifier.size(12.dp),
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun JvmStreamingQualityMeter(active: Boolean) {
-    val barColor = if (active) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.24f)
-    }
-    Row(
-        modifier = Modifier.height(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2),
-        verticalAlignment = Alignment.Bottom
-    ) {
-        listOf(6.dp, 10.dp, 14.dp).forEach { height ->
-            Box(
-                modifier = Modifier
-                    .width(4.dp)
-                    .height(height)
-                    .background(barColor, CircleShape)
-            )
-        }
-    }
-}
-
-@Composable
-private fun JvmStreamingQualityChip(text: String) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-        )
-    ) {
-        Text(
-            modifier = Modifier.padding(
-                horizontal = XyTheme.dimens.contentPadding,
-                vertical = XyTheme.dimens.outerVerticalPadding / 2
-            ),
-            text = text,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-        )
     }
 }
 
