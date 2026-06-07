@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -41,7 +40,6 @@ import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.utils.withDefaultHttpScheme
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.ui.components.JvmSettingActionEntry
-import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
@@ -79,12 +77,6 @@ private val JvmProxySummaryWidth = 284.dp
 
 /** JVM 代理模式卡片高度，和预览稿中的分段模式选择保持接近。 */
 private val JvmProxyModeCardHeight = 158.dp
-
-/** JVM 代理信息卡从单列切换成多列的最小宽度。 */
-private val JvmProxyInfoGridBreakpoint = 620.dp
-
-/** JVM 代理信息卡的紧凑宽度，避免宽屏时只读信息被拉得过散。 */
-private val JvmProxyInfoTileMinWidth = 170.dp
 
 /**
  * JVM 代理路由规则展示数据。
@@ -379,26 +371,15 @@ private fun JvmProxyConfigInput(
  */
 @Composable
 private fun JvmProxyInfoGrid(tiles: List<JvmProxyInfoTile>) {
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val gap = XyTheme.dimens.contentPadding
-        val tileWidth = if (maxWidth >= JvmProxyInfoGridBreakpoint) {
-            (maxWidth - gap * 2f) / 3f
-        } else {
-            maxWidth
-        }
-
-        JvmSettingFlowRow(
-            horizontalArrangement = Arrangement.spacedBy(gap),
-            verticalArrangement = Arrangement.spacedBy(gap),
-        ) {
-            tiles.forEach { tile ->
-                JvmProxyInfoTileCard(
-                    modifier = Modifier
-                        .width(tileWidth)
-                        .widthIn(min = minOf(tileWidth, JvmProxyInfoTileMinWidth)),
-                    tile = tile
-                )
-            }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+    ) {
+        tiles.forEach { tile ->
+            JvmProxyInfoTileCard(
+                modifier = Modifier.weight(1f),
+                tile = tile
+            )
         }
     }
 }
