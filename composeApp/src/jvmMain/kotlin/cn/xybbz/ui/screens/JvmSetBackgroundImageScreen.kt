@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,13 +39,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,6 +71,7 @@ import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.components.rememberBackgroundImagePicker
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
@@ -85,12 +81,10 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_24px
 import xymusic_kmp.composeapp.generated.resources.album_24px
 import xymusic_kmp.composeapp.generated.resources.background_image
 import xymusic_kmp.composeapp.generated.resources.background_image_setting
 import xymusic_kmp.composeapp.generated.resources.clear_image
-import xymusic_kmp.composeapp.generated.resources.close_24px
 import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
 import xymusic_kmp.composeapp.generated.resources.select_image
 import xymusic_kmp.composeapp.generated.resources.settings_24px
@@ -609,35 +603,25 @@ private fun JvmBackgroundActionPanel(
                 horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
+                XyButton(
                     modifier = Modifier.weight(1f),
                     onClick = composeClick(onClick = onSelectImage),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.add_24px),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(XyTheme.dimens.outerVerticalPadding))
-                    Text(selectImageTitle)
-                }
-                OutlinedButton(
+                    text = selectImageTitle,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    backgroundColor = MaterialTheme.colorScheme.primary,
+                )
+                XyButton(
                     modifier = Modifier.weight(1f),
-                    enabled = imageSelected,
                     onClick = composeClick(onClick = onClearImage),
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.close_24px),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(XyTheme.dimens.outerVerticalPadding))
-                    Text(clearImageTitle)
-                }
+                    text = clearImageTitle,
+                    color = if (imageSelected) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    enabled = imageSelected,
+                )
             }
         }
     }
