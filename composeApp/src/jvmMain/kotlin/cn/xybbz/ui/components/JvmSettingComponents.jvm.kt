@@ -54,7 +54,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -71,6 +70,9 @@ import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextLarge
+import cn.xybbz.ui.xy.XyTextSub
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -388,16 +390,15 @@ internal fun JvmSettingPageHeader(
                     .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
             ) {
-                Text(
+                XyTextLarge(
                     text = title,
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Text(
+                XyTextSub(
                     text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 22.sp
+                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -467,7 +468,7 @@ private fun JvmSettingStatusCardRow(
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
+        XyTextSub(
             modifier = Modifier.weight(1f),
             text = label,
             style = MaterialTheme.typography.bodySmall,
@@ -475,7 +476,7 @@ private fun JvmSettingStatusCardRow(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        Text(
+        XyText(
             text = value,
             style = valueStyle,
             color = MaterialTheme.colorScheme.onSurface,
@@ -531,14 +532,14 @@ internal fun JvmSettingOverviewTile(
         ) {
             JvmSettingKicker(icon = icon, text = kicker)
             Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-            Text(
+            XyTextLarge(
                 text = value,
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(
+            XyTextSub(
                 text = sub,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -601,16 +602,15 @@ internal fun JvmSettingSection(
                         .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
                 ) {
-                    Text(
+                    XyText(
                         text = title,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Text(
+                    XyTextSub(
                         text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 20.sp
+                        style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -817,9 +817,9 @@ private fun JvmSettingDownloadSegment(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
+        XyText(
             text = value.toString(),
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.labelLarge,
             color = if (selected) {
                 MaterialTheme.colorScheme.primary
             } else {
@@ -1007,14 +1007,14 @@ internal fun JvmSettingBaseRow(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
             ) {
-                Text(
+                XyText(
                     text = title,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(
+                XyTextSub(
                     text = description,
                     style = if (descriptionStyle == JvmSettingRowDescriptionStyle.Path) {
                         MaterialTheme.typography.labelSmall
@@ -1105,25 +1105,24 @@ private fun JvmSettingActionCard(
                 contentAlpha = contentAlpha,
             )
             Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-            Text(
+            XyText(
                 text = actionEntry.title,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding / 2))
-            Text(
+            XyTextSub(
                 text = actionEntry.description,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(lineHeight = 17.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
-                lineHeight = 17.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
             actionEntry.status?.let { status ->
                 Spacer(modifier = Modifier.weight(1f))
-                Text(
+                XyTextSub(
                     text = status,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = colorScheme.onSurfaceVariant.copy(alpha = contentAlpha * 0.78f),
@@ -1165,18 +1164,17 @@ internal fun JvmSettingNote(text: String) {
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
+                XyText(
                     text = "i",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            Text(
+            XyTextSub(
                 modifier = Modifier.weight(1f),
                 text = text,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = 20.sp
+                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -1208,7 +1206,7 @@ private fun JvmSettingKicker(
             color = color,
             contentAlpha = contentAlpha,
         )
-        Text(
+        XyTextSub(
             text = text,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
@@ -1291,13 +1289,14 @@ private fun JvmSettingBadge(text: String) {
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
         )
     ) {
-        Text(
+        XyText(
             modifier = Modifier.padding(
                 horizontal = XyTheme.dimens.contentPadding,
                 vertical = XyTheme.dimens.outerVerticalPadding
             ),
             text = text,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }
@@ -1318,15 +1317,15 @@ private fun JvmSettingValuePill(value: String) {
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
         )
     ) {
-        Text(
+        XyText(
             modifier = Modifier
                 .widthIn(max = 180.dp)
                 .padding(
                     horizontal = XyTheme.dimens.contentPadding,
                     vertical = XyTheme.dimens.outerVerticalPadding / 2
-                ),
+            ),
             text = value,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.labelSmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
