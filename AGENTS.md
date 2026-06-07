@@ -23,3 +23,5 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 禁止随意代码提交到github上
 
 如果要提交到git的话,commit message使用中文
+
+新增代码/方法/属性/对象都要增加中文注释
