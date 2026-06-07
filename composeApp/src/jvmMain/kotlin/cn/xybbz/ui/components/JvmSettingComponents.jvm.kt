@@ -121,6 +121,9 @@ private val JvmSettingIconSize = 32.dp
  * @param description 卡片说明。
  * @param enabled 是否允许点击和 hover 上移动效，禁用时保持占位尺寸不变。
  * @param color 卡片强调色；为空时使用主题主色，设置页默认保持统一主色样式。
+ * @param selected 是否展示选中态背景和边框。
+ * @param status 可选底部状态文本，适合入口卡片承载当前状态。
+ * @param role 可选语义角色，单选类入口可传 [Role.RadioButton]。
  * @param onClick 卡片点击事件。
  */
 internal data class JvmSettingActionEntry(
@@ -130,6 +133,9 @@ internal data class JvmSettingActionEntry(
     val description: String,
     val enabled: Boolean = true,
     val color: Color? = null,
+    val selected: Boolean = false,
+    val status: String? = null,
+    val role: Role? = null,
     val onClick: () -> Unit,
 )
 
@@ -813,11 +819,13 @@ private fun JvmSettingDownloadSegment(
  *
  * @param actionEntries 需要渲染的入口卡片数据，调用方只负责提供文案、颜色和点击动作。
  * @param modifier 外层布局修饰符，用来承接不同页面的宽度约束。
+ * @param fillTwoColumnWidth 双列时是否让两张卡片平分整行宽度，默认沿用紧凑入口卡宽。
  */
 @Composable
 internal fun JvmSettingActionGrid(
     actionEntries: List<JvmSettingActionEntry>,
     modifier: Modifier = Modifier,
+    fillTwoColumnWidth: Boolean = false,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
@@ -836,22 +844,51 @@ internal fun JvmSettingActionGrid(
         }
         val cardWidth = if (columnCount == 2) {
             // 双列时随可用宽度收缩，并用上限避免右栏加宽后卡片过宽。
-            minOf((maxWidth - gap) / 2f, JvmSettingActionCardMaxWidth)
+            val twoColumnCardWidth = (maxWidth - gap) / 2f
+            if (fillTwoColumnWidth) {
+                twoColumnCardWidth
+            } else {
+                minOf(twoColumnCardWidth, JvmSettingActionCardMaxWidth)
+            }
         } else {
             maxWidth
         }
 
-        JvmSettingFlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            // 卡片宽度确定后居中排列，避免最后一行靠左显得松散。
-            horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(gap),
-        ) {
-            actionEntries.forEach { actionEntry ->
-                JvmSettingActionCard(
-                    modifier = Modifier.width(cardWidth),
-                    actionEntry = actionEntry
-                )
+        if (columnCount == 2 && fillTwoColumnWidth) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(gap),
+            ) {
+                actionEntries.chunked(2).forEach { rowEntries ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(gap),
+                    ) {
+                        rowEntries.forEach { actionEntry ->
+                            JvmSettingActionCard(
+                                modifier = Modifier.weight(1f),
+                                actionEntry = actionEntry
+                            )
+                        }
+                        if (rowEntries.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        } else {
+            JvmSettingFlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                // 卡片宽度确定后居中排列，避免最后一行靠左显得松散。
+                horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(gap),
+            ) {
+                actionEntries.forEach { actionEntry ->
+                    JvmSettingActionCard(
+                        modifier = Modifier.width(cardWidth),
+                        actionEntry = actionEntry
+                    )
+                }
             }
         }
     }
@@ -957,9 +994,11 @@ private fun JvmSettingActionCard(
     val hovered by interactionSource.collectIsHoveredAsState()
     val cardHovered = actionEntry.enabled && hovered
     val contentAlpha = if (actionEntry.enabled) 1f else 0.44f
+    val colorScheme = MaterialTheme.colorScheme
     val clickableModifier = if (actionEntry.enabled) {
         Modifier.jvmHoverDebounceClickable(
             interactionSource = interactionSource,
+            role = actionEntry.role,
             onClick = actionEntry.onClick
         )
     } else {
@@ -971,6 +1010,16 @@ private fun JvmSettingActionCard(
         animationSpec = tween(durationMillis = 160),
         label = "setting_action_card_lift_offset",
     )
+    val containerColor = if (actionEntry.selected) {
+        colorScheme.primary.copy(alpha = if (XyTheme.configs.isDarkTheme) 0.18f else 0.10f)
+    } else {
+        colorScheme.surfaceContainerLowest
+    }
+    val borderColor = if (actionEntry.selected) {
+        colorScheme.primary.copy(alpha = 0.72f)
+    } else {
+        colorScheme.onSurface.copy(alpha = 0.10f)
+    }
 
     Box(
         modifier = modifier
@@ -985,11 +1034,8 @@ private fun JvmSettingActionCard(
                 .offset(y = liftOffset)
                 .fillMaxSize()
                 .clip(shape)
-                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                .border(
-                    BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
-                    shape
-                )
+                .background(containerColor)
+                .border(BorderStroke(1.dp, borderColor), shape)
                 .padding(XyTheme.dimens.outerHorizontalPadding),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
         ) {
@@ -1015,6 +1061,16 @@ private fun JvmSettingActionCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
+            actionEntry.status?.let { status ->
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = status,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    color = colorScheme.onSurfaceVariant.copy(alpha = contentAlpha * 0.78f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

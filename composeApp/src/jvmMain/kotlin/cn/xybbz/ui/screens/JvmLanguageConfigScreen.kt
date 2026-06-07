@@ -18,48 +18,32 @@
 
 package cn.xybbz.ui.screens
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.localdata.enums.LanguageType
-import cn.xybbz.ui.components.JvmSettingFlowRow
+import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
@@ -68,21 +52,15 @@ import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
-import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.LanguageConfigViewModel
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.label_24px
 import xymusic_kmp.composeapp.generated.resources.settings_24px
+import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 
 private val JvmLanguageSummaryWidth = 278.dp
-private val JvmLanguageGridTwoColumnMinWidth = 320.dp
-private val JvmLanguageCardCompactWidth = 154.dp
-private val JvmLanguageCardHeight = 148.dp
-private val JvmLanguageCardLiftOffset = (-6).dp
 
 /**
  * JVM 桌面端语言设置页面。
@@ -167,151 +145,43 @@ private fun JvmLanguageGrid(
     configuredLanguageType: LanguageType?,
     onLanguageSelected: (LanguageType?) -> Unit,
 ) {
-    val options = listOf(
-        JvmLanguageOption(
-            type = null,
+    val actionEntries = listOf(
+        JvmSettingActionEntry(
             icon = Res.drawable.settings_24px,
-            code = "AUTO",
+            kicker = "AUTO",
             title = "跟随系统",
             description = "由操作系统语言决定界面文本；未支持语言会回退到默认语言。",
             status = "系统偏好",
+            selected = configuredLanguageType == null,
+            role = Role.RadioButton,
+            onClick = {
+                if (configuredLanguageType != null) {
+                    onLanguageSelected(null)
+                }
+            },
         )
     ) + LanguageType.entries.map { languageType ->
-        JvmLanguageOption(
-            type = languageType,
+        JvmSettingActionEntry(
             icon = Res.drawable.label_24px,
-            code = languageType.languageCode,
+            kicker = languageType.languageCode,
             title = languageType.displayName(),
             description = languageType.descriptionText(),
             status = if (languageType.enabled) "固定语言" else "暂未开放",
             enabled = languageType.enabled,
-        )
-    }
-
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val gap = XyTheme.dimens.contentPadding
-        val twoColumnMinWidth = maxOf(
-            JvmLanguageGridTwoColumnMinWidth,
-            JvmLanguageCardCompactWidth * 2f + gap
-        )
-        val columnCount = if (maxWidth >= twoColumnMinWidth) 2 else 1
-        val cardWidth = if (columnCount == 2) {
-            (maxWidth - gap) / 2f
-        } else {
-            maxWidth
-        }
-
-        JvmSettingFlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(gap),
-            verticalArrangement = Arrangement.spacedBy(gap),
-        ) {
-            options.forEach { option ->
-                val selected = configuredLanguageType == option.type
-                JvmLanguageCard(
-                    modifier = Modifier.width(cardWidth),
-                    option = option,
-                    selected = selected,
-                    onClick = {
-                        if (option.enabled && !selected) {
-                            onLanguageSelected(option.type)
-                        }
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun JvmLanguageCard(
-    option: JvmLanguageOption,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
-    val shape = RoundedCornerShape(XyTheme.dimens.corner)
-    val colorScheme = MaterialTheme.colorScheme
-    val enabled = option.enabled
-    val cardHovered = enabled && hovered
-    val contentAlpha = if (enabled) 1f else 0.44f
-    val clickableModifier = if (enabled) {
-        Modifier.jvmHoverDebounceClickable(
-            interactionSource = interactionSource,
-            indication = null,
+            selected = configuredLanguageType == languageType,
             role = Role.RadioButton,
-            onClick = onClick
+            onClick = {
+                if (configuredLanguageType != languageType) {
+                    onLanguageSelected(languageType)
+                }
+            },
         )
-    } else {
-        Modifier
-    }
-    val liftOffset by animateDpAsState(
-        targetValue = if (cardHovered) JvmLanguageCardLiftOffset else 0.dp,
-        animationSpec = tween(durationMillis = 160),
-        label = "language_card_lift_offset",
-    )
-    val containerColor = if (selected) {
-        colorScheme.primary.copy(alpha = if (XyTheme.configs.isDarkTheme) 0.18f else 0.10f)
-    } else {
-        colorScheme.surfaceContainerLowest
-    }
-    val borderColor = if (selected) {
-        colorScheme.primary.copy(alpha = 0.72f)
-    } else {
-        colorScheme.onSurface.copy(alpha = 0.10f)
     }
 
-    Box(
-        modifier = modifier
-            .heightIn(
-                min = JvmLanguageCardHeight,
-                max = JvmLanguageCardHeight
-            )
-            .then(clickableModifier)
-    ) {
-        Column(
-            modifier = Modifier
-                .offset(y = liftOffset)
-                .fillMaxSize()
-                .clip(shape)
-                .background(containerColor)
-                .border(BorderStroke(1.dp, borderColor), shape)
-                .padding(XyTheme.dimens.outerHorizontalPadding),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-        ) {
-            JvmLanguageKicker(
-                icon = option.icon,
-                text = option.code,
-                contentAlpha = contentAlpha,
-            )
-            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-            Text(
-                text = option.title,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = colorScheme.onSurface.copy(alpha = contentAlpha),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = option.description,
-                style = MaterialTheme.typography.labelSmall,
-                color = colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
-                lineHeight = 17.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = option.status,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = colorScheme.onSurfaceVariant.copy(alpha = contentAlpha * 0.78f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
+    JvmSettingActionEntryGrid(
+        actionEntries = actionEntries,
+        fillTwoColumnWidth = true,
+    )
 }
 
 @Composable
@@ -381,60 +251,6 @@ private fun JvmLanguagePreviewLine(
         }
     }
 }
-
-@Composable
-private fun JvmLanguageKicker(
-    icon: DrawableResource,
-    text: String,
-    contentAlpha: Float,
-) {
-    val shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f * contentAlpha),
-                    shape = shape
-                )
-                .border(
-                    BorderStroke(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.26f * contentAlpha)
-                    ),
-                    shape = shape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = contentAlpha)
-            )
-        }
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-private data class JvmLanguageOption(
-    val type: LanguageType?,
-    val icon: DrawableResource,
-    val code: String,
-    val title: String,
-    val description: String,
-    val status: String,
-    val enabled: Boolean = true,
-)
 
 private fun LanguageType.displayName(): String {
     return when (this) {
