@@ -61,6 +61,8 @@ import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
+import cn.xybbz.ui.components.JvmSettingStatusCard
+import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.AboutViewModel
@@ -134,7 +136,14 @@ fun JvmAboutScreen(
             description = "查看桌面端应用信息、当前版本、项目入口和核心技术栈。",
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
-            JvmAboutStatusCard(versionInfo = versionInfo)
+            JvmSettingStatusCard(
+                prominentValue = true,
+                items = listOf(
+                    JvmSettingStatusCardItem(label = "当前版本", value = versionInfo),
+                    JvmSettingStatusCardItem(label = "平台", value = "Windows Desktop"),
+                    JvmSettingStatusCardItem(label = "更新状态", value = "未检查"),
+                )
+            )
         }
 
         JvmAboutContent(
@@ -418,94 +427,6 @@ private fun JvmAboutLogo(appIconInfo: String) {
             painter = painterResource(Res.drawable.logo_new),
             contentScale = ContentScale.Fit,
             contentDescription = appIconInfo
-        )
-    }
-}
-
-/**
- * 关于页右栏顶部状态卡片。
- *
- * @param versionInfo 当前版本信息。
- */
-@Composable
-private fun JvmAboutStatusCard(versionInfo: String) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 172.dp)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            Color.Transparent
-                        )
-                    )
-                )
-                .padding(XyTheme.dimens.innerHorizontalPadding),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = "当前版本",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = versionInfo,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.W900,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)) {
-                JvmAboutStatusRow(label = "平台", value = "Windows Desktop")
-                JvmAboutStatusRow(label = "更新状态", value = "未检查")
-            }
-        }
-    }
-}
-
-/**
- * 状态卡中的单行键值展示。
- *
- * @param label 状态名称。
- * @param value 状态值。
- */
-@Composable
-private fun JvmAboutStatusRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            modifier = Modifier.weight(1f),
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
         )
     }
 }
