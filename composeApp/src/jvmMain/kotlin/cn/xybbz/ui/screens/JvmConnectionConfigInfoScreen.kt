@@ -33,11 +33,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -64,6 +62,7 @@ import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
@@ -210,6 +209,14 @@ fun JvmConnectionConfigInfoScreen(
                     subtitle = "修改服务地址、登录账号、密码和本地显示别名。",
                     badge = if (canSave) "可保存" else "需填写",
                     contentContainerEnabled = false,
+                    headerAction = {
+                        XyButton(
+                            modifier = Modifier.widthIn(min = 96.dp),
+                            enabled = canSave,
+                            onClick = saveConnection,
+                            text = saveText,
+                        )
+                    },
                 ) {
                     JvmConnectionFormFields(
                         address = address,
@@ -220,13 +227,6 @@ fun JvmConnectionConfigInfoScreen(
                         onUsernameChange = connectionConfigInfoViewModel::updateUsername,
                         onPasswordChange = connectionConfigInfoViewModel::updatePassword,
                         onConnectionNameChange = connectionConfigInfoViewModel::updateConnectionName,
-                    )
-                    JvmConnectionSavePanel(
-                        enabled = canSave,
-                        addressChanged = connectionConfig?.address != null && connectionConfig.address != address,
-                        usernameChanged = connectionConfig?.username != null && connectionConfig.username != username,
-                        saveText = saveText,
-                        onSave = saveConnection,
                     )
                 }
             },
@@ -559,57 +559,6 @@ private fun JvmConnectionFormCard(
                 JvmConnectionStatePill(text = state, selected = selected)
             }
             content()
-        }
-    }
-}
-
-/**
- * JVM 连接页的保存面板。
- *
- * @param enabled 保存按钮是否可用。
- * @param addressChanged 地址是否变更。
- * @param usernameChanged 用户名是否变更。
- * @param saveText 保存按钮文案。
- * @param onSave 保存回调。
- */
-@Composable
-private fun JvmConnectionSavePanel(
-    enabled: Boolean,
-    addressChanged: Boolean,
-    usernameChanged: Boolean,
-    saveText: String,
-    onSave: () -> Unit,
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            XyTextSub(
-                modifier = Modifier.weight(1f),
-                text = when {
-                    !enabled -> "链接地址和别名不能为空。"
-                    addressChanged || usernameChanged -> "保存后会更新连接配置，并对当前连接重新登录。"
-                    else -> "保存后写入本地连接配置；密码变更时会按原逻辑重新登录。"
-                },
-                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Button(
-                enabled = enabled,
-                onClick = onSave
-            ) {
-                Text(saveText)
-            }
         }
     }
 }

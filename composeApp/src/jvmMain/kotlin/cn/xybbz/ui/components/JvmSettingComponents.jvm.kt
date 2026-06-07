@@ -561,6 +561,7 @@ internal fun JvmSettingOverviewTile(
  * @param contentContainerColor 分组内容区背景色，默认保留设置行的浅色容器。
  * @param contentContainerBorderColor 分组内容区边框色，透明内容区可同步传透明避免出现嵌套边框。
  * @param qualityNote 分组底部提示文案；为空或空白时不显示。
+ * @param headerAction 分组标题右侧追加操作，用于放置页面局部按钮。
  * @param content 分组内部的设置行内容。
  */
 @Composable
@@ -573,6 +574,7 @@ internal fun JvmSettingSection(
     contentContainerColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
     contentContainerBorderColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
     qualityNote: String? = null,
+    headerAction: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(
@@ -590,31 +592,46 @@ internal fun JvmSettingSection(
             ),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
         ) {
-            JvmSettingFlowRow(
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-                itemVerticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top
             ) {
+                // 宽度足够时保留标题区倾向宽度，窄屏时优先保证右侧操作不换行。
+                val effectiveTitleMinWidth = if (headerAction == null) {
+                    titleMinWidth
+                } else {
+                    0.dp
+                }
                 Column(
                     modifier = Modifier
-                        .widthIn(min = titleMinWidth)
-                        .weight(1f),
+                        .weight(1f)
+                        .widthIn(min = effectiveTitleMinWidth),
                     verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
                 ) {
                     XyText(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     XyTextSub(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                JvmSettingBadge(text = badge)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    JvmSettingBadge(text = badge)
+                    headerAction?.invoke()
+                }
             }
 
             // 设置页普通行需要统一浅色容器，卡片网格类内容则直接使用 section 的留白。

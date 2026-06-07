@@ -18,13 +18,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +41,6 @@ import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.utils.withDefaultHttpScheme
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.ui.components.JvmSettingActionEntry
-import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
@@ -56,7 +51,9 @@ import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyEdit
+import cn.xybbz.ui.xy.XyIconTextButton
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.ProxyConfigViewModel
@@ -67,10 +64,8 @@ import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.check_24px
 import xymusic_kmp.composeapp.generated.resources.close_24px
-import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.http_24px
 import xymusic_kmp.composeapp.generated.resources.info_24px
-import xymusic_kmp.composeapp.generated.resources.password_24px
 import xymusic_kmp.composeapp.generated.resources.poxy_config
 import xymusic_kmp.composeapp.generated.resources.proxy_address
 import xymusic_kmp.composeapp.generated.resources.save
@@ -146,7 +141,7 @@ fun JvmProxyConfigScreen(
     ) {
         JvmSettingPageHeader(
             title = pageTitle,
-            description = "把代理开关、服务器地址、连通性测试和路由范围集中在一个页面内，便于桌面端排查服务访问失败。当前配置会应用到后续服务端请求。",
+            description = "把代理开关、服务器地址和连通性测试集中在一个页面内，便于桌面端排查服务访问失败。当前配置会应用到后续服务端请求。",
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
@@ -190,40 +185,6 @@ fun JvmProxyConfigScreen(
                         parsedProxy = parsedProxy,
                         onAddressChange = { newAddress ->
                             proxyConfigViewModel.updateAddress(newAddress)
-                        }
-                    )
-                }
-
-                JvmSettingSection(
-                    title = "请求范围",
-                    subtitle = "说明代理会覆盖的桌面端网络请求，避免误以为会改变本地资源或账号信息。",
-                    badge = "Routing",
-                ) {
-                    JvmSettingBaseRow(
-                        icon = Res.drawable.http_24px,
-                        title = "服务请求",
-                        description = "音乐库、搜索、封面和歌词等服务端请求会使用当前代理。",
-                        iconSelected = enabled,
-                        trailing = {
-                            JvmProxyPill(text = if (enabled) "走代理" else "直连")
-                        }
-                    )
-                    JvmSettingBaseRow(
-                        icon = Res.drawable.download_24px,
-                        title = "资源下载",
-                        description = "在线资源请求复用同一 HTTP 客户端代理配置。",
-                        iconSelected = enabled,
-                        trailing = {
-                            JvmProxyPill(text = if (enabled) "随代理" else "直连")
-                        }
-                    )
-                    JvmSettingBaseRow(
-                        icon = Res.drawable.password_24px,
-                        title = "代理认证",
-                        description = "当前配置项暂未保存用户名和密码，建议使用无需认证的本机代理端口。",
-                        enabled = false,
-                        trailing = {
-                            JvmProxyPill(text = "暂不支持")
                         }
                     )
                 }
@@ -538,22 +499,20 @@ private fun JvmProxyActionPanel(
                 horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
+                XyIconTextButton(
                     modifier = Modifier.weight(1f),
-                    enabled = addressText.isNotBlank(),
                     onClick = onTestConnection,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Text(testConnectionTitle)
-                }
-                TextButton(
+                    text = testConnectionTitle,
+                    icon = Res.drawable.signal_cellular_alt_24px,
+                    enabled = addressText.isNotBlank(),
+                )
+                XyButton(
+                    modifier = Modifier.widthIn(min = 96.dp),
                     onClick = onSave,
-                ) {
-                    Text(saveTitle)
-                }
+                    text = saveTitle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    backgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+                )
             }
         }
     }

@@ -45,7 +45,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,6 +61,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.data.library.XyLibrary
+import cn.xybbz.router.ConnectionManagement
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
@@ -77,8 +77,8 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyIconTextButton
 import cn.xybbz.viewmodel.SelectLibraryViewModel
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -88,17 +88,18 @@ import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.all_media_libraries
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.back_to_connection_info
-import xymusic_kmp.composeapp.generated.resources.check_24px
 import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
 import xymusic_kmp.composeapp.generated.resources.media_library_selection
 import xymusic_kmp.composeapp.generated.resources.refresh_24px
+import xymusic_kmp.composeapp.generated.resources.restart_alt_24px
+import xymusic_kmp.composeapp.generated.resources.settings_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /** JVM 媒体库选择页头部状态卡宽度。 */
 private val JvmSelectLibrarySummaryWidth = 284.dp
 
-/** JVM 媒体库选择页概览卡片三列断点。 */
-private val JvmSelectLibraryOverviewThreeColumnWidth = 760.dp
+/** JVM 媒体库选择页概览卡片双列断点。 */
+private val JvmSelectLibraryOverviewTwoColumnWidth = 640.dp
 
 /** JVM 媒体库列表单行最小高度。 */
 private val JvmSelectLibraryRowMinHeight = 76.dp
@@ -127,23 +128,15 @@ fun JvmSelectLibraryScreen(
     dataSourceManager: DataSourceManager = koinInject(),
 ) {
     val navigator = LocalNavigator.current
-    val coroutineScope = rememberCoroutineScope()
     val pageTitle = stringResource(Res.string.media_library_selection)
     val allLibraryName = stringResource(Res.string.all_media_libraries)
     val libraryList = selectLibraryViewModel.libraryList
     val selectedLibraryIds = selectLibraryViewModel.libraryIds
     val dataSourceType = dataSourceManager.dataSourceType
+    val dataSourceLabel = dataSourceType?.title ?: "未连接"
     val selectedLibraries = libraryList.filter { selectedLibraryIds.contains(it.id) }
     val allLibrarySelected = selectedLibraryIds.contains(Constants.MINUS_ONE_INT.toString())
-    val selectedSummary = selectedLibraries.librarySelectionSummary(
-        allLibrarySelected = allLibrarySelected,
-        allLibraryName = allLibraryName
-    )
-    val selectedCountText = if (allLibrarySelected) {
-        "全部"
-    } else {
-        "${selectedLibraries.size} 个"
-    }
+    val hasInitialChanges = selectLibraryViewModel.hasInitialLibraryChanges
     val selectionModeText = if (dataSourceType?.ifMultiMediaLibrary == true) {
         "多媒体库"
     } else {
@@ -185,19 +178,15 @@ fun JvmSelectLibraryScreen(
                 width = JvmSelectLibrarySummaryWidth,
                 prominentValue = true,
                 items = listOf(
-                    JvmSettingStatusCardItem(label = "数据源", value = dataSourceType?.title ?: "未连接"),
+                    JvmSettingStatusCardItem(label = "数据源", value = dataSourceLabel),
                     JvmSettingStatusCardItem(label = "连接 ID", value = "#$connectionId"),
-                    JvmSettingStatusCardItem(label = "当前范围", value = selectedCountText),
                 )
             )
         }
 
         JvmSelectLibraryOverview(
             libraryCount = libraryList.size,
-            selectedCountText = selectedCountText,
-            selectedSummary = selectedSummary,
             selectionModeText = selectionModeText,
-            allLibrarySelected = allLibrarySelected,
         )
 
         JvmSettingTwoPaneContent(
@@ -207,6 +196,18 @@ fun JvmSelectLibraryScreen(
                     subtitle = "全部媒体库为互斥范围；具体媒体库的单选或多选由当前数据源能力决定。",
                     badge = selectionModeText,
                     contentContainerEnabled = true,
+                    headerAction = {
+                        XyIconTextButton(
+                            modifier = Modifier.widthIn(min = 96.dp),
+                            onClick = selectLibraryViewModel::restoreInitialLibraryIds,
+                            text = "撤销",
+                            icon = Res.drawable.restart_alt_24px,
+                            enabled = hasInitialChanges,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            backgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+                            borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                        )
+                    },
                 ) {
                     JvmSelectLibraryList(
                         libraries = libraryList,
@@ -214,9 +215,7 @@ fun JvmSelectLibraryScreen(
                         allLibraryName = allLibraryName,
                         multiSelection = dataSourceType?.ifMultiMediaLibrary == true,
                         onLibraryClick = { library ->
-                            coroutineScope.launch {
-                                selectLibraryViewModel.updateLibraryId(library.id)
-                            }
+                            selectLibraryViewModel.updateLibraryId(library.id)
                         }
                     )
                 }
@@ -225,13 +224,27 @@ fun JvmSelectLibraryScreen(
                 JvmSettingSection(
                     title = "当前生效范围",
                     subtitle = "返回连接详情后，这个范围会用于后续数据加载。",
-                    badge = selectedCountText,
+                    badge = "范围",
                     contentContainerEnabled = false,
                 ) {
                     JvmSelectLibrarySelectionCard(
                         selectedLibraries = selectedLibraries,
                         allLibraryName = allLibraryName,
                         allLibrarySelected = allLibrarySelected,
+                    )
+                }
+
+                JvmSettingSection(
+                    title = "管理模块",
+                    subtitle = "处理媒体库列表刷新和连接管理跳转。",
+                    badge = "管理",
+                    contentContainerEnabled = false,
+                ) {
+                    JvmSelectLibraryManagementModule(
+                        onRefresh = selectLibraryViewModel::refreshLibraryList,
+                        onOpenConnectionManagement = {
+                            navigator.navigate(ConnectionManagement)
+                        }
                     )
                 }
             }
@@ -243,24 +256,18 @@ fun JvmSelectLibraryScreen(
  * JVM 媒体库选择页的概览卡片区域。
  *
  * @param libraryCount 当前可选媒体库数量。
- * @param selectedCountText 当前选中数量文案。
- * @param selectedSummary 当前选中范围摘要。
  * @param selectionModeText 当前数据源选择模式文案。
- * @param allLibrarySelected 当前是否选择全部媒体库。
  */
 @Composable
 private fun JvmSelectLibraryOverview(
     libraryCount: Int,
-    selectedCountText: String,
-    selectedSummary: String,
     selectionModeText: String,
-    allLibrarySelected: Boolean,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        val useThreeColumns = maxWidth >= JvmSelectLibraryOverviewThreeColumnWidth
-        val tileWidth = if (useThreeColumns) {
-            (maxWidth - gap * 2) / 3
+        val useTwoColumns = maxWidth >= JvmSelectLibraryOverviewTwoColumnWidth
+        val tileWidth = if (useTwoColumns) {
+            (maxWidth - gap) / 2
         } else {
             maxWidth
         }
@@ -276,14 +283,6 @@ private fun JvmSelectLibraryOverview(
                 kicker = "可选媒体库",
                 value = "${libraryCount} 个",
                 sub = "来自当前服务连接",
-            )
-            JvmSettingOverviewTile(
-                modifier = Modifier.width(tileWidth),
-                icon = Res.drawable.check_24px,
-                kicker = "已选择",
-                value = selectedCountText,
-                sub = if (allLibrarySelected) "不限制媒体库范围" else selectedSummary,
-                subMaxLines = 1,
             )
             JvmSettingOverviewTile(
                 modifier = Modifier.width(tileWidth),
@@ -513,6 +512,44 @@ private fun JvmSelectLibrarySelector(
 }
 
 /**
+ * JVM 媒体库选择页右侧管理模块。
+ *
+ * @param onRefresh 重新读取本地媒体库列表。
+ * @param onOpenConnectionManagement 打开连接管理页面。
+ */
+@Composable
+private fun JvmSelectLibraryManagementModule(
+    onRefresh: () -> Unit,
+    onOpenConnectionManagement: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
+    ) {
+        XyTextSub(
+            text = "刷新列表只重新读取本地已同步媒体库；连接增删和别名维护请进入连接管理。",
+            style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        XyIconTextButton(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onRefresh,
+            text = "刷新列表",
+            icon = Res.drawable.refresh_24px,
+            color = MaterialTheme.colorScheme.onSurface,
+            backgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+            borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
+        )
+        XyIconTextButton(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onOpenConnectionManagement,
+            text = "连接管理",
+            icon = Res.drawable.settings_24px,
+        )
+    }
+}
+
+/**
  * JVM 媒体库当前选择摘要卡片。
  *
  * @param selectedLibraries 当前已选媒体库。
@@ -559,7 +596,7 @@ private fun JvmSelectLibrarySelectionCard(
                 text = if (allLibrarySelected) {
                     "使用服务端返回的完整媒体库范围。"
                 } else {
-                    "仅加载已选择媒体库中的音乐、专辑和播放内容。"
+                    "仅加载当前范围内的音乐、专辑和播放内容。"
                 },
                 style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant

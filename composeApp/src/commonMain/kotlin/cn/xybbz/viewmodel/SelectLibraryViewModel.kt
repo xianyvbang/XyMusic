@@ -18,8 +18,11 @@
 
 package cn.xybbz.viewmodel
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateSetOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
@@ -41,29 +44,60 @@ class SelectLibraryViewModel(
     private val dataSourceManager: DataSourceManager
 ) : ViewModel() {
 
+    /**
+     * 全部媒体库占位 ID。
+     */
+    private val allLibraryId = Constants.MINUS_ONE_INT.toString()
+
+    /**
+     * 进入页面时的媒体库选择，用于桌面端即时保存后的撤销。
+     */
+    private val initialLibraryIds = normalizedLibraryIds(thisLibraryId)
+
+    /**
+     * 最近一次已保存的媒体库选择，用于撤销本次页面内的临时改动。
+     */
+    private var savedLibraryIds by mutableStateOf(initialLibraryIds)
 
     //媒体库
     val libraryList = mutableStateListOf<XyLibrary>()
 
 
     //当前媒体库id
-    val libraryIds = mutableStateSetOf<String>()
+    val libraryIds = mutableStateSetOf<String>().apply {
+        addAll(savedLibraryIds)
+    }
+
+    /**
+     * 当前页面选择是否和已保存选择不同。
+     */
+    val hasPendingLibraryChanges: Boolean
+        get() = libraryIds.toSet() != savedLibraryIds
+
+    /**
+     * 当前选择是否已经偏离进入页面时的选择，用于控制桌面端撤销按钮。
+     */
+    val hasInitialLibraryChanges: Boolean
+        get() = libraryIds.toSet() != initialLibraryIds
 
     init {
-        getLibraryList()
+        getLibraryList(resetSelection = true)
     }
 
     /**
      * 获得媒体库
      */
-    private fun getLibraryList() {
+    private fun getLibraryList(resetSelection: Boolean) {
         viewModelScope.launch {
-            libraryIds.addAll(thisLibraryId?.toSet() ?: setOf(Constants.MINUS_ONE_INT.toString()))
+            if (resetSelection) {
+                applyLibraryIds(savedLibraryIds)
+            }
             val libraryData = db.libraryDao.selectListByDataSourceType()
+            libraryList.clear()
             if (dataSourceManager.dataSourceType?.ifAllMediaLibrary == true) {
                 libraryList.add(
                     XyLibrary(
-                        id = Constants.MINUS_ONE_INT.toString(),
+                        id = allLibraryId,
                         name = getString(Res.string.all_media_libraries),
                         connectionId = connectionId,
                         collectionType = ""
@@ -77,47 +111,100 @@ class SelectLibraryViewModel(
         }
     }
 
+    /**
+     * 重新读取本地媒体库列表，保留当前页面内的临时选择。
+     */
+    fun refreshLibraryList() {
+        getLibraryList(resetSelection = false)
+    }
 
     /**
      * 设置媒体库id
+     *
+     * @param data 媒体库 ID。
+     * @param saveImmediately 是否立即写入当前连接，默认选择后即时保存。
      */
-    fun updateLibraryId(data: String) {
-        if (dataSourceManager.dataSourceType?.ifMultiMediaLibrary == true){
+    fun updateLibraryId(data: String, saveImmediately: Boolean = true) {
+        if (dataSourceManager.dataSourceType?.ifMultiMediaLibrary == true) {
             if (libraryIds.contains(data)) {
                 libraryIds.remove(data)
                 if (libraryIds.isEmpty()) {
-                    libraryIds.add(Constants.MINUS_ONE_INT.toString())
+                    libraryIds.add(allLibraryId)
                 }
             } else {
                 libraryIds.add(data)
-                if (data == Constants.MINUS_ONE_INT.toString()) {
+                if (data == allLibraryId) {
                     libraryIds.clear()
-                    libraryIds.add(Constants.MINUS_ONE_INT.toString())
-                }else {
-                    libraryIds.remove(Constants.MINUS_ONE_INT.toString())
+                    libraryIds.add(allLibraryId)
+                } else {
+                    libraryIds.remove(allLibraryId)
                 }
             }
-        }else {
+        } else {
             if (libraryIds.contains(data)) {
                 libraryIds.clear()
-                libraryIds.add(Constants.MINUS_ONE_INT.toString())
+                libraryIds.add(allLibraryId)
             } else {
                 libraryIds.clear()
                 libraryIds.add(data)
             }
         }
 
-        var libraryIds: Set<String>? = this.libraryIds
-        viewModelScope.launch {
-            if (libraryIds?.contains(Constants.MINUS_ONE_INT.toString()) == true) {
-                libraryIds = null
-            }
-            //更新媒体库
-            dataSourceManager.updateLibraryId(
-                libraryIds = libraryIds?.toList(),
-                connectionId = connectionId
-            )
+        if (saveImmediately) {
+            saveLibraryIds()
         }
     }
 
+    /**
+     * 保存当前页面内选择到连接配置。
+     */
+    fun saveLibraryIds() {
+        val selectedLibraryIds = libraryIds.toSet()
+        var persistedLibraryIds: Set<String>? = selectedLibraryIds
+        viewModelScope.launch {
+            if (persistedLibraryIds?.contains(allLibraryId) == true) {
+                persistedLibraryIds = null
+            }
+            //更新媒体库
+            dataSourceManager.updateLibraryId(
+                libraryIds = persistedLibraryIds?.toList(),
+                connectionId = connectionId
+            )
+            savedLibraryIds = selectedLibraryIds
+        }
+    }
+
+    /**
+     * 撤销当前页面内未保存的选择，恢复到最近一次已保存状态。
+     */
+    fun resetLibraryIds() {
+        applyLibraryIds(savedLibraryIds)
+    }
+
+    /**
+     * 撤销本页面内已经即时保存的选择，并恢复进入页面时的媒体库范围。
+     */
+    fun restoreInitialLibraryIds() {
+        applyLibraryIds(initialLibraryIds)
+        saveLibraryIds()
+    }
+
+    /**
+     * 将传入的媒体库 ID 写入页面状态。
+     *
+     * @param ids 需要展示为选中的媒体库 ID 集合。
+     */
+    private fun applyLibraryIds(ids: Set<String>) {
+        libraryIds.clear()
+        libraryIds.addAll(ids)
+    }
+
+    /**
+     * 将持久化字段转换成页面可展示的媒体库 ID 集合。
+     *
+     * @param ids 数据库中保存的媒体库 ID 列表，空值表示全部媒体库。
+     */
+    private fun normalizedLibraryIds(ids: List<String>?): Set<String> {
+        return ids?.toSet()?.takeIf { it.isNotEmpty() } ?: setOf(allLibraryId)
+    }
 }
