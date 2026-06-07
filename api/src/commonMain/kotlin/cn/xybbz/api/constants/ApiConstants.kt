@@ -21,6 +21,31 @@ package cn.xybbz.api.constants
 object ApiConstants {
 
     /**
+     * URL 协议头分隔符。
+     */
+    const val URL_SCHEME_SEPARATOR = "://"
+
+    /**
+     * HTTP 协议地址前缀。
+     */
+    const val HTTP = "http://"
+
+    /**
+     * HTTPS 协议地址前缀。
+     */
+    const val HTTPS = "https://"
+
+    /**
+     * HTTP 协议展示名称。
+     */
+    const val HTTP_PROTOCOL_NAME = "HTTP"
+
+    /**
+     * HTTPS 协议展示名称。
+     */
+    const val HTTPS_PROTOCOL_NAME = "HTTPS"
+
+    /**
      * The recommended value for the accept header. It prefers JSON followed by octet stream and finally
      * everything. The "any MIME type" (* / *) is required for some endpoints in the server.
      * application/octet-stream;

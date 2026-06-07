@@ -7,8 +7,8 @@ import cn.xybbz.api.AuthenticatedRequestState
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.custom.data.CustomCoverQuery
-import cn.xybbz.common.constants.Constants.HTTP
-import cn.xybbz.common.constants.Constants.HTTPS
+import cn.xybbz.api.constants.ApiConstants.HTTP
+import cn.xybbz.api.constants.ApiConstants.HTTPS
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist

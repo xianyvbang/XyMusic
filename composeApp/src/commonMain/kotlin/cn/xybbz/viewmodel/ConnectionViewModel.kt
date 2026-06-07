@@ -25,11 +25,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.xybbz.api.constants.ApiConstants.HTTP
+import cn.xybbz.api.constants.ApiConstants.HTTPS
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
-import cn.xybbz.common.constants.Constants.HTTP
-import cn.xybbz.common.constants.Constants.HTTPS
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.extractPortOrNull

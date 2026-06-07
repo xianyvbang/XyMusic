@@ -41,6 +41,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.xybbz.api.constants.ApiConstants
+import cn.xybbz.api.utils.withDefaultHttpScheme
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingBaseRow
@@ -180,7 +182,7 @@ fun JvmProxyConfigScreen(
                     subtitle = "桌面端使用一条代理地址字符串，支持 host:port 或带协议的 URL 写法。",
                     badge = "HTTP",
                     contentContainerEnabled = false,
-                    qualityNote = "JVM 当前代理解析会自动为未带协议的地址补齐 http://，例如 ${Constants.DEFAULT_PROXY_ADDRESS} 会按 HTTP 代理使用。"
+                    qualityNote = "JVM 当前代理解析会自动为未带协议的地址补齐 ${ApiConstants.HTTP}，例如 ${Constants.DEFAULT_PROXY_ADDRESS} 会按 ${ApiConstants.HTTP_PROTOCOL_NAME} 代理使用。"
                 ) {
                     JvmProxyAddressPanel(
                         title = proxyAddressTitle,
@@ -339,7 +341,7 @@ private fun JvmProxyAddressPanel(
                         overflow = TextOverflow.Ellipsis
                     )
                     XyTextSub(
-                        text = "示例：${Constants.DEFAULT_PROXY_ADDRESS} 或 http://${Constants.DEFAULT_PROXY_ADDRESS}",
+                        text = "示例：${Constants.DEFAULT_PROXY_ADDRESS} 或 ${ApiConstants.HTTP}${Constants.DEFAULT_PROXY_ADDRESS}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -815,9 +817,9 @@ private fun String.toJvmProxyParsedAddress(): JvmProxyParsedAddress {
     }
 
     val parsedUri = runCatching {
-        URI(if ("://" in this) this else "http://$this")
+        URI(withDefaultHttpScheme())
     }.getOrNull()
-    val protocol = parsedUri?.scheme?.uppercase()?.takeIf { it.isNotBlank() } ?: "HTTP"
+    val protocol = parsedUri?.scheme?.uppercase()?.takeIf { it.isNotBlank() } ?: ApiConstants.HTTP_PROTOCOL_NAME
     val host = parsedUri?.host?.takeIf { it.isNotBlank() } ?: "未解析"
     val port = parsedUri?.port?.takeIf { it > 0 }?.toString() ?: "未解析"
     return JvmProxyParsedAddress(
@@ -833,7 +835,7 @@ private fun String.toJvmProxyParsedAddress(): JvmProxyParsedAddress {
 private fun String.proxyTargetLabel(): String {
     return trim()
         .takeIf { it.isNotBlank() }
-        ?.removePrefix("https://")
-        ?.removePrefix("http://")
+        ?.removePrefix(ApiConstants.HTTPS)
+        ?.removePrefix(ApiConstants.HTTP)
         ?: "未连接"
 }

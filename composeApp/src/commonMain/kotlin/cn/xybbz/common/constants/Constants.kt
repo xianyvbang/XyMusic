@@ -219,7 +219,4 @@ object Constants {
 
     const val DOWNLOAD_NOTIFICATION_CHANNEL_ID: String = "download_channel"
 
-    const val HTTP = "http://"
-
-    const val HTTPS = "https://"
 }
