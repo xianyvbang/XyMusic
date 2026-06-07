@@ -58,6 +58,7 @@ import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
+import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
@@ -69,6 +70,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_link_24px
+import xymusic_kmp.composeapp.generated.resources.about
 import xymusic_kmp.composeapp.generated.resources.app_icon_info
 import xymusic_kmp.composeapp.generated.resources.app_name
 import xymusic_kmp.composeapp.generated.resources.check_24px
@@ -104,6 +106,8 @@ fun JvmAboutScreen(
 
     // 资源文案集中读取，下面的内容编排只负责展示和事件转发。
     val appName = stringResource(Res.string.app_name)
+    // 标题文案使用统一资源，保证关于页和设置入口命名一致。
+    val pageTitle = stringResource(Res.string.about)
     val currentVersionTitle = stringResource(Res.string.current_version)
     val problemFeedbackTitle = stringResource(Res.string.problem_feedback)
     val officialWebsiteTitle = stringResource(Res.string.official_website)
@@ -125,6 +129,14 @@ fun JvmAboutScreen(
             vertical = XyTheme.dimens.outerVerticalPadding * 3
         )
     ) {
+        JvmSettingPageHeader(
+            title = pageTitle,
+            description = "查看桌面端应用信息、当前版本、项目入口和核心技术栈。",
+            contentMaxWidth = JvmSettingPageContentMaxWidth,
+        ) {
+            JvmAboutStatusCard(versionInfo = versionInfo)
+        }
+
         JvmAboutContent(
             appName = appName,
             appIconInfo = appIconInfo,
@@ -271,9 +283,7 @@ private fun JvmAboutContent(
             }
         },
         rightContent = {
-            // 右栏放状态摘要和辅助动作，和设置页右侧栏的信息密度保持一致。
-            JvmAboutStatusCard(versionInfo = versionInfo)
-
+            // 右栏放更新和辅助动作，状态摘要已提升到页头，避免版本信息重复展示。
             JvmSettingSection(
                 title = "更新",
                 subtitle = "检查更新放在明显位置，但不打断设置浏览。",
@@ -370,12 +380,6 @@ private fun JvmAboutHero(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
             ) {
-                Text(
-                    text = "桌面端设置",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
                 Text(
                     text = appName,
                     style = MaterialTheme.typography.headlineLarge,
