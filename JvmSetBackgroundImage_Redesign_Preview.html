@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XyMusic JVM 背景图片设置预览</title>
+    <style>
+        :root {
+            --accent: #0470E6;
+            --accent-border: rgba(4, 112, 230, 0.72);
+            --bg: #1A1A1A;
+            --surface-low: #242424;
+            --surface-high: #363636;
+            --surface-hover: #3C3C3C;
+            --line: rgba(255, 255, 255, 0.10);
+            --line-strong: rgba(255, 255, 255, 0.16);
+            --text: #EBEEF1;
+            --muted: #A7A7A7;
+            --dim: #727272;
+            --danger: #E76F51;
+            --warm: #E9C46A;
+            --teal: #2A9D8F;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            color: var(--text);
+            background: var(--bg);
+            font-family: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+            overflow: hidden;
+            letter-spacing: 0;
+        }
+        button, input { font: inherit; }
+
+        /* 页面骨架：沿用 JVM 设置页预览的桌面布局。 */
+        .app-shell {
+            display: grid;
+            grid-template-columns: 248px minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr) 88px;
+            grid-template-areas: "sidebar main" "player player";
+            height: 100vh;
+            min-width: 880px;
+            background: linear-gradient(180deg, rgba(4, 112, 230, 0.09), rgba(26, 26, 26, 0) 260px), var(--bg);
+        }
+        .sidebar {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+            padding: 18px 12px 12px;
+            background: #111111;
+            border-right: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 44px;
+            padding: 0 12px;
+            color: #FFFFFF;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), #31A8FF);
+            box-shadow: 0 8px 20px rgba(4, 112, 230, 0.28);
+        }
+        .brand-mark::before {
+            content: "";
+            width: 12px;
+            height: 16px;
+            border-right: 4px solid #FFFFFF;
+            border-bottom: 4px solid #FFFFFF;
+            border-radius: 0 0 8px 0;
+            transform: rotate(8deg);
+        }
+        .nav-panel, .library-panel {
+            border-radius: var(--radius);
+            background: var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .nav-panel { padding: 8px; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            height: 42px;
+            padding: 0 12px;
+            color: var(--muted);
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .nav-item.active { color: var(--text); background: var(--surface-high); }
+        .nav-icon { display: grid; place-items: center; width: 22px; height: 22px; font-size: 15px; }
+        .library-panel { display: flex; flex: 1; min-height: 0; flex-direction: column; padding: 10px; }
+        .library-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 36px;
+            padding: 0 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .library-list { display: grid; gap: 6px; margin-top: 6px; overflow: hidden; }
+        .library-row {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .library-row.current { background: rgba(255, 255, 255, 0.05); }
+        .cover { width: 42px; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #274060, var(--teal)); }
+        .cover.alt { background: linear-gradient(135deg, #5F4B8B, var(--warm)); }
+        .cover.third { background: linear-gradient(135deg, #183A37, var(--accent)); }
+        .line-title, .line-sub, .setting-title, .setting-desc, .path-text, .file-name, .file-path {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .line-title { color: #FFFFFF; font-size: 14px; font-weight: 700; }
+        .line-sub { margin-top: 4px; color: var(--dim); font-size: 12px; }
+
+        .main {
+            grid-area: main;
+            min-width: 0;
+            margin: 8px 8px 0;
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, rgba(4, 112, 230, 0.18), rgba(47, 47, 47, 0) 230px), var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            padding: 0 24px;
+            background: rgba(31, 31, 31, 0.72);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(18px);
+        }
+        .window-actions { display: flex; align-items: center; gap: 8px; }
+        .round-button, .icon-button {
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.24);
+        }
+        .round-button { width: 34px; height: 34px; border-radius: 50%; }
+        .icon-button { width: 36px; height: 36px; border-radius: 10px; }
+        .source-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 36px;
+            padding: 0 12px 0 8px;
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .source-dot { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--teal)); }
+        .content-scroll { height: calc(100vh - 160px); overflow: auto; }
+        .content-scroll::-webkit-scrollbar { width: 10px; }
+        .content-scroll::-webkit-scrollbar-thumb {
+            border: 3px solid transparent;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.24);
+            background-clip: content-box;
+        }
+        .content { width: min(1080px, calc(100% - 48px)); margin: 0 auto; padding: 34px 0 42px; }
+        .page-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 24px;
+            align-items: end;
+            margin-bottom: 24px;
+        }
+        .eyebrow { margin-bottom: 10px; color: #8FC4FF; font-size: 13px; font-weight: 700; }
+        h1 { margin: 0; color: #FFFFFF; font-size: 32px; line-height: 1.18; font-weight: 750; letter-spacing: 0; }
+        .summary { margin: 10px 0 0; max-width: 660px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+        .status-card {
+            display: grid;
+            gap: 10px;
+            min-width: 278px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+        .status-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 13px; }
+        .status-value { color: var(--text); font-weight: 700; }
+        .layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr); gap: 16px; align-items: start; }
+        .stack { display: grid; gap: 16px; min-width: 0; }
+        .section {
+            padding: 20px;
+            border-radius: var(--radius);
+            background: rgba(47, 47, 47, 0.82);
+            border: 1px solid var(--line);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+        }
+        .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 16px; }
+        .section-title { margin: 0; color: #FFFFFF; font-size: 17px; line-height: 1.35; font-weight: 700; }
+        .section-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+        .badge, .pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            color: #BBD9FF;
+            background: rgba(4, 112, 230, 0.12);
+            border: 1px solid rgba(4, 112, 230, 0.28);
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .pill.neutral { color: var(--muted); background: rgba(255, 255, 255, 0.07); border-color: rgba(255, 255, 255, 0.10); }
+        .pill.danger { color: #FFD8D0; background: rgba(231, 111, 81, 0.13); border-color: rgba(231, 111, 81, 0.28); }
+
+        /* 图片预览：对应 Compose 中的 16:9 Crop 效果。 */
+        .preview-stage {
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 16 / 9;
+            min-height: 360px;
+            border-radius: var(--radius);
+            background:
+                radial-gradient(circle at 20% 18%, rgba(233, 196, 106, 0.50), transparent 24%),
+                radial-gradient(circle at 78% 26%, rgba(42, 157, 143, 0.55), transparent 28%),
+                linear-gradient(135deg, #17263B 0%, #203A50 36%, #121D2E 100%);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+        .preview-stage.empty {
+            background:
+                linear-gradient(135deg, rgba(4, 112, 230, 0.18), rgba(42, 157, 143, 0.10)),
+                #1E1E1E;
+        }
+        .preview-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 180ms ease;
+        }
+        .preview-stage.has-image .preview-image { opacity: 1; }
+        .default-art {
+            position: absolute;
+            inset: 0;
+            opacity: 1;
+            transition: opacity 180ms ease;
+            background:
+                linear-gradient(120deg, rgba(4, 112, 230, 0.10), transparent 34%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900' viewBox='0 0 1600 900'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%23234064'/%3E%3Cstop offset='.55' stop-color='%230E2336'/%3E%3Cstop offset='1' stop-color='%2309121F'/%3E%3C/linearGradient%3E%3ClinearGradient id='glow' x1='0' x2='1'%3E%3Cstop stop-color='%23E9C46A' stop-opacity='.72'/%3E%3Cstop offset='.52' stop-color='%232A9D8F' stop-opacity='.68'/%3E%3Cstop offset='1' stop-color='%230470E6' stop-opacity='.42'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1600' height='900' fill='url(%23sky)'/%3E%3Cpath d='M0 598 C220 520 330 565 500 488 C720 390 830 472 990 398 C1180 310 1320 340 1600 210 L1600 900 L0 900 Z' fill='%230A1727'/%3E%3Cpath d='M0 686 C210 638 390 645 570 588 C770 525 880 590 1080 515 C1250 452 1410 454 1600 395 L1600 900 L0 900 Z' fill='%23132537'/%3E%3Cpath d='M130 690 C270 635 414 638 540 672 C726 722 873 692 1022 620 C1180 544 1390 552 1600 605 L1600 900 L0 900 L0 742 C40 726 78 708 130 690 Z' fill='%23204245'/%3E%3Ccircle cx='1215' cy='205' r='106' fill='%23E9C46A' opacity='.86'/%3E%3Cpath d='M0 610 L1600 500 L1600 590 L0 724 Z' fill='url(%23glow)' opacity='.36'/%3E%3Cpath d='M0 780 C310 735 506 772 760 714 C1038 650 1256 694 1600 650 L1600 900 L0 900 Z' fill='%23061119' opacity='.72'/%3E%3C/svg%3E") center / cover;
+        }
+        .preview-stage.has-image .default-art,
+        .preview-stage.empty .default-art { opacity: 0; }
+        .empty-state {
+            position: absolute;
+            inset: 0;
+            display: none;
+            place-items: center;
+            padding: 24px;
+            text-align: center;
+        }
+        .preview-stage.empty .empty-state { display: grid; }
+        .empty-icon {
+            display: grid;
+            place-items: center;
+            width: 74px;
+            height: 74px;
+            margin: 0 auto 16px;
+            border-radius: 18px;
+            color: #DCEEFF;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 30px;
+        }
+        .empty-title { color: #FFFFFF; font-size: 20px; font-weight: 760; }
+        .empty-desc { margin-top: 8px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+        .preview-overlay {
+            position: absolute;
+            inset: 20px;
+            display: grid;
+            grid-template-rows: 44px minmax(0, 1fr) 58px;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(18, 18, 18, 0.34);
+            box-shadow: 0 22px 70px rgba(0, 0, 0, 0.36);
+            backdrop-filter: blur(16px);
+        }
+        .preview-stage.empty .preview-overlay { display: none; }
+        .mock-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            background: rgba(16, 16, 16, 0.54);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+        }
+        .mock-dot-row { display: flex; align-items: center; gap: 6px; }
+        .mock-dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, 0.28); }
+        .mock-title { color: #FFFFFF; font-size: 12px; font-weight: 700; }
+        .mock-main {
+            display: grid;
+            grid-template-columns: 124px minmax(0, 1fr);
+            min-height: 0;
+        }
+        .mock-side {
+            padding: 12px;
+            background: rgba(10, 10, 10, 0.42);
+            border-right: 1px solid rgba(255, 255, 255, 0.10);
+        }
+        .mock-nav { height: 28px; margin-bottom: 9px; border-radius: 8px; background: rgba(255, 255, 255, 0.10); }
+        .mock-nav.active { background: rgba(4, 112, 230, 0.36); }
+        .mock-content {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            padding: 14px;
+        }
+        .mock-card {
+            min-height: 74px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .mock-card.wide { grid-column: 1 / -1; min-height: 86px; }
+        .mock-player {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr) 96px;
+            gap: 12px;
+            align-items: center;
+            padding: 0 14px;
+            background: rgba(12, 12, 12, 0.72);
+            border-top: 1px solid rgba(255, 255, 255, 0.10);
+        }
+        .mock-album { width: 38px; height: 38px; border-radius: 8px; background: linear-gradient(135deg, var(--warm), var(--accent)); }
+        .mock-lines { display: grid; gap: 7px; }
+        .mock-line { height: 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.24); }
+        .mock-line.short { width: 58%; }
+        .mock-control { height: 8px; border-radius: 999px; background: rgba(4, 112, 230, 0.60); }
+        .preview-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 14px;
+            min-width: 0;
+        }
+        .preview-caption { min-width: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+        .mode-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            flex: 0 0 auto;
+            width: 300px;
+            max-width: 100%;
+            padding: 6px;
+            border-radius: var(--radius);
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .mode-tab {
+            height: 34px;
+            min-width: 0;
+            padding: 0 10px;
+            border: 0;
+            border-radius: 8px;
+            color: var(--muted);
+            background: transparent;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .mode-tab.active {
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.26);
+            box-shadow: inset 0 0 0 1px rgba(4, 112, 230, 0.24);
+        }
+
+        .action-panel {
+            display: grid;
+            gap: 14px;
+            padding: 18px;
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, rgba(4, 112, 230, 0.14), rgba(255, 255, 255, 0.04)), var(--surface-high);
+            border: 1px solid rgba(4, 112, 230, 0.24);
+        }
+        .file-card {
+            display: grid;
+            grid-template-columns: 46px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            border-radius: var(--radius);
+            background: rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .file-icon {
+            display: grid;
+            place-items: center;
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.20);
+            border: 1px solid rgba(4, 112, 230, 0.26);
+            font-size: 18px;
+        }
+        .file-name { color: #FFFFFF; font-size: 14px; font-weight: 740; }
+        .file-path { margin-top: 6px; color: var(--dim); font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+        .button-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .primary-button, .secondary-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 40px;
+            min-width: 0;
+            padding: 0 14px;
+            border-radius: 9px;
+            font-weight: 750;
+            white-space: nowrap;
+        }
+        .primary-button {
+            border: 0;
+            color: #FFFFFF;
+            background: var(--accent);
+            box-shadow: 0 10px 24px rgba(4, 112, 230, 0.24);
+        }
+        .secondary-button {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+        .secondary-button:disabled {
+            color: var(--dim);
+            cursor: default;
+            background: rgba(255, 255, 255, 0.035);
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+        .setting-list { display: grid; overflow: hidden; border-radius: var(--radius); background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.07); }
+        .setting-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+            min-height: 62px;
+            padding: 12px 14px;
+            color: var(--text);
+            background: transparent;
+            border: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            text-align: left;
+        }
+        .setting-row:last-child { border-bottom: 0; }
+        .setting-title-line { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .setting-icon {
+            display: grid;
+            flex: 0 0 auto;
+            place-items: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            color: #DCEEFF;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+        }
+        .setting-title { color: #FFFFFF; font-size: 14px; font-weight: 700; }
+        .setting-desc { margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+        .setting-trailing { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
+        .path-text { max-width: 220px; color: var(--dim); font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+        .note-row {
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .note-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; color: #FFFFFF; background: rgba(4, 112, 230, 0.20); border: 1px solid rgba(4, 112, 230, 0.26); }
+        .toast {
+            position: fixed;
+            right: 24px;
+            bottom: 108px;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: #FFFFFF;
+            background: rgba(36, 36, 36, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+            backdrop-filter: blur(18px);
+            font-size: 13px;
+        }
+        .toast.show { display: flex; }
+        .bar { height: 8px; overflow: hidden; border-radius: 999px; background: rgba(255, 255, 255, 0.13); }
+        .bar-fill { height: 100%; border-radius: inherit; background: var(--accent); }
+        .player {
+            grid-area: player;
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(360px, 520px) minmax(220px, 1fr);
+            gap: 18px;
+            align-items: center;
+            padding: 12px 18px;
+            background: #121212;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .now-playing { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 12px; align-items: center; min-width: 0; }
+        .album-art { width: 54px; height: 54px; border-radius: 8px; background: linear-gradient(135deg, rgba(233, 196, 106, 0.92), rgba(4, 112, 230, 0.86)); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28); }
+        .player-title { overflow: hidden; color: #FFFFFF; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+        .player-subtitle { overflow: hidden; margin-top: 5px; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+        .transport { display: grid; gap: 10px; justify-items: center; }
+        .transport-buttons { display: flex; align-items: center; gap: 14px; }
+        .transport-button { display: grid; place-items: center; width: 28px; height: 28px; color: var(--muted); background: transparent; border: 0; }
+        .play-button { display: grid; place-items: center; width: 36px; height: 36px; color: #FFFFFF; background: var(--accent); border: 0; border-radius: 50%; box-shadow: 0 10px 24px rgba(4, 112, 230, 0.28); }
+        .progress { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; align-items: center; width: 100%; color: var(--dim); font-size: 11px; }
+        .player-tools { display: flex; align-items: center; justify-content: flex-end; gap: 12px; color: var(--muted); font-size: 12px; }
+        .volume { width: min(120px, 32%); }
+
+        @media (max-width: 1180px) {
+            .app-shell { grid-template-columns: 218px minmax(0, 1fr); }
+            .content { width: calc(100% - 36px); }
+            .page-head, .layout { grid-template-columns: 1fr; }
+            .status-card { min-width: 0; }
+            .preview-stage { min-height: 320px; }
+        }
+        @media (max-width: 920px) {
+            body { overflow: auto; }
+            .app-shell {
+                min-width: 0;
+                height: auto;
+                min-height: 100vh;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto minmax(0, 1fr) 88px;
+                grid-template-areas: "sidebar" "main" "player";
+            }
+            .sidebar { flex-direction: row; align-items: center; overflow: hidden; border-right: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+            .brand { flex: 0 0 auto; }
+            .nav-panel { display: flex; flex: 1; min-width: 0; }
+            .nav-item { justify-content: center; min-width: 42px; padding: 0 10px; }
+            .nav-item span:not(.nav-icon) { display: none; }
+            .library-panel { display: none; }
+            .main { margin: 8px; }
+            .content-scroll { height: auto; overflow: visible; }
+            .player { grid-template-columns: minmax(0, 1fr) auto; }
+            .transport { display: none; }
+            .preview-toolbar { align-items: stretch; flex-direction: column; }
+            .mode-tabs { width: 100%; }
+        }
+        @media (max-width: 560px) {
+            .topbar { padding: 0 12px; }
+            .source-pill { display: none; }
+            h1 { font-size: 28px; }
+            .content { width: calc(100% - 24px); padding-top: 24px; }
+            .section { padding: 16px; }
+            .preview-stage { min-height: 230px; }
+            .preview-overlay { inset: 12px; grid-template-rows: 38px minmax(0, 1fr) 50px; }
+            .mock-main { grid-template-columns: 1fr; }
+            .mock-side { display: none; }
+            .mock-content { grid-template-columns: 1fr; gap: 8px; padding: 10px; }
+            .mock-card { min-height: 44px; }
+            .button-row, .setting-row { grid-template-columns: 1fr; }
+            .setting-trailing { justify-content: flex-start; }
+            .path-text { max-width: 100%; }
+            .player-tools { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" aria-label="桌面导航">
+        <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>XyMusic</span></div>
+        <nav class="nav-panel" aria-label="主导航">
+            <button class="nav-item" type="button"><span class="nav-icon" aria-hidden="true">⌂</span><span>首页</span></button>
+            <button class="nav-item" type="button"><span class="nav-icon" aria-hidden="true">♪</span><span>音乐库</span></button>
+            <button class="nav-item active" type="button"><span class="nav-icon" aria-hidden="true">⚙</span><span>设置</span></button>
+        </nav>
+        <section class="library-panel" aria-label="播放列表">
+            <div class="library-header"><span>最近播放</span><span aria-hidden="true">+</span></div>
+            <div class="library-list">
+                <div class="library-row current"><div class="cover"></div><div><div class="line-title">Daily Mix</div><div class="line-sub">Navidrome · 48 首</div></div></div>
+                <div class="library-row"><div class="cover alt"></div><div><div class="line-title">夜间电台</div><div class="line-sub">Jellyfin · 收藏</div></div></div>
+                <div class="library-row"><div class="cover third"></div><div><div class="line-title">高解析度试听</div><div class="line-sub">本地缓存</div></div></div>
+            </div>
+        </section>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="window-actions" aria-label="历史导航">
+                <button class="round-button" type="button" aria-label="返回">‹</button>
+                <button class="round-button" type="button" aria-label="前进">›</button>
+            </div>
+            <div class="window-actions">
+                <div class="source-pill"><span class="source-dot" aria-hidden="true"></span><span>Navidrome · 在线</span></div>
+                <button class="icon-button" type="button" aria-label="搜索">⌕</button>
+                <button class="icon-button" type="button" aria-label="设置">⚙</button>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+            <div class="content">
+                <section class="page-head">
+                    <div>
+                        <div class="eyebrow">桌面端设置</div>
+                        <h1>背景图片设置</h1>
+                        <p class="summary">将背景图选择、清除和裁剪预览放在同一个桌面工作区，用户能在保存前看到它与侧栏、内容区和播放栏叠加后的状态。</p>
+                    </div>
+                    <aside class="status-card" aria-label="当前背景摘要">
+                        <div class="status-row"><span>当前状态</span><span class="status-value" id="state-status">已选择</span></div>
+                        <div class="status-row"><span>显示比例</span><span class="status-value">16:9</span></div>
+                        <div class="status-row"><span>填充方式</span><span class="status-value" id="mode-status">居中裁剪</span></div>
+                    </aside>
+                </section>
+
+                <div class="layout">
+                    <section class="section" aria-labelledby="preview-title">
+                        <div class="section-head">
+                            <div>
+                                <h2 class="section-title" id="preview-title">背景预览</h2>
+                                <p class="section-subtitle">按照当前桌面端背景图逻辑展示，图片会铺满 16:9 区域并保留中心视觉。</p>
+                            </div>
+                            <span class="badge" id="preview-badge">当前图片</span>
+                        </div>
+
+                        <div class="preview-stage" id="preview-stage">
+                            <div class="default-art" aria-hidden="true"></div>
+                            <img class="preview-image" id="preview-image" alt="背景图片预览">
+                            <div class="preview-overlay" aria-hidden="true">
+                                <div class="mock-top">
+                                    <div class="mock-dot-row"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span></div>
+                                    <div class="mock-title">XyMusic</div>
+                                </div>
+                                <div class="mock-main">
+                                    <div class="mock-side"><div class="mock-nav active"></div><div class="mock-nav"></div><div class="mock-nav"></div></div>
+                                    <div class="mock-content"><div class="mock-card wide"></div><div class="mock-card"></div><div class="mock-card"></div></div>
+                                </div>
+                                <div class="mock-player">
+                                    <div class="mock-album"></div>
+                                    <div class="mock-lines"><span class="mock-line"></span><span class="mock-line short"></span></div>
+                                    <div class="mock-control"></div>
+                                </div>
+                            </div>
+                            <div class="empty-state" aria-hidden="true">
+                                <div>
+                                    <div class="empty-icon">▧</div>
+                                    <div class="empty-title">未选择背景图片</div>
+                                    <div class="empty-desc">页面会回到默认深色背景，侧栏和播放栏保持当前主题。</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="preview-toolbar">
+                            <div class="preview-caption" id="preview-caption">图片使用居中裁剪填充，适合宽屏桌面窗口。</div>
+                            <div class="mode-tabs" aria-label="预览区域">
+                                <button class="mode-tab active" type="button" data-mode="桌面主界面">主界面</button>
+                                <button class="mode-tab" type="button" data-mode="设置列表">设置</button>
+                                <button class="mode-tab" type="button" data-mode="播放栏">播放栏</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <aside class="stack">
+                        <section class="action-panel" aria-labelledby="action-title">
+                            <div>
+                                <h2 class="section-title" id="action-title">当前图片</h2>
+                                <p class="section-subtitle">保留原页面的选择和清除动作，并把文件状态放到操作旁边。</p>
+                            </div>
+                            <div class="file-card">
+                                <div class="file-icon" aria-hidden="true">▧</div>
+                                <div>
+                                    <div class="file-name" id="file-name">xy-wallpaper-blue-hour.jpg</div>
+                                    <div class="file-path" id="file-path">D:\Pictures\XyMusic\xy-wallpaper-blue-hour.jpg</div>
+                                </div>
+                            </div>
+                            <div class="button-row">
+                                <button class="primary-button" type="button" id="select-button"><span aria-hidden="true">＋</span><span>选择图片</span></button>
+                                <button class="secondary-button" type="button" id="clear-button"><span aria-hidden="true">×</span><span>清除图片</span></button>
+                            </div>
+                            <input id="image-input" type="file" accept="image/*" hidden>
+                        </section>
+
+                        <section class="section" aria-labelledby="detail-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="detail-title">显示信息</h2>
+                                    <p class="section-subtitle">桌面端只需要展示与当前背景相关的少量关键信息。</p>
+                                </div>
+                            </div>
+                            <div class="setting-list">
+                                <div class="setting-row">
+                                    <div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">◫</span><span class="setting-title">生效范围</span></div><div class="setting-desc">桌面端主窗口背景。</div></div>
+                                    <div class="setting-trailing"><span class="pill">JVM</span></div>
+                                </div>
+                                <div class="setting-row">
+                                    <div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">▣</span><span class="setting-title">裁剪策略</span></div><div class="setting-desc">铺满预览区域，超出部分自动裁剪。</div></div>
+                                    <div class="setting-trailing"><span class="pill">Crop</span></div>
+                                </div>
+                                <div class="setting-row">
+                                    <div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">□</span><span class="setting-title">文件路径</span></div><div class="setting-desc path-text" id="detail-path">D:\Pictures\XyMusic\xy-wallpaper-blue-hour.jpg</div></div>
+                                    <div class="setting-trailing"><span class="pill neutral" id="path-pill">本地</span></div>
+                                </div>
+                            </div>
+                            <div class="note-row">
+                                <div class="note-icon" aria-hidden="true">i</div>
+                                <div>清除背景后保留深色桌面结构，避免播放页和设置页出现跳变。</div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="player" aria-label="播放控制栏">
+        <div class="now-playing"><div class="album-art" aria-hidden="true"></div><div><div class="player-title">Blue Hour</div><div class="player-subtitle">XyMusic Preview · 背景图片设置</div></div></div>
+        <div class="transport">
+            <div class="transport-buttons"><button class="transport-button" type="button" aria-label="随机播放">⤨</button><button class="transport-button" type="button" aria-label="上一首">‹‹</button><button class="play-button" type="button" aria-label="播放">▶</button><button class="transport-button" type="button" aria-label="下一首">››</button><button class="transport-button" type="button" aria-label="循环播放">↻</button></div>
+            <div class="progress"><span>1:24</span><div class="bar" aria-hidden="true"><div class="bar-fill" style="width: 38%;"></div></div><span>3:41</span></div>
+        </div>
+        <div class="player-tools"><span>列表</span><span>歌词</span><span>音量</span><div class="bar volume" aria-hidden="true"><div class="bar-fill" style="width: 68%;"></div></div></div>
+    </footer>
+    <div class="toast" id="toast" role="status" aria-live="polite"><span class="note-icon" aria-hidden="true">✓</span><span id="toast-text">已更新</span></div>
+</div>
+
+<script>
+    const toast = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
+    const previewStage = document.getElementById("preview-stage");
+    const previewImage = document.getElementById("preview-image");
+    const selectButton = document.getElementById("select-button");
+    const clearButton = document.getElementById("clear-button");
+    const imageInput = document.getElementById("image-input");
+    const stateStatus = document.getElementById("state-status");
+    const previewBadge = document.getElementById("preview-badge");
+    const fileName = document.getElementById("file-name");
+    const filePath = document.getElementById("file-path");
+    const detailPath = document.getElementById("detail-path");
+    const pathPill = document.getElementById("path-pill");
+    let toastTimer = null;
+
+    // 显示桌面端反馈提示。
+    function showToast(text) {
+        toastText.textContent = text;
+        toast.classList.add("show");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("show"), 1500);
+    }
+
+    // 同步背景图片选择后的状态文案。
+    function setImageState(selected, name = "未选择背景图片", path = "未设置") {
+        previewStage.classList.toggle("has-image", selected);
+        previewStage.classList.toggle("empty", !selected);
+        clearButton.disabled = !selected;
+        stateStatus.textContent = selected ? "已选择" : "未选择";
+        previewBadge.textContent = selected ? "当前图片" : "默认背景";
+        fileName.textContent = name;
+        filePath.textContent = path;
+        detailPath.textContent = path;
+        pathPill.textContent = selected ? "本地" : "空";
+        pathPill.classList.toggle("danger", !selected);
+    }
+
+    selectButton.addEventListener("click", () => imageInput.click());
+
+    imageInput.addEventListener("change", () => {
+        const file = imageInput.files && imageInput.files[0];
+        if (!file) return;
+        const imageUrl = URL.createObjectURL(file);
+        previewImage.onload = () => URL.revokeObjectURL(imageUrl);
+        previewImage.src = imageUrl;
+        setImageState(true, file.name, file.name);
+        showToast("已选择背景图片");
+    });
+
+    clearButton.addEventListener("click", () => {
+        previewImage.removeAttribute("src");
+        imageInput.value = "";
+        setImageState(false);
+        showToast("背景图片已清除");
+    });
+
+    document.querySelectorAll(".mode-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".mode-tab").forEach((item) => item.classList.remove("active"));
+            tab.classList.add("active");
+            document.getElementById("preview-caption").textContent = `${tab.dataset.mode}预览使用同一张背景图片与居中裁剪策略。`;
+        });
+    });
+</script>
+</body>
+</html>
