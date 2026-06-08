@@ -184,7 +184,7 @@ fun CustomApiScreen(
             item {
                 CustomLyricsSettingInput(
                     value = customLyricsViewModel.customLrcSingleApiValue,
-                    hint = stringResource(Res.string.lyrics_single_api_hint),
+                    hint = "${ApiConstants.HTTPS}${stringResource(Res.string.lyrics_single_api_hint)}",
                     onValueChange = { customLyricsViewModel.updateCustomLrcSingleApi(it) }
                 )
             }
@@ -197,7 +197,7 @@ fun CustomApiScreen(
             item {
                 CustomLyricsSettingInput(
                     value = customLyricsViewModel.customCoverApiValue,
-                    hint = stringResource(Res.string.custom_cover_api_hint),
+                    hint = "${ApiConstants.HTTPS}${stringResource(Res.string.custom_cover_api_hint)}",
                     onValueChange = { customLyricsViewModel.updateCustomCoverApi(it) }
                 )
             }

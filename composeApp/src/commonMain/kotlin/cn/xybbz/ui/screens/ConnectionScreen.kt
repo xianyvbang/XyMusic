@@ -66,6 +66,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.common.enums.ConnectionScreenType
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
@@ -603,7 +604,7 @@ fun AddressInputEdit(
             updateAddress(it)
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-        hint = stringResource(Res.string.connection_address_hint),
+        hint = stringResource(Res.string.connection_address_hint, ApiConstants.HTTP),
         icon = painterResource(Res.drawable.http_24px),
         iconContentDescription = stringResource(Res.string.httpInput),
         actionContent = if (address.isNotBlank()) {

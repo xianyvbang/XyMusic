@@ -22,6 +22,7 @@ import cn.xybbz.api.client.ApiFactory
 import cn.xybbz.api.client.DownloadFactory
 import cn.xybbz.api.client.provideClient
 import cn.xybbz.api.client.version.service.GitHubVersionApi
+import cn.xybbz.api.constants.ApiConstants
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.DefaultRequest
@@ -43,7 +44,7 @@ class VersionApiClient : ApiFactory, DownloadFactory {
     override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
         httpClient = provideClient().config {
             install(DefaultRequest) {
-                url("https://api.github.com/")
+                url("${ApiConstants.HTTPS}api.github.com/")
             }
             install(HttpRequestRetry) {
                 maxRetries = 2

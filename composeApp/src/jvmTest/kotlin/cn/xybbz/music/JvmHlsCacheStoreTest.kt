@@ -1,5 +1,6 @@
 package cn.xybbz.music
 
+import cn.xybbz.api.constants.ApiConstants
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
@@ -22,29 +23,29 @@ class JvmHlsCacheStoreTest {
         val entry = store.openEntry(
             cacheKey = "hls:song-1",
             safeCacheKey = "hls-song-1",
-            playlistUrl = "https://example.test/master.m3u8",
+            playlistUrl = "${ApiConstants.HTTPS}example.test/master.m3u8",
         )
 
         // 先把 playlist 中发现的媒体分片登记到索引，此时资源还没有缓存完成。
         store.updateResources(
             entry = entry,
-            playlistUrl = "https://example.test/master.m3u8",
+            playlistUrl = "${ApiConstants.HTTPS}example.test/master.m3u8",
             resources = listOf(
                 HlsPlaylistResource(
-                    url = "https://example.test/seg-1.ts",
+                    url = "${ApiConstants.HTTPS}example.test/seg-1.ts",
                     kind = HlsResourceKind.SEGMENT,
                     cacheable = true,
                 )
             ),
         )
-        val tempFile = store.createTempResourceFile(entry, "https://example.test/seg-1.ts")
+        val tempFile = store.createTempResourceFile(entry, "${ApiConstants.HTTPS}example.test/seg-1.ts")
         // 模拟上游分片已经完整下载到临时文件。
         tempFile.writeBytes(byteArrayOf(1, 2, 3))
 
         // 提交后临时文件会变成正式缓存文件，并更新 index.json。
         store.commitResource(
             entry = entry,
-            resourceUrl = "https://example.test/seg-1.ts",
+            resourceUrl = "${ApiConstants.HTTPS}example.test/seg-1.ts",
             kind = HlsResourceKind.SEGMENT,
             cacheable = true,
             contentType = "video/mp2t",
@@ -52,7 +53,7 @@ class JvmHlsCacheStoreTest {
         )
 
         // 缓存命中必须能读到内容长度、响应类型和进度状态。
-        val resource = store.cachedResource(entry, "https://example.test/seg-1.ts")
+        val resource = store.cachedResource(entry, "${ApiConstants.HTTPS}example.test/seg-1.ts")
         assertNotNull(resource)
         assertEquals(3, resource.contentLength)
         assertEquals("video/mp2t", resource.contentType)
@@ -67,13 +68,13 @@ class JvmHlsCacheStoreTest {
         val entry = store.openEntry(
             cacheKey = "hls:song-2",
             safeCacheKey = "hls-song-2",
-            playlistUrl = "https://example.test/master.m3u8",
+            playlistUrl = "${ApiConstants.HTTPS}example.test/master.m3u8",
         )
 
-        val tempFile = store.createTempResourceFile(entry, "https://example.test/seg-1.ts")
+        val tempFile = store.createTempResourceFile(entry, "${ApiConstants.HTTPS}example.test/seg-1.ts")
         tempFile.writeBytes(byteArrayOf(1, 2, 3))
 
-        assertNull(store.cachedResource(entry, "https://example.test/seg-1.ts"))
+        assertNull(store.cachedResource(entry, "${ApiConstants.HTTPS}example.test/seg-1.ts"))
     }
 
     @Test
@@ -84,25 +85,25 @@ class JvmHlsCacheStoreTest {
         val entry = store.openEntry(
             cacheKey = "hls:song-3",
             safeCacheKey = "hls-song-3",
-            playlistUrl = "https://example.test/master.m3u8",
+            playlistUrl = "${ApiConstants.HTTPS}example.test/master.m3u8",
         )
 
         store.updateResources(
             entry = entry,
-            playlistUrl = "https://example.test/master.m3u8",
+            playlistUrl = "${ApiConstants.HTTPS}example.test/master.m3u8",
             resources = listOf(
                 HlsPlaylistResource(
-                    url = "https://example.test/child.m3u8",
+                    url = "${ApiConstants.HTTPS}example.test/child.m3u8",
                     kind = HlsResourceKind.PLAYLIST,
                     cacheable = false,
                 ),
                 HlsPlaylistResource(
-                    url = "https://example.test/seg-1.ts",
+                    url = "${ApiConstants.HTTPS}example.test/seg-1.ts",
                     kind = HlsResourceKind.SEGMENT,
                     cacheable = true,
                 ),
                 HlsPlaylistResource(
-                    url = "https://example.test/seg-2.ts",
+                    url = "${ApiConstants.HTTPS}example.test/seg-2.ts",
                     kind = HlsResourceKind.SEGMENT,
                     cacheable = false,
                 ),

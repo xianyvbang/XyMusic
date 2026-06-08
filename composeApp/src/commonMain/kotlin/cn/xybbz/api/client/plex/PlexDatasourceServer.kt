@@ -27,6 +27,7 @@ import cn.xybbz.api.client.plex.data.Directory
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
 import cn.xybbz.api.client.toLatinCompat
+import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.plex.ImageType
 import cn.xybbz.api.enums.plex.MetadatumType
@@ -186,7 +187,7 @@ class PlexDatasourceServer(
         initApiClient(address = "", deviceId = getDeviceId(), username = "", "")
         plexLogin(clientLoginInfoReq)
         val systemInfo = plexApiClient.userApi()
-            .getSystemInfo("https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=1")
+            .getSystemInfo("${ApiConstants.HTTPS}plex.tv/api/v2/resources?includeHttps=1&includeRelay=1")
         Log.i("=====", "服务器信息 $systemInfo")
 
         if (systemInfo.isEmpty()) {
@@ -199,7 +200,7 @@ class PlexDatasourceServer(
                 val ipv4Data = ResourceData(
                     infoResponse.name,
                     infoResponse.product,
-                    "http://${connection.address}:${connection.port}",
+                    "${ApiConstants.HTTP}${connection.address}:${connection.port}",
                     serverVersion = infoResponse.platformVersion ?: "",
                     serverName = infoResponse.name,
                     serverId = Uuid.random().toString()
@@ -211,7 +212,7 @@ class PlexDatasourceServer(
                     val ipv6Data = ResourceData(
                         infoResponse.name,
                         infoResponse.product,
-                        "http://[${connection.address}]:${connection.port}",
+                        "${ApiConstants.HTTP}[${connection.address}]:${connection.port}",
                         serverVersion = infoResponse.platformVersion ?: "",
                         serverName = infoResponse.name,
                         serverId = Uuid.random().toString()

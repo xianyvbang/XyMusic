@@ -1,5 +1,6 @@
 package cn.xybbz.music
 
+import cn.xybbz.api.constants.ApiConstants
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -24,7 +25,7 @@ class JvmHlsPlaylistRewriterTest {
             #EXTINF:10,
             seg-1.ts
             #EXTINF:10,
-            https://cdn.example.test/seg-2.ts
+            ${ApiConstants.HTTPS}cdn.example.test/seg-2.ts
         """.trimIndent()
 
         val result = JvmHlsPlaylistRewriter.rewrite(
@@ -40,7 +41,7 @@ class JvmHlsPlaylistRewriterTest {
         assertTrue("local://map?cache=true&url=/Audio/song/init.mp4" in result.text)
         assertTrue("local://playlist?cache=false&url=/Audio/song/child/audio.m3u8" in result.text)
         assertTrue("local://segment?cache=true&url=/Audio/song/seg-1.ts" in result.text)
-        assertTrue("local://segment?cache=true&url=https://cdn.example.test/seg-2.ts" in result.text)
+        assertTrue("local://segment?cache=true&url=${ApiConstants.HTTPS}cdn.example.test/seg-2.ts" in result.text)
 
         assertEquals(
             // 资源清单顺序要和 playlist 中出现的顺序一致，后台预取依赖这个顺序。

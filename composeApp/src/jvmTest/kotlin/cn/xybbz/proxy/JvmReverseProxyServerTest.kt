@@ -1,5 +1,6 @@
 package cn.xybbz.proxy
 
+import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.music.CacheSessionSnapshot
 import cn.xybbz.music.CacheStatus
 import kotlin.test.Test
@@ -14,10 +15,10 @@ class JvmReverseProxyServerTest {
 
     @Test
     fun wrappedProxyUrlUsesLoopbackHostAndAccessToken() {
-        val proxyUrl = JvmReverseProxyServer.wrapTargetUrl("https://example.test/song.mp3")
+        val proxyUrl = JvmReverseProxyServer.wrapTargetUrl("${ApiConstants.HTTPS}example.test/song.mp3")
         val accessToken = extractAccessToken(proxyUrl)
 
-        assertTrue(proxyUrl.startsWith("http://127.0.0.1:19180/proxy?"))
+        assertTrue(proxyUrl.startsWith("${ApiConstants.HTTP}127.0.0.1:19180/proxy?"))
         assertTrue(accessToken.isNotBlank())
         assertTrue(JvmReverseProxyServer.isValidAccessToken(accessToken))
     }
@@ -27,7 +28,7 @@ class JvmReverseProxyServerTest {
         val cacheUrl = JvmReverseProxyServer.wrapCachePlaybackUrl(sessionId = 123L)
         val hlsUrl = JvmReverseProxyServer.wrapHlsResourceUrl(
             sessionId = 123L,
-            resourceUrl = "https://example.test/segment.ts",
+            resourceUrl = "${ApiConstants.HTTPS}example.test/segment.ts",
             type = "segment",
             cacheable = true,
         )
@@ -87,7 +88,7 @@ class JvmReverseProxyServerTest {
     ): CacheSessionSnapshot {
         return CacheSessionSnapshot(
             id = 1L,
-            sourceUrl = "https://example.test/song.mp3",
+            sourceUrl = "${ApiConstants.HTTPS}example.test/song.mp3",
             totalBytes = totalBytes,
             downloadedBytes = 0L,
             status = status,

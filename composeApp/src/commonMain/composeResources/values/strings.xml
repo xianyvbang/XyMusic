@@ -255,11 +255,11 @@
     <string name="lyrics_single_api_desc">参考 /lyrics：按 title/artist/album 查询，返回 LRC 文本</string>
     <string name="lyrics_api_auth_key">歌词接口鉴权 Key</string>
     <string name="lyrics_api_auth_key_desc">可选，按接口文档使用请求头 auth</string>
-    <string name="lyrics_single_api_hint">https://api.lrc.cx/lyrics</string>
+    <string name="lyrics_single_api_hint">api.lrc.cx/lyrics</string>
     <string name="lyrics_api_auth_key_hint">可留空</string>
     <string name="custom_cover_api">自定义封面接口</string>
     <string name="custom_cover_api_desc">参考 /cover：按 title/artist/album 查询，返回封面地址</string>
-    <string name="custom_cover_api_hint">https://api.lrc.cx/cover</string>
+    <string name="custom_cover_api_hint">api.lrc.cx/cover</string>
     <string name="cache_location">缓存位置</string>
     <string name="song_cache_location">歌曲存储位置</string>
     <string name="connection_management">连接管理</string>
@@ -475,7 +475,7 @@
     <string name="modify_connection">修改连接</string>
     <string name="connection_address_or_username_cannot_be_empty">连接地址或用户名不能为空</string>
     <string name="fetching_resources">正在获取资源</string>
-    <string name="connection_address_hint">连接地址:http://192.168.1.2:8096</string>
+    <string name="connection_address_hint">连接地址:%1$s192.168.1.2:8096</string>
     <string name="download_status_queued">排队中</string>
     <string name="tap_to_resume_download">点击继续下载</string>
     <string name="download_completed">下载完成</string>

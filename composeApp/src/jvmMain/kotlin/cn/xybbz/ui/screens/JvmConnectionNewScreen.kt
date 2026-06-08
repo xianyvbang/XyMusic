@@ -80,6 +80,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -877,7 +878,7 @@ private fun JvmConnectionNewFormPanel(
                         label = "服务地址",
                         text = address,
                         onChange = onAddressChange,
-                        hint = "http://192.168.1.12:${selectedDataSource.httpPort}",
+                        hint = "${ApiConstants.HTTP}192.168.1.12:${selectedDataSource.httpPort}",
                         keyboardType = KeyboardType.Uri,
                         leadingIcon = painterResource(Res.drawable.http_24px),
                         actionContent = if (address.isNotBlank()) {
@@ -1189,7 +1190,7 @@ private fun JvmConnectionNewSummaryContent(
     JvmConnectionNewMetaRow(
         label = "地址",
         value = if (selectedDataSource.ifInputUrl) {
-            address.removePrefix("http://").removePrefix("https://").ifBlank { "未填写" }
+            address.removePrefix(ApiConstants.HTTP).removePrefix(ApiConstants.HTTPS).ifBlank { "未填写" }
         } else {
             "自动发现"
         }

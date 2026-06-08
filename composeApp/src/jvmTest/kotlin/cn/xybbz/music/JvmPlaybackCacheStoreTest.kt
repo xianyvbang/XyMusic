@@ -1,5 +1,6 @@
 package cn.xybbz.music
 
+import cn.xybbz.api.constants.ApiConstants
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -24,7 +25,7 @@ class JvmPlaybackCacheStoreTest {
         val entry = store.openEntry(
             cacheKey = "song-1",
             safeCacheKey = "song-1",
-            sourceUrl = "https://example.test/song.mp3",
+            sourceUrl = "${ApiConstants.HTTPS}example.test/song.mp3",
             totalBytes = 10,
         )
 
@@ -49,7 +50,7 @@ class JvmPlaybackCacheStoreTest {
         val entry = store.openEntry(
             cacheKey = "song-2",
             safeCacheKey = "song-2",
-            sourceUrl = "https://example.test/song.flac",
+            sourceUrl = "${ApiConstants.HTTPS}example.test/song.flac",
             totalBytes = 20,
         )
 
@@ -74,7 +75,7 @@ class JvmPlaybackCacheStoreTest {
         val entry = store.openEntry(
             cacheKey = "song-overlap",
             safeCacheKey = "song-overlap",
-            sourceUrl = "https://example.test/song-overlap.mp3",
+            sourceUrl = "${ApiConstants.HTTPS}example.test/song-overlap.mp3",
             totalBytes = 20,
         )
 
@@ -102,7 +103,7 @@ class JvmPlaybackCacheStoreTest {
         val entry = store.openEntry(
             cacheKey = "song-3",
             safeCacheKey = "song-3",
-            sourceUrl = "https://example.test/song.aac",
+            sourceUrl = "${ApiConstants.HTTPS}example.test/song.aac",
             totalBytes = 8,
         )
 

@@ -373,7 +373,7 @@ class PlexApiClient : DefaultParentApiClient() {
     suspend fun plexLogin(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
         val responseData =
             userApi().authenticateByName(
-                "https://plex.tv/api/v2/users/signin",
+                "${ApiConstants.HTTPS}plex.tv/api/v2/users/signin",
                 clientLoginInfoReq.toPlexLogin()
             )
         logger.info { "返回响应值: $responseData" }

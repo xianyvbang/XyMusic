@@ -1,6 +1,7 @@
 package cn.xybbz.proxy
 
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.music.CacheStatus
 import cn.xybbz.music.CacheStreamResult
 import cn.xybbz.music.HlsResourceKind
@@ -154,7 +155,7 @@ object JvmReverseProxyServer : KoinComponent {
                 }
             ).start(wait = false)
             logger.info {
-                "本地反向代理服务已启动：http://$PROXY_HOST:$PROXY_PORT/proxy，" +
+                "本地反向代理服务已启动：${ApiConstants.HTTP}$PROXY_HOST:$PROXY_PORT/proxy，" +
                         "worker=$proxyWorkerThreadCount，call=$proxyCallThreadCount，" +
                         "runningLimit=$proxyRunningRequestLimit"
             }
@@ -712,7 +713,7 @@ object JvmReverseProxyServer : KoinComponent {
 
     private fun localProxyUrl(pathAndQuery: String): String {
         val separator = if ('?' in pathAndQuery) "&" else "?"
-        return "http://$PROXY_HOST:$PROXY_PORT$pathAndQuery$separator$ACCESS_TOKEN_PARAMETER=$accessToken"
+        return "${ApiConstants.HTTP}$PROXY_HOST:$PROXY_PORT$pathAndQuery$separator$ACCESS_TOKEN_PARAMETER=$accessToken"
     }
 
     internal fun isValidAccessToken(token: String?): Boolean {
@@ -735,7 +736,7 @@ object JvmReverseProxyServer : KoinComponent {
 
     /**
      * 判断目标地址是否再次指向当前代理入口。
-     * 该校验可以防止 /proxy?url=http://localhost:19180/proxy?... 造成递归代理。
+     * 该校验可以防止指向 localhost 代理入口的递归代理。
      */
     private fun isSelfProxyUrl(targetUrl: Url): Boolean {
         val normalizedHost = targetUrl.host.lowercase()
