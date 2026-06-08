@@ -37,6 +37,7 @@ import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -110,6 +111,14 @@ interface IDataSourceServer : AutoCloseable, KoinComponent {
      * 获得专辑,艺术家,音频,歌单数量
      */
     suspend fun getDataInfoCount(connectionId: Long)
+
+    /**
+     * 按需刷新专辑,艺术家,音频,歌单数量
+     */
+    suspend fun refreshDataInfoCountIfNeeded(
+        connectionId: Long,
+        force: Boolean = false
+    ): XyDataCount?
 
     /**
      * 初始化收藏数据
@@ -304,6 +313,11 @@ interface IDataSourceServer : AutoCloseable, KoinComponent {
      * 获取歌单列表
      */
     suspend fun getPlaylists(): List<XyAlbum>?
+
+    /**
+     * 按需获取歌单列表
+     */
+    suspend fun refreshPlaylistsIfNeeded(force: Boolean = false): List<XyAlbum>?
 
     /**
      * 增加歌单

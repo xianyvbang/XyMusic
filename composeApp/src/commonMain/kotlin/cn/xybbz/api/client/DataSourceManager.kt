@@ -55,6 +55,7 @@ import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -650,6 +651,23 @@ open class DataSourceManager(
         requireDataSourceServer().getDataInfoCount(connectionId)
     }
 
+    /**
+     * 按需刷新专辑,艺术家,音频,歌单数量
+     */
+    override suspend fun refreshDataInfoCountIfNeeded(
+        connectionId: Long,
+        force: Boolean
+    ): XyDataCount? {
+        val server = currentDataSourceServerOrNull()
+            ?: return db.dataCountDao.selectOne(connectionId)
+        return try {
+            server.refreshDataInfoCountIfNeeded(connectionId, force)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "按需刷新统计数量失败", e)
+            db.dataCountDao.selectOne(connectionId)
+        }
+    }
+
 
     /**
      * 初始化收藏数据
@@ -1036,6 +1054,20 @@ open class DataSourceManager(
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
             null
+        }
+    }
+
+    /**
+     * 按需获取歌单列表
+     */
+    override suspend fun refreshPlaylistsIfNeeded(force: Boolean): List<XyAlbum>? {
+        // 首次打开添加歌单弹窗时可能还没完成自动登录，未就绪就跳过这次远程刷新。
+        val server = currentDataSourceServerOrNull() ?: return db.albumDao.selectPlaylist()
+        return try {
+            server.refreshPlaylistsIfNeeded(force)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "按需获取歌单失败", e)
+            db.albumDao.selectPlaylist()
         }
     }
 

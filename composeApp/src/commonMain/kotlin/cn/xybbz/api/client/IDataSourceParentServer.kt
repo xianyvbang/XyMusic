@@ -43,6 +43,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.info.shouldShowLoginMessageTips
+import cn.xybbz.config.ifSyncDataInfoCountAfterLogin
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.database.withTransaction
@@ -97,6 +98,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.jetbrains.compose.resources.getString
 import org.koin.core.component.get
 import xymusic_kmp.composeapp.generated.resources.Res
@@ -137,6 +140,16 @@ abstract class IDataSourceParentServer(
 
 
     private var ifTmpObject = false
+
+    /**
+     * 统计数量刷新锁，避免登录同步和首页下拉同时请求统计接口。
+     */
+    private val dataInfoCountRefreshMutex = Mutex()
+
+    /**
+     * 歌单刷新锁，避免首页刷新和添加歌单弹窗同时请求歌单接口。
+     */
+    private val playlistRefreshMutex = Mutex()
 
     init {
         createScope()
@@ -1034,6 +1047,78 @@ abstract class IDataSourceParentServer(
         }
     }
 
+    /**
+     * 按需刷新专辑,艺术家,音频,歌单数量。
+     * 登录后台同步和首页下拉刷新共用该入口，避免同一连接短时间重复请求统计接口。
+     */
+    override suspend fun refreshDataInfoCountIfNeeded(
+        connectionId: Long,
+        force: Boolean
+    ): XyDataCount? {
+        return dataInfoCountRefreshMutex.withLock {
+            val remoteId = RemoteIdConstants.DATA_INFO_COUNT + connectionId
+            val lastRefreshTime = db.remoteCurrentDao
+                .remoteKeyById(remoteId)
+                ?.createTime ?: 0L
+            val now = Clock.System.now().toEpochMilliseconds()
+            val refreshInterval = if (force) {
+                Constants.PAGE_TIME_FAILURE.minutes
+            } else {
+                Constants.HOME_PAGE_TIME_FAILURE.minutes
+            }
+
+            if (now - lastRefreshTime < refreshInterval.inWholeMilliseconds) {
+                return@withLock db.dataCountDao.selectOne(connectionId)
+            }
+
+            getDataInfoCount(connectionId)
+            db.remoteCurrentDao.insertOrReplace(
+                RemoteCurrent(
+                    id = remoteId,
+                    connectionId = connectionId,
+                    refresh = false,
+                    createTime = now
+                )
+            )
+            db.dataCountDao.selectOne(connectionId)
+        }
+    }
+
+    /**
+     * 按需刷新服务端歌单列表。
+     * 首页刷新和添加歌单弹窗共用该入口，避免短时间重复请求歌单接口。
+     */
+    override suspend fun refreshPlaylistsIfNeeded(force: Boolean): List<XyAlbum>? {
+        return playlistRefreshMutex.withLock {
+            val connectionId = getConnectionId()
+            val remoteId = RemoteIdConstants.PLAYLISTS + connectionId
+            val lastRefreshTime = db.remoteCurrentDao
+                .remoteKeyById(remoteId)
+                ?.createTime ?: 0L
+            val now = Clock.System.now().toEpochMilliseconds()
+            val refreshInterval = if (force) {
+                Constants.PAGE_TIME_FAILURE.minutes
+            } else {
+                Constants.HOME_PAGE_TIME_FAILURE.minutes
+            }
+
+            if (now - lastRefreshTime < refreshInterval.inWholeMilliseconds) {
+                return@withLock db.albumDao.selectPlaylist()
+            }
+
+            getPlaylists()
+            db.remoteCurrentDao.insertOrReplace(
+                RemoteCurrent(
+                    id = remoteId,
+                    connectionId = connectionId,
+                    refresh = false,
+                    createTime = now
+                )
+            )
+            db.albumDao.selectPlaylist()
+        }
+    }
+
 
     /**
      * 创建歌单
@@ -1423,14 +1508,16 @@ abstract class IDataSourceParentServer(
                 val remoteId = RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionId
 
                 initFavoriteData(connectionId = connectionId)
-                try {
-                    getDataInfoCount(connectionId)
-                } catch (e: Exception) {
-                    Log.e(
-                        Constants.LOG_ERROR_PREFIX,
-                        "failed to fetch media/album/artist/favorite/genre counts",
-                        e
-                    )
+                if (ifSyncDataInfoCountAfterLogin) {
+                    try {
+                        refreshDataInfoCountIfNeeded(connectionId)
+                    } catch (e: Exception) {
+                        Log.e(
+                            Constants.LOG_ERROR_PREFIX,
+                            "failed to fetch media/album/artist/favorite/genre counts",
+                            e
+                        )
+                    }
                 }
 
                 try {

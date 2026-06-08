@@ -37,6 +37,7 @@ import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.config.download.enqueueMusicDownload
+import cn.xybbz.config.ifLoadHomeRefreshAuxiliaryData
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.recommender.DailyRecommender
@@ -198,9 +199,10 @@ class HomeViewModel(
 
     /**
      * 获得服务端歌单
+     * @param [force] 是否按用户手动刷新语义请求歌单。
      */
-    suspend fun getServerPlaylists() {
-        dataSourceManager.getPlaylists()
+    suspend fun getServerPlaylists(force: Boolean = false) {
+        dataSourceManager.refreshPlaylistsIfNeeded(force)
     }
 
     /**
@@ -276,14 +278,19 @@ class HomeViewModel(
             onEnd?.invoke(false)
             return
         }
-        refreshDataAll(onEnd, isRefresh)
+        refreshDataAll(onEnd, isRefresh, reason)
         DataRefreshEstimateUtils.updateHomeRefreshTime(connectionId, db, key)
     }
 
     /**
      * 刷新数据
+     * @param [reason] 首页刷新原因，用于区分用户手动下拉和登录自动刷新。
      */
-    fun refreshDataAll(onEnd: ((Boolean) -> Unit)? = null, isRefresh: Boolean = false) {
+    fun refreshDataAll(
+        onEnd: ((Boolean) -> Unit)? = null,
+        isRefresh: Boolean = false,
+        reason: HomeRefreshReason = HomeRefreshReason.EnterHome
+    ) {
         isRefreshing = true
         viewModelScope.launch {
             if (dataSourceManager.ifLoginError) {
@@ -292,21 +299,30 @@ class HomeViewModel(
                 }
             } else {
                 Log.i("home", "开始刷新数据")
-                val mostPlayerMusicAsync = async {
-                    dataSourceManager.getMostPlayerMusicList()
-                }
-                val newestAlbumAsync = async {
-                    dataSourceManager.getNewestAlbumList()
-                }
-                val playRecordMusicOrAlbumAsync = async {
-                    dataSourceManager.playRecordMusicOrAlbumList()
-                }
+                // 首页基础刷新任务，JVM 端只保留这些核心数据。
+                val refreshTasks = mutableListOf(
+                    async {
+                        dataSourceManager.getMostPlayerMusicList()
+                    },
+                    async {
+                        dataSourceManager.getNewestAlbumList()
+                    },
+                    async {
+                        dataSourceManager.playRecordMusicOrAlbumList()
+                    }
+                )
 
-                val playlistsAsync = async {
-                    getServerPlaylists()
-                }
-                val dataCountAsync = async {
-                    getServerDataCount()
+                if (ifLoadHomeRefreshAuxiliaryData) {
+                    refreshTasks.add(
+                        async {
+                            getServerPlaylists(reason == HomeRefreshReason.Manual)
+                        }
+                    )
+                    refreshTasks.add(
+                        async {
+                            getServerDataCount(reason == HomeRefreshReason.Manual)
+                        }
+                    )
                 }
 
                 if (isRefresh)
@@ -314,13 +330,7 @@ class HomeViewModel(
                         generateRecommendedMusicList()
                     }
 
-                awaitAll(
-                    mostPlayerMusicAsync,
-                    newestAlbumAsync,
-                    playRecordMusicOrAlbumAsync,
-                    playlistsAsync,
-                    dataCountAsync
-                )
+                refreshTasks.awaitAll()
             }
             isRefreshing = false
             onEnd?.invoke(false)
@@ -350,10 +360,10 @@ class HomeViewModel(
     }
 
     /**
-     * 获得数据数量
+     * 按需刷新服务端统计数量，移动端下拉刷新可请求强制刷新但仍会走短冷却。
      */
-    private suspend fun getServerDataCount() {
-        dataSourceManager.getDataInfoCount(dataSourceManager.getConnectionId())
+    private suspend fun getServerDataCount(force: Boolean = false) {
+        dataSourceManager.refreshDataInfoCountIfNeeded(dataSourceManager.getConnectionId(), force)
     }
 
     private suspend fun generateRecommendedMusicList() {

@@ -60,4 +60,14 @@ object RemoteIdConstants {
      */
     const val MEDIA_LIBRARY_AND_FAVORITE = "mediaLibraryAndFavorite"
 
+    /**
+     * 服务端统计数量刷新时间
+     */
+    const val DATA_INFO_COUNT = "dataInfoCount"
+
+    /**
+     * 服务端歌单列表刷新时间
+     */
+    const val PLAYLISTS = "playlists"
+
 }

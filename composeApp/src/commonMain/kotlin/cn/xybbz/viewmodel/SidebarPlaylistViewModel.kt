@@ -72,7 +72,7 @@ class SidebarPlaylistViewModel(
 
     fun refreshPlaylists() {
         viewModelScope.launch {
-            dataSourceManager.getPlaylists()
+            dataSourceManager.refreshPlaylistsIfNeeded()
         }
     }
 

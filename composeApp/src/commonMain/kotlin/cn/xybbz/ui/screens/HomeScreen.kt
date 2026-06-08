@@ -767,7 +767,7 @@ internal fun MobileHomeScreen(
                                             ifShowPlaylistMenu = false
                                             coroutineScope.launch {
                                                 ifRefreshingPlaylist = true
-                                                homeViewModel.getServerPlaylists()
+                                                homeViewModel.getServerPlaylists(force = true)
                                             }.invokeOnCompletion {
                                                 ifRefreshingPlaylist = false
                                             }

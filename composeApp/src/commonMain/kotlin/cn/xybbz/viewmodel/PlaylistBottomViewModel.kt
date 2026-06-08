@@ -24,7 +24,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.utils.Log
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import kotlinx.coroutines.Job
@@ -87,7 +86,6 @@ class PlaylistBottomViewModel(
 
 
     suspend fun getServerPlaylists() {
-        Log.i("=====", "获得歌单数据")
-        dataSourceManager.getPlaylists()
+        dataSourceManager.refreshPlaylistsIfNeeded(force = true)
     }
 }
