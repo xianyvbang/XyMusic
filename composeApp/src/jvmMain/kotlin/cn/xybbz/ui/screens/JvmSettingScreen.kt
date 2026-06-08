@@ -62,6 +62,7 @@ import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -412,18 +413,18 @@ private fun JvmSettingOverview(
         // 概览区和下方主体使用同一个宽度基准，保证三张 item 总宽与下面内容对齐。
         val contentWidth = minOf(maxWidth, JvmSettingPageContentMaxWidth)
         val tileWidth = if (useThreeColumns) {
-            // 三列时扣除两个横向间距，再平均分配每张卡片宽度。
-            (contentWidth - gap * 2) / 3f
+            // 三列时扣除横向间距，再平均分配每张卡片宽度。
+            (contentWidth - gap) / 3f
         } else {
             // 单列时铺满可用宽度，避免窄屏出现过窄卡片。
             maxWidth
         }
 
-        JvmSettingFlowRow(
+        XyRow(
             modifier = Modifier.fillMaxWidth(),
             // 卡片不再铺满整行时居中摆放，视觉上更接近预览稿。
             horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(gap),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             JvmSettingOverviewTile(
                 modifier = Modifier.width(tileWidth),

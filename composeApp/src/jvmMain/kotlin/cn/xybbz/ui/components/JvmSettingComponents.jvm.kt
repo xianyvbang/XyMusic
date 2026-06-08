@@ -197,7 +197,7 @@ internal fun JvmSettingPageScaffold(
     modifier: Modifier = Modifier,
     contentMaxWidth: Dp,
     contentPadding: PaddingValues = PaddingValues(
-        horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
+        horizontal = XyTheme.dimens.outerHorizontalPadding,
     ),
     verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(
         XyTheme.dimens.outerVerticalPadding * 2
