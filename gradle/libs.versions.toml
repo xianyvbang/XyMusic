@@ -3,6 +3,10 @@ agp = "9.2.1"
 android-compileSdk = "36"
 android-minSdk = "28"
 android-targetSdk = "36"
+# Android versionCode 使用的应用版本号。
+app-versionCode = "1"
+# Android versionName 与桌面端 packageVersion 共用的应用版本名。
+app-versionName = "1.0.0"
 androidx-activity = "1.13.0"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.18.0"

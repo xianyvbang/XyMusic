@@ -6,11 +6,14 @@ import java.net.InetAddress
 
 private const val DESKTOP_PLATFORM_NAME = "Desktop"
 private const val UNKNOWN_DEVICE_NAME = "Unknown Device"
+// 桌面端包版本属性由 desktopApp 的 Gradle 配置注入。
+private const val DESKTOP_PACKAGE_VERSION_PROPERTY = "cn.xybbz.packageVersion"
 
 actual fun getPlatformInfo(contextWrapper: ContextWrapper): PlatformInfo {
     val osName = System.getProperty("os.name").orEmpty()
     val osVersion = System.getProperty("os.version").orEmpty()
-    val javaVersion = System.getProperty("java.version").orEmpty()
+    // 优先读取桌面端 packageVersion，避免关于页显示 Java 运行时版本。
+    val packageVersion = System.getProperty(DESKTOP_PACKAGE_VERSION_PROPERTY).orEmpty()
 
     val deviceName = runCatching {
         InetAddress.getLocalHost().hostName
@@ -23,9 +26,10 @@ actual fun getPlatformInfo(contextWrapper: ContextWrapper): PlatformInfo {
             }
         }.ifBlank { UNKNOWN_DEVICE_NAME }
 
-    val appVersion = PlatformInfo::class.java.`package`?.implementationVersion
-        ?.takeIf { it.isNotBlank() }
-        ?: javaVersion
+    val appVersion = packageVersion.takeIf { it.isNotBlank() }
+        ?: PlatformInfo::class.java.`package`?.implementationVersion
+            ?.takeIf { it.isNotBlank() }
+        ?: ""
 
     return PlatformInfo(
         appName = Constants.APP_NAME,

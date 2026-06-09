@@ -6,6 +6,9 @@ plugins {
     alias(libs.plugins.composeCompiler)
 }
 
+// 桌面端包版本与 Android versionName 统一由版本目录维护。
+val appVersionName = libs.versions.app.versionName.get()
+
 kotlin {
     dependencies {
         implementation(projects.composeApp)
@@ -27,11 +30,13 @@ kotlin {
 
 tasks.withType<JavaExec>().configureEach {
     systemProperty("compose.application.resources.dir", project.layout.projectDirectory.dir("resources/windows-x64"))
+    systemProperty("cn.xybbz.packageVersion", appVersionName)
 }
 
 compose.desktop {
     application {
         mainClass = "cn.xybbz.MainKt"
+        jvmArgs += listOf("-Dcn.xybbz.packageVersion=$appVersionName")
 
         buildTypes.release.proguard {
             obfuscate.set(true)
@@ -42,7 +47,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "cn.xybbz"
-            packageVersion = "1.0.0"
+            packageVersion = appVersionName
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
             linux {
                 // FileKit 的 Linux 原生文件选择器依赖该 JDK 模块访问系统认证/用户信息。
