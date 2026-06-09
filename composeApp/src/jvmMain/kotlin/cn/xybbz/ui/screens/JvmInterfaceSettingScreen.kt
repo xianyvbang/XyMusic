@@ -67,6 +67,8 @@ import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
+import cn.xybbz.ui.components.JvmSettingInterfaceMiniPreviewHeight
+import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -84,9 +86,6 @@ import xymusic_kmp.composeapp.generated.resources.return_setting_screen
 import xymusic_kmp.composeapp.generated.resources.settings_24px
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.xy.XyIconButton as IconButton
-
-private val JvmInterfaceSummaryWidth = 278.dp
-private val JvmInterfaceMiniPreviewHeight = 230.dp
 
 /**
  * 界面设置
@@ -143,7 +142,7 @@ fun JvmInterfaceSettingScreen(
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
-                width = JvmInterfaceSummaryWidth,
+                width = JvmSettingSummaryCardWidth,
                 prominentValue = true,
                 items = listOf(
                     JvmSettingStatusCardItem(label = "主题", value = themeLabel),
@@ -263,7 +262,7 @@ private fun JvmInterfaceMiniPreview(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = JvmInterfaceMiniPreviewHeight),
+            .heightIn(min = JvmSettingInterfaceMiniPreviewHeight),
         shape = RoundedCornerShape(XyTheme.dimens.corner),
         color = colorScheme.surfaceContainerLowest,
         border = BorderStroke(

@@ -51,6 +51,7 @@ import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
+import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.LanguageConfigViewModel
@@ -59,8 +60,6 @@ import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.label_24px
 import xymusic_kmp.composeapp.generated.resources.settings_24px
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
-
-private val JvmLanguageSummaryWidth = 278.dp
 
 /**
  * JVM 桌面端语言设置页面。
@@ -88,7 +87,7 @@ fun JvmLanguageConfigScreen(
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
-                width = JvmLanguageSummaryWidth,
+                width = JvmSettingSummaryCardWidth,
                 prominentValue = true,
                 items = listOf(
                     JvmSettingStatusCardItem(label = "语言模式", value = languageModeLabel),

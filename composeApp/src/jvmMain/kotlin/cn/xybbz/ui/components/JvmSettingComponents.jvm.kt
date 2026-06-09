@@ -84,6 +84,75 @@ import xymusic_kmp.composeapp.generated.resources.download_max_list
 /** JVM 设置类页面主体最大宽度，设置页、关于页和存储管理页共用。 */
 internal val JvmSettingPageContentMaxWidth = 1080.dp
 
+/** JVM 设置页头部标准摘要卡宽度，复用在缓存、界面、语言和背景等页面。 */
+internal val JvmSettingSummaryCardWidth = 278.dp
+
+/** JVM 设置页头部较宽摘要卡宽度，适合连接、代理和媒体库等信息密度更高的页面。 */
+internal val JvmSettingSummaryCardWideWidth = 284.dp
+
+/** JVM 设置页头部紧凑摘要卡宽度，适合自定义接口页的保存按钮组合。 */
+internal val JvmSettingSummaryCardCompactWidth = 268.dp
+
+/** JVM 设置页概览区切换为三列卡片的宽度断点。 */
+internal val JvmSettingOverviewThreeColumnWidth = 760.dp
+
+/** JVM 设置页小型概览卡的最小宽度。 */
+internal val JvmSettingOverviewTileMinWidth = 140.dp
+
+/** JVM 设置页连接列表卡片双列布局的单卡最小宽度。 */
+internal val JvmSettingConnectionCardMinWidth = 240.dp
+
+/** JVM 设置页连接管理面板切换为左右双栏的宽度断点。 */
+internal val JvmSettingConnectionBoardTwoPaneBreakpoint = 900.dp
+
+/** JVM 设置页连接卡片头像尺寸。 */
+internal val JvmSettingConnectionAvatarSize = 50.dp
+
+/** JVM 设置页连接详情头像尺寸。 */
+internal val JvmSettingConnectionDetailAvatarSize = 56.dp
+
+/** JVM 设置页连接表单卡片的最小高度。 */
+internal val JvmSettingConnectionFormCardMinHeight = 118.dp
+
+/** JVM 设置页较高入口卡片高度，适合长说明或档位选择卡片。 */
+internal val JvmSettingTallActionCardHeight = 168.dp
+
+/** JVM 设置页中等入口卡片高度，适合播放质量和格式选择卡片。 */
+internal val JvmSettingComfortActionCardHeight = 160.dp
+
+/** JVM 设置页代理模式卡片高度，保持分段模式选择的统一视觉高度。 */
+internal val JvmSettingProxyModeCardHeight = 158.dp
+
+/** JVM 设置页自定义接口端点卡片切换为双列的宽度断点。 */
+internal val JvmSettingCustomApiEndpointGridBreakpoint = 620.dp
+
+/** JVM 设置页自定义接口参数令牌切换为双列的宽度断点。 */
+internal val JvmSettingCustomApiTokenGridBreakpoint = 460.dp
+
+/** JVM 设置页背景预览叠加层在窄宽度下隐藏侧栏的断点。 */
+internal val JvmSettingBackgroundPreviewCompactBreakpoint = 560.dp
+
+/** JVM 设置页背景预览中模拟桌面播放器的底栏高度。 */
+internal val JvmSettingBackgroundPreviewPlayerHeight = 58.dp
+
+/** JVM 设置页背景预览中模拟桌面顶栏的高度。 */
+internal val JvmSettingBackgroundPreviewTopBarHeight = 44.dp
+
+/** JVM 设置页背景预览中模拟桌面侧栏的宽度。 */
+internal val JvmSettingBackgroundPreviewSideWidth = 124.dp
+
+/** JVM 设置页媒体库概览卡片切换为双列的宽度断点。 */
+internal val JvmSettingLibraryOverviewTwoColumnWidth = 640.dp
+
+/** JVM 设置页媒体库列表单行最小高度。 */
+internal val JvmSettingLibraryRowMinHeight = 76.dp
+
+/** JVM 设置页媒体库头像尺寸。 */
+internal val JvmSettingLibraryAvatarSize = 46.dp
+
+/** JVM 设置页界面预览卡片的最小高度。 */
+internal val JvmSettingInterfaceMiniPreviewHeight = 230.dp
+
 /** JVM 设置类页面头部状态卡的默认固定宽度。 */
 private val JvmSettingStatusCardDefaultWidth = 248.dp
 
@@ -109,7 +178,7 @@ private val JvmSettingActionCardMaxWidth = 196.dp
 private val JvmSettingActionCardHeight = 148.dp
 
 /** 带底部状态文本的入口卡片需要额外高度，避免状态文字贴底被裁切。 */
-private val JvmSettingActionCardWithStatusHeight = 160.dp
+private val JvmSettingActionCardWithStatusHeight = JvmSettingComfortActionCardHeight
 
 /** 通用入口卡片移入时的上移距离，保持与专辑卡片 hover 反馈一致。 */
 private val JvmSettingActionCardLiftOffset = (-6).dp

@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGridArrangement
+import cn.xybbz.ui.components.JvmSettingComfortActionCardHeight
+import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -50,9 +52,6 @@ import xymusic_kmp.composeapp.generated.resources.transcoding_format
 import xymusic_kmp.composeapp.generated.resources.volume_up_24px
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 
-private val QualityActionCardHeight = 160.dp
-private val FormatActionCardHeight = 160.dp
-
 @Composable
 fun JvmStreamingQualityScreen(
     streamingQualityViewModel: StreamingQualityViewModel = koinViewModel<StreamingQualityViewModel>(),
@@ -67,7 +66,7 @@ fun JvmStreamingQualityScreen(
         ?.name
         ?: streamingQualityViewModel.transcodeFormat.uppercase()
 
-    JvmSettingPageScaffold(contentMaxWidth = 1060.dp) {
+    JvmSettingPageScaffold(contentMaxWidth = JvmSettingPageContentMaxWidth) {
         JvmSettingPageHeader(
             title = pageTitle,
             description = "选择桌面端播放时使用的在线音频品质和服务端转码格式。当前桌面端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。",
@@ -108,7 +107,7 @@ fun JvmStreamingQualityScreen(
                     )
                 },
                 arrangement = JvmSettingActionGridArrangement.Horizontal,
-                cardHeight = QualityActionCardHeight,
+                cardHeight = JvmSettingComfortActionCardHeight,
             )
         }
 
@@ -142,7 +141,7 @@ fun JvmStreamingQualityScreen(
                         )
                     },
                     arrangement = JvmSettingActionGridArrangement.Horizontal,
-                    cardHeight = FormatActionCardHeight,
+                    cardHeight = JvmSettingComfortActionCardHeight,
                 )
             }
         }

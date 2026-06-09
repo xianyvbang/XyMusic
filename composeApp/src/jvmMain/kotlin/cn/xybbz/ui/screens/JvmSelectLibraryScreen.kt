@@ -70,6 +70,10 @@ import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
+import cn.xybbz.ui.components.JvmSettingLibraryAvatarSize
+import cn.xybbz.ui.components.JvmSettingLibraryOverviewTwoColumnWidth
+import cn.xybbz.ui.components.JvmSettingLibraryRowMinHeight
+import cn.xybbz.ui.components.JvmSettingSummaryCardWideWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -94,18 +98,6 @@ import xymusic_kmp.composeapp.generated.resources.refresh_24px
 import xymusic_kmp.composeapp.generated.resources.restart_alt_24px
 import xymusic_kmp.composeapp.generated.resources.settings_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
-
-/** JVM 媒体库选择页头部状态卡宽度。 */
-private val JvmSelectLibrarySummaryWidth = 284.dp
-
-/** JVM 媒体库选择页概览卡片双列断点。 */
-private val JvmSelectLibraryOverviewTwoColumnWidth = 640.dp
-
-/** JVM 媒体库列表单行最小高度。 */
-private val JvmSelectLibraryRowMinHeight = 76.dp
-
-/** JVM 媒体库头像尺寸。 */
-private val JvmSelectLibraryAvatarSize = 46.dp
 
 /**
  * JVM 桌面端媒体库选择页面。
@@ -175,7 +167,7 @@ fun JvmSelectLibraryScreen(
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
-                width = JvmSelectLibrarySummaryWidth,
+                width = JvmSettingSummaryCardWideWidth,
                 prominentValue = true,
                 items = listOf(
                     JvmSettingStatusCardItem(label = "数据源", value = dataSourceLabel),
@@ -265,7 +257,7 @@ private fun JvmSelectLibraryOverview(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        val useTwoColumns = maxWidth >= JvmSelectLibraryOverviewTwoColumnWidth
+        val useTwoColumns = maxWidth >= JvmSettingLibraryOverviewTwoColumnWidth
         val tileWidth = if (useTwoColumns) {
             (maxWidth - gap) / 2
         } else {
@@ -368,7 +360,7 @@ private fun JvmSelectLibraryRow(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = JvmSelectLibraryRowMinHeight)
+            .heightIn(min = JvmSettingLibraryRowMinHeight)
             .selectable(
                 selected = selected,
                 role = selectorRole,
@@ -459,7 +451,7 @@ private fun JvmSelectLibraryAvatar(
 
     Box(
         modifier = Modifier
-            .size(JvmSelectLibraryAvatarSize)
+            .size(JvmSettingLibraryAvatarSize)
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
             .background(accentColor.copy(alpha = if (selected || isAllLibrary) 0.22f else 0.14f))
             .border(

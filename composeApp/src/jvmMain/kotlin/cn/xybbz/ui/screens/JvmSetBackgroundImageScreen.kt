@@ -59,6 +59,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.components.JvmSettingBaseRow
+import cn.xybbz.ui.components.JvmSettingBackgroundPreviewCompactBreakpoint
+import cn.xybbz.ui.components.JvmSettingBackgroundPreviewPlayerHeight
+import cn.xybbz.ui.components.JvmSettingBackgroundPreviewSideWidth
+import cn.xybbz.ui.components.JvmSettingBackgroundPreviewTopBarHeight
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
@@ -67,6 +71,7 @@ import cn.xybbz.ui.components.JvmSettingRowDescriptionStyle
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
+import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.components.rememberBackgroundImagePicker
 import cn.xybbz.ui.ext.composeClick
@@ -90,21 +95,6 @@ import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
 import xymusic_kmp.composeapp.generated.resources.select_image
 import xymusic_kmp.composeapp.generated.resources.settings_24px
 import xymusic_kmp.composeapp.generated.resources.visibility_24px
-
-/** JVM 背景设置页头部摘要卡宽度。 */
-private val JvmBackgroundSummaryWidth = 278.dp
-
-/** JVM 背景预览叠加层在窄宽度下隐藏侧栏的断点。 */
-private val JvmBackgroundPreviewCompactBreakpoint = 560.dp
-
-/** JVM 背景预览中模拟桌面播放器的底栏高度。 */
-private val JvmBackgroundPreviewPlayerHeight = 58.dp
-
-/** JVM 背景预览中模拟桌面顶栏的高度。 */
-private val JvmBackgroundPreviewTopBarHeight = 44.dp
-
-/** JVM 背景预览中模拟桌面侧栏的宽度。 */
-private val JvmBackgroundPreviewSideWidth = 124.dp
 
 /** JVM 背景信息行展示数据。 */
 private data class JvmBackgroundInfoRow(
@@ -155,7 +145,7 @@ fun JvmSetBackgroundImageScreen(
                 contentMaxWidth = JvmSettingPageContentMaxWidth,
             ) {
                 JvmSettingStatusCard(
-                    width = JvmBackgroundSummaryWidth,
+                    width = JvmSettingSummaryCardWidth,
                     prominentValue = true,
                     items = listOf(
                         JvmSettingStatusCardItem(label = "当前状态", value = if (imageSelected) "已选择" else "未选择"),
@@ -355,7 +345,7 @@ private fun JvmBackgroundMockTopBar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(JvmBackgroundPreviewTopBarHeight)
+            .height(JvmSettingBackgroundPreviewTopBarHeight)
             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.54f))
             .border(
                 BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
@@ -389,13 +379,13 @@ private fun JvmBackgroundMockTopBar() {
 @Composable
 private fun JvmBackgroundMockMainArea(modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        val showSideBar = maxWidth >= JvmBackgroundPreviewCompactBreakpoint
+        val showSideBar = maxWidth >= JvmSettingBackgroundPreviewCompactBreakpoint
 
         Row(modifier = Modifier.fillMaxSize()) {
             if (showSideBar) {
                 Column(
                     modifier = Modifier
-                        .width(JvmBackgroundPreviewSideWidth)
+                        .width(JvmSettingBackgroundPreviewSideWidth)
                         .fillMaxHeight()
                         .background(MaterialTheme.colorScheme.background.copy(alpha = 0.42f))
                         .border(
@@ -444,7 +434,7 @@ private fun JvmBackgroundMockPlayerBar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(JvmBackgroundPreviewPlayerHeight)
+            .height(JvmSettingBackgroundPreviewPlayerHeight)
             .background(MaterialTheme.colorScheme.background.copy(alpha = 0.72f))
             .border(
                 BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),

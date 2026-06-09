@@ -67,6 +67,8 @@ import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
+import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
+import cn.xybbz.ui.components.JvmSettingTallActionCardHeight
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.CacheLimitViewModel
@@ -81,16 +83,6 @@ import xymusic_kmp.composeapp.generated.resources.info_24px
 import xymusic_kmp.composeapp.generated.resources.music_cache_limit_title
 import xymusic_kmp.composeapp.generated.resources.music_note_24px
 import xymusic_kmp.composeapp.generated.resources.speed_24px
-
-/**
- * 右上角摘要状态卡的固定宽度，和其它 JVM 设置页保持统一视觉节奏。
- */
-private val JvmCacheSummaryWidth = 278.dp
-
-/**
- * 缓存上限档位卡片的固定高度，避免不同文案长度造成网格跳动。
- */
-private val JvmCacheLimitActionCardHeight = 168.dp
 
 /**
  * JVM 桌面端音乐缓存上限设置页面。
@@ -152,7 +144,7 @@ fun JvmCacheLimitScreen(
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
-                width = JvmCacheSummaryWidth,
+                width = JvmSettingSummaryCardWidth,
                 prominentValue = true,
                 items = listOf(
                     JvmSettingStatusCardItem(label = "缓存上限", value = displayedLimitLabel),
@@ -186,7 +178,7 @@ fun JvmCacheLimitScreen(
                             },
                         ),
                         fillTwoColumnWidth = true,
-                        cardHeight = JvmCacheLimitActionCardHeight,
+                        cardHeight = JvmSettingTallActionCardHeight,
                     )
                 }
             },

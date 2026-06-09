@@ -64,8 +64,13 @@ import cn.xybbz.router.ConnectionInfo
 import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.JvmSettingBaseRow
+import cn.xybbz.ui.components.JvmSettingConnectionAvatarSize
+import cn.xybbz.ui.components.JvmSettingConnectionBoardTwoPaneBreakpoint
+import cn.xybbz.ui.components.JvmSettingConnectionCardMinWidth
+import cn.xybbz.ui.components.JvmSettingConnectionDetailAvatarSize
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
+import cn.xybbz.ui.components.JvmSettingOverviewThreeColumnWidth
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
@@ -114,21 +119,6 @@ import xymusic_kmp.composeapp.generated.resources.library_add_24px
 import xymusic_kmp.composeapp.generated.resources.modify_connection
 import xymusic_kmp.composeapp.generated.resources.music_library
 import xymusic_kmp.composeapp.generated.resources.warning
-
-/** JVM 连接管理页概览卡三列布局断点。 */
-private val JvmConnectionOverviewThreeColumnWidth = 760.dp
-
-/** JVM 连接列表卡片双列布局的单卡最小宽度。 */
-private val JvmConnectionCardMinWidth = 240.dp
-
-/** JVM 连接管理页左右内容切换断点。 */
-private val JvmConnectionBoardTwoPaneBreakpoint = 900.dp
-
-/** JVM 连接卡片头像尺寸。 */
-private val JvmConnectionAvatarSize = 50.dp
-
-/** JVM 连接详情头像尺寸。 */
-private val JvmConnectionDetailAvatarSize = 56.dp
 
 /**
  * 连接设置列表。
@@ -215,7 +205,7 @@ fun JvmConnectionManagement(
             contentContainerEnabled = false,
         ) {
             JvmSettingResponsiveRow(
-                breakpoint = JvmConnectionBoardTwoPaneBreakpoint,
+                breakpoint = JvmSettingConnectionBoardTwoPaneBreakpoint,
                 leftWeight = 2.0f,
                 rightWeight = 0.8f,
                 horizontalGap = XyTheme.dimens.outerHorizontalPadding,
@@ -283,7 +273,7 @@ private fun JvmConnectionOverview(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        val useThreeColumns = maxWidth >= JvmConnectionOverviewThreeColumnWidth
+        val useThreeColumns = maxWidth >= JvmSettingOverviewThreeColumnWidth
         val contentWidth = minOf(maxWidth, JvmSettingPageContentMaxWidth)
         val tileWidth = if (useThreeColumns) {
             (contentWidth - gap * 2) / 3f
@@ -346,7 +336,7 @@ private fun JvmConnectionCardGrid(
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        val useTwoColumns = maxWidth >= JvmConnectionCardMinWidth * 2 + gap
+        val useTwoColumns = maxWidth >= JvmSettingConnectionCardMinWidth * 2 + gap
 
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -452,7 +442,7 @@ private fun JvmConnectionCard(
                 JvmConnectionAvatar(
                     connectionConfig = displayItem.config,
                     selected = selected,
-                    size = JvmConnectionAvatarSize,
+                    size = JvmSettingConnectionAvatarSize,
                 )
                 Column(
                     modifier = Modifier.weight(1f),
@@ -640,7 +630,7 @@ private fun JvmConnectionDetailHeader(displayItem: JvmConnectionDisplayItem) {
         JvmConnectionAvatar(
             connectionConfig = displayItem.config,
             selected = true,
-            size = JvmConnectionDetailAvatarSize,
+            size = JvmSettingConnectionDetailAvatarSize,
         )
         Column(
             modifier = Modifier.weight(1f),

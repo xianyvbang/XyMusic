@@ -63,6 +63,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.api.constants.ApiConstants
+import cn.xybbz.ui.components.JvmSettingCustomApiEndpointGridBreakpoint
+import cn.xybbz.ui.components.JvmSettingCustomApiTokenGridBreakpoint
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
@@ -72,6 +74,7 @@ import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingSwitchRow
+import cn.xybbz.ui.components.JvmSettingSummaryCardCompactWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyEdit
@@ -97,10 +100,6 @@ import xymusic_kmp.composeapp.generated.resources.password_24px
 import xymusic_kmp.composeapp.generated.resources.prioritize_music_service_api
 import xymusic_kmp.composeapp.generated.resources.save
 import xymusic_kmp.composeapp.generated.resources.settings_24px
-
-private val JvmCustomApiSummaryWidth = 268.dp
-private val JvmCustomApiEndpointGridBreakpoint = 620.dp
-private val JvmCustomApiTokenGridBreakpoint = 460.dp
 
 @Composable
 fun JvmCustomApiScreen(
@@ -301,11 +300,11 @@ private fun JvmCustomApiSummaryCard(
     onSave: () -> Unit,
 ) {
     Column(
-        modifier = Modifier.width(JvmCustomApiSummaryWidth),
+        modifier = Modifier.width(JvmSettingSummaryCardCompactWidth),
         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
     ) {
         JvmSettingStatusCard(
-            width = JvmCustomApiSummaryWidth,
+            width = JvmSettingSummaryCardCompactWidth,
             items = listOf(
                 JvmSettingStatusCardItem(label = "已配置端点", value = "$configuredEndpointCount / 2"),
                 JvmSettingStatusCardItem(label = "当前优先", value = priorityLabel),
@@ -337,7 +336,7 @@ private fun JvmCustomApiEndpointGrid(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        val cardWidth = if (maxWidth >= JvmCustomApiEndpointGridBreakpoint) {
+        val cardWidth = if (maxWidth >= JvmSettingCustomApiEndpointGridBreakpoint) {
             (maxWidth - gap) / 2f
         } else {
             maxWidth
@@ -556,7 +555,7 @@ private fun JvmCustomApiTokenGrid(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        val tokenWidth = if (maxWidth >= JvmCustomApiTokenGridBreakpoint) {
+        val tokenWidth = if (maxWidth >= JvmSettingCustomApiTokenGridBreakpoint) {
             (maxWidth - gap) / 2f
         } else {
             maxWidth

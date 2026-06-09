@@ -57,6 +57,7 @@ import cn.xybbz.ui.components.JvmSettingActionGrid
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
+import cn.xybbz.ui.components.JvmSettingOverviewTileMinWidth
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
@@ -86,9 +87,6 @@ import xymusic_kmp.composeapp.generated.resources.no_official_website_yet
 import xymusic_kmp.composeapp.generated.resources.official_website
 import xymusic_kmp.composeapp.generated.resources.problem_feedback
 import xymusic_kmp.composeapp.generated.resources.settings_24px
-
-// 应用信息概览卡需要在关于页左栏内三项同排展示，最小宽度低于设置页概览卡。
-private val JvmAboutOverviewTileMinWidth = 140.dp
 
 /**
  * JVM 桌面端关于页面。
@@ -231,7 +229,7 @@ private fun JvmAboutContent(
                 ) {
                     JvmSettingOverviewTile(
                         modifier = Modifier
-                            .widthIn(min = JvmAboutOverviewTileMinWidth)
+                            .widthIn(min = JvmSettingOverviewTileMinWidth)
                             .weight(1f),
                         icon = Res.drawable.info_24px,
                         kicker = "版本",
@@ -240,7 +238,7 @@ private fun JvmAboutContent(
                     )
                     JvmSettingOverviewTile(
                         modifier = Modifier
-                            .widthIn(min = JvmAboutOverviewTileMinWidth)
+                            .widthIn(min = JvmSettingOverviewTileMinWidth)
                             .weight(1f),
                         icon = Res.drawable.settings_24px,
                         kicker = "运行时",
@@ -249,7 +247,7 @@ private fun JvmAboutContent(
                     )
                     JvmSettingOverviewTile(
                         modifier = Modifier
-                            .widthIn(min = JvmAboutOverviewTileMinWidth)
+                            .widthIn(min = JvmSettingOverviewTileMinWidth)
                             .weight(1f),
                         icon = Res.drawable.music_note_24px,
                         kicker = "数据源",

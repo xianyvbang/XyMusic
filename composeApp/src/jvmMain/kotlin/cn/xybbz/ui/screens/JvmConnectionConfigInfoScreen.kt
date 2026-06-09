@@ -52,6 +52,7 @@ import cn.xybbz.api.utils.withDefaultHttpScheme
 import cn.xybbz.common.enums.img
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.ui.components.JvmSettingBaseRow
+import cn.xybbz.ui.components.JvmSettingConnectionFormCardMinHeight
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
@@ -60,6 +61,7 @@ import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
+import cn.xybbz.ui.components.JvmSettingSummaryCardWideWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyButton
@@ -94,12 +96,6 @@ import xymusic_kmp.composeapp.generated.resources.set_alias
 import xymusic_kmp.composeapp.generated.resources.warning_24px
 import xymusic_kmp.composeapp.generated.resources.username
 import java.net.URI
-
-/** JVM 连接信息页头部状态卡宽度。 */
-private val JvmConnectionSummaryWidth = 284.dp
-
-/** JVM 连接表单卡片的最小高度。 */
-private val JvmConnectionFormCardMinHeight = 118.dp
 
 /**
  * JVM 桌面端连接信息页面。
@@ -168,7 +164,7 @@ fun JvmConnectionConfigInfoScreen(
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
-                width = JvmConnectionSummaryWidth,
+                width = JvmSettingSummaryCardWideWidth,
                 prominentValue = true,
                 items = listOf(
                     JvmSettingStatusCardItem(
@@ -520,7 +516,7 @@ private fun JvmConnectionFormCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = JvmConnectionFormCardMinHeight),
+            .heightIn(min = JvmSettingConnectionFormCardMinHeight),
         shape = RoundedCornerShape(XyTheme.dimens.corner),
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.045f),
         border = BorderStroke(

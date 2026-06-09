@@ -47,6 +47,8 @@ import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
+import cn.xybbz.ui.components.JvmSettingProxyModeCardHeight
+import cn.xybbz.ui.components.JvmSettingSummaryCardWideWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyButton
@@ -71,12 +73,6 @@ import xymusic_kmp.composeapp.generated.resources.signal_cellular_alt_24px
 import xymusic_kmp.composeapp.generated.resources.test_connection
 import java.net.URI
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
-
-/** JVM 代理设置页头部摘要卡宽度。 */
-private val JvmProxySummaryWidth = 284.dp
-
-/** JVM 代理模式卡片高度，和预览稿中的分段模式选择保持接近。 */
-private val JvmProxyModeCardHeight = 158.dp
 
 /**
  * JVM 代理路由规则展示数据。
@@ -137,7 +133,7 @@ fun JvmProxyConfigScreen(
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
-                width = JvmProxySummaryWidth,
+                width = JvmSettingSummaryCardWideWidth,
                 prominentValue = true,
                 items = listOf(
                     JvmSettingStatusCardItem(label = "代理状态", value = proxyModeLabel),
@@ -249,7 +245,7 @@ private fun JvmProxyModeGrid(
             ),
         ),
         fillTwoColumnWidth = true,
-        cardHeight = JvmProxyModeCardHeight,
+        cardHeight = JvmSettingProxyModeCardHeight,
     )
 }
 

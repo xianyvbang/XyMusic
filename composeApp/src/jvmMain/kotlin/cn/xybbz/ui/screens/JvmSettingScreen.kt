@@ -52,6 +52,7 @@ import cn.xybbz.ui.components.JvmSettingDownloadRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
+import cn.xybbz.ui.components.JvmSettingOverviewThreeColumnWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
@@ -96,9 +97,6 @@ import xymusic_kmp.composeapp.generated.resources.signal_cellular_alt_24px
 import xymusic_kmp.composeapp.generated.resources.song_cache_location
 import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.volume_up_24px
-
-// 概览区从单列切换为三列卡片的最小宽度。
-private val JvmSettingOverviewGridMinWidth = 760.dp
 
 /**
  * 设置页面
@@ -409,7 +407,7 @@ private fun JvmSettingOverview(
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
         // 三张概览卡只有在足够宽时才同排，避免卡片文字被挤压。
-        val useThreeColumns = maxWidth >= JvmSettingOverviewGridMinWidth
+        val useThreeColumns = maxWidth >= JvmSettingOverviewThreeColumnWidth
         // 概览区和下方主体使用同一个宽度基准，保证三张 item 总宽与下面内容对齐。
         val contentWidth = minOf(maxWidth, JvmSettingPageContentMaxWidth)
         val tileWidth = if (useThreeColumns) {
