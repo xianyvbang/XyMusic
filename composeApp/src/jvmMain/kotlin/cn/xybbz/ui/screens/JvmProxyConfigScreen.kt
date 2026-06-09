@@ -46,7 +46,6 @@ import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
-import cn.xybbz.ui.components.JvmSettingProxyModeCardHeight
 import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
@@ -242,7 +241,6 @@ private fun JvmProxyModeGrid(
             ),
         ),
         fillTwoColumnWidth = true,
-        cardHeight = JvmSettingProxyModeCardHeight,
     )
 }
 

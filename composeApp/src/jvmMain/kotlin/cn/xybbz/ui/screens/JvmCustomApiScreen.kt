@@ -63,8 +63,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.ui.components.JvmSettingCustomApiEndpointGridBreakpoint
-import cn.xybbz.ui.components.JvmSettingCustomApiTokenGridBreakpoint
+import cn.xybbz.ui.components.JvmSettingContentGridTwoColumnBreakpoint
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPageHeader
@@ -333,7 +332,7 @@ private fun JvmCustomApiEndpointGrid(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        val cardWidth = if (maxWidth >= JvmSettingCustomApiEndpointGridBreakpoint) {
+        val cardWidth = if (maxWidth >= JvmSettingContentGridTwoColumnBreakpoint) {
             (maxWidth - gap) / 2f
         } else {
             maxWidth
@@ -552,7 +551,7 @@ private fun JvmCustomApiTokenGrid(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        val tokenWidth = if (maxWidth >= JvmSettingCustomApiTokenGridBreakpoint) {
+        val tokenWidth = if (maxWidth >= JvmSettingContentGridTwoColumnBreakpoint) {
             (maxWidth - gap) / 2f
         } else {
             maxWidth

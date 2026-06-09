@@ -93,29 +93,14 @@ internal val JvmSettingOverviewTileMinWidth = 140.dp
 /** JVM 设置页连接列表卡片双列布局的单卡最小宽度。 */
 internal val JvmSettingConnectionCardMinWidth = 240.dp
 
-/** JVM 设置页连接管理面板切换为左右双栏的宽度断点。 */
-internal val JvmSettingConnectionBoardTwoPaneBreakpoint = 900.dp
-
 /** JVM 设置页头像统一尺寸，连接和媒体库等头像类入口共用。 */
 internal val JvmSettingAvatarSize = 56.dp
 
 /** JVM 设置页连接表单卡片的最小高度。 */
 internal val JvmSettingConnectionFormCardMinHeight = 118.dp
 
-/** JVM 设置页较高入口卡片高度，适合长说明或档位选择卡片。 */
-internal val JvmSettingTallActionCardHeight = 168.dp
-
-/** JVM 设置页中等入口卡片高度，适合播放质量和格式选择卡片。 */
-internal val JvmSettingComfortActionCardHeight = 160.dp
-
-/** JVM 设置页代理模式卡片高度，保持分段模式选择的统一视觉高度。 */
-internal val JvmSettingProxyModeCardHeight = 158.dp
-
-/** JVM 设置页自定义接口端点卡片切换为双列的宽度断点。 */
-internal val JvmSettingCustomApiEndpointGridBreakpoint = 620.dp
-
-/** JVM 设置页自定义接口参数令牌切换为双列的宽度断点。 */
-internal val JvmSettingCustomApiTokenGridBreakpoint = 460.dp
+/** JVM 设置页内容卡片切换为双列的统一宽度断点。 */
+internal val JvmSettingContentGridTwoColumnBreakpoint = 640.dp
 
 /** JVM 设置页背景预览叠加层在窄宽度下隐藏侧栏的断点。 */
 internal val JvmSettingBackgroundPreviewCompactBreakpoint = 560.dp
@@ -129,17 +114,11 @@ internal val JvmSettingBackgroundPreviewTopBarHeight = 44.dp
 /** JVM 设置页背景预览中模拟桌面侧栏的宽度。 */
 internal val JvmSettingBackgroundPreviewSideWidth = 124.dp
 
-/** JVM 设置页媒体库概览卡片切换为双列的宽度断点。 */
-internal val JvmSettingLibraryOverviewTwoColumnWidth = 640.dp
-
 /** JVM 设置页媒体库列表单行最小高度。 */
 internal val JvmSettingLibraryRowMinHeight = 76.dp
 
 /** JVM 设置页界面预览卡片的最小高度。 */
 internal val JvmSettingInterfaceMiniPreviewHeight = 230.dp
-
-/** JVM 设置类页面头部状态卡的默认固定宽度。 */
-private val JvmSettingStatusCardDefaultWidth = 248.dp
 
 /** JVM 设置类页面从单列切换为左右两栏的最小宽度。 */
 private val JvmSettingTwoPaneBreakpoint = 860.dp
@@ -159,11 +138,8 @@ private val JvmSettingActionCardCompactWidth = 154.dp
 /** 通用入口卡片在双列场景下允许的最大宽度，避免右栏加宽后卡片被拉得过宽。 */
 private val JvmSettingActionCardMaxWidth = 196.dp
 
-/** 通用入口卡片固定高度，保证四个入口在 FlowRow 中等高排列。 */
-private val JvmSettingActionCardHeight = 148.dp
-
-/** 带底部状态文本的入口卡片需要额外高度，避免状态文字贴底被裁切。 */
-private val JvmSettingActionCardWithStatusHeight = JvmSettingComfortActionCardHeight
+/** 通用入口卡片统一高度，保证设置、档位和分段选择卡片等高排列。 */
+private val JvmSettingActionCardHeight = 160.dp
 
 /** 通用入口卡片移入时的上移距离，保持与专辑卡片 hover 反馈一致。 */
 private val JvmSettingActionCardLiftOffset = (-6).dp
@@ -293,7 +269,7 @@ internal fun JvmSettingPageScaffold(
 @Composable
 internal fun JvmSettingResponsiveRow(
     modifier: Modifier = Modifier,
-    breakpoint: Dp,
+    breakpoint: Dp = JvmSettingTwoPaneBreakpoint,
     leftWeight: Float = 1f,
     rightWeight: Float = 1f,
     horizontalGap: Dp = XyTheme.dimens.outerHorizontalPadding,
@@ -457,7 +433,7 @@ internal data class JvmSettingStatusCardItem(
 @Composable
 internal fun JvmSettingStatusCard(
     modifier: Modifier = Modifier,
-    width: Dp = JvmSettingStatusCardDefaultWidth,
+    width: Dp = JvmSettingSummaryCardWidth,
     items: List<JvmSettingStatusCardItem>,
     prominentValue: Boolean = false,
 ) {
@@ -899,11 +875,7 @@ internal fun JvmSettingActionGrid(
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        val resolvedCardHeight = if (actionEntries.any { it.status != null }) {
-            maxOf(cardHeight, JvmSettingActionCardWithStatusHeight)
-        } else {
-            cardHeight
-        }
+        val resolvedCardHeight = cardHeight
         // 两列布局至少满足卡片自身宽度，也不能低于设置页约定的通用入口最小宽度。
         val twoColumnMinWidth = maxOf(
             JvmSettingActionGridMinWidth,

@@ -65,7 +65,6 @@ import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingAvatarSize
-import cn.xybbz.ui.components.JvmSettingConnectionBoardTwoPaneBreakpoint
 import cn.xybbz.ui.components.JvmSettingConnectionCardMinWidth
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
@@ -201,7 +200,6 @@ fun JvmConnectionManagement(
             contentContainerEnabled = false,
         ) {
             JvmSettingResponsiveRow(
-                breakpoint = JvmSettingConnectionBoardTwoPaneBreakpoint,
                 leftWeight = 2.0f,
                 rightWeight = 0.8f,
                 horizontalGap = XyTheme.dimens.outerHorizontalPadding,

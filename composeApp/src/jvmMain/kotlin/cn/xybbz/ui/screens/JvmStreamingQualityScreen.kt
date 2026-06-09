@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGridArrangement
-import cn.xybbz.ui.components.JvmSettingComfortActionCardHeight
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -106,7 +105,6 @@ fun JvmStreamingQualityScreen(
                     )
                 },
                 arrangement = JvmSettingActionGridArrangement.Horizontal,
-                cardHeight = JvmSettingComfortActionCardHeight,
             )
         }
 
@@ -140,7 +138,6 @@ fun JvmStreamingQualityScreen(
                         )
                     },
                     arrangement = JvmSettingActionGridArrangement.Horizontal,
-                    cardHeight = JvmSettingComfortActionCardHeight,
                 )
             }
         }

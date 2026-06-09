@@ -67,7 +67,6 @@ import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
-import cn.xybbz.ui.components.JvmSettingTallActionCardHeight
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.CacheLimitViewModel
@@ -175,7 +174,6 @@ fun JvmCacheLimitScreen(
                             },
                         ),
                         fillTwoColumnWidth = true,
-                        cardHeight = JvmSettingTallActionCardHeight,
                     )
                 }
             },

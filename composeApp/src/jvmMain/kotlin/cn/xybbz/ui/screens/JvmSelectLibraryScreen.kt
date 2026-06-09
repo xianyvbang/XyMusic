@@ -70,7 +70,7 @@ import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingAvatarSize
-import cn.xybbz.ui.components.JvmSettingLibraryOverviewTwoColumnWidth
+import cn.xybbz.ui.components.JvmSettingContentGridTwoColumnBreakpoint
 import cn.xybbz.ui.components.JvmSettingLibraryRowMinHeight
 import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
@@ -254,7 +254,7 @@ private fun JvmSelectLibraryOverview(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        val useTwoColumns = maxWidth >= JvmSettingLibraryOverviewTwoColumnWidth
+        val useTwoColumns = maxWidth >= JvmSettingContentGridTwoColumnBreakpoint
         val tileWidth = if (useTwoColumns) {
             (maxWidth - gap) / 2
         } else {
