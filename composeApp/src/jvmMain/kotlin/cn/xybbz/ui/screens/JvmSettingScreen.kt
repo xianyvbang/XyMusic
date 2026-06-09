@@ -19,9 +19,13 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -404,40 +408,32 @@ private fun JvmSettingOverview(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
-        // 三张概览卡只有在足够宽时才同排，避免卡片文字被挤压。
-        val useThreeColumns = maxWidth >= JvmSettingOverviewThreeColumnWidth
-        // 概览区和下方主体使用同一个宽度基准，保证三张 item 总宽与下面内容对齐。
-        val contentWidth = maxWidth
-        val tileWidth = if (useThreeColumns) {
-            // 三列时扣除横向间距，再平均分配每张卡片宽度。
-            (contentWidth - gap) / 3f
-        } else {
-            // 单列时铺满可用宽度，避免窄屏出现过窄卡片。
-            maxWidth
-        }
+
 
         XyRow(
-            modifier = Modifier.fillMaxWidth(),
+            paddingValues = PaddingValues(),
             // 卡片不再铺满整行时居中摆放，视觉上更接近预览稿。
-            horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             JvmSettingOverviewTile(
-                modifier = Modifier.width(tileWidth),
+                modifier = Modifier.fillMaxWidth().weight(1f),
                 icon = Res.drawable.download_24px,
                 kicker = "播放缓存",
                 value = if (settings.ifEnableEdgeDownload) "边下边播已开启" else "边下边播已关闭",
                 sub = "缓存上限 · $cacheLimitLabel"
             )
+            Spacer(modifier = Modifier.width(gap))
             JvmSettingOverviewTile(
-                modifier = Modifier.width(tileWidth),
+                modifier = Modifier.fillMaxWidth().weight(1f),
                 icon = Res.drawable.av_timer_24px,
                 kicker = "播放同步",
                 value = if (settings.ifEnableSyncPlayProgress) "进度同步已开启" else "进度同步已关闭",
                 sub = if (settings.ifEnableAlbumHistory) "播放历史 · 专辑启用" else "播放历史 · 专辑关闭"
             )
+            Spacer(modifier = Modifier.width(gap))
             JvmSettingOverviewTile(
-                modifier = Modifier.width(tileWidth),
+                modifier = Modifier.fillMaxWidth().weight(1f),
                 icon = Res.drawable.folder_managed_24px,
                 kicker = "存储管理",
                 value = "打开存储管理",
