@@ -1,4 +1,4 @@
-package cn.xybbz.ui.components
+﻿package cn.xybbz.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,6 +17,8 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
 import kotlinx.coroutines.flow.Flow
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.*
 
 
 /**
@@ -163,7 +165,7 @@ internal fun SongTableHeader(
                 vertical = XyTheme.dimens.outerVerticalPadding
             )
         ) {
-            SongTableCell("标题", SongTableDefaults.titleWidth, MaterialTheme.colorScheme.onSurfaceVariant)
+            SongTableCell(stringResource(Res.string.title), SongTableDefaults.titleWidth, MaterialTheme.colorScheme.onSurfaceVariant)
             if (columns.showFavoriteColumn) {
                 SongTableSpacer(SongTableDefaults.favoriteWidth)
             }
@@ -171,14 +173,14 @@ internal fun SongTableHeader(
                 SongTableSpacer(SongTableDefaults.actionsWidth)
             }
             if (columns.showAlbumColumn) {
-                SongTableCell("专辑", SongTableDefaults.albumWidth, MaterialTheme.colorScheme.onSurfaceVariant)
+                SongTableCell(stringResource(Res.string.album), SongTableDefaults.albumWidth, MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (columns.showMetaColumn) {
-                SongTableCell("添加时间", SongTableDefaults.metaWidth, MaterialTheme.colorScheme.onSurfaceVariant)
+                SongTableCell(stringResource(Res.string.add_time), SongTableDefaults.metaWidth, MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (columns.showDurationColumn) {
                 SongTableCell(
-                    "时长",
+                    stringResource(Res.string.duration),
                     SongTableDefaults.durationWidth,
                     MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.End

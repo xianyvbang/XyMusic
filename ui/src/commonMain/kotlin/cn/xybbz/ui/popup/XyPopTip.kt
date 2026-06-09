@@ -49,10 +49,21 @@ enum class XyPopTipStyle {
     Hint
 }
 
+/**
+ * 弹窗提示展示数据。
+ *
+ * @param id 提示唯一标识
+ * @param text 已经格式化完成的提示文本
+ * @param textRes 需要在组合阶段读取的字符串资源
+ * @param formatArgs 字符串资源自带格式化占位符参数
+ * @param style 提示展示样式
+ * @param durationMillis 提示展示时长
+ */
 data class XyPopTipData(
     val id: Long,
     val text: String? = null,
     val textRes: StringResource? = null,
+    val formatArgs: List<Any> = emptyList(),
     val style: XyPopTipStyle = XyPopTipStyle.Default,
     val durationMillis: Long = 1_500L
 )
@@ -94,12 +105,14 @@ object XyPopTipManager {
     fun show(
         textRes: StringResource,
         style: XyPopTipStyle = XyPopTipStyle.Default,
-        durationMillis: Long = 1_500L
+        durationMillis: Long = 1_500L,
+        formatArgs: List<Any> = emptyList()
     ): XyPopTipHandle {
         return showInternal(
             XyPopTipData(
                 id = newId(),
                 textRes = textRes,
+                formatArgs = formatArgs,
                 style = style,
                 durationMillis = durationMillis
             )
@@ -150,7 +163,13 @@ fun XyPopTipHost(
     if (currentTip == null) return
 
     val tip = currentTip ?: return
-    val text = tip.text ?: tip.textRes?.let { stringResource(it) } ?: return
+    val text = tip.text ?: tip.textRes?.let {
+        if (tip.formatArgs.isEmpty()) {
+            stringResource(it)
+        } else {
+            stringResource(it, *tip.formatArgs.toTypedArray())
+        }
+    } ?: return
     val dimens = XyTheme.dimens
     val iconContainerSize = dimens.innerHorizontalPadding * 2
     val iconSize = dimens.contentPadding * 2

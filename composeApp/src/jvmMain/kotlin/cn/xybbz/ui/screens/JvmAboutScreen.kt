@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -70,6 +70,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_link_24px
 import xymusic_kmp.composeapp.generated.resources.about
@@ -115,7 +116,7 @@ fun JvmAboutScreen(
     val appIconInfo = stringResource(Res.string.app_icon_info)
     // 数据源展示从枚举生成，避免关于页遗漏新增的可展示数据源。
     val visibleDataSources = DataSourceType.entries.filter { it.ifShow }
-    val dataSourceCountLabel = "${visibleDataSources.size} 类"
+    val dataSourceCountLabel = stringResource(Res.string.jvm_about_screen_text_01, visibleDataSources.size)
     val dataSourceTitles = visibleDataSources.joinToString(" / ") { it.title }
     // PlatformInfo 尚未返回时保留 JVM 占位，保证关于页状态区不会出现空白版本。
     val versionInfo = aboutViewModel.versionInfo.ifBlank { "JVM" }
@@ -129,14 +130,14 @@ fun JvmAboutScreen(
     ) {
         JvmSettingPageHeader(
             title = pageTitle,
-            description = "查看桌面端应用信息、当前版本、项目入口和核心技术栈。",
+            description = stringResource(Res.string.jvm_about_screen_text_02),
         ) {
             JvmSettingStatusCard(
                 prominentValue = true,
                 items = listOf(
-                    JvmSettingStatusCardItem(label = "当前版本", value = versionInfo),
-                    JvmSettingStatusCardItem(label = "平台", value = "Windows Desktop"),
-                    JvmSettingStatusCardItem(label = "更新状态", value = "未检查"),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.current_version), value = versionInfo),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_about_screen_text_03), value = "Windows Desktop"),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_about_screen_text_04), value = stringResource(Res.string.jvm_about_screen_text_05)),
                 )
             )
         }
@@ -212,11 +213,11 @@ private fun JvmAboutContent(
             )
 
             JvmSettingSection(
-                title = "应用信息",
-                subtitle = "版本、运行环境和支持的数据源集中展示。",
+                title = stringResource(Res.string.jvm_about_screen_text_06),
+                subtitle = stringResource(Res.string.jvm_about_screen_text_07),
                 badge = "JVM Desktop",
                 contentContainerEnabled = false,
-                qualityNote = "桌面端版本信息来自 PlatformInfo；当前页面只调整关于页的信息架构和视觉密度。",
+                qualityNote = stringResource(Res.string.jvm_about_screen_text_08),
             ) {
                 JvmSettingFlowRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -228,7 +229,7 @@ private fun JvmAboutContent(
                             .widthIn(min = JvmSettingOverviewTileMinWidth)
                             .weight(1f),
                         icon = Res.drawable.info_24px,
-                        kicker = "版本",
+                        kicker = stringResource(Res.string.jvm_about_screen_text_09),
                         value = versionInfo,
                         sub = currentVersionTitle
                     )
@@ -237,7 +238,7 @@ private fun JvmAboutContent(
                             .widthIn(min = JvmSettingOverviewTileMinWidth)
                             .weight(1f),
                         icon = Res.drawable.settings_24px,
-                        kicker = "运行时",
+                        kicker = stringResource(Res.string.jvm_about_screen_text_10),
                         value = "JVM",
                         sub = "Compose Multiplatform"
                     )
@@ -246,7 +247,7 @@ private fun JvmAboutContent(
                             .widthIn(min = JvmSettingOverviewTileMinWidth)
                             .weight(1f),
                         icon = Res.drawable.music_note_24px,
-                        kicker = "数据源",
+                        kicker = stringResource(Res.string.jvm_about_screen_text_11),
                         value = dataSourceCountLabel,
                         sub = dataSourceTitles,
                         subMaxLines = 3
@@ -255,8 +256,8 @@ private fun JvmAboutContent(
             }
 
             JvmSettingSection(
-                title = "项目入口",
-                subtitle = "常用外部入口采用设置行样式，和主设置页的可点击项保持一致。",
+                title = stringResource(Res.string.jvm_about_screen_text_12),
+                subtitle = stringResource(Res.string.jvm_about_screen_text_13),
                 badge = "Links",
                 contentContainerEnabled = false,
             ) {
@@ -264,22 +265,22 @@ private fun JvmAboutContent(
                     JvmAboutProjectEntryRow(
                         icon = Res.drawable.add_link_24px,
                         title = officialWebsiteTitle,
-                        description = "查看项目主页、发布说明和文档入口。",
-                        value = "打开",
+                        description = stringResource(Res.string.jvm_about_screen_text_14),
+                        value = stringResource(Res.string.jvm_about_screen_text_15),
                         onClick = onOfficialWebsite
                     )
                     JvmAboutProjectEntryRow(
                         icon = Res.drawable.info_24px,
                         title = problemFeedbackTitle,
-                        description = "提交桌面端问题、连接问题或功能建议。",
-                        value = "反馈",
+                        description = stringResource(Res.string.jvm_about_screen_text_16),
+                        value = stringResource(Res.string.jvm_about_screen_text_17),
                         onClick = onProblemFeedback
                     )
                     JvmAboutProjectEntryRow(
                         icon = Res.drawable.check_24px,
-                        title = "复制诊断信息",
-                        description = "包含版本、平台、数据源类型和 JVM 运行时。",
-                        value = "复制",
+                        title = stringResource(Res.string.jvm_about_screen_text_18),
+                        description = stringResource(Res.string.jvm_about_screen_text_19),
+                        value = stringResource(Res.string.jvm_about_screen_text_20),
                         onClick = onCopyDiagnostics
                     )
                 }
@@ -288,8 +289,8 @@ private fun JvmAboutContent(
         rightContent = {
             // 右栏放更新和辅助动作，状态摘要已提升到页头，避免版本信息重复展示。
             JvmSettingSection(
-                title = "更新",
-                subtitle = "检查更新放在明显位置，但不打断设置浏览。",
+                title = stringResource(Res.string.jvm_about_screen_text_21),
+                subtitle = stringResource(Res.string.jvm_about_screen_text_22),
                 badge = "Release",
                 contentContainerEnabled = false,
             ) {
@@ -298,15 +299,15 @@ private fun JvmAboutContent(
                         JvmSettingActionEntry(
                             icon = Res.drawable.check_24px,
                             kicker = "Release",
-                            title = "检查更新",
-                            description = "获取最新桌面版本和更新说明。",
+                            title = stringResource(Res.string.check_updates),
+                            description = stringResource(Res.string.jvm_about_screen_text_23),
                             onClick = onCheckUpdates
                         ),
                         JvmSettingActionEntry(
                             icon = Res.drawable.download_24px,
                             kicker = "History",
-                            title = "更新日志",
-                            description = "查看最近版本的改动记录。",
+                            title = stringResource(Res.string.jvm_about_screen_text_24),
+                            description = stringResource(Res.string.jvm_about_screen_text_25),
                             onClick = onCheckUpdates
                         )
                     )
@@ -314,8 +315,8 @@ private fun JvmAboutContent(
             }
 
             JvmSettingSection(
-                title = "技术栈",
-                subtitle = "简洁列出核心依赖，方便排查桌面端问题。",
+                title = stringResource(Res.string.jvm_about_screen_text_26),
+                subtitle = stringResource(Res.string.jvm_about_screen_text_27),
                 badge = "Stack",
                 contentContainerEnabled = false,
             ) {
@@ -323,19 +324,19 @@ private fun JvmAboutContent(
                     JvmAboutInfoRow(
                         icon = Res.drawable.settings_24px,
                         title = "Kotlin Multiplatform",
-                        description = "共享业务逻辑与平台实现。",
+                        description = stringResource(Res.string.jvm_about_screen_text_28),
                         value = "KMP"
                     )
                     JvmAboutInfoRow(
                         icon = Res.drawable.info_24px,
                         title = "Compose Multiplatform",
-                        description = "桌面端界面框架。",
+                        description = stringResource(Res.string.jvm_about_screen_text_29),
                         value = "UI"
                     )
                     JvmAboutInfoRow(
                         icon = Res.drawable.music_note_24px,
                         title = "VLCJ / Media",
-                        description = "桌面端播放能力。",
+                        description = stringResource(Res.string.jvm_about_screen_text_30),
                         value = "Audio"
                     )
                 }
@@ -392,7 +393,7 @@ private fun JvmAboutHero(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "跨平台音乐客户端，面向自托管音乐服务和本地桌面播放体验。",
+                    text = stringResource(Res.string.jvm_about_screen_text_31),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 22.sp

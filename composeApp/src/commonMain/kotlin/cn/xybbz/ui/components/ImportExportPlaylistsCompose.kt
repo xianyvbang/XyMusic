@@ -36,7 +36,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.export_playlist
 import xymusic_kmp.composeapp.generated.resources.please_select_export_format
@@ -113,8 +116,9 @@ internal fun rememberPlaylistFileHandler(
     val currentImportResult by rememberUpdatedState(onImportResult)
     val currentExportResult by rememberUpdatedState(onExportResult)
     val coroutineScope = rememberCoroutineScope()
-    val importDialogSettings = rememberFileKitDialogSettings("导入歌单")
-    val exportDialogSettings = rememberFileKitDialogSettings("导出歌单")
+    val messages = rememberPlaylistOperationMessages()
+    val importDialogSettings = rememberFileKitDialogSettings(stringResource(Res.string.import_playlist))
+    val exportDialogSettings = rememberFileKitDialogSettings(stringResource(Res.string.export_playlist))
     // FileKit 的保存回调只返回用户选择的文件,导出内容需要临时挂起保存。
     var pendingExportRequest by remember { mutableStateOf<PlaylistExportRequest?>(null) }
 
@@ -128,7 +132,7 @@ internal fun rememberPlaylistFileHandler(
         }
 
         val selectedFileName = selectedFile.name
-        MessageUtils.sendPopTip(buildImportReadingMessage(selectedFileName))
+        MessageUtils.sendPopTip(messages.importReading(selectedFileName))
         coroutineScope.launch {
             val importData = runCatching {
                 // 文件读取放到 IO 线程,避免阻塞 Compose 主线程。
@@ -142,7 +146,7 @@ internal fun rememberPlaylistFileHandler(
                 }
             }.onFailure { error ->
                 Log.e(Constants.LOG_ERROR_PREFIX, "读取导入歌单文件失败", error)
-                MessageUtils.sendPopTipError(buildImportReadFailedMessage(selectedFileName))
+                MessageUtils.sendPopTipError(messages.importReadFailed(selectedFileName))
             }.getOrNull()
 
             currentImportResult(importData)
@@ -161,7 +165,7 @@ internal fun rememberPlaylistFileHandler(
         }
 
         coroutineScope.launch {
-            MessageUtils.sendPopTip(buildExportWritingMessage(request))
+            MessageUtils.sendPopTip(messages.exportWriting(request))
             // 保存文件失败时只返回失败状态,由上层统一弹出导出失败提示。
             val success = runCatching {
                 chosenFile.writeString(request.content)
@@ -221,14 +225,15 @@ fun getExportPlaylistsAlertDialogObject(
     onClick: () -> Unit
 ): () -> Unit {
     val exportPlaylist = stringResource(Res.string.export_playlist)
+    val messages = rememberPlaylistOperationMessages()
     val playlistFileHandler = rememberPlaylistFileHandler(
         onImportResult = {},
         onExportResult = { result ->
             // 文件真正写入完成后再提示成功,失败则统一显示导出失败。
             if (result.success) {
-                MessageUtils.sendPopTipSuccess(buildExportSuccessMessage(result.request))
+                MessageUtils.sendPopTipSuccess(messages.exportSuccess(result.request))
             } else {
-                MessageUtils.sendPopTipError(buildExportFailedMessage(result.request))
+                MessageUtils.sendPopTipError(messages.exportFailed(result.request))
             }
         }
     )
@@ -244,8 +249,12 @@ fun getExportPlaylistsAlertDialogObject(
                     onExportTypeSelected = { type ->
                         coroutineScope.launch {
                             val pendingFileName = buildExportFileName(playlistName.orEmpty(), type)
-                            val exportFailedTip = buildExportFailedMessage(pendingFileName, type)
-                            MessageUtils.sendPopTip(buildExportPreparingMessage(pendingFileName, type))
+                            val exportFailedTip = getString(
+                                Res.string.import_export_playlists_compose_text_09,
+                                pendingFileName,
+                                type.displayName()
+                            )
+                            MessageUtils.sendPopTip(messages.exportPreparing(pendingFileName, type))
                             // 拉取远端歌单数据可能超时,这里兜底避免异常冒出导致闪退。
                             val playlist = runCatching {
                                 onPlayTrackList(exportFailedTip)
@@ -335,6 +344,7 @@ fun importPlaylistsCompose(
     onClick: () -> Unit
 ): () -> Unit {
     val unknownPlaylist = stringResource(Constants.UNKNOWN_PLAYLIST)
+    val messages = rememberPlaylistOperationMessages()
     val playlistFileHandler = rememberPlaylistFileHandler(
         onImportResult = importHandler@{ importData ->
             if (importData == null) {
@@ -342,13 +352,13 @@ fun importPlaylistsCompose(
             }
 
             runCatching {
-                MessageUtils.sendPopTip(buildImportParsingMessage(importData))
+                MessageUtils.sendPopTip(messages.importParsing(importData))
                 // 根据文件名和内容自动识别格式,再交给对应解析器。
                 val tracks = when (importData.fileType) {
                     ExportType.M3U8 -> PlaylistParser.parseM3U(importData.lines)
                     ExportType.TXT -> PlaylistParser.parseTxt(importData.lines)
                 }
-                MessageUtils.sendPopTipSuccess(buildImportParseSuccessMessage(importData))
+                MessageUtils.sendPopTipSuccess(messages.importParseSuccess(importData))
                 onCreatePlaylist(
                     PlaylistParser.Playlist(
                         musicList = tracks,
@@ -357,7 +367,7 @@ fun importPlaylistsCompose(
                 )
             }.onFailure { error ->
                 Log.e(Constants.LOG_ERROR_PREFIX, "导入歌单失败", error)
-                MessageUtils.sendPopTipError(buildImportParseFailedMessage(importData))
+                MessageUtils.sendPopTipError(messages.importParseFailed(importData))
             }
         },
         onExportResult = {}
@@ -408,87 +418,135 @@ private fun ExportType.displayName(): String {
 }
 
 /**
- * 导出数据生成阶段的提示。
+ * 发送普通歌单操作提示。
  */
-private fun buildExportPreparingMessage(fileName: String, fileType: ExportType): String {
-    return "正在生成 $fileName 的 ${fileType.displayName()} 歌单文件…"
+private fun MessageUtils.sendPopTip(message: PlaylistOperationMessage) {
+    sendPopTip(message.resource, message.formatArgs)
 }
 
 /**
- * 导出文件写入阶段的提示。
+ * 发送成功歌单操作提示。
  */
-private fun buildExportWritingMessage(request: PlaylistExportRequest): String {
-    return "正在导出 ${request.fileName} 的 ${request.fileType.displayName()} 歌单文件…"
+private fun MessageUtils.sendPopTipSuccess(message: PlaylistOperationMessage) {
+    sendPopTipSuccess(message.resource, message.formatArgs)
 }
 
 /**
- * 导出成功提示。
+ * 发送失败歌单操作提示。
  */
-private fun buildExportSuccessMessage(request: PlaylistExportRequest): String {
-    return "${request.fileName} 的 ${request.fileType.displayName()} 歌单文件导出成功"
+private fun MessageUtils.sendPopTipError(message: PlaylistOperationMessage) {
+    sendPopTipError(message.resource, message.formatArgs)
 }
 
 /**
- * 导出失败提示。
+ * 在组合阶段读取未知文件名兜底文案，资源模板由弹窗 Host 使用 stringResource 格式化。
  */
-private fun buildExportFailedMessage(request: PlaylistExportRequest): String {
-    return buildExportFailedMessage(request.fileName, request.fileType)
+@Composable
+private fun rememberPlaylistOperationMessages(): PlaylistOperationMessages {
+    val unknownFileName = stringResource(Res.string.unknown)
+    return remember(unknownFileName) {
+        PlaylistOperationMessages(unknownFileName = unknownFileName)
+    }
 }
 
 /**
- * 导出失败提示。
+ * 歌单操作提示资源和格式化参数。
+ *
+ * @param resource 字符串资源
+ * @param formatArgs 字符串资源自带格式化占位符参数
  */
-private fun buildExportFailedMessage(fileName: String, fileType: ExportType): String {
-    return "$fileName 的 ${fileType.displayName()} 歌单文件导出失败"
-}
+private data class PlaylistOperationMessage(
+    val resource: StringResource,
+    val formatArgs: List<Any> = emptyList(),
+)
 
 /**
- * 导入文件读取阶段的提示。
+ * 歌单导入导出提示构造器，回调中只传资源和参数，避免在非 Composable 回调中读取资源。
  */
-private fun buildImportReadingMessage(fileName: String?): String {
-    return "正在读取 ${fileName.toDisplayFileName()} 歌单文件…"
-}
+private data class PlaylistOperationMessages(
+    val unknownFileName: String,
+) {
+    /** 构造导出数据生成阶段的提示。 */
+    fun exportPreparing(fileName: String, fileType: ExportType): PlaylistOperationMessage {
+        return PlaylistOperationMessage(
+            resource = Res.string.import_export_playlists_compose_text_06,
+            formatArgs = listOf(fileName, fileType.displayName())
+        )
+    }
 
-/**
- * 导入文件读取失败提示。
- */
-private fun buildImportReadFailedMessage(fileName: String?): String {
-    return "${fileName.toDisplayFileName()} 歌单文件读取失败"
-}
+    /** 构造导出文件写入阶段的提示。 */
+    fun exportWriting(request: PlaylistExportRequest): PlaylistOperationMessage {
+        return PlaylistOperationMessage(
+            resource = Res.string.import_export_playlists_compose_text_07,
+            formatArgs = listOf(request.fileName, request.fileType.displayName())
+        )
+    }
 
-/**
- * 导入文件解析阶段的提示。
- */
-private fun buildImportParsingMessage(importData: PlaylistImportData): String {
-    return "正在解析 ${importData.displayFileName()} 的 ${importData.fileType.displayName()} 歌单文件…"
-}
+    /** 构造导出成功提示。 */
+    fun exportSuccess(request: PlaylistExportRequest): PlaylistOperationMessage {
+        return PlaylistOperationMessage(
+            resource = Res.string.import_export_playlists_compose_text_08,
+            formatArgs = listOf(request.fileName, request.fileType.displayName())
+        )
+    }
 
-/**
- * 导入文件解析成功提示。
- */
-private fun buildImportParseSuccessMessage(importData: PlaylistImportData): String {
-    return "${importData.displayFileName()} 的 ${importData.fileType.displayName()} 歌单文件解析成功"
-}
+    /** 构造导出失败提示。 */
+    fun exportFailed(request: PlaylistExportRequest): PlaylistOperationMessage {
+        return exportFailed(request.fileName, request.fileType)
+    }
 
-/**
- * 导入文件解析失败提示。
- */
-private fun buildImportParseFailedMessage(importData: PlaylistImportData): String {
-    return "${importData.displayFileName()} 的 ${importData.fileType.displayName()} 歌单文件解析失败"
-}
+    /** 构造导出失败提示。 */
+    fun exportFailed(fileName: String, fileType: ExportType): PlaylistOperationMessage {
+        return PlaylistOperationMessage(
+            resource = Res.string.import_export_playlists_compose_text_09,
+            formatArgs = listOf(fileName, fileType.displayName())
+        )
+    }
 
-/**
- * 导入数据展示用文件名。
- */
-private fun PlaylistImportData.displayFileName(): String {
-    return fileName.toDisplayFileName()
-}
+    /** 构造导入文件读取阶段的提示。 */
+    fun importReading(fileName: String?): PlaylistOperationMessage {
+        return PlaylistOperationMessage(
+            resource = Res.string.import_export_playlists_compose_text_10,
+            formatArgs = listOf(fileName.toDisplayFileName())
+        )
+    }
 
-/**
- * 用户未提供文件名时的展示兜底。
- */
-private fun String?.toDisplayFileName(): String {
-    return this?.ifBlank { null } ?: "未知"
+    /** 构造导入文件读取失败提示。 */
+    fun importReadFailed(fileName: String?): PlaylistOperationMessage {
+        return PlaylistOperationMessage(
+            resource = Res.string.import_export_playlists_compose_text_11,
+            formatArgs = listOf(fileName.toDisplayFileName())
+        )
+    }
+
+    /** 构造导入文件解析阶段的提示。 */
+    fun importParsing(importData: PlaylistImportData): PlaylistOperationMessage {
+        return PlaylistOperationMessage(
+            resource = Res.string.import_export_playlists_compose_text_12,
+            formatArgs = listOf(importData.fileName.toDisplayFileName(), importData.fileType.displayName())
+        )
+    }
+
+    /** 构造导入文件解析成功提示。 */
+    fun importParseSuccess(importData: PlaylistImportData): PlaylistOperationMessage {
+        return PlaylistOperationMessage(
+            resource = Res.string.import_export_playlists_compose_text_13,
+            formatArgs = listOf(importData.fileName.toDisplayFileName(), importData.fileType.displayName())
+        )
+    }
+
+    /** 构造导入文件解析失败提示。 */
+    fun importParseFailed(importData: PlaylistImportData): PlaylistOperationMessage {
+        return PlaylistOperationMessage(
+            resource = Res.string.import_export_playlists_compose_text_14,
+            formatArgs = listOf(importData.fileName.toDisplayFileName(), importData.fileType.displayName())
+        )
+    }
+
+    /** 用户未提供文件名时使用未知文案兜底。 */
+    private fun String?.toDisplayFileName(): String {
+        return this?.ifBlank { null } ?: unknownFileName
+    }
 }
 
 /**

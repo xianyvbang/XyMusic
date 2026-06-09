@@ -1,4 +1,4 @@
-package cn.xybbz.ui.components
+﻿package cn.xybbz.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -66,6 +66,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_to_next_play_success
 import xymusic_kmp.composeapp.generated.resources.add_to_playlist
@@ -371,7 +372,7 @@ private fun rememberSongRowContextMenuItems(
         ),
         if (viewSubItems.isNotEmpty()) {
             songContextMenuItem(
-                title = "查看",
+                title = stringResource(Res.string.jvm_song_row_text_01),
                 iconRes = Res.drawable.visibility_24px,
                 trailingIconRes = Res.drawable.chevron_right_24px,
                 dismissOnClick = false,

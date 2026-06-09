@@ -16,6 +16,17 @@ object MessageUtils {
         XyPopTipManager.show(value, durationMillis = delay)
     }
 
+    /**
+     * 发送带格式化参数的普通资源提示。
+     */
+    fun sendPopTip(value: StringResource, formatArgs: List<Any>, delay: Long = 1500) {
+        XyPopTipManager.show(
+            textRes = value,
+            durationMillis = delay,
+            formatArgs = formatArgs
+        )
+    }
+
     fun sendPopTipError(value: String, delay: Long = 1500) {
         XyPopTipManager.show(
             text = value,
@@ -32,11 +43,35 @@ object MessageUtils {
         )
     }
 
+    /**
+     * 发送带格式化参数的错误资源提示。
+     */
+    fun sendPopTipError(resId: StringResource, formatArgs: List<Any>, delay: Long = 1500) {
+        XyPopTipManager.show(
+            textRes = resId,
+            style = XyPopTipStyle.Error,
+            durationMillis = delay,
+            formatArgs = formatArgs
+        )
+    }
+
     fun sendPopTipSuccess(resId: StringResource, delay: Long = 1500) {
         XyPopTipManager.show(
             textRes = resId,
             style = XyPopTipStyle.Success,
             durationMillis = delay
+        )
+    }
+
+    /**
+     * 发送带格式化参数的成功资源提示。
+     */
+    fun sendPopTipSuccess(resId: StringResource, formatArgs: List<Any>, delay: Long = 1500) {
+        XyPopTipManager.show(
+            textRes = resId,
+            style = XyPopTipStyle.Success,
+            durationMillis = delay,
+            formatArgs = formatArgs
         )
     }
 

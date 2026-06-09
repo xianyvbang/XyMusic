@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -87,6 +87,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.all_media_libraries
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
@@ -124,14 +125,14 @@ fun JvmSelectLibraryScreen(
     val libraryList = selectLibraryViewModel.libraryList
     val selectedLibraryIds = selectLibraryViewModel.libraryIds
     val dataSourceType = dataSourceManager.dataSourceType
-    val dataSourceLabel = dataSourceType?.title ?: "未连接"
+    val dataSourceLabel = dataSourceType?.title ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
     val selectedLibraries = libraryList.filter { selectedLibraryIds.contains(it.id) }
     val allLibrarySelected = selectedLibraryIds.contains(Constants.MINUS_ONE_INT.toString())
     val hasInitialChanges = selectLibraryViewModel.hasInitialLibraryChanges
     val selectionModeText = if (dataSourceType?.ifMultiMediaLibrary == true) {
-        "多媒体库"
+        stringResource(Res.string.jvm_select_library_screen_text_01)
     } else {
-        "单媒体库"
+        stringResource(Res.string.jvm_select_library_screen_text_02)
     }
 
     JvmSettingPageScaffold(
@@ -161,14 +162,14 @@ fun JvmSelectLibraryScreen(
     ) {
         JvmSettingPageHeader(
             title = pageTitle,
-            description = "为当前连接指定桌面端可见的媒体库范围；专辑、歌曲、搜索和播放队列都会按照这个范围加载。",
+            description = stringResource(Res.string.jvm_select_library_screen_text_03),
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,
                 prominentValue = true,
                 items = listOf(
-                    JvmSettingStatusCardItem(label = "数据源", value = dataSourceLabel),
-                    JvmSettingStatusCardItem(label = "连接 ID", value = "#$connectionId"),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_about_screen_text_11), value = dataSourceLabel),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_connection_config_info_screen_text_20), value = "#$connectionId"),
                 )
             )
         }
@@ -181,15 +182,15 @@ fun JvmSelectLibraryScreen(
         JvmSettingTwoPaneContent(
             leftContent = {
                 JvmSettingSection(
-                    title = "媒体库列表",
-                    subtitle = "全部媒体库为互斥范围；具体媒体库的单选或多选由当前数据源能力决定。",
+                    title = stringResource(Res.string.jvm_select_library_screen_text_04),
+                    subtitle = stringResource(Res.string.jvm_select_library_screen_text_05),
                     badge = selectionModeText,
                     contentContainerEnabled = true,
                     headerAction = {
                         XyIconTextButton(
                             modifier = Modifier.widthIn(min = 96.dp),
                             onClick = selectLibraryViewModel::restoreInitialLibraryIds,
-                            text = "撤销",
+                            text = stringResource(Res.string.jvm_select_library_screen_text_06),
                             icon = Res.drawable.restart_alt_24px,
                             enabled = hasInitialChanges,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -211,9 +212,9 @@ fun JvmSelectLibraryScreen(
             },
             rightContent = {
                 JvmSettingSection(
-                    title = "当前生效范围",
-                    subtitle = "返回连接详情后，这个范围会用于后续数据加载。",
-                    badge = "范围",
+                    title = stringResource(Res.string.jvm_select_library_screen_text_07),
+                    subtitle = stringResource(Res.string.jvm_select_library_screen_text_08),
+                    badge = stringResource(Res.string.jvm_select_library_screen_text_09),
                     contentContainerEnabled = false,
                 ) {
                     JvmSelectLibrarySelectionCard(
@@ -224,9 +225,9 @@ fun JvmSelectLibraryScreen(
                 }
 
                 JvmSettingSection(
-                    title = "管理模块",
-                    subtitle = "处理媒体库列表刷新和连接管理跳转。",
-                    badge = "管理",
+                    title = stringResource(Res.string.jvm_select_library_screen_text_10),
+                    subtitle = stringResource(Res.string.jvm_select_library_screen_text_11),
+                    badge = stringResource(Res.string.jvm_select_library_screen_text_12),
                     contentContainerEnabled = false,
                 ) {
                     JvmSelectLibraryManagementModule(
@@ -269,16 +270,16 @@ private fun JvmSelectLibraryOverview(
             JvmSettingOverviewTile(
                 modifier = Modifier.width(tileWidth),
                 icon = Res.drawable.folder_managed_24px,
-                kicker = "可选媒体库",
-                value = "${libraryCount} 个",
-                sub = "来自当前服务连接",
+                kicker = stringResource(Res.string.jvm_select_library_screen_text_13),
+                value = stringResource(Res.string.jvm_select_library_screen_text_14, libraryCount),
+                sub = stringResource(Res.string.jvm_select_library_screen_text_15),
             )
             JvmSettingOverviewTile(
                 modifier = Modifier.width(tileWidth),
                 icon = Res.drawable.refresh_24px,
-                kicker = "同步状态",
-                value = "即时",
-                sub = "当前模式：$selectionModeText",
+                kicker = stringResource(Res.string.jvm_select_library_screen_text_16),
+                value = stringResource(Res.string.jvm_select_library_screen_text_17),
+                sub = stringResource(Res.string.jvm_select_library_screen_text_18, selectionModeText),
             )
         }
     }
@@ -401,7 +402,7 @@ private fun JvmSelectLibraryRow(
                         overflow = TextOverflow.Ellipsis
                     )
                     JvmSelectLibraryPill(
-                        text = if (isAllLibrary) "默认范围" else library.collectionType.ifBlank { "媒体库" },
+                        text = if (isAllLibrary) stringResource(Res.string.jvm_select_library_screen_text_19) else library.collectionType.ifBlank { stringResource(Res.string.music_library) },
                         selected = selected,
                         maxWidth = 120.dp,
                     )
@@ -441,9 +442,9 @@ private fun JvmSelectLibraryAvatar(
         else -> MaterialTheme.colorScheme.primary
     }
     val avatarText = if (isAllLibrary) {
-        "全"
+        stringResource(Res.string.jvm_select_library_screen_text_20)
     } else {
-        library.name.firstOrNull()?.toString().orEmpty().ifBlank { "库" }
+        library.name.firstOrNull()?.toString().orEmpty().ifBlank { stringResource(Res.string.jvm_select_library_screen_text_21) }
     }
 
     Box(
@@ -516,14 +517,14 @@ private fun JvmSelectLibraryManagementModule(
         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
     ) {
         XyTextSub(
-            text = "刷新列表只重新读取本地已同步媒体库；连接增删和别名维护请进入连接管理。",
+            text = stringResource(Res.string.jvm_select_library_screen_text_22),
             style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         XyIconTextButton(
             modifier = Modifier.fillMaxWidth(),
             onClick = onRefresh,
-            text = "刷新列表",
+            text = stringResource(Res.string.jvm_select_library_screen_text_23),
             icon = Res.drawable.refresh_24px,
             color = MaterialTheme.colorScheme.onSurface,
             backgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
@@ -532,7 +533,7 @@ private fun JvmSelectLibraryManagementModule(
         XyIconTextButton(
             modifier = Modifier.fillMaxWidth(),
             onClick = onOpenConnectionManagement,
-            text = "连接管理",
+            text = stringResource(Res.string.connection_management),
             icon = Res.drawable.settings_24px,
         )
     }
@@ -570,7 +571,7 @@ private fun JvmSelectLibrarySelectionCard(
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
         ) {
             XyText(
-                text = "可见内容",
+                text = stringResource(Res.string.jvm_select_library_screen_text_24),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -583,9 +584,9 @@ private fun JvmSelectLibrarySelectionCard(
             )
             XyTextSub(
                 text = if (allLibrarySelected) {
-                    "使用服务端返回的完整媒体库范围。"
+                    stringResource(Res.string.jvm_select_library_screen_text_25)
                 } else {
-                    "仅加载当前范围内的音乐、专辑和播放内容。"
+                    stringResource(Res.string.jvm_select_library_screen_text_26)
                 },
                 style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -651,7 +652,7 @@ private fun JvmSelectLibraryEmptyState() {
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         XyTextSub(
-            text = "正在读取媒体库，或当前连接没有返回可选择的媒体库。",
+            text = stringResource(Res.string.jvm_select_library_screen_text_27),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -714,12 +715,13 @@ private fun XyLibrary.isAllMediaLibrary(): Boolean {
  *
  * @param isAllLibrary 当前媒体库是否为全部媒体库占位项。
  */
+@Composable
 private fun XyLibrary.libraryDescription(isAllLibrary: Boolean): String {
     return if (isAllLibrary) {
-        "不过滤任何音乐库 · 服务端全部内容"
+        stringResource(Res.string.jvm_select_library_screen_text_28)
     } else {
-        val typeText = collectionType.ifBlank { "未标记类型" }
-        "$typeText · 连接 #$connectionId · ID $id"
+        val typeText = collectionType.ifBlank { stringResource(Res.string.jvm_select_library_screen_text_29) }
+        stringResource(Res.string.jvm_select_library_screen_text_30, typeText, connectionId, id)
     }
 }
 

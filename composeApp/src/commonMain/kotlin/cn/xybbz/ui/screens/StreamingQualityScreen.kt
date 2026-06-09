@@ -30,6 +30,7 @@ import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.displayAudioBitRateText
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -119,7 +120,7 @@ fun StreamingQualityScreen(
                 SettingRoundedSurfaceColumn {
                     TranscodeAudioBitRateType.entries.forEach {
                         XyItemRadioButton(
-                            text = it.audioBitRateStr,
+                            text = it.displayAudioBitRateText(),
                             selected = streamingQualityViewModel.mobileNetworkAudioBitRate == it,
                             onClick = {
                                 coroutineScope.launch {
@@ -150,7 +151,7 @@ fun StreamingQualityScreen(
                 SettingRoundedSurfaceColumn {
                     TranscodeAudioBitRateType.entries.forEach {
                         XyItemRadioButton(
-                            text = it.audioBitRateStr,
+                            text = it.displayAudioBitRateText(),
                             selected = streamingQualityViewModel.wifiNetworkAudioBitRate == it,
                             onClick = {
                                 coroutineScope.launch {

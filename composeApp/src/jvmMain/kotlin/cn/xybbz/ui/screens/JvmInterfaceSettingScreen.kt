@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -76,6 +76,7 @@ import cn.xybbz.viewmodel.InterfaceSettingViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.album_24px
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
@@ -100,7 +101,7 @@ fun JvmInterfaceSettingScreen(
     val imageFilePath by interfaceSettingViewModel.settingsManager.imageFilePath.collectAsState()
     val themeLabel = stringResource(themeType.toResStringInt())
     val backgroundConfigured = !imageFilePath.isNullOrBlank()
-    val backgroundStatus = if (backgroundConfigured) "已设置" else "未设置"
+    val backgroundStatus = if (backgroundConfigured) stringResource(Res.string.jvm_interface_setting_screen_text_01) else stringResource(Res.string.jvm_interface_setting_screen_text_02)
     val interfaceSettingsTitle = stringResource(Res.string.interface_settings)
     val backgroundImageTitle = stringResource(Res.string.background_image_setting)
     val topBar: (@Composable () -> Unit)? = if (showBackButton) {
@@ -136,15 +137,15 @@ fun JvmInterfaceSettingScreen(
     ) {
         JvmSettingPageHeader(
             title = interfaceSettingsTitle,
-            description = "把主题、背景和桌面显示偏好放进同一张可预览的控制台，保持紧凑，同时能快速看到当前视觉结果。",
+            description = stringResource(Res.string.jvm_interface_setting_screen_text_03),
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,
                 prominentValue = true,
                 items = listOf(
-                    JvmSettingStatusCardItem(label = "主题", value = themeLabel),
-                    JvmSettingStatusCardItem(label = "背景图片", value = backgroundStatus),
-                    JvmSettingStatusCardItem(label = "强调色", value = "Material 主题色"),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_interface_setting_screen_text_04), value = themeLabel),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.background_image), value = backgroundStatus),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_interface_setting_screen_text_05), value = stringResource(Res.string.jvm_interface_setting_screen_text_06)),
                 )
             )
         }
@@ -152,9 +153,9 @@ fun JvmInterfaceSettingScreen(
         JvmSettingTwoPaneContent(
             leftContent = {
                 JvmSettingSection(
-                    title = "主题外观",
-                    subtitle = "用卡片呈现最终视觉倾向，而不是只给一个下拉菜单。",
-                    badge = "桌面预览",
+                    title = stringResource(Res.string.jvm_interface_setting_screen_text_07),
+                    subtitle = stringResource(Res.string.jvm_interface_setting_screen_text_08),
+                    badge = stringResource(Res.string.jvm_interface_setting_screen_text_09),
                     contentContainerEnabled = false,
                 ) {
                     JvmSettingActionEntryGrid(
@@ -163,8 +164,8 @@ fun JvmInterfaceSettingScreen(
                                 icon = Res.drawable.settings_24px,
                                 kicker = "AUTO",
                                 title = stringResource(ThemeTypeEnum.SYSTEM.toResStringInt()),
-                                description = "根据系统深浅色自动切换界面。",
-                                status = if (themeType == ThemeTypeEnum.SYSTEM) "当前主题" else "点击切换",
+                                description = stringResource(Res.string.jvm_interface_setting_screen_text_10),
+                                status = if (themeType == ThemeTypeEnum.SYSTEM) stringResource(Res.string.jvm_interface_setting_screen_text_11) else stringResource(Res.string.jvm_interface_setting_screen_text_12),
                                 selected = themeType == ThemeTypeEnum.SYSTEM,
                                 role = Role.RadioButton,
                                 onClick = {
@@ -177,8 +178,8 @@ fun JvmInterfaceSettingScreen(
                                 icon = Res.drawable.settings_24px,
                                 kicker = "DARK",
                                 title = stringResource(ThemeTypeEnum.DARK.toResStringInt()),
-                                description = "适合长时间播放和夜间桌面环境。",
-                                status = if (themeType == ThemeTypeEnum.DARK) "当前主题" else "点击切换",
+                                description = stringResource(Res.string.jvm_interface_setting_screen_text_13),
+                                status = if (themeType == ThemeTypeEnum.DARK) stringResource(Res.string.jvm_interface_setting_screen_text_11) else stringResource(Res.string.jvm_interface_setting_screen_text_12),
                                 selected = themeType == ThemeTypeEnum.DARK,
                                 role = Role.RadioButton,
                                 onClick = {
@@ -191,8 +192,8 @@ fun JvmInterfaceSettingScreen(
                                 icon = Res.drawable.settings_24px,
                                 kicker = "LIGHT",
                                 title = stringResource(ThemeTypeEnum.LIGHT.toResStringInt()),
-                                description = "适合白天办公和浅色系统主题。",
-                                status = if (themeType == ThemeTypeEnum.LIGHT) "当前主题" else "点击切换",
+                                description = stringResource(Res.string.jvm_interface_setting_screen_text_14),
+                                status = if (themeType == ThemeTypeEnum.LIGHT) stringResource(Res.string.jvm_interface_setting_screen_text_11) else stringResource(Res.string.jvm_interface_setting_screen_text_12),
                                 selected = themeType == ThemeTypeEnum.LIGHT,
                                 role = Role.RadioButton,
                                 onClick = {
@@ -207,15 +208,15 @@ fun JvmInterfaceSettingScreen(
                 }
 
                 JvmSettingSection(
-                    title = "显示细节",
-                    subtitle = "背景相关偏好保留为明确入口，避免和主题模式混在一个下拉列表里。",
-                    badge = "偏好",
-                    qualityNote = "背景图片会交给现有背景设置页面处理；此页只负责桌面界面偏好的总览与主题切换。"
+                    title = stringResource(Res.string.jvm_interface_setting_screen_text_15),
+                    subtitle = stringResource(Res.string.jvm_interface_setting_screen_text_16),
+                    badge = stringResource(Res.string.jvm_interface_setting_screen_text_17),
+                    qualityNote = stringResource(Res.string.jvm_interface_setting_screen_text_18)
                 ) {
                     JvmSettingNavigationRow(
                         icon = Res.drawable.album_24px,
                         title = backgroundImageTitle,
-                        description = "选择或清除主界面的背景图片。",
+                        description = stringResource(Res.string.jvm_interface_setting_screen_text_19),
                         value = backgroundStatus,
                         onClick = {
                             navigator.navigate(SetBackgroundImage)
@@ -225,8 +226,8 @@ fun JvmInterfaceSettingScreen(
             },
             rightContent = {
                 JvmSettingSection(
-                    title = "实时预览",
-                    subtitle = "用缩略窗口模拟主题和背景设置生效后的桌面结构。",
+                    title = stringResource(Res.string.jvm_interface_setting_screen_text_20),
+                    subtitle = stringResource(Res.string.jvm_interface_setting_screen_text_21),
                     badge = "Preview",
                     contentContainerEnabled = false,
                 ) {
@@ -237,13 +238,13 @@ fun JvmInterfaceSettingScreen(
                 }
 
                 JvmSettingSection(
-                    title = "强调色",
-                    subtitle = "界面设置页跟随 MaterialTheme.colorScheme，不单独维护桌面色值。",
+                    title = stringResource(Res.string.jvm_interface_setting_screen_text_05),
+                    subtitle = stringResource(Res.string.jvm_interface_setting_screen_text_22),
                     badge = "Theme",
                     contentContainerEnabled = false,
                 ) {
                     JvmInterfaceAccentPreview()
-                    JvmSettingNote(text = "所有间距、圆角和高亮状态优先使用 XyTheme.dimens 与 MaterialTheme.colorScheme，保持与其他 JVM 设置页一致。")
+                    JvmSettingNote(text = stringResource(Res.string.jvm_interface_setting_screen_text_23))
                 }
             }
         )
@@ -366,8 +367,8 @@ private fun JvmInterfaceMiniPreview(
             }
 
             JvmInterfacePreviewStatus(
-                label = "背景状态",
-                value = if (backgroundConfigured) "已连接背景图" else "使用主题背景"
+                label = stringResource(Res.string.jvm_interface_setting_screen_text_24),
+                value = if (backgroundConfigured) stringResource(Res.string.jvm_interface_setting_screen_text_25) else stringResource(Res.string.jvm_interface_setting_screen_text_26)
             )
         }
     }
@@ -390,7 +391,7 @@ private fun JvmInterfaceAccentPreview() {
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
         ) {
             Text(
-                text = "当前界面色板",
+                text = stringResource(Res.string.jvm_interface_setting_screen_text_27),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                 color = colorScheme.onSurface,
                 maxLines = 1,

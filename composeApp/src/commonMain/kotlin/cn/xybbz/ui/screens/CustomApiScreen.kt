@@ -66,6 +66,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.custom_cover_api
@@ -144,11 +145,11 @@ fun CustomApiScreen(
             item {
                 val annotatedText = buildAnnotatedString {
 
-                    append("验证信息作为请求头传入,使用${ApiConstants.AUTHORIZATION}作为Key为验证信息,更多信息请参考")
+                    append(stringResource(Res.string.custom_api_screen_text_01, ApiConstants.AUTHORIZATION))
 
                     pushStringAnnotation(
                         tag = "CLICK",
-                        annotation = "官方文档"
+                        annotation = stringResource(Res.string.jvm_custom_api_screen_text_49)
                     )
                     withLink(
                         LinkAnnotation.Clickable(
@@ -164,12 +165,12 @@ fun CustomApiScreen(
                             )
                         )
                     ) {
-                        append("官方文档")
+                        append(stringResource(Res.string.jvm_custom_api_screen_text_49))
                     }
                 }
                 CustomLyricsItemComponent(
                     bottomInfo = annotatedText,
-                    title = "验证信息",
+                    title = stringResource(Res.string.custom_api_screen_text_02),
                     value = customLyricsViewModel.customLrcApiAuthValue,
                     hint = stringResource(Res.string.lyrics_api_auth_key_hint),
                     onValueChange = { customLyricsViewModel.updateCustomLrcApiAuth(it) }
@@ -225,7 +226,7 @@ private fun CustomLyricsSettingTitleItem(
 
 @Composable
 private fun CustomLyricsSettingInput(
-    title: String = "地址",
+    title: String = stringResource(Res.string.jvm_connection_new_screen_text_14),
     bottomInfo: String? = null,
     value: String,
     hint: String,
@@ -262,7 +263,7 @@ private fun CustomLyricsSettingInput(
 @Composable
 private fun CustomLyricsItemComponent(
     modifier: Modifier = Modifier,
-    title: String = "地址",
+    title: String = stringResource(Res.string.jvm_connection_new_screen_text_14),
     bottomInfo: AnnotatedString? = null,
     textColor: Color = MaterialTheme.colorScheme.onSurface,
     enabled: Boolean = true,

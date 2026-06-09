@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -81,6 +81,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.album_24px
 import xymusic_kmp.composeapp.generated.resources.check_24px
@@ -115,11 +116,11 @@ fun JvmCustomApiScreen(
     val authConfigured = customLyricsViewModel.customLrcApiAuthValue.isNotBlank()
     val configuredEndpointCount = listOf(lyricsConfigured, coverConfigured).count { it }
     val priorityLabel = if (customLyricsViewModel.ifPriorityMusicApi) {
-        "音乐服务优先"
+        stringResource(Res.string.jvm_custom_api_screen_text_01)
     } else {
-        "自定义资源优先"
+        stringResource(Res.string.jvm_custom_api_screen_text_02)
     }
-    val authLabel = if (authConfigured) "Header 已配置" else "未设置 Header"
+    val authLabel = if (authConfigured) stringResource(Res.string.jvm_custom_api_screen_text_03) else stringResource(Res.string.jvm_custom_api_screen_text_04)
     val authHelpText = customApiAuthHelpText(
         docUrl = customLyricsViewModel.url,
         onOpenDoc = {
@@ -135,7 +136,7 @@ fun JvmCustomApiScreen(
     ) {
         JvmSettingPageHeader(
             title = pageTitle,
-            description = "统一管理桌面端歌词与封面自定义接口。配置为空时继续使用音乐服务返回的资源，保存后会应用到后续播放和封面解析流程。",
+            description = stringResource(Res.string.jvm_custom_api_screen_text_05),
         ) {
             JvmCustomApiSummaryCard(
                 configuredEndpointCount = configuredEndpointCount,
@@ -151,28 +152,28 @@ fun JvmCustomApiScreen(
         JvmSettingTwoPaneContent(
             leftContent = {
                 JvmSettingSection(
-                    title = "服务端点",
-                    subtitle = "按用途展示当前自定义资源端点，便于桌面端快速扫描配置状态。",
+                    title = stringResource(Res.string.jvm_custom_api_screen_text_06),
+                    subtitle = stringResource(Res.string.jvm_custom_api_screen_text_07),
                     badge = "CustomMediaApi",
                     contentContainerEnabled = false,
-                    qualityNote = "自定义接口请求失败或未配置时，会继续回退到当前音乐服务返回的歌词和封面，避免影响播放主流程。",
+                    qualityNote = stringResource(Res.string.jvm_custom_api_screen_text_08),
                 ) {
                     JvmCustomApiEndpointGrid(
                         endpoints = listOf(
                             JvmCustomApiEndpoint(
                                 icon = Res.drawable.music_note_24px,
                                 title = lyricsApiTitle,
-                                description = "为当前播放歌曲补充网络歌词文本。",
+                                description = stringResource(Res.string.jvm_custom_api_screen_text_09),
                                 url = customLyricsViewModel.customLrcSingleApiValue,
-                                badge = if (customLyricsViewModel.ifPriorityMusicApi) "回退" else "优先",
+                                badge = if (customLyricsViewModel.ifPriorityMusicApi) stringResource(Res.string.jvm_custom_api_screen_text_10) else stringResource(Res.string.jvm_custom_api_screen_text_11),
                                 configured = lyricsConfigured,
                             ),
                             JvmCustomApiEndpoint(
                                 icon = Res.drawable.album_24px,
                                 title = coverApiTitle,
-                                description = "为歌曲、专辑和艺术家补充封面地址。",
+                                description = stringResource(Res.string.jvm_custom_api_screen_text_12),
                                 url = customLyricsViewModel.customCoverApiValue,
-                                badge = if (customLyricsViewModel.ifPriorityMusicApi) "回退" else "优先",
+                                badge = if (customLyricsViewModel.ifPriorityMusicApi) stringResource(Res.string.jvm_custom_api_screen_text_10) else stringResource(Res.string.jvm_custom_api_screen_text_11),
                                 configured = coverConfigured,
                             )
                         )
@@ -180,9 +181,9 @@ fun JvmCustomApiScreen(
                 }
 
                 JvmSettingSection(
-                    title = "接口配置",
-                    subtitle = "请求地址和鉴权信息会在保存时写入本地设置，播放链路读取保存后的配置。",
-                    badge = "编辑",
+                    title = stringResource(Res.string.jvm_custom_api_screen_text_13),
+                    subtitle = stringResource(Res.string.jvm_custom_api_screen_text_14),
+                    badge = stringResource(Res.string.jvm_custom_api_screen_text_15),
                     contentContainerEnabled = false,
                 ) {
                     JvmCustomApiFieldList(
@@ -190,7 +191,7 @@ fun JvmCustomApiScreen(
                             JvmCustomApiField(
                                 icon = Res.drawable.music_note_24px,
                                 title = lyricsApiTitle,
-                                description = "请求成功后直接读取接口返回的歌词文本。",
+                                description = stringResource(Res.string.jvm_custom_api_screen_text_16),
                                 value = customLyricsViewModel.customLrcSingleApiValue,
                                 hint = "${ApiConstants.HTTPS}${stringResource(Res.string.lyrics_single_api_hint)}",
                                 badge = "GET / lyrics",
@@ -199,7 +200,7 @@ fun JvmCustomApiScreen(
                             JvmCustomApiField(
                                 icon = Res.drawable.album_24px,
                                 title = coverApiTitle,
-                                description = "封面接口需要返回可访问图片地址，客户端会把它作为自定义封面候选。",
+                                description = stringResource(Res.string.jvm_custom_api_screen_text_17),
                                 value = customLyricsViewModel.customCoverApiValue,
                                 hint = "${ApiConstants.HTTPS}${stringResource(Res.string.custom_cover_api_hint)}",
                                 badge = "GET / cover",
@@ -208,7 +209,7 @@ fun JvmCustomApiScreen(
                             JvmCustomApiField(
                                 icon = Res.drawable.password_24px,
                                 title = authTitle,
-                                description = "同一份鉴权信息会用于歌词和封面请求。",
+                                description = stringResource(Res.string.jvm_custom_api_screen_text_18),
                                 value = customLyricsViewModel.customLrcApiAuthValue,
                                 hint = stringResource(Res.string.lyrics_api_auth_key_hint),
                                 badge = ApiConstants.AUTHORIZATION,
@@ -221,49 +222,49 @@ fun JvmCustomApiScreen(
             },
             rightContent = {
                 JvmSettingSection(
-                    title = "请求策略",
-                    subtitle = "控制自定义服务和音乐服务在主流程中的先后顺序。",
-                    badge = "优先级",
+                    title = stringResource(Res.string.jvm_custom_api_screen_text_19),
+                    subtitle = stringResource(Res.string.jvm_custom_api_screen_text_20),
+                    badge = stringResource(Res.string.jvm_custom_api_screen_text_21),
                     qualityNote = if (customLyricsViewModel.ifPriorityMusicApi) {
-                        "当前先读取音乐服务接口；服务端没有歌词或封面时，再使用自定义接口兜底。"
+                        stringResource(Res.string.jvm_custom_api_screen_text_22)
                     } else {
-                        "当前先读取自定义接口；自定义接口失败时，再回退到音乐服务返回的资源。"
+                        stringResource(Res.string.jvm_custom_api_screen_text_23)
                     },
                 ) {
                     JvmSettingSwitchRow(
                         icon = Res.drawable.settings_24px,
                         title = stringResource(Res.string.prioritize_music_service_api),
-                        description = "开启后音乐服务优先，关闭后自定义接口优先。",
+                        description = stringResource(Res.string.jvm_custom_api_screen_text_24),
                         checked = customLyricsViewModel.ifPriorityMusicApi,
                         onCheckedChange = customLyricsViewModel::updateIfPriorityMusicApi,
                     )
                 }
 
                 JvmSettingSection(
-                    title = "请求参数",
-                    subtitle = "客户端会把当前歌曲信息作为查询参数追加到配置的 URL。",
-                    badge = "参数",
+                    title = stringResource(Res.string.jvm_custom_api_screen_text_25),
+                    subtitle = stringResource(Res.string.jvm_custom_api_screen_text_26),
+                    badge = stringResource(Res.string.jvm_custom_api_screen_text_27),
                     contentContainerEnabled = false,
                 ) {
                     JvmCustomApiTokenGrid(
                         tokens = listOf(
-                            JvmCustomApiToken(name = "title", description = "歌曲标题"),
-                            JvmCustomApiToken(name = "artist", description = "艺术家名称"),
-                            JvmCustomApiToken(name = "album", description = "专辑名称"),
-                            JvmCustomApiToken(name = "path", description = "本地或服务端路径"),
-                            JvmCustomApiToken(name = ApiConstants.AUTHORIZATION, description = "请求头鉴权"),
+                            JvmCustomApiToken(name = "title", description = stringResource(Res.string.jvm_custom_api_screen_text_28)),
+                            JvmCustomApiToken(name = "artist", description = stringResource(Res.string.jvm_custom_api_screen_text_29)),
+                            JvmCustomApiToken(name = "album", description = stringResource(Res.string.jvm_custom_api_screen_text_30)),
+                            JvmCustomApiToken(name = "path", description = stringResource(Res.string.jvm_custom_api_screen_text_31)),
+                            JvmCustomApiToken(name = ApiConstants.AUTHORIZATION, description = stringResource(Res.string.jvm_custom_api_screen_text_32)),
                             JvmCustomApiToken(
                                 name = ApiConstants.CUSTOM_IMAGE_HEADER_NAME,
-                                description = "鉴权参数兼容字段"
+                                description = stringResource(Res.string.jvm_custom_api_screen_text_33)
                             ),
                         )
                     )
                 }
 
                 JvmSettingSection(
-                    title = "生效范围",
-                    subtitle = "保存后的配置由歌词和封面解析链路统一读取。",
-                    badge = "运行时",
+                    title = stringResource(Res.string.jvm_custom_api_screen_text_34),
+                    subtitle = stringResource(Res.string.jvm_custom_api_screen_text_35),
+                    badge = stringResource(Res.string.jvm_about_screen_text_10),
                     contentContainerEnabled = false,
                 ) {
                     Column(
@@ -271,15 +272,15 @@ fun JvmCustomApiScreen(
                     ) {
                         JvmCustomApiRuntimeRow(
                             icon = Res.drawable.check_24px,
-                            title = "播放歌词",
-                            description = "当前播放歌曲没有内嵌歌词时，使用音乐服务和自定义接口补全。"
+                            title = stringResource(Res.string.jvm_custom_api_screen_text_36),
+                            description = stringResource(Res.string.jvm_custom_api_screen_text_37)
                         )
                         JvmCustomApiRuntimeRow(
                             icon = Res.drawable.http_24px,
-                            title = "封面解析",
-                            description = "歌曲、专辑和艺术家封面会按当前优先级选择候选地址。"
+                            title = stringResource(Res.string.jvm_custom_api_screen_text_38),
+                            description = stringResource(Res.string.jvm_custom_api_screen_text_39)
                         )
-                        JvmSettingNote(text = "此页面只保存配置，不立即发起端点测试；新的配置会在后续播放和封面加载时生效。")
+                        JvmSettingNote(text = stringResource(Res.string.jvm_custom_api_screen_text_40))
                     }
                 }
             }
@@ -302,9 +303,9 @@ private fun JvmCustomApiSummaryCard(
         JvmSettingStatusCard(
             width = JvmSettingSummaryCardWidth,
             items = listOf(
-                JvmSettingStatusCardItem(label = "已配置端点", value = "$configuredEndpointCount / 2"),
-                JvmSettingStatusCardItem(label = "当前优先", value = priorityLabel),
-                JvmSettingStatusCardItem(label = "鉴权状态", value = authLabel),
+                JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_custom_api_screen_text_41), value = "$configuredEndpointCount / 2"),
+                JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_custom_api_screen_text_42), value = priorityLabel),
+                JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_custom_api_screen_text_43), value = authLabel),
             )
         )
         Button(
@@ -359,7 +360,7 @@ private fun JvmCustomApiEndpointCard(
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val accentColor = if (endpoint.configured) colorScheme.primary else colorScheme.onSurfaceVariant
-    val statusLabel = if (endpoint.configured) "已配置" else "未配置"
+    val statusLabel = if (endpoint.configured) stringResource(Res.string.jvm_custom_api_screen_text_44) else stringResource(Res.string.jvm_custom_api_screen_text_45)
 
     Surface(
         modifier = modifier.heightIn(min = 150.dp),
@@ -408,7 +409,7 @@ private fun JvmCustomApiEndpointCard(
             }
 
             Text(
-                text = endpoint.url.ifBlank { "未配置请求地址" },
+                text = endpoint.url.ifBlank { stringResource(Res.string.jvm_custom_api_screen_text_46) },
                 style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
                 color = if (endpoint.configured) colorScheme.onSurface else colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -712,9 +713,9 @@ private fun customApiAuthHelpText(
     onOpenDoc: () -> Unit,
 ): AnnotatedString {
     return buildAnnotatedString {
-        append("鉴权信息会作为 ${ApiConstants.AUTHORIZATION} 请求头传入，并兼容 ")
+        append(stringResource(Res.string.jvm_custom_api_screen_text_47, ApiConstants.AUTHORIZATION))
         append(ApiConstants.CUSTOM_IMAGE_HEADER_NAME)
-        append(" 查询参数。更多信息请参考")
+        append(stringResource(Res.string.jvm_custom_api_screen_text_48))
         withLink(
             LinkAnnotation.Clickable(
                 tag = "custom_api_doc",
@@ -729,7 +730,7 @@ private fun customApiAuthHelpText(
                 )
             )
         ) {
-            append("官方文档")
+            append(stringResource(Res.string.jvm_custom_api_screen_text_49))
         }
         append("。")
     }

@@ -38,11 +38,13 @@ import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
+import cn.xybbz.ui.components.displayAudioBitRateText
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.StreamingQualityViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.online_music_quality
 import xymusic_kmp.composeapp.generated.resources.settings_voice_24px
@@ -59,6 +61,7 @@ fun JvmStreamingQualityScreen(
     val pageTitle = stringResource(Res.string.online_music_quality)
     val transcodeFormatTitle = stringResource(Res.string.transcoding_format)
     val selectedQuality = streamingQualityViewModel.wifiNetworkAudioBitRate
+    val selectedQualityLabel = selectedQuality.displayAudioBitRateText()
     val selectedFormatLabel = streamingQualityViewModel.transcodeAudioBitRateType
         .firstOrNull { it.targetFormat == streamingQualityViewModel.transcodeFormat }
         ?.name
@@ -67,31 +70,31 @@ fun JvmStreamingQualityScreen(
     JvmSettingPageScaffold() {
         JvmSettingPageHeader(
             title = pageTitle,
-            description = "选择桌面端播放时使用的在线音频品质和服务端转码格式。当前桌面端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。",
+            description = stringResource(Res.string.jvm_streaming_quality_screen_text_01),
         ) {
             JvmSettingStatusCard(
                 items = listOf(
-                    JvmSettingStatusCardItem(label = "播放品质", value = selectedQuality.audioBitRateStr),
-                    JvmSettingStatusCardItem(label = "转码格式", value = selectedFormatLabel),
-                    JvmSettingStatusCardItem(label = "应用范围", value = "全网络"),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_streaming_quality_screen_text_02), value = selectedQualityLabel),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.transcoding_format), value = selectedFormatLabel),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_streaming_quality_screen_text_03), value = stringResource(Res.string.jvm_streaming_quality_screen_text_04)),
                 )
             )
         }
 
         JvmSettingSection(
-            title = "播放品质",
-            subtitle = "桌面端保持一组品质选择，写入时同步更新 Wi-Fi 与移动网络码率。",
-            badge = "当前：全网络同步",
+            title = stringResource(Res.string.jvm_streaming_quality_screen_text_02),
+            subtitle = stringResource(Res.string.jvm_streaming_quality_screen_text_05),
+            badge = stringResource(Res.string.jvm_streaming_quality_screen_text_06),
             titleMinWidth = 240.dp,
             contentContainerEnabled = false,
-            qualityNote = "选择任一品质后，桌面端会继续同时更新 Wi-Fi 与移动网络两套码率设置。",
+            qualityNote = stringResource(Res.string.jvm_streaming_quality_screen_text_07),
         ) {
             JvmSettingActionEntryGrid(
                 actionEntries = TranscodeAudioBitRateType.entries.map { quality ->
                     JvmSettingActionEntry(
                         icon = Res.drawable.volume_up_24px,
                         kicker = quality.kickerText(),
-                        title = quality.audioBitRateStr,
+                        title = quality.displayAudioBitRateText(),
                         description = quality.descriptionText(),
                         selected = selectedQuality == quality,
                         status = "${quality.levelText()} · ${quality.audioBitRate}",
@@ -110,13 +113,13 @@ fun JvmStreamingQualityScreen(
 
         JvmSettingSection(
             title = transcodeFormatTitle,
-            subtitle = "格式列表来自服务端支持项，并补齐客户端可显示的默认格式。",
-            badge = "服务端能力",
+            subtitle = stringResource(Res.string.jvm_streaming_quality_screen_text_08),
+            badge = stringResource(Res.string.jvm_streaming_quality_screen_text_09),
             titleMinWidth = 240.dp,
             contentContainerEnabled = false,
         ) {
             if (streamingQualityViewModel.transcodeAudioBitRateType.isEmpty()) {
-                JvmStreamingQualityEmptyState(text = "正在读取服务端支持的转码格式…")
+                JvmStreamingQualityEmptyState(text = stringResource(Res.string.jvm_streaming_quality_screen_text_10))
             } else {
                 JvmSettingActionEntryGrid(
                     actionEntries = streamingQualityViewModel.transcodeAudioBitRateType.map { format ->
@@ -164,23 +167,25 @@ private fun JvmStreamingQualityEmptyState(text: String) {
     }
 }
 
+@Composable
 private fun TranscodeAudioBitRateType.kickerText(): String {
     return when (this) {
-        TranscodeAudioBitRateType.LOSSLESS -> "原始音频"
-        TranscodeAudioBitRateType.HIGHEST -> "高质量"
-        TranscodeAudioBitRateType.HIGH -> "均衡"
-        TranscodeAudioBitRateType.MEDIUM -> "标准"
-        TranscodeAudioBitRateType.LOW -> "省流量"
+        TranscodeAudioBitRateType.LOSSLESS -> stringResource(Res.string.jvm_streaming_quality_screen_text_11)
+        TranscodeAudioBitRateType.HIGHEST -> stringResource(Res.string.jvm_streaming_quality_screen_text_12)
+        TranscodeAudioBitRateType.HIGH -> stringResource(Res.string.jvm_cache_limit_screen_text_32)
+        TranscodeAudioBitRateType.MEDIUM -> stringResource(Res.string.jvm_streaming_quality_screen_text_13)
+        TranscodeAudioBitRateType.LOW -> stringResource(Res.string.jvm_streaming_quality_screen_text_14)
     }
 }
 
+@Composable
 private fun TranscodeAudioBitRateType.descriptionText(): String {
     return when (this) {
-        TranscodeAudioBitRateType.LOSSLESS -> "尽量保留服务端提供的原始音频流。"
-        TranscodeAudioBitRateType.HIGHEST -> "更接近原曲听感，适合稳定网络。"
-        TranscodeAudioBitRateType.HIGH -> "兼顾音质与加载速度，桌面端常用。"
-        TranscodeAudioBitRateType.MEDIUM -> "默认转码码率，适合多数服务端。"
-        TranscodeAudioBitRateType.LOW -> "弱网下更快开始播放，带宽占用更低。"
+        TranscodeAudioBitRateType.LOSSLESS -> stringResource(Res.string.jvm_streaming_quality_screen_text_15)
+        TranscodeAudioBitRateType.HIGHEST -> stringResource(Res.string.jvm_streaming_quality_screen_text_16)
+        TranscodeAudioBitRateType.HIGH -> stringResource(Res.string.jvm_streaming_quality_screen_text_17)
+        TranscodeAudioBitRateType.MEDIUM -> stringResource(Res.string.jvm_streaming_quality_screen_text_18)
+        TranscodeAudioBitRateType.LOW -> stringResource(Res.string.jvm_streaming_quality_screen_text_19)
     }
 }
 
@@ -194,18 +199,20 @@ private fun TranscodeAudioBitRateType.levelText(): String {
     }
 }
 
+@Composable
 private fun String.formatKickerText(): String {
     return when (lowercase()) {
-        "mp3" -> "兼容优先"
-        "aac" -> "压缩效率"
-        else -> "服务端格式"
+        "mp3" -> stringResource(Res.string.jvm_streaming_quality_screen_text_20)
+        "aac" -> stringResource(Res.string.jvm_streaming_quality_screen_text_21)
+        else -> stringResource(Res.string.jvm_streaming_quality_screen_text_22)
     }
 }
 
+@Composable
 private fun String.formatDescriptionText(): String {
     return when (lowercase()) {
-        "mp3" -> "兼容性强，适合跨服务端、跨设备播放。"
-        "aac" -> "在相近码率下保持更好的细节与体积平衡。"
-        else -> "使用服务端返回的转码格式进行在线播放。"
+        "mp3" -> stringResource(Res.string.jvm_streaming_quality_screen_text_23)
+        "aac" -> stringResource(Res.string.jvm_streaming_quality_screen_text_24)
+        else -> stringResource(Res.string.jvm_streaming_quality_screen_text_25)
     }
 }

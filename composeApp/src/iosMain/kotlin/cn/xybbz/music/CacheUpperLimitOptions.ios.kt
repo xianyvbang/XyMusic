@@ -18,12 +18,14 @@
 
 package cn.xybbz.music
 
+import xymusic_kmp.composeapp.generated.resources.*
+
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 
 actual fun cacheUpperLimitOptions(): List<CacheUpperLimitOption> {
     return listOf(
-        CacheUpperLimitOption(CacheUpperLimitEnum.Auto, "自动"),
-        CacheUpperLimitOption(CacheUpperLimitEnum.No, "不缓存"),
+        CacheUpperLimitOption(CacheUpperLimitEnum.Auto, "", Res.string.cache_upper_limit_options_text_01),
+        CacheUpperLimitOption(CacheUpperLimitEnum.No, "", Res.string.jvm_cache_limit_screen_text_20),
         CacheUpperLimitOption(CacheUpperLimitEnum.OneHundred, "100MB"),
         CacheUpperLimitOption(CacheUpperLimitEnum.FiveHundred, "500MB"),
         CacheUpperLimitOption(CacheUpperLimitEnum.EightHundred, "800MB"),

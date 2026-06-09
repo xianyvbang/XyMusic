@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -84,6 +84,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.album_24px
 import xymusic_kmp.composeapp.generated.resources.background_image
@@ -127,8 +128,8 @@ fun JvmSetBackgroundImageScreen(
     val selectImageTitle = stringResource(Res.string.select_image)
     val clearImageTitle = stringResource(Res.string.clear_image)
     val fileName = imageFilePath?.toJvmBackgroundFileName()?.takeIf { it.isNotBlank() }
-        ?: "未选择背景图片"
-    val filePath = imageFilePath?.takeIf { it.isNotBlank() } ?: "未设置"
+        ?: stringResource(Res.string.jvm_set_background_image_screen_text_01)
+    val filePath = imageFilePath?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.jvm_interface_setting_screen_text_02)
 
     key(XyTheme.brash.backgroundImageUri) {
         JvmSettingPageScaffold(
@@ -139,15 +140,15 @@ fun JvmSetBackgroundImageScreen(
         ) {
             JvmSettingPageHeader(
                 title = pageTitle,
-                description = "将背景图选择、清除和裁剪预览放在同一个桌面工作区，保存前即可看到它与侧栏、内容区和播放栏叠加后的状态。",
+                description = stringResource(Res.string.jvm_set_background_image_screen_text_02),
             ) {
                 JvmSettingStatusCard(
                     width = JvmSettingSummaryCardWidth,
                     prominentValue = true,
                     items = listOf(
-                        JvmSettingStatusCardItem(label = "当前状态", value = if (imageSelected) "已选择" else "未选择"),
-                        JvmSettingStatusCardItem(label = "显示比例", value = "16:9"),
-                        JvmSettingStatusCardItem(label = "填充方式", value = "居中裁剪"),
+                        JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_set_background_image_screen_text_03), value = if (imageSelected) stringResource(Res.string.jvm_set_background_image_screen_text_04) else stringResource(Res.string.jvm_set_background_image_screen_text_05)),
+                        JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_set_background_image_screen_text_06), value = "16:9"),
+                        JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_set_background_image_screen_text_07), value = stringResource(Res.string.jvm_set_background_image_screen_text_08)),
                     )
                 )
             }
@@ -155,11 +156,11 @@ fun JvmSetBackgroundImageScreen(
             JvmSettingTwoPaneContent(
                 leftContent = {
                     JvmSettingSection(
-                        title = "背景预览",
-                        subtitle = "按照当前桌面端背景图逻辑展示，图片会铺满 16:9 区域并保留中心视觉。",
-                        badge = if (imageSelected) "当前图片" else "默认背景",
+                        title = stringResource(Res.string.jvm_set_background_image_screen_text_09),
+                        subtitle = stringResource(Res.string.jvm_set_background_image_screen_text_10),
+                        badge = if (imageSelected) stringResource(Res.string.jvm_set_background_image_screen_text_11) else stringResource(Res.string.jvm_set_background_image_screen_text_12),
                         contentContainerEnabled = false,
-                        qualityNote = "背景图片会使用 ContentScale.Crop 填充预览区域；窗口比例变化时边缘可能被裁剪，中心内容会优先保留。"
+                        qualityNote = stringResource(Res.string.jvm_set_background_image_screen_text_13)
                     ) {
                         JvmBackgroundPreviewWorkbench(
                             imageFilePath = imageFilePath,
@@ -183,29 +184,29 @@ fun JvmSetBackgroundImageScreen(
                     )
 
                     JvmSettingSection(
-                        title = "显示信息",
-                        subtitle = "桌面端只展示与当前背景相关的少量关键信息。",
+                        title = stringResource(Res.string.jvm_set_background_image_screen_text_14),
+                        subtitle = stringResource(Res.string.jvm_set_background_image_screen_text_15),
                         badge = "JVM",
                     ) {
                         JvmBackgroundInfoRows(
                             rows = listOf(
                                 JvmBackgroundInfoRow(
                                     icon = Res.drawable.visibility_24px,
-                                    title = "生效范围",
-                                    description = "桌面端主窗口背景。",
+                                    title = stringResource(Res.string.jvm_custom_api_screen_text_34),
+                                    description = stringResource(Res.string.jvm_set_background_image_screen_text_16),
                                     value = "JVM"
                                 ),
                                 JvmBackgroundInfoRow(
                                     icon = Res.drawable.settings_24px,
-                                    title = "裁剪策略",
-                                    description = "铺满预览区域，超出部分自动裁剪。",
+                                    title = stringResource(Res.string.jvm_set_background_image_screen_text_17),
+                                    description = stringResource(Res.string.jvm_set_background_image_screen_text_18),
                                     value = "Crop"
                                 ),
                                 JvmBackgroundInfoRow(
                                     icon = Res.drawable.folder_managed_24px,
-                                    title = "文件路径",
+                                    title = stringResource(Res.string.jvm_set_background_image_screen_text_19),
                                     description = filePath,
-                                    value = if (imageSelected) "本地" else "空",
+                                    value = if (imageSelected) stringResource(Res.string.local) else stringResource(Res.string.jvm_set_background_image_screen_text_20),
                                     selected = imageSelected,
                                     descriptionStyle = JvmSettingRowDescriptionStyle.Path,
                                 ),
@@ -213,7 +214,7 @@ fun JvmSetBackgroundImageScreen(
                         )
                     }
 
-                    JvmSettingNote(text = "清除背景后会回到默认主题背景，侧栏和播放栏保持当前 Material 主题样式。")
+                    JvmSettingNote(text = stringResource(Res.string.jvm_set_background_image_screen_text_21))
                 }
             )
         }
@@ -292,14 +293,14 @@ private fun JvmBackgroundEmptyPreview() {
             size = 72.dp,
         )
         XyText(
-            text = "未选择背景图片",
+            text = stringResource(Res.string.jvm_set_background_image_screen_text_01),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         XyTextSub(
-            text = "页面会回到默认深色背景，侧栏和播放栏保持当前主题。",
+            text = stringResource(Res.string.jvm_set_background_image_screen_text_22),
             style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 2,
@@ -563,21 +564,21 @@ private fun JvmBackgroundActionPanel(
                     verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
                 ) {
                     XyText(
-                        text = "当前图片",
+                        text = stringResource(Res.string.jvm_set_background_image_screen_text_11),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     XyTextSub(
-                        text = "保留原页面的选择和清除动作，并把文件状态放到操作旁边。",
+                        text = stringResource(Res.string.jvm_set_background_image_screen_text_23),
                         style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                JvmBackgroundPill(text = if (imageSelected) "已选择" else "未选择", selected = imageSelected)
+                JvmBackgroundPill(text = if (imageSelected) stringResource(Res.string.jvm_set_background_image_screen_text_04) else stringResource(Res.string.jvm_set_background_image_screen_text_05), selected = imageSelected)
             }
 
             JvmBackgroundFileCard(

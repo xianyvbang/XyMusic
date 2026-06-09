@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -74,6 +74,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.connection_address
 import xymusic_kmp.composeapp.generated.resources.connection_info
@@ -126,7 +127,7 @@ fun JvmConnectionConfigInfoScreen(
     } else {
         stringResource(Res.string.connection_server_version_unknown_label)
     }
-    val dataSourceLabel = connectionConfig?.type?.title ?: "未连接"
+    val dataSourceLabel = connectionConfig?.type?.title ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
     val address = connectionConfigInfoViewModel.address
     val username = connectionConfigInfoViewModel.username
     val currentConnection = connectionConfigInfoViewModel.getConnectionId() == connectionId
@@ -134,11 +135,11 @@ fun JvmConnectionConfigInfoScreen(
     val capabilityValue = buildList {
         if (connectionConfig?.ifEnabledDownload == true) add(downloadText)
         if (connectionConfig?.ifEnabledDelete == true) add(deleteText)
-    }.takeIf { it.isNotEmpty() }?.joinToString(" / ") ?: "只读"
+    }.takeIf { it.isNotEmpty() }?.joinToString(" / ") ?: stringResource(Res.string.connection_permission_read_only)
     val capabilityText = stringResource(Res.string.connection_permissions_label, capabilityValue)
     val libraryText = connectionConfig?.libraryIds
         ?.takeIf { it.isNotEmpty() }
-        ?.let { "已选 ${it.size} 个媒体库" }
+        ?.let { stringResource(Res.string.jvm_connection_config_info_screen_text_02, it.size) }
         ?: allLibraryText
     val saveConnection = {
         coroutineScope.launch {
@@ -158,18 +159,18 @@ fun JvmConnectionConfigInfoScreen(
     ) {
         JvmSettingPageHeader(
             title = pageTitle,
-            description = "维护当前音乐服务地址、账号凭据和显示别名；地址、用户名或密码变更后，保存会触发当前连接重新登录。",
+            description = stringResource(Res.string.jvm_connection_config_info_screen_text_03),
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,
                 prominentValue = true,
                 items = listOf(
                     JvmSettingStatusCardItem(
-                        label = "连接状态",
-                        value = if (currentConnection) currentConnectionText else "备用连接"
+                        label = stringResource(Res.string.jvm_connection_config_info_screen_text_04),
+                        value = if (currentConnection) currentConnectionText else stringResource(Res.string.jvm_connection_config_info_screen_text_05)
                     ),
-                    JvmSettingStatusCardItem(label = "服务端版本", value = serverVersionText),
-                    JvmSettingStatusCardItem(label = "服务类型", value = dataSourceLabel),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_connection_config_info_screen_text_06), value = serverVersionText),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_connection_config_info_screen_text_07), value = dataSourceLabel),
                 )
             )
         }
@@ -177,16 +178,16 @@ fun JvmConnectionConfigInfoScreen(
         JvmSettingTwoPaneContent(
             leftContent = {
                 JvmSettingSection(
-                    title = "当前连接",
-                    subtitle = "用于桌面端播放、媒体库浏览和数据同步的数据源。",
-                    badge = if (currentConnection) "在线" else "未选中",
+                    title = stringResource(Res.string.jvm_connection_config_info_screen_text_08),
+                    subtitle = stringResource(Res.string.jvm_connection_config_info_screen_text_09),
+                    badge = if (currentConnection) stringResource(Res.string.jvm_connection_config_info_screen_text_10) else stringResource(Res.string.jvm_connection_config_info_screen_text_11),
                     contentContainerEnabled = false,
                 ) {
                     JvmConnectionHeroCard(
                         connectionConfig = connectionConfig,
                         name = connectionName,
                         address = address,
-                        status = if (currentConnection) currentConnectionText else "备用",
+                        status = if (currentConnection) currentConnectionText else stringResource(Res.string.jvm_connection_config_info_screen_text_12),
                     )
                 }
 
@@ -198,9 +199,9 @@ fun JvmConnectionConfigInfoScreen(
                 )
 
                 JvmSettingSection(
-                    title = "连接设置",
-                    subtitle = "修改服务地址、登录账号、密码和本地显示别名。",
-                    badge = if (canSave) "可保存" else "需填写",
+                    title = stringResource(Res.string.jvm_connection_config_info_screen_text_13),
+                    subtitle = stringResource(Res.string.jvm_connection_config_info_screen_text_14),
+                    badge = if (canSave) stringResource(Res.string.jvm_connection_config_info_screen_text_15) else stringResource(Res.string.jvm_connection_config_info_screen_text_16),
                     contentContainerEnabled = false,
                     headerAction = {
                         XyButton(
@@ -225,54 +226,54 @@ fun JvmConnectionConfigInfoScreen(
             },
             rightContent = {
                 JvmSettingSection(
-                    title = "连接详情",
-                    subtitle = "来自当前 ConnectionConfig 的关键状态。",
-                    badge = "详情",
+                    title = stringResource(Res.string.jvm_connection_config_info_screen_text_17),
+                    subtitle = stringResource(Res.string.jvm_connection_config_info_screen_text_18),
+                    badge = stringResource(Res.string.jvm_connection_config_info_screen_text_19),
                 ) {
-                    JvmConnectionInfoRow(label = "连接 ID", value = "#$connectionId")
-                    JvmConnectionInfoRow(label = "服务类型", value = dataSourceLabel)
-                    JvmConnectionInfoRow(label = "媒体库", value = libraryText)
-                    JvmConnectionInfoRow(label = "权限", value = capabilityText)
+                    JvmConnectionInfoRow(label = stringResource(Res.string.jvm_connection_config_info_screen_text_20), value = "#$connectionId")
+                    JvmConnectionInfoRow(label = stringResource(Res.string.jvm_connection_config_info_screen_text_07), value = dataSourceLabel)
+                    JvmConnectionInfoRow(label = stringResource(Res.string.music_library), value = libraryText)
+                    JvmConnectionInfoRow(label = stringResource(Res.string.jvm_connection_config_info_screen_text_21), value = capabilityText)
                 }
 
                 JvmSettingSection(
-                    title = "保存影响",
-                    subtitle = "保存按钮会更新本地配置，并按当前连接状态处理登录。",
-                    badge = "保存",
+                    title = stringResource(Res.string.jvm_connection_config_info_screen_text_22),
+                    subtitle = stringResource(Res.string.jvm_connection_config_info_screen_text_23),
+                    badge = stringResource(Res.string.save),
                 ) {
                     JvmSettingBaseRow(
                         icon = Res.drawable.refresh_24px,
-                        title = "地址、用户名、密码变更",
-                        description = "如果正在使用这个连接，保存后会立即重新登录。",
+                        title = stringResource(Res.string.jvm_connection_config_info_screen_text_24),
+                        description = stringResource(Res.string.jvm_connection_config_info_screen_text_25),
                         descriptionMaxLines = 2,
                         iconSelected = true,
                         trailing = {
-                            JvmConnectionStatePill(text = if (currentConnection) "会重登" else "下次生效")
+                            JvmConnectionStatePill(text = if (currentConnection) stringResource(Res.string.jvm_connection_config_info_screen_text_26) else stringResource(Res.string.jvm_connection_config_info_screen_text_27))
                         }
                     )
                     JvmSettingBaseRow(
                         icon = Res.drawable.label_24px,
-                        title = "别名变更",
-                        description = "只更新本地显示名，不额外触发服务端请求。",
+                        title = stringResource(Res.string.jvm_connection_config_info_screen_text_28),
+                        description = stringResource(Res.string.jvm_connection_config_info_screen_text_29),
                         descriptionMaxLines = 2,
                         trailing = {
-                            JvmConnectionStatePill(text = "本地")
+                            JvmConnectionStatePill(text = stringResource(Res.string.local))
                         }
                     )
                     JvmSettingBaseRow(
                         icon = Res.drawable.warning_24px,
-                        title = "空值校验",
-                        description = "链接地址和别名为空时不允许保存。",
+                        title = stringResource(Res.string.jvm_connection_config_info_screen_text_30),
+                        description = stringResource(Res.string.jvm_connection_config_info_screen_text_31),
                         descriptionMaxLines = 2,
                         iconColor = MaterialTheme.colorScheme.error,
                         trailing = {
                             JvmConnectionStatePill(
-                                text = if (canSave) "通过" else "待填写",
+                                text = if (canSave) stringResource(Res.string.jvm_connection_config_info_screen_text_32) else stringResource(Res.string.jvm_connection_config_info_screen_text_33),
                                 selected = canSave,
                             )
                         }
                     )
-                    JvmSettingNote(text = "密码字段沿用当前连接输入框和本地加密保存流程；页面只重排信息架构，不改变原有保存与重新登录语义。")
+                    JvmSettingNote(text = stringResource(Res.string.jvm_connection_config_info_screen_text_34))
                 }
             }
         )
@@ -323,7 +324,7 @@ private fun JvmConnectionHeroCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 XyTextSub(
-                    text = address.ifBlank { "未填写链接地址" },
+                    text = address.ifBlank { stringResource(Res.string.jvm_connection_config_info_screen_text_35) },
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontFamily = FontFamily.Monospace,
                         lineHeight = 18.sp
@@ -397,7 +398,7 @@ private fun JvmConnectionOverview(
         JvmSettingOverviewTile(
             modifier = Modifier.weight(1f),
             icon = Res.drawable.http_24px,
-            kicker = "服务器地址",
+            kicker = stringResource(Res.string.jvm_connection_config_info_screen_text_36),
             value = address.jvmConnectionHostLabel(),
             sub = address.jvmConnectionProtocolPortLabel(connectionConfig),
         )
@@ -405,15 +406,15 @@ private fun JvmConnectionOverview(
             modifier = Modifier.weight(1f),
             icon = Res.drawable.person_24px,
             kicker = stringResource(Res.string.username),
-            value = username.ifBlank { "未填写" },
-            sub = "保存后用于重新登录",
+            value = username.ifBlank { stringResource(Res.string.jvm_connection_config_info_screen_text_37) },
+            sub = stringResource(Res.string.jvm_connection_config_info_screen_text_38),
         )
         JvmSettingOverviewTile(
             modifier = Modifier.weight(1f),
             icon = Res.drawable.info_24px,
-            kicker = "服务版本",
-            value = serverVersionText.removePrefix("版本："),
-            sub = connectionConfig?.type?.title ?: "等待连接配置",
+            kicker = stringResource(Res.string.jvm_connection_config_info_screen_text_39),
+            value = serverVersionText.removePrefix(stringResource(Res.string.jvm_connection_config_info_screen_text_40)),
+            sub = connectionConfig?.type?.title ?: stringResource(Res.string.jvm_connection_config_info_screen_text_41),
         )
     }
 }
@@ -447,8 +448,8 @@ private fun JvmConnectionFormFields(
     ) {
         JvmConnectionFormCard(
             title = stringResource(Res.string.connection_address),
-            description = "示例：${ApiConstants.HTTP}192.168.1.2:8096 或 ${ApiConstants.HTTPS}music.example.com",
-            state = "必填",
+            description = stringResource(Res.string.jvm_connection_config_info_screen_text_42, ApiConstants.HTTP, ApiConstants.HTTPS),
+            state = stringResource(Res.string.jvm_connection_config_info_screen_text_43),
             selected = true,
         ) {
             JvmAddressInputEdit(
@@ -459,8 +460,8 @@ private fun JvmConnectionFormFields(
 
         JvmConnectionFormCard(
             title = stringResource(Res.string.username),
-            description = "保存后作为服务端 API 登录账号。",
-            state = "账号",
+            description = stringResource(Res.string.jvm_connection_config_info_screen_text_44),
+            state = stringResource(Res.string.jvm_connection_config_info_screen_text_45),
         ) {
             JvmUsernameInputEdit(
                 username = username,
@@ -470,8 +471,8 @@ private fun JvmConnectionFormFields(
 
         JvmConnectionFormCard(
             title = stringResource(Res.string.password),
-            description = "密码会在本地加密保存。",
-            state = "加密",
+            description = stringResource(Res.string.jvm_connection_config_info_screen_text_46),
+            state = stringResource(Res.string.jvm_connection_config_info_screen_text_47),
         ) {
             JvmPasswordInputEdit(
                 password = password,
@@ -481,8 +482,8 @@ private fun JvmConnectionFormFields(
 
         JvmConnectionFormCard(
             title = stringResource(Res.string.set_alias),
-            description = "别名只影响本地列表和页面标题展示。",
-            state = "必填",
+            description = stringResource(Res.string.jvm_connection_config_info_screen_text_48),
+            state = stringResource(Res.string.jvm_connection_config_info_screen_text_43),
             selected = true,
         ) {
             JvmConnectionNameInputEdit(
@@ -643,9 +644,10 @@ private fun JvmConnectionStatePill(
 /**
  * 提取连接地址中的主机名。
  */
+@Composable
 private fun String.jvmConnectionHostLabel(): String {
     if (isBlank()) {
-        return "未填写"
+        return stringResource(Res.string.jvm_connection_config_info_screen_text_37)
     }
     return runCatching {
         URI(withDefaultHttpScheme()).host
@@ -657,9 +659,10 @@ private fun String.jvmConnectionHostLabel(): String {
  *
  * @param connectionConfig 当前连接配置，用于补充默认端口。
  */
+@Composable
 private fun String.jvmConnectionProtocolPortLabel(connectionConfig: ConnectionConfig?): String {
     if (isBlank()) {
-        return "等待填写服务地址"
+        return stringResource(Res.string.jvm_connection_config_info_screen_text_49)
     }
     val uri = runCatching {
         URI(withDefaultHttpScheme())

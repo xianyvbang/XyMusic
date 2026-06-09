@@ -1,5 +1,7 @@
 package cn.xybbz.proxy
 
+import xymusic_kmp.composeapp.generated.resources.*
+
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.music.CacheStatus
@@ -55,6 +57,7 @@ import io.ktor.utils.io.writeFully
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.getString
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import java.net.URLEncoder
@@ -296,7 +299,7 @@ object JvmReverseProxyServer : KoinComponent {
         val targetUrl = validateTargetUrl(call.request.queryParameters["url"])
         if (targetUrl == null) {
             call.respondText(
-                text = "url 参数无效，仅支持 http/https 且不能回指当前代理服务。",
+                text = getString(Res.string.jvm_reverse_proxy_server_text_03),
                 status = HttpStatusCode.BadRequest
             )
             return
@@ -305,7 +308,7 @@ object JvmReverseProxyServer : KoinComponent {
         val httpClient = currentProxyHttpClient()
         if (httpClient == null) {
             call.respondText(
-                text = "代理服务尚未拿到可用的数据源客户端。",
+                text = getString(Res.string.jvm_reverse_proxy_server_text_04),
                 status = HttpStatusCode.ServiceUnavailable
             )
             return
@@ -386,7 +389,10 @@ object JvmReverseProxyServer : KoinComponent {
         } catch (throwable: Throwable) {
             logger.error(throwable) { "代理请求失败，targetUrl=$targetUrl" }
             call.respondText(
-                text = "代理请求失败：${throwable.message ?: "unknown"}",
+                text = getString(
+                    Res.string.jvm_reverse_proxy_server_text_06,
+                    throwable.message ?: getString(Res.string.unknown)
+                ),
                 status = HttpStatusCode.BadGateway
             )
             throw throwable
@@ -404,7 +410,7 @@ object JvmReverseProxyServer : KoinComponent {
         val sessionId = call.request.queryParameters["id"]?.toLongOrNull()
         if (sessionId == null) {
             call.respondText(
-                text = "id 参数无效。",
+                text = getString(Res.string.jvm_reverse_proxy_server_text_07),
                 status = HttpStatusCode.BadRequest
             )
             return
@@ -413,7 +419,7 @@ object JvmReverseProxyServer : KoinComponent {
         val cacheController = JvmDownloadCacheController.controllerOrNull()
         if (cacheController == null) {
             call.respondText(
-                text = "播放缓存服务不可用。",
+                text = getString(Res.string.jvm_reverse_proxy_server_text_08),
                 status = HttpStatusCode.ServiceUnavailable
             )
             return
@@ -422,14 +428,14 @@ object JvmReverseProxyServer : KoinComponent {
         val snapshot = cacheController.getSessionSnapshot(sessionId)
         if (snapshot == null) {
             call.respondText(
-                text = "播放缓存会话不存在。",
+                text = getString(Res.string.jvm_reverse_proxy_server_text_09),
                 status = HttpStatusCode.NotFound
             )
             return
         }
         if (snapshot.status == CacheStatus.FAILED || snapshot.status == CacheStatus.CANCELLED) {
             call.respondText(
-                text = "播放缓存会话不可用。",
+                text = getString(Res.string.jvm_reverse_proxy_server_text_10),
                 status = HttpStatusCode.ServiceUnavailable
             )
             return
@@ -470,7 +476,7 @@ object JvmReverseProxyServer : KoinComponent {
         )
         if (requestedRange == null) {
             call.respondText(
-                text = "Range 请求无效。",
+                text = getString(Res.string.jvm_reverse_proxy_server_text_11),
                 status = HttpStatusCode.RequestedRangeNotSatisfiable
             )
             return
@@ -540,7 +546,7 @@ object JvmReverseProxyServer : KoinComponent {
         val sourceUrl = cacheController.getSessionSourceUrl(sessionId)
         if (sourceUrl.isNullOrBlank()) {
             call.respondText(
-                text = "播放缓存回退地址不可用。",
+                text = getString(Res.string.jvm_reverse_proxy_server_text_12),
                 status = HttpStatusCode.BadGateway,
             )
             return
@@ -548,7 +554,7 @@ object JvmReverseProxyServer : KoinComponent {
 
         val proxyUrl = wrapTargetUrl(sourceUrl)
         logger.info {
-            "缓存播放回退普通代理：sessionId=$sessionId, reason=$reason"
+            "缓存播放回退普通代理：sessionId=${sessionId}, reason=${reason}"
         }
         call.respondRedirect(
             url = proxyUrl,
@@ -576,7 +582,7 @@ object JvmReverseProxyServer : KoinComponent {
         val kind = HlsResourceKind.fromRouteValue(call.request.queryParameters["type"])
         if (sessionId == null || resourceUrl.isNullOrBlank() || kind == null) {
             call.respondText(
-                text = "HLS 参数无效。",
+                text = getString(Res.string.jvm_reverse_proxy_server_text_14),
                 status = HttpStatusCode.BadRequest,
             )
             return
@@ -586,7 +592,7 @@ object JvmReverseProxyServer : KoinComponent {
         val cacheController = JvmDownloadCacheController.controllerOrNull()
         if (cacheController == null) {
             call.respondText(
-                text = "播放缓存服务不可用。",
+                text = getString(Res.string.jvm_reverse_proxy_server_text_08),
                 status = HttpStatusCode.ServiceUnavailable,
             )
             return
@@ -600,7 +606,7 @@ object JvmReverseProxyServer : KoinComponent {
             )
             if (playlist == null) {
                 call.respondText(
-                    text = "HLS playlist 不可用。",
+                    text = getString(Res.string.jvm_reverse_proxy_server_text_15),
                     status = HttpStatusCode.BadGateway,
                 )
                 return
@@ -705,7 +711,7 @@ object JvmReverseProxyServer : KoinComponent {
         }
 
         call.respondText(
-            text = "本地代理访问令牌无效。",
+            text = getString(Res.string.jvm_reverse_proxy_server_text_16),
             status = HttpStatusCode.Forbidden,
         )
         return false

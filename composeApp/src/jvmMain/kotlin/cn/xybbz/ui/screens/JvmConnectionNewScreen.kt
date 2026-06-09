@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -101,6 +101,7 @@ import cn.xybbz.viewmodel.ConnectionViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.cancel_24px
 import xymusic_kmp.composeapp.generated.resources.check_24px
@@ -357,7 +358,7 @@ private fun JvmConnectionNewSidebar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             XyText(
-                text = "服务器连接",
+                text = stringResource(Res.string.server_connection),
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.W900,
                 style = MaterialTheme.typography.titleMedium,
@@ -499,7 +500,7 @@ private fun JvmConnectionNewStatusPill(
 private fun JvmConnectionNewStepPanel(
     activeStep: Int,
 ) {
-    val steps = listOf("选择服务", "输入凭据", "选择资源", "登录验证")
+    val steps = listOf(stringResource(Res.string.jvm_connection_new_screen_text_01), stringResource(Res.string.jvm_connection_new_screen_text_02), stringResource(Res.string.jvm_connection_new_screen_text_03), stringResource(Res.string.jvm_connection_new_screen_text_04))
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -740,9 +741,9 @@ private fun JvmConnectionNewHeader(
     compact: Boolean,
 ) {
     val titleCopy = if (selectedDataSource.ifInputUrl) {
-        "已选择 ${selectedDataSource.title}，输入服务地址和账号后即可读取媒体资源。"
+        stringResource(Res.string.jvm_connection_new_screen_text_05, selectedDataSource.title)
     } else {
-        "已选择 ${selectedDataSource.title}，输入账号后会自动读取可用服务器。"
+        stringResource(Res.string.jvm_connection_new_screen_text_06, selectedDataSource.title)
     }
 
     if (compact) {
@@ -776,7 +777,7 @@ private fun JvmConnectionNewHeaderText(
         modifier = modifier
     ) {
         XyTextLarge(
-            text = "连接到媒体服务器",
+            text = stringResource(Res.string.jvm_connection_new_screen_text_07),
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W900,
             style = MaterialTheme.typography.headlineLarge,
@@ -858,7 +859,7 @@ private fun JvmConnectionNewFormPanel(
         modifier = modifier,
     ) {
         XyText(
-            text = "${selectedDataSource.title} 凭据",
+            text = stringResource(Res.string.jvm_connection_new_screen_text_08, selectedDataSource.title),
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W900,
             style = MaterialTheme.typography.titleMedium
@@ -875,7 +876,7 @@ private fun JvmConnectionNewFormPanel(
             AnimatedVisibility(visible = selectedDataSource.ifInputUrl) {
                 Column {
                     JvmConnectionNewInputField(
-                        label = "服务地址",
+                        label = stringResource(Res.string.jvm_connection_new_screen_text_09),
                         text = address,
                         onChange = onAddressChange,
                         hint = "${ApiConstants.HTTP}192.168.1.12:${selectedDataSource.httpPort}",
@@ -894,18 +895,18 @@ private fun JvmConnectionNewFormPanel(
                         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
                     ) {
                         JvmConnectionNewChip(
-                            text = "默认端口 ${selectedDataSource.httpPort}",
+                            text = stringResource(Res.string.jvm_connection_new_screen_text_10, selectedDataSource.httpPort),
                             color = MaterialTheme.colorScheme.primary,
                             backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                         )
-                        JvmConnectionNewChip(text = "支持 http / https")
+                        JvmConnectionNewChip(text = stringResource(Res.string.jvm_connection_new_screen_text_11))
                     }
                     Spacer(modifier = Modifier.height(14.dp))
                 }
             }
 
             JvmConnectionNewInputField(
-                label = "用户名",
+                label = stringResource(Res.string.username),
                 text = username,
                 onChange = onUsernameChange,
                 hint = "admin",
@@ -922,7 +923,7 @@ private fun JvmConnectionNewFormPanel(
             Spacer(modifier = Modifier.height(14.dp))
 
             JvmConnectionNewInputField(
-                label = "密码",
+                label = stringResource(Res.string.password),
                 text = password,
                 onChange = onPasswordChange,
                 hint = "password",
@@ -956,7 +957,7 @@ private fun JvmConnectionNewFormPanel(
             AnimatedVisibility(visible = !selectedDataSource.ifInputUrl) {
                 Column {
                     JvmConnectionNewChip(
-                        text = "Plex 将通过账号自动读取可用服务器",
+                        text = stringResource(Res.string.jvm_connection_new_screen_text_12),
                         color = Color(0xFFA86200),
                         backgroundColor = Color(0xFFFFF4DF),
                     )
@@ -977,7 +978,7 @@ private fun JvmConnectionNewFormPanel(
                     )
                 ) {
                     XyText(
-                        text = "重新选择",
+                        text = stringResource(Res.string.reselect),
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Normal,
                         style = MaterialTheme.typography.labelLarge
@@ -986,7 +987,7 @@ private fun JvmConnectionNewFormPanel(
                 Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
                 XyButton(
                     onClick = onConnect,
-                    text = "连接"
+                    text = stringResource(Res.string.connect)
                 )
             }
         }
@@ -1186,21 +1187,21 @@ private fun JvmConnectionNewSummaryContent(
         }
     }
     Spacer(modifier = Modifier.height(12.dp))
-    JvmConnectionNewMetaRow(label = "协议", value = selectedDataSource.title)
+    JvmConnectionNewMetaRow(label = stringResource(Res.string.jvm_connection_new_screen_text_13), value = selectedDataSource.title)
     JvmConnectionNewMetaRow(
-        label = "地址",
+        label = stringResource(Res.string.jvm_connection_new_screen_text_14),
         value = if (selectedDataSource.ifInputUrl) {
-            address.removePrefix(ApiConstants.HTTP).removePrefix(ApiConstants.HTTPS).ifBlank { "未填写" }
+            address.removePrefix(ApiConstants.HTTP).removePrefix(ApiConstants.HTTPS).ifBlank { stringResource(Res.string.jvm_connection_config_info_screen_text_37) }
         } else {
-            "自动发现"
+            stringResource(Res.string.jvm_connection_new_screen_text_15)
         }
     )
     JvmConnectionNewMetaRow(
-        label = "版本",
+        label = stringResource(Res.string.jvm_about_screen_text_09),
         value = if (selectedDataSource.ifInputUrl) {
             "${selectedDataSource.version}+"
         } else {
-            "账号发现"
+            stringResource(Res.string.jvm_connection_new_screen_text_16)
         }
     )
     Spacer(modifier = Modifier.height(14.dp))
@@ -1235,14 +1236,14 @@ private fun JvmConnectionNewSummaryContent(
             modifier = Modifier.weight(1f)
         ) {
             XyText(
-                text = "准备同步媒体库",
+                text = stringResource(Res.string.jvm_connection_new_screen_text_17),
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.W800,
                 maxLines = 1,
                 style = MaterialTheme.typography.bodySmall
             )
             XyTextSub(
-                text = "歌曲、专辑、艺术家将在登录后读取",
+                text = stringResource(Res.string.jvm_connection_new_screen_text_18),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 style = MaterialTheme.typography.bodySmall
@@ -1300,7 +1301,7 @@ private fun JvmConnectionNewResourceContent(
 ) {
     // 资源内容只渲染 ViewModel 暴露的真实候选地址、Plex 资源和错误状态。
     XyText(
-        text = "选择资源地址",
+        text = stringResource(Res.string.jvm_connection_new_screen_text_19),
         color = MaterialTheme.colorScheme.onSurface,
         fontWeight = FontWeight.W900,
         style = MaterialTheme.typography.titleMedium
@@ -1308,9 +1309,9 @@ private fun JvmConnectionNewResourceContent(
     Spacer(modifier = Modifier.height(5.dp))
     XyTextSub(
         text = if (selectedDataSource.ifInputUrl) {
-            "已找到可连接的 ${selectedDataSource.title} 地址。"
+            stringResource(Res.string.jvm_connection_new_screen_text_20, selectedDataSource.title)
         } else {
-            "已读取账号下的 Plex 服务器。"
+            stringResource(Res.string.jvm_connection_new_screen_text_21)
         },
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         style = MaterialTheme.typography.bodySmall
@@ -1325,7 +1326,7 @@ private fun JvmConnectionNewResourceContent(
             shape = RoundedCornerShape(XyTheme.dimens.corner),
         ) {
             XyText(
-                text = "修改连接信息",
+                text = stringResource(Res.string.jvm_connection_new_screen_text_22),
                 fontWeight = FontWeight.Normal,
                 style = MaterialTheme.typography.labelLarge
             )
@@ -1336,7 +1337,7 @@ private fun JvmConnectionNewResourceContent(
     // 状态优先级由业务流程决定：加载和登录结果优先，其次才展示可选择资源。
     when {
         resourceLoading -> {
-            JvmConnectionNewLoadingPanel(text = "正在读取可用资源")
+            JvmConnectionNewLoadingPanel(text = stringResource(Res.string.jvm_connection_new_screen_text_23))
         }
 
         loginLoading || connectionReady -> {
@@ -1350,7 +1351,7 @@ private fun JvmConnectionNewResourceContent(
 
         resourceError -> {
             JvmConnectionNewErrorPanel(
-                title = "资源读取失败",
+                title = stringResource(Res.string.jvm_connection_new_screen_text_24),
                 errorHint = errorHint,
                 errorMessage = errorMessage
             )
@@ -1358,7 +1359,7 @@ private fun JvmConnectionNewResourceContent(
 
         loginError -> {
             JvmConnectionNewErrorPanel(
-                title = "登录失败",
+                title = stringResource(Res.string.login_failed),
                 errorHint = errorHint,
                 errorMessage = errorMessage
             )
@@ -1373,7 +1374,7 @@ private fun JvmConnectionNewResourceContent(
                     JvmConnectionNewResourceItem(
                         title = item.name,
                         address = item.addressUrl,
-                        tag = item.product.ifBlank { "可用" },
+                        tag = item.product.ifBlank { stringResource(Res.string.jvm_connection_new_screen_text_25) },
                         selected = index == selectedResourceIndex,
                         onClick = { onSelectResource(index) }
                     )
@@ -1388,9 +1389,9 @@ private fun JvmConnectionNewResourceContent(
             ) {
                 tmpAddressList.forEachIndexed { index, item ->
                     JvmConnectionNewResourceItem(
-                        title = if (index == 0) "推荐地址" else "候选地址",
+                        title = if (index == 0) stringResource(Res.string.jvm_connection_new_screen_text_26) else stringResource(Res.string.jvm_connection_new_screen_text_27),
                         address = item,
-                        tag = if (index == 0) "推荐" else "可选",
+                        tag = if (index == 0) stringResource(Res.string.recommend) else stringResource(Res.string.jvm_connection_new_screen_text_28),
                         selected = index == selectedResourceIndex,
                         onClick = { onSelectResource(index) }
                     )
@@ -1562,7 +1563,7 @@ private fun JvmConnectionNewErrorPanel(
 private fun JvmConnectionNewEmptyResourcePanel() {
     // ViewModel 已请求资源面板但暂无候选数据时，保留面板避免视觉状态跳回表单。
     XyTextSub(
-        text = "等待连接信息提交后读取资源。",
+        text = stringResource(Res.string.jvm_connection_new_screen_text_29),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         style = MaterialTheme.typography.bodySmall
     )
@@ -1589,13 +1590,13 @@ private fun JvmConnectionNewLoginStatusPanel(
     }
     val title = when (activeStage) {
         JvmConnectionNewLoginStage.Idle,
-        JvmConnectionNewLoginStage.LoggingIn -> "正在登录"
-        JvmConnectionNewLoginStage.Success -> "登录成功"
+        JvmConnectionNewLoginStage.LoggingIn -> stringResource(Res.string.jvm_connection_new_screen_text_30)
+        JvmConnectionNewLoginStage.Success -> stringResource(Res.string.login_success)
     }
     val detail = when (activeStage) {
         JvmConnectionNewLoginStage.Idle,
-        JvmConnectionNewLoginStage.LoggingIn -> "正在使用 ${selectedDataSource.title} 账号登录所选资源。"
-        JvmConnectionNewLoginStage.Success -> "账号和资源地址已确认，可以进入主页。"
+        JvmConnectionNewLoginStage.LoggingIn -> stringResource(Res.string.jvm_connection_new_screen_text_31, selectedDataSource.title)
+        JvmConnectionNewLoginStage.Success -> stringResource(Res.string.jvm_connection_new_screen_text_32)
     }
 
     Column(
@@ -1648,7 +1649,7 @@ private fun JvmConnectionNewLoginStatusPanel(
                 )
             }
             JvmConnectionNewChip(
-                text = if (isSuccess) "完成" else "登录中",
+                text = if (isSuccess) stringResource(Res.string.jvm_connection_new_screen_text_33) else stringResource(Res.string.jvm_connection_new_screen_text_34),
                 color = if (isSuccess) successColor else MaterialTheme.colorScheme.primary,
                 backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest
             )
@@ -1658,7 +1659,7 @@ private fun JvmConnectionNewLoginStatusPanel(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
         ) {
-            listOf("验证账号", "建立会话", "同步资料").forEachIndexed { index, text ->
+            listOf(stringResource(Res.string.jvm_connection_new_screen_text_35), stringResource(Res.string.jvm_connection_new_screen_text_36), stringResource(Res.string.jvm_connection_new_screen_text_37)).forEachIndexed { index, text ->
                 JvmConnectionNewLoginProgressItem(
                     modifier = Modifier.fillMaxWidth(),
                     text = text,
@@ -1670,8 +1671,8 @@ private fun JvmConnectionNewLoginStatusPanel(
         }
 
         JvmConnectionNewMetaRow(
-            label = "资源地址",
-            value = resourceAddress.ifBlank { "自动发现" }
+            label = stringResource(Res.string.jvm_connection_new_screen_text_38),
+            value = resourceAddress.ifBlank { stringResource(Res.string.jvm_connection_new_screen_text_15) }
         )
     }
 }
@@ -1779,13 +1780,13 @@ private fun JvmConnectionNewSuccessBanner(
             modifier = Modifier.weight(1f)
         ) {
             XyText(
-                text = "连接成功",
+                text = stringResource(Res.string.connection_successful),
                 color = successColor,
                 fontWeight = FontWeight.W900,
                 style = MaterialTheme.typography.bodyMedium
             )
             XyTextSub(
-                text = "${selectedDataSource.title} 登录完成，可以进入主页。",
+                text = stringResource(Res.string.jvm_connection_new_screen_text_39, selectedDataSource.title),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 style = MaterialTheme.typography.bodySmall
@@ -1794,7 +1795,7 @@ private fun JvmConnectionNewSuccessBanner(
         Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
         XyButton(
             onClick = onEnter,
-            text = "进入主页",
+            text = stringResource(Res.string.jvm_connection_new_screen_text_40),
         )
     }
 }
@@ -1854,9 +1855,10 @@ private enum class JvmConnectionNewLoginStage {
     Success,
 }
 
+@Composable
 private fun ConnectionUiType?.connectionStatusText(): String = when (this) {
     // 侧栏状态文案跟随入口类型，避免添加连接时仍显示“首次打开”。
-    ConnectionUiType.FIRST_OPEN -> "首次打开"
-    ConnectionUiType.ADD_CONNECTION -> "添加连接"
-    null -> "服务器连接"
+    ConnectionUiType.FIRST_OPEN -> stringResource(Res.string.jvm_connection_new_screen_text_41)
+    ConnectionUiType.ADD_CONNECTION -> stringResource(Res.string.add_connection)
+    null -> stringResource(Res.string.server_connection)
 }

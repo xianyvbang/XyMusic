@@ -1,4 +1,4 @@
-package cn.xybbz.ui.screens
+﻿package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -59,6 +59,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.check_24px
 import xymusic_kmp.composeapp.generated.resources.close_24px
@@ -115,7 +116,7 @@ fun JvmProxyConfigScreen(
     val addressValue = proxyConfigViewModel.addressValue
     val addressText = addressValue.text.trim()
     val connectionAddress = proxyConfigViewModel.getConnectionAddress()
-    val proxyModeLabel = if (enabled) "手动代理" else "关闭"
+    val proxyModeLabel = if (enabled) stringResource(Res.string.jvm_proxy_config_screen_text_01) else stringResource(Res.string.close)
     val parsedProxy = addressText.toJvmProxyParsedAddress()
 
     JvmSettingPageScaffold(
@@ -126,15 +127,15 @@ fun JvmProxyConfigScreen(
     ) {
         JvmSettingPageHeader(
             title = pageTitle,
-            description = "把代理开关、服务器地址和连通性测试集中在一个页面内，便于桌面端排查服务访问失败。当前配置会应用到后续服务端请求。",
+            description = stringResource(Res.string.jvm_proxy_config_screen_text_02),
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,
                 prominentValue = true,
                 items = listOf(
-                    JvmSettingStatusCardItem(label = "代理状态", value = proxyModeLabel),
-                    JvmSettingStatusCardItem(label = "协议", value = parsedProxy.protocol),
-                    JvmSettingStatusCardItem(label = "测试目标", value = connectionAddress.proxyTargetLabel()),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_proxy_config_screen_text_03), value = proxyModeLabel),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_connection_new_screen_text_13), value = parsedProxy.protocol),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_proxy_config_screen_text_04), value = connectionAddress.proxyTargetLabel()),
                 )
             )
         }
@@ -142,11 +143,11 @@ fun JvmProxyConfigScreen(
         JvmSettingTwoPaneContent(
             leftContent = {
                 JvmSettingSection(
-                    title = "代理模式",
-                    subtitle = "清楚区分关闭和手动代理；当前版本会保存这两种真实可用状态。",
-                    badge = "当前：$proxyModeLabel",
+                    title = stringResource(Res.string.jvm_proxy_config_screen_text_05),
+                    subtitle = stringResource(Res.string.jvm_proxy_config_screen_text_06),
+                    badge = stringResource(Res.string.jvm_cache_limit_screen_text_07, proxyModeLabel),
                     contentContainerEnabled = false,
-                    qualityNote = "代理只影响服务端访问和资源请求，不改变本地播放队列、缓存目录和数据库。"
+                    qualityNote = stringResource(Res.string.jvm_proxy_config_screen_text_07)
                 ) {
                     JvmProxyModeGrid(
                         enabled = enabled,
@@ -157,11 +158,11 @@ fun JvmProxyConfigScreen(
                 }
 
                 JvmSettingSection(
-                    title = "手动代理",
-                    subtitle = "桌面端使用一条代理地址字符串，支持 host:port 或带协议的 URL 写法。",
+                    title = stringResource(Res.string.jvm_proxy_config_screen_text_01),
+                    subtitle = stringResource(Res.string.jvm_proxy_config_screen_text_08),
                     badge = "HTTP",
                     contentContainerEnabled = false,
-                    qualityNote = "JVM 当前代理解析会自动为未带协议的地址补齐 ${ApiConstants.HTTP}，例如 ${Constants.DEFAULT_PROXY_ADDRESS} 会按 ${ApiConstants.HTTP_PROTOCOL_NAME} 代理使用。"
+                    qualityNote = stringResource(Res.string.jvm_proxy_config_screen_text_09, ApiConstants.HTTP, Constants.DEFAULT_PROXY_ADDRESS, ApiConstants.HTTP_PROTOCOL_NAME)
                 ) {
                     JvmProxyAddressPanel(
                         title = proxyAddressTitle,
@@ -189,9 +190,9 @@ fun JvmProxyConfigScreen(
                 )
 
                 JvmSettingSection(
-                    title = "例外规则",
-                    subtitle = "这些地址通常属于本机或局域网场景，排查网络时优先确认是否需要直连。",
-                    badge = "参考",
+                    title = stringResource(Res.string.jvm_proxy_config_screen_text_10),
+                    subtitle = stringResource(Res.string.jvm_proxy_config_screen_text_11),
+                    badge = stringResource(Res.string.jvm_proxy_config_screen_text_12),
                     contentContainerEnabled = false,
                 ) {
                     JvmProxyRouteRules()
@@ -214,9 +215,9 @@ private fun JvmProxyModeGrid(
             JvmSettingActionEntry(
                 icon = Res.drawable.close_24px,
                 kicker = "OFF",
-                title = "关闭",
-                description = "清除当前代理选择，服务请求直接连接服务器。",
-                status = if (!enabled) "当前模式" else "点击切换",
+                title = stringResource(Res.string.close),
+                description = stringResource(Res.string.jvm_proxy_config_screen_text_13),
+                status = if (!enabled) stringResource(Res.string.jvm_proxy_config_screen_text_14) else stringResource(Res.string.jvm_interface_setting_screen_text_12),
                 selected = !enabled,
                 role = Role.RadioButton,
                 onClick = {
@@ -228,9 +229,9 @@ private fun JvmProxyModeGrid(
             JvmSettingActionEntry(
                 icon = Res.drawable.signal_cellular_alt_24px,
                 kicker = "MANUAL",
-                title = "手动",
-                description = "使用下方代理地址转发服务端请求。",
-                status = if (enabled) "当前模式" else "点击切换",
+                title = stringResource(Res.string.jvm_cache_limit_screen_text_42),
+                description = stringResource(Res.string.jvm_proxy_config_screen_text_15),
+                status = if (enabled) stringResource(Res.string.jvm_proxy_config_screen_text_14) else stringResource(Res.string.jvm_interface_setting_screen_text_12),
                 selected = enabled,
                 role = Role.RadioButton,
                 onClick = {
@@ -285,7 +286,7 @@ private fun JvmProxyAddressPanel(
                         overflow = TextOverflow.Ellipsis
                     )
                     XyTextSub(
-                        text = "示例：${Constants.DEFAULT_PROXY_ADDRESS} 或 ${ApiConstants.HTTP}${Constants.DEFAULT_PROXY_ADDRESS}",
+                        text = stringResource(Res.string.jvm_proxy_config_screen_text_16, Constants.DEFAULT_PROXY_ADDRESS, ApiConstants.HTTP, Constants.DEFAULT_PROXY_ADDRESS),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -306,19 +307,19 @@ private fun JvmProxyAddressPanel(
             JvmProxyInfoGrid(
                 tiles = listOf(
                     JvmProxyInfoTile(
-                        label = "协议",
+                        label = stringResource(Res.string.jvm_connection_new_screen_text_13),
                         value = parsedProxy.protocol,
-                        description = "未填写协议时按 HTTP"
+                        description = stringResource(Res.string.jvm_proxy_config_screen_text_17)
                     ),
                     JvmProxyInfoTile(
-                        label = "主机",
+                        label = stringResource(Res.string.jvm_proxy_config_screen_text_18),
                         value = parsedProxy.host,
-                        description = "代理服务监听地址"
+                        description = stringResource(Res.string.jvm_proxy_config_screen_text_19)
                     ),
                     JvmProxyInfoTile(
-                        label = "端口",
+                        label = stringResource(Res.string.jvm_proxy_config_screen_text_20),
                         value = parsedProxy.port,
-                        description = "代理服务监听端口"
+                        description = stringResource(Res.string.jvm_proxy_config_screen_text_21)
                     ),
                 )
             )
@@ -456,7 +457,7 @@ private fun JvmProxyActionPanel(
                 overflow = TextOverflow.Ellipsis
             )
             XyTextSub(
-                text = "使用当前代理向 ${connectionAddress.proxyTargetLabel()} 发起轻量请求，结果会通过页面提示反馈。",
+                text = stringResource(Res.string.jvm_proxy_config_screen_text_22, connectionAddress.proxyTargetLabel()),
                 style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 3,
@@ -500,7 +501,7 @@ private fun JvmProxyActionHeader(enabled: Boolean) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        JvmProxyPill(text = if (enabled) "手动代理已启用" else "当前直连")
+        JvmProxyPill(text = if (enabled) stringResource(Res.string.jvm_proxy_config_screen_text_23) else stringResource(Res.string.jvm_proxy_config_screen_text_24))
         JvmProxyIconBox(
             icon = if (enabled) Res.drawable.check_24px else Res.drawable.info_24px,
             selected = enabled
@@ -529,8 +530,8 @@ private fun JvmProxyConnectionSummary(
             modifier = Modifier.padding(XyTheme.dimens.contentPadding),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
         ) {
-            JvmProxySummaryLine(label = "代理地址", value = addressText.ifBlank { "未填写" })
-            JvmProxySummaryLine(label = "连接目标", value = connectionAddress.proxyTargetLabel())
+            JvmProxySummaryLine(label = stringResource(Res.string.proxy_address), value = addressText.ifBlank { stringResource(Res.string.jvm_connection_config_info_screen_text_37) })
+            JvmProxySummaryLine(label = stringResource(Res.string.jvm_proxy_config_screen_text_25), value = connectionAddress.proxyTargetLabel())
         }
     }
 }
@@ -580,26 +581,26 @@ private fun JvmProxyRouteRules() {
             JvmProxyRouteRule(
                 icon = Res.drawable.info_24px,
                 name = "localhost",
-                description = "本机服务与开发环境",
-                value = "建议直连"
+                description = stringResource(Res.string.jvm_proxy_config_screen_text_26),
+                value = stringResource(Res.string.jvm_proxy_config_screen_text_27)
             ),
             JvmProxyRouteRule(
                 icon = Res.drawable.signal_cellular_alt_24px,
                 name = "192.168.*",
-                description = "家庭局域网音乐服务器",
-                value = "局域网"
+                description = stringResource(Res.string.jvm_proxy_config_screen_text_28),
+                value = stringResource(Res.string.jvm_proxy_config_screen_text_29)
             ),
             JvmProxyRouteRule(
                 icon = Res.drawable.http_24px,
                 name = "media.local",
-                description = "本地域名或内网 DNS",
-                value = "按需直连"
+                description = stringResource(Res.string.jvm_proxy_config_screen_text_30),
+                value = stringResource(Res.string.jvm_proxy_config_screen_text_31)
             ),
         ).forEach { rule ->
             JvmProxyRouteCard(rule = rule)
         }
 
-        JvmSettingNote(text = "当前页面不会自动维护例外列表；如果服务器在局域网内，通常不需要开启代理。")
+        JvmSettingNote(text = stringResource(Res.string.jvm_proxy_config_screen_text_32))
     }
 }
 
@@ -742,17 +743,18 @@ private data class JvmProxyParsedAddress(
 /**
  * 将代理地址解析成页面可读的协议、主机和端口。
  */
+@Composable
 private fun String.toJvmProxyParsedAddress(): JvmProxyParsedAddress {
     if (isBlank()) {
-        return JvmProxyParsedAddress(protocol = "HTTP", host = "未填写", port = "未填写")
+        return JvmProxyParsedAddress(protocol = "HTTP", host = stringResource(Res.string.jvm_connection_config_info_screen_text_37), port = stringResource(Res.string.jvm_connection_config_info_screen_text_37))
     }
 
     val parsedUri = runCatching {
         URI(withDefaultHttpScheme())
     }.getOrNull()
     val protocol = parsedUri?.scheme?.uppercase()?.takeIf { it.isNotBlank() } ?: ApiConstants.HTTP_PROTOCOL_NAME
-    val host = parsedUri?.host?.takeIf { it.isNotBlank() } ?: "未解析"
-    val port = parsedUri?.port?.takeIf { it > 0 }?.toString() ?: "未解析"
+    val host = parsedUri?.host?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.jvm_proxy_config_screen_text_33)
+    val port = parsedUri?.port?.takeIf { it > 0 }?.toString() ?: stringResource(Res.string.jvm_proxy_config_screen_text_33)
     return JvmProxyParsedAddress(
         protocol = protocol,
         host = host,
@@ -763,10 +765,11 @@ private fun String.toJvmProxyParsedAddress(): JvmProxyParsedAddress {
 /**
  * 将连接地址缩短成适合状态卡和测试卡展示的目标文案。
  */
+@Composable
 private fun String.proxyTargetLabel(): String {
     return trim()
         .takeIf { it.isNotBlank() }
         ?.removePrefix(ApiConstants.HTTPS)
         ?.removePrefix(ApiConstants.HTTP)
-        ?: "未连接"
+        ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
 }

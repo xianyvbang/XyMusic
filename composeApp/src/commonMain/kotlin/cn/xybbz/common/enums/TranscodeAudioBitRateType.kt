@@ -18,8 +18,18 @@
 
 package cn.xybbz.common.enums
 
-enum class TranscodeAudioBitRateType(val audioBitRateStr: String, val audioBitRate: Int) {
-    LOSSLESS("不转码", 0),
+import org.jetbrains.compose.resources.StringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.transcode_audio_bit_rate_type_text_01
+
+enum class TranscodeAudioBitRateType(
+    /** 码率的固定展示文案，数字码率直接使用该字段。 */
+    val audioBitRateStr: String,
+    val audioBitRate: Int,
+    /** 码率的资源展示文案，需要本地化的档位使用该字段。 */
+    val audioBitRateResource: StringResource? = null,
+) {
+    LOSSLESS("", 0, Res.string.transcode_audio_bit_rate_type_text_01),
     HIGHEST("320K", 320000),
     HIGH("256K", 256000),
     MEDIUM("192K", 192000),

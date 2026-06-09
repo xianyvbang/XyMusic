@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -54,7 +54,9 @@ import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.LanguageConfigViewModel
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.label_24px
 import xymusic_kmp.composeapp.generated.resources.settings_24px
@@ -71,7 +73,7 @@ fun JvmLanguageConfigScreen(
     val languageType by languageConfigViewModel.settingsManager.languageType.collectAsState()
     val settings by languageConfigViewModel.settingsManager.settings.collectAsState()
     val configuredLanguageType = settings.languageType
-    val languageModeLabel = if (configuredLanguageType == null) "跟随系统" else "固定语言"
+    val languageModeLabel = if (configuredLanguageType == null) stringResource(Res.string.system) else stringResource(Res.string.jvm_language_config_screen_text_01)
 
     JvmSettingPageScaffold(
         contentPadding = PaddingValues(
@@ -80,16 +82,16 @@ fun JvmLanguageConfigScreen(
         ),
     ) {
         JvmSettingPageHeader(
-            title = "本地化",
-            description = "语言选择、文本预览和翻译覆盖状态集中呈现。页面强调当前生效语言。",
+            title = stringResource(Res.string.jvm_language_config_screen_text_02),
+            description = stringResource(Res.string.jvm_language_config_screen_text_03),
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,
                 prominentValue = true,
                 items = listOf(
-                    JvmSettingStatusCardItem(label = "语言模式", value = languageModeLabel),
-                    JvmSettingStatusCardItem(label = "当前语言", value = languageType.displayName()),
-                    JvmSettingStatusCardItem(label = "翻译覆盖", value = languageType.coverageLabel()),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_language_config_screen_text_04), value = languageModeLabel),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_language_config_screen_text_05), value = languageType.displayName()),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_language_config_screen_text_06), value = languageType.coverageLabel()),
                 )
             )
         }
@@ -97,11 +99,11 @@ fun JvmLanguageConfigScreen(
         JvmSettingTwoPaneContent(
             leftContent = {
                 JvmSettingSection(
-                    title = "显示语言",
-                    subtitle = "语言卡片同时展示模式、语言代码和翻译覆盖状态，适合快速切换。",
-                    badge = "部分窗口需重启",
+                    title = stringResource(Res.string.jvm_language_config_screen_text_07),
+                    subtitle = stringResource(Res.string.jvm_language_config_screen_text_08),
+                    badge = stringResource(Res.string.jvm_language_config_screen_text_09),
                     contentContainerEnabled = false,
-                    qualityNote = "选择跟随系统会清除固定语言并应用当前系统语言；选择固定语言后会立即写入本地设置。部分已经打开的窗口可能需要重新进入页面后才能完全刷新文本。",
+                    qualityNote = stringResource(Res.string.jvm_language_config_screen_text_10),
                 ) {
                     JvmLanguageGrid(
                         configuredLanguageType = configuredLanguageType,
@@ -113,8 +115,8 @@ fun JvmLanguageConfigScreen(
             },
             rightContent = {
                 JvmSettingSection(
-                    title = "文本预览",
-                    subtitle = "提前看到导航、按钮、日期和容量文本在当前语言下的展示方式。",
+                    title = stringResource(Res.string.jvm_language_config_screen_text_11),
+                    subtitle = stringResource(Res.string.jvm_language_config_screen_text_12),
                     badge = "Preview",
                     contentContainerEnabled = false,
                 ) {
@@ -122,13 +124,13 @@ fun JvmLanguageConfigScreen(
                 }
 
                 JvmSettingSection(
-                    title = "缺失翻译",
-                    subtitle = "让用户知道什么时候会回退到英文，避免出现键名或空白文本。",
-                    badge = "${languageType.fallbackPercentLabel()} 回退",
+                    title = stringResource(Res.string.jvm_language_config_screen_text_13),
+                    subtitle = stringResource(Res.string.jvm_language_config_screen_text_14),
+                    badge = stringResource(Res.string.jvm_language_config_screen_text_15, languageType.fallbackPercentLabel()),
                     contentContainerEnabled = false,
                 ) {
                     JvmSettingNote(
-                        text = "未覆盖的界面文本会优先回退到 English。当前页面只调整 JVM 桌面端语言设置的呈现方式，不改变原有语言写入逻辑。"
+                        text = stringResource(Res.string.jvm_language_config_screen_text_16)
                     )
                 }
             }
@@ -145,9 +147,9 @@ private fun JvmLanguageGrid(
         JvmSettingActionEntry(
             icon = Res.drawable.settings_24px,
             kicker = "AUTO",
-            title = "跟随系统",
-            description = "由操作系统语言决定界面文本；未支持语言会回退到默认语言。",
-            status = "系统偏好",
+            title = stringResource(Res.string.system),
+            description = stringResource(Res.string.jvm_language_config_screen_text_17),
+            status = stringResource(Res.string.jvm_language_config_screen_text_18),
             selected = configuredLanguageType == null,
             role = Role.RadioButton,
             onClick = {
@@ -162,7 +164,7 @@ private fun JvmLanguageGrid(
             kicker = languageType.languageCode,
             title = languageType.displayName(),
             description = languageType.descriptionText(),
-            status = if (languageType.enabled) "固定语言" else "暂未开放",
+            status = if (languageType.enabled) stringResource(Res.string.jvm_language_config_screen_text_01) else stringResource(Res.string.jvm_language_config_screen_text_19),
             enabled = languageType.enabled,
             selected = configuredLanguageType == languageType,
             role = Role.RadioButton,
@@ -195,10 +197,10 @@ private fun JvmLanguageTextPreview(languageType: LanguageType) {
             modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
         ) {
-            JvmLanguagePreviewLine(label = "导航", value = languageType.navigationPreviewText())
-            JvmLanguagePreviewLine(label = "操作", value = languageType.actionPreviewText())
-            JvmLanguagePreviewLine(label = "日期", value = languageType.datePreviewText())
-            JvmLanguagePreviewLine(label = "容量", value = languageType.sizePreviewText())
+            JvmLanguagePreviewLine(label = stringResource(Res.string.jvm_language_config_screen_text_20), value = languageType.navigationPreviewText())
+            JvmLanguagePreviewLine(label = stringResource(Res.string.jvm_language_config_screen_text_21), value = languageType.actionPreviewText())
+            JvmLanguagePreviewLine(label = stringResource(Res.string.jvm_language_config_screen_text_22), value = languageType.datePreviewText())
+            JvmLanguagePreviewLine(label = stringResource(Res.string.jvm_language_config_screen_text_23), value = languageType.sizePreviewText())
         }
     }
 }
@@ -248,19 +250,21 @@ private fun JvmLanguagePreviewLine(
     }
 }
 
+@Composable
 private fun LanguageType.displayName(): String {
     return when (this) {
-        LanguageType.ZH_CN -> "简体中文"
+        LanguageType.ZH_CN -> stringResource(Res.string.jvm_language_config_screen_text_24)
         LanguageType.EN -> "English"
-        LanguageType.ZH_TW -> "繁體中文"
+        LanguageType.ZH_TW -> stringResource(Res.string.jvm_language_config_screen_text_25)
     }
 }
 
+@Composable
 private fun LanguageType.descriptionText(): String {
     return when (this) {
-        LanguageType.ZH_CN -> "简体中文界面文本。"
+        LanguageType.ZH_CN -> stringResource(Res.string.jvm_language_config_screen_text_26)
         LanguageType.EN -> "English UI with English fallback strings."
-        LanguageType.ZH_TW -> "繁體中文介面文本。"
+        LanguageType.ZH_TW -> stringResource(Res.string.jvm_language_config_screen_text_27)
     }
 }
 
@@ -280,34 +284,38 @@ private fun LanguageType.fallbackPercentLabel(): String {
     }
 }
 
+@Composable
 private fun LanguageType.navigationPreviewText(): String {
     return when (this) {
-        LanguageType.ZH_CN -> "首页 / 音乐库 / 设置"
+        LanguageType.ZH_CN -> stringResource(Res.string.jvm_language_config_screen_text_28)
         LanguageType.EN -> "Home / Library / Settings"
-        LanguageType.ZH_TW -> "首頁 / 音樂庫 / 設定"
+        LanguageType.ZH_TW -> stringResource(Res.string.jvm_language_config_screen_text_29)
     }
 }
 
+@Composable
 private fun LanguageType.actionPreviewText(): String {
     return when (this) {
-        LanguageType.ZH_CN -> "保存设置 · 检查更新"
+        LanguageType.ZH_CN -> stringResource(Res.string.jvm_language_config_screen_text_30)
         LanguageType.EN -> "Save settings · Check updates"
-        LanguageType.ZH_TW -> "儲存設定 · 檢查更新"
+        LanguageType.ZH_TW -> stringResource(Res.string.jvm_language_config_screen_text_31)
     }
 }
 
+@Composable
 private fun LanguageType.datePreviewText(): String {
     return when (this) {
-        LanguageType.ZH_CN -> "2026年6月5日 14:30"
+        LanguageType.ZH_CN -> stringResource(Res.string.jvm_language_config_screen_text_32)
         LanguageType.EN -> "June 5, 2026 2:30 PM"
-        LanguageType.ZH_TW -> "2026年6月5日 14:30"
+        LanguageType.ZH_TW -> stringResource(Res.string.jvm_language_config_screen_text_32)
     }
 }
 
+@Composable
 private fun LanguageType.sizePreviewText(): String {
     return when (this) {
-        LanguageType.ZH_CN -> "18.6 GB 可清理"
+        LanguageType.ZH_CN -> stringResource(Res.string.jvm_language_config_screen_text_33)
         LanguageType.EN -> "18.6 GB available"
-        LanguageType.ZH_TW -> "18.6 GB 可清理"
+        LanguageType.ZH_TW -> stringResource(Res.string.jvm_language_config_screen_text_33)
     }
 }

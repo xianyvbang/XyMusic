@@ -100,6 +100,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.back_to_input_credentials
@@ -420,7 +421,7 @@ internal fun MobileConnectionScreen(
                                         modifier = Modifier.width(width = 150.dp),
                                         onClick = {
                                             if (!connectionViewModel.hasSelectedResource) {
-                                                MessageUtils.sendPopTipError("请选择资源地址")
+                                                MessageUtils.sendPopTipError(Res.string.connection_screen_text_01)
                                                 return@Button
                                             }
                                             coroutineScope.launch {

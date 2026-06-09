@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -95,6 +95,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.cancel_download
 import xymusic_kmp.composeapp.generated.resources.confirm_delete_download
@@ -292,12 +293,12 @@ private fun JvmLocalDownloadHeader(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             JvmLocalDownloadTabButton(
-                label = "本地歌曲$localCount",
+                label = stringResource(Res.string.jvm_download_screen_text_01, localCount),
                 selected = selectedTab == JvmLocalDownloadTab.LocalSongs,
                 onClick = { onSelectTab(JvmLocalDownloadTab.LocalSongs) },
             )
             JvmLocalDownloadTabButton(
-                label = "正在下载$downloadingCount",
+                label = stringResource(Res.string.jvm_download_screen_text_02, downloadingCount),
                 selected = selectedTab == JvmLocalDownloadTab.Downloading,
                 onClick = { onSelectTab(JvmLocalDownloadTab.Downloading) },
             )
@@ -311,17 +312,17 @@ private fun JvmLocalDownloadHeader(
             ) {
                 JvmDownloadToolbarButton(
                     icon = Res.drawable.download_24px,
-                    text = "开始",
+                    text = stringResource(Res.string.jvm_download_screen_text_03),
                     onClick = onResumeAll,
                 )
                 JvmDownloadToolbarButton(
                     icon = Res.drawable.pause_24px,
-                    text = "暂停",
+                    text = stringResource(Res.string.jvm_download_screen_text_04),
                     onClick = onPauseAll,
                 )
                 JvmDownloadToolbarButton(
                     icon = Res.drawable.delete_24px,
-                    text = "清空",
+                    text = stringResource(Res.string.jvm_download_screen_text_05),
                     onClick = onClearAll,
                 )
             }
@@ -404,11 +405,11 @@ private fun JvmDownloadTableHeader() {
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            JvmDownloadTableCell("歌名/歌手", JvmDownloadSongColumnWidth, MaterialTheme.colorScheme.onSurfaceVariant)
+            JvmDownloadTableCell(stringResource(Res.string.jvm_download_screen_text_06), JvmDownloadSongColumnWidth, MaterialTheme.colorScheme.onSurfaceVariant)
             JvmDownloadTableSpacer(JvmDownloadActionsColumnWidth)
-            JvmDownloadTableCell("进度", JvmDownloadProgressColumnWidth, MaterialTheme.colorScheme.onSurfaceVariant)
+            JvmDownloadTableCell(stringResource(Res.string.jvm_download_screen_text_07), JvmDownloadProgressColumnWidth, MaterialTheme.colorScheme.onSurfaceVariant)
             JvmDownloadTableCell(
-                "大小",
+                stringResource(Res.string.size_num),
                 JvmDownloadSizeColumnWidth,
                 MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.End,
@@ -680,7 +681,7 @@ private fun JvmDownloadTableSpacer(width: Dp) {
 private fun jvmDownloadStatusText(task: XyDownload): String {
     return when (task.status) {
         DownloadStatus.QUEUED -> stringResource(Res.string.download_status_queued)
-        DownloadStatus.DOWNLOADING -> "下载中"
+        DownloadStatus.DOWNLOADING -> stringResource(Res.string.jvm_download_screen_text_08)
         DownloadStatus.PAUSED -> stringResource(Res.string.tap_to_resume_download)
         DownloadStatus.COMPLETED -> stringResource(Res.string.download_completed)
         DownloadStatus.FAILED -> stringResource(Res.string.download_failed_with_reason, task.error ?: "")

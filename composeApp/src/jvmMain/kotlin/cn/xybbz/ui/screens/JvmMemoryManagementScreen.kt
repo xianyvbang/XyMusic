@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -82,6 +82,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.adjust
 import xymusic_kmp.composeapp.generated.resources.audio_cache
@@ -137,7 +138,7 @@ fun JvmMemoryManagementScreen(
     // 目录选择器是 suspend API，点击路径操作后需要使用页面协程启动。
     val coroutineScope = rememberCoroutineScope()
     // 绑定 JVM 主窗口的 FileKit 设置，避免系统目录选择弹窗出现在应用窗口后方。
-    val cacheDirectoryDialogSettings = rememberJvmFileKitDialogSettings("选择缓存路径")
+    val cacheDirectoryDialogSettings = rememberJvmFileKitDialogSettings(stringResource(Res.string.jvm_memory_management_screen_text_01))
 
     // 打开缓存路径弹窗：弹窗内的“调整”会继续拉起系统目录选择器，“恢复默认”直接调用 ViewModel。
     fun showCachePathDialog() {
@@ -188,7 +189,7 @@ fun JvmMemoryManagementScreen(
             sizeBytes = memoryManagementViewModel.musicCacheSize.toStorageBytes(),
             icon = Res.drawable.music_note_24px,
             color = MaterialTheme.colorScheme.primary,
-            meta = "可重新缓存",
+            meta = stringResource(Res.string.jvm_memory_management_screen_text_02),
             onClear = { memoryManagementViewModel.clearMusicCache() },
         ),
         JvmStorageDisplayItem(
@@ -198,7 +199,7 @@ fun JvmMemoryManagementScreen(
             sizeBytes = memoryManagementViewModel.cacheSize.toStorageBytes(),
             icon = Res.drawable.queue_music_24px,
             color = MaterialTheme.colorScheme.tertiary,
-            meta = "播放临时文件",
+            meta = stringResource(Res.string.jvm_memory_management_screen_text_03),
             onClear = { memoryManagementViewModel.clearAllCache() },
         ),
         JvmStorageDisplayItem(
@@ -208,7 +209,7 @@ fun JvmMemoryManagementScreen(
             sizeBytes = memoryManagementViewModel.databaseSize.toStorageBytes(),
             icon = Res.drawable.settings_24px,
             color = MaterialTheme.colorScheme.error,
-            meta = "清理前确认",
+            meta = stringResource(Res.string.jvm_memory_management_screen_text_04),
             onClear = ::confirmClearDatabase,
         ),
         JvmStorageDisplayItem(
@@ -218,7 +219,7 @@ fun JvmMemoryManagementScreen(
             sizeBytes = memoryManagementViewModel.appDataSize.toStorageBytes(),
             icon = Res.drawable.info_24px,
             color = MaterialTheme.colorScheme.secondary,
-            meta = "核心应用数据",
+            meta = stringResource(Res.string.jvm_memory_management_screen_text_05),
         ),
     )
     // 总占用用于头部状态和空间分布进度条的比例计算。
@@ -231,7 +232,7 @@ fun JvmMemoryManagementScreen(
     val totalSizeText = totalBytes.toStorageLabel()
     val clearableSizeText = clearableBytes.toStorageLabel()
     // 路径状态用于提示当前是默认缓存目录还是用户自定义目录。
-    val cachePathMode = if (memoryManagementViewModel.isDefaultMusicCachePath) "默认路径" else "自定义路径"
+    val cachePathMode = if (memoryManagementViewModel.isDefaultMusicCachePath) stringResource(Res.string.jvm_memory_management_screen_text_06) else stringResource(Res.string.jvm_memory_management_screen_text_07)
 
     LaunchedEffect(Unit) {
         // 进入页面时刷新一次平台存储信息，避免显示上一次页面打开时的旧数据。
@@ -373,15 +374,15 @@ private fun JvmMemoryHeader(
 ) {
     JvmSettingPageHeader(
         title = title,
-        description = "查看歌曲缓存、临时缓存、数据库和应用数据的真实占用，并把清理与路径操作集中在一个页面。",
+        description = stringResource(Res.string.jvm_memory_management_screen_text_08),
     ) {
         JvmSettingStatusCard(
             width = 278.dp,
             prominentValue = true,
             items = listOf(
-                JvmSettingStatusCardItem(label = "本地占用", value = totalSize),
-                JvmSettingStatusCardItem(label = "可清理", value = clearableSize),
-                JvmSettingStatusCardItem(label = "缓存路径", value = cachePathMode),
+                JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_memory_management_screen_text_09), value = totalSize),
+                JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_memory_management_screen_text_10), value = clearableSize),
+                JvmSettingStatusCardItem(label = stringResource(Res.string.cache_path), value = cachePathMode),
             )
         )
     }
@@ -482,11 +483,11 @@ private fun JvmMemoryDistributionSection(
     totalSizeText: String,
 ) {
     JvmSettingSection(
-        title = "空间分布",
-        subtitle = "每一类数据都显示用途、占用和清理风险，方便快速判断是否需要释放空间。",
-        badge = "总计 $totalSizeText",
+        title = stringResource(Res.string.jvm_memory_management_screen_text_11),
+        subtitle = stringResource(Res.string.jvm_memory_management_screen_text_12),
+        badge = stringResource(Res.string.jvm_memory_management_screen_text_13, totalSizeText),
         contentContainerEnabled = false,
-        qualityNote = "清理歌曲缓存和临时缓存只影响可重新生成的数据；数据库清理会先弹出确认。",
+        qualityNote = stringResource(Res.string.jvm_memory_management_screen_text_14),
     ) {
         Column(
             modifier = Modifier
@@ -682,44 +683,44 @@ private fun JvmMemoryQuickCleanSection(
     val quickCleanEntries = listOf(
         JvmSettingActionEntry(
             icon = Res.drawable.delete_24px,
-            kicker = "安全",
+            kicker = stringResource(Res.string.jvm_memory_management_screen_text_15),
             title = "${clearTitle}${musicCache?.title.orEmpty()}",
-            description = musicCache.clearDescription("释放歌曲缓存，后续播放时可重新缓存。"),
+            description = musicCache.clearDescription(stringResource(Res.string.jvm_memory_management_screen_text_16)),
             enabled = musicCache.hasStorage(),
             color = MaterialTheme.colorScheme.primary,
             onClick = onClearMusicCache,
         ),
         JvmSettingActionEntry(
             icon = Res.drawable.download_24px,
-            kicker = "安全",
+            kicker = stringResource(Res.string.jvm_memory_management_screen_text_15),
             title = "${clearTitle}${temporaryCache?.title.orEmpty()}",
-            description = temporaryCache.clearDescription("释放播放临时文件，不影响核心应用数据。"),
+            description = temporaryCache.clearDescription(stringResource(Res.string.jvm_memory_management_screen_text_17)),
             enabled = temporaryCache.hasStorage(),
             color = MaterialTheme.colorScheme.tertiary,
             onClick = onClearTemporaryCache,
         ),
         JvmSettingActionEntry(
             icon = Res.drawable.delete_24px,
-            kicker = "确认",
+            kicker = stringResource(Res.string.jvm_memory_management_screen_text_18),
             title = "${clearTitle}${database?.title.orEmpty()}",
-            description = database.clearDescription("重置本地数据库数据，执行前会再次确认。"),
+            description = database.clearDescription(stringResource(Res.string.jvm_memory_management_screen_text_19)),
             enabled = database.hasStorage(),
             color = MaterialTheme.colorScheme.error,
             onClick = onClearDatabase,
         ),
         JvmSettingActionEntry(
             icon = Res.drawable.folder_managed_24px,
-            kicker = "位置",
-            title = "调整缓存路径",
-            description = "选择歌曲缓存目录，适合把缓存移动到空间更充足的磁盘。",
+            kicker = stringResource(Res.string.jvm_memory_management_screen_text_20),
+            title = stringResource(Res.string.jvm_memory_management_screen_text_21),
+            description = stringResource(Res.string.jvm_memory_management_screen_text_22),
             color = MaterialTheme.colorScheme.secondary,
             onClick = onOpenPath,
         ),
     )
 
     JvmSettingSection(
-        title = "快速清理",
-        subtitle = "高频动作集中成卡片，清理前能看到会释放哪一类数据。",
+        title = stringResource(Res.string.jvm_memory_management_screen_text_23),
+        subtitle = stringResource(Res.string.jvm_memory_management_screen_text_24),
         badge = clearTitle,
         contentContainerEnabled = false,
     ) {
@@ -749,11 +750,11 @@ private fun JvmMemoryPathSection(
     onRestoreDefaultPath: () -> Unit,
 ) {
     JvmSettingSection(
-        title = "存储位置",
-        subtitle = "缓存路径单独展示，调整和恢复默认路径都保留原有桌面端逻辑。",
+        title = stringResource(Res.string.jvm_memory_management_screen_text_25),
+        subtitle = stringResource(Res.string.jvm_memory_management_screen_text_26),
         badge = cachePathMode,
         contentContainerEnabled = false,
-        qualityNote = "选择新路径后会刷新存储信息；取消系统目录选择器不会修改当前缓存位置。",
+        qualityNote = stringResource(Res.string.jvm_memory_management_screen_text_27),
     ) {
         Column(
             modifier = Modifier
@@ -767,8 +768,8 @@ private fun JvmMemoryPathSection(
         ) {
             JvmSettingBaseRow(
                 icon = Res.drawable.folder_managed_24px,
-                title = "歌曲缓存位置",
-                description = cachePath.ifBlank { "使用默认缓存目录" },
+                title = stringResource(Res.string.jvm_memory_management_screen_text_28),
+                description = cachePath.ifBlank { stringResource(Res.string.jvm_memory_management_screen_text_29) },
                 descriptionMaxLines = 2,
                 descriptionOverflow = TextOverflow.Visible,
                 minHeight = 72.dp,
@@ -792,7 +793,7 @@ private fun JvmMemoryPathSection(
                 icon = Res.drawable.check_24px,
                 title = restoreDefaultTitle,
                 // 已经是默认目录时禁用恢复操作，只保留状态提示。
-                description = if (isDefaultCachePath) "当前已经使用默认缓存目录。" else "恢复到应用默认的歌曲缓存目录。",
+                description = if (isDefaultCachePath) stringResource(Res.string.jvm_memory_management_screen_text_30) else stringResource(Res.string.jvm_memory_management_screen_text_31),
                 enabled = restorePathEnabled,
                 minHeight = 72.dp,
                 horizontalPadding = XyTheme.dimens.contentPadding,
@@ -802,7 +803,7 @@ private fun JvmMemoryPathSection(
                 onClick = onRestoreDefaultPath,
                 trailing = {
                     JvmMemorySettingValueBadge(
-                        text = if (isDefaultCachePath) "已默认" else "恢复",
+                        text = if (isDefaultCachePath) stringResource(Res.string.jvm_memory_management_screen_text_32) else stringResource(Res.string.jvm_memory_management_screen_text_33),
                         alpha = restorePathContentAlpha,
                     )
                 }
@@ -962,12 +963,13 @@ private fun JvmStorageDisplayItem?.hasStorage(): Boolean {
  * @param fallback 当前分类的默认清理说明。
  * @return 根据是否有占用生成“当前占用”或“当前无需清理”的说明。
  */
+@Composable
 private fun JvmStorageDisplayItem?.clearDescription(fallback: String): String {
     val item = this ?: return fallback
     return if (item.sizeBytes > 0.0) {
-        "当前占用 ${item.sizeText}，${fallback.replaceFirstChar { it.lowercase(Locale.getDefault()) }}"
+        stringResource(Res.string.jvm_memory_management_screen_text_34, item.sizeText, fallback.replaceFirstChar { it.lowercase(Locale.getDefault()) })
     } else {
-        "当前无需清理，${fallback.replaceFirstChar { it.lowercase(Locale.getDefault()) }}"
+        stringResource(Res.string.jvm_memory_management_screen_text_35, fallback.replaceFirstChar { it.lowercase(Locale.getDefault()) })
     }
 }
 

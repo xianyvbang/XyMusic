@@ -77,6 +77,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.cancel_24px
@@ -377,7 +378,7 @@ private fun DownloadStatusPill(
 private fun downloadStatusText(task: XyDownload): String {
     return when (task.status) {
         DownloadStatus.QUEUED -> stringResource(Res.string.download_status_queued)
-        DownloadStatus.DOWNLOADING -> "下载中"
+        DownloadStatus.DOWNLOADING -> stringResource(Res.string.jvm_download_screen_text_08)
         DownloadStatus.PAUSED -> stringResource(Res.string.tap_to_resume_download)
         DownloadStatus.COMPLETED -> stringResource(Res.string.download_completed)
         DownloadStatus.FAILED -> stringResource(Res.string.download_failed)

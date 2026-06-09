@@ -31,7 +31,10 @@ import xymusic_kmp.composeapp.generated.resources.unknown_playlist
 
 object Constants {
 
-    const val COMPOSITION_LOCAL_ERROR = "没有找到上下文"
+    /**
+     * CompositionLocal 未提供上下文时使用的错误提示。
+     */
+    const val COMPOSITION_LOCAL_ERROR: String = "没有找到上下文"
 
     /**
      * 链接用户信息分页长度

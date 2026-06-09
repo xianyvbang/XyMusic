@@ -19,10 +19,14 @@
 package cn.xybbz.music
 
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+import org.jetbrains.compose.resources.StringResource
 
 data class CacheUpperLimitOption(
     val limit: CacheUpperLimitEnum,
+    /** 缓存上限的普通展示文案，容量类固定文本直接使用该字段。 */
     val message: String,
+    /** 缓存上限的资源展示文案，需要跟随语言切换的选项使用该字段。 */
+    val messageResource: StringResource? = null,
 )
 
 expect fun cacheUpperLimitOptions(): List<CacheUpperLimitOption>

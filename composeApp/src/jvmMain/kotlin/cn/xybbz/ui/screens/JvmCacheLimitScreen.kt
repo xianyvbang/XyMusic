@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -68,12 +68,14 @@ import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
+import cn.xybbz.ui.components.displayMessage
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.CacheLimitViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.av_timer_24px
 import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
@@ -105,14 +107,14 @@ fun JvmCacheLimitScreen(
     val selectedOption = cacheLimitOptions.firstOrNull { it.limit == selectedLimit }
 
     // 优先使用选项里的展示文案，兜底时用枚举名，避免摘要区域出现空文本。
-    val selectedLimitLabel = selectedOption?.message ?: selectedLimit.name
+    val selectedLimitLabel = selectedOption?.displayMessage() ?: selectedLimit.name
 
     // 将枚举映射为桌面卡片需要的策略、描述和脚注文案。
     val selectedLimitProfile = selectedLimit.cacheLimitProfile()
 
     // 如果当前值是历史不可展示档位，先提示已自动迁移，实际写入在 LaunchedEffect 中执行。
     val displayedLimitLabel = if (selectedOption == null) {
-        "${CacheLimitFallbackOption.message} · 已自动迁移"
+        stringResource(Res.string.jvm_cache_limit_screen_text_01, CacheLimitFallbackOption.message)
     } else {
         selectedLimitLabel
     }
@@ -137,15 +139,15 @@ fun JvmCacheLimitScreen(
     ) {
         JvmSettingPageHeader(
             title = stringResource(Res.string.music_cache_limit_title),
-            description = "把边下边播产生的播放缓存上限做成可扫读的容量面板。固定档位适合给桌面磁盘预留明确空间预算。",
+            description = stringResource(Res.string.jvm_cache_limit_screen_text_02),
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,
                 prominentValue = true,
                 items = listOf(
-                    JvmSettingStatusCardItem(label = "缓存上限", value = displayedLimitLabel),
-                    JvmSettingStatusCardItem(label = "容量策略", value = selectedLimitProfile.strategy),
-                    JvmSettingStatusCardItem(label = "已使用", value = musicCacheSizeLabel.addCapacitySpace()),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.cache_limit), value = displayedLimitLabel),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_cache_limit_screen_text_03), value = selectedLimitProfile.strategy),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_cache_limit_screen_text_04), value = musicCacheSizeLabel.addCapacitySpace()),
                 )
             )
         }
@@ -153,11 +155,11 @@ fun JvmCacheLimitScreen(
         JvmSettingTwoPaneContent(
             leftContent = {
                 JvmSettingSection(
-                    title = "上限档位",
-                    subtitle = "卡片直接呈现容量语义，减少在列表和说明之间来回确认。",
-                    badge = "当前：$displayedLimitLabel",
+                    title = stringResource(Res.string.jvm_cache_limit_screen_text_05),
+                    subtitle = stringResource(Res.string.jvm_cache_limit_screen_text_06),
+                    badge = stringResource(Res.string.jvm_cache_limit_screen_text_07, displayedLimitLabel),
                     contentContainerEnabled = false,
-                    qualityNote = "JVM 端当前提供固定容量档位；历史自动或不缓存配置进入页面后会迁移到默认 2GB 档位。",
+                    qualityNote = stringResource(Res.string.jvm_cache_limit_screen_text_08),
                 ) {
                     JvmSettingActionEntryGrid(
                         // 将缓存上限选项转换成桌面设置页通用的操作卡片模型。
@@ -210,7 +212,7 @@ private fun jvmCacheLimitActionEntries(
         JvmSettingActionEntry(
             icon = option.limit.cacheLimitIcon(),
             kicker = profile.kicker,
-            title = option.message.addCapacitySpace(),
+            title = option.displayMessage().addCapacitySpace(),
             description = profile.description,
             color = option.limit.cacheLimitColor(),
             selected = selectedLimit == option.limit,
@@ -299,11 +301,11 @@ private fun JvmCacheUsageOverviewSection(
     onStorageClick: () -> Unit,
 ) {
     JvmSettingSection(
-        title = "占用概览",
-        subtitle = "真实占用与存储管理页的音频缓存使用同一套计算方式。",
-        badge = "真实占用",
+        title = stringResource(Res.string.jvm_cache_limit_screen_text_09),
+        subtitle = stringResource(Res.string.jvm_cache_limit_screen_text_10),
+        badge = stringResource(Res.string.jvm_cache_limit_screen_text_11),
         contentContainerEnabled = false,
-        qualityNote = "缓存命中和当前播放条目会优先保留，超过上限时后台清理更早访问的缓存文件。缓存路径、真实占用和批量清理继续归入存储管理页。",
+        qualityNote = stringResource(Res.string.jvm_cache_limit_screen_text_12),
     ) {
         Surface(
             // 外层 Surface 承载圆形仪表和两行信息列表，形成独立的概览块。
@@ -322,22 +324,22 @@ private fun JvmCacheUsageOverviewSection(
             ) {
                 JvmCacheGauge(
                     value = musicCacheSizeLabel.addCapacitySpace(),
-                    label = "音频缓存占用",
+                    label = stringResource(Res.string.jvm_cache_limit_screen_text_13),
                 )
                 JvmCacheInfoList(
                     // 第一行可跳转到存储管理页，第二行只展示当前上限。
                     rows = listOf(
                         JvmCacheInfoRow(
                             icon = Res.drawable.music_note_24px,
-                            title = "真实占用",
-                            description = "点击查看歌曲缓存路径和其它存储分类。",
+                            title = stringResource(Res.string.jvm_cache_limit_screen_text_11),
+                            description = stringResource(Res.string.jvm_cache_limit_screen_text_14),
                             value = musicCacheSizeLabel.addCapacitySpace(),
                             onClick = onStorageClick,
                         ),
                         JvmCacheInfoRow(
                             icon = Res.drawable.folder_managed_24px,
-                            title = "当前上限",
-                            description = "达到容量上限后自动触发 LRU 清理。",
+                            title = stringResource(Res.string.jvm_cache_limit_screen_text_15),
+                            description = stringResource(Res.string.jvm_cache_limit_screen_text_16),
                             value = selectedLimitLabel.addCapacitySpace(),
                         ),
                     )
@@ -558,23 +560,24 @@ private val CacheLimitFallbackOption = CacheUpperLimitOption(
 /**
  * 将缓存上限枚举映射为 JVM 桌面端页面的展示画像。
  */
+@Composable
 private fun CacheUpperLimitEnum.cacheLimitProfile(): JvmCacheLimitProfile {
     return when (this) {
         // 自动档位主要用于兼容共享枚举，JVM 页面会迁移到固定容量档位。
         CacheUpperLimitEnum.Auto -> JvmCacheLimitProfile(
             kicker = "AUTO",
-            strategy = "系统建议",
-            description = "按平台策略动态限制播放缓存。",
-            footLabel = "推荐",
-            footValue = "弹性",
+            strategy = stringResource(Res.string.jvm_cache_limit_screen_text_17),
+            description = stringResource(Res.string.jvm_cache_limit_screen_text_18),
+            footLabel = stringResource(Res.string.recommend),
+            footValue = stringResource(Res.string.jvm_cache_limit_screen_text_19),
         )
         // 不缓存档位同样用于兼容历史设置，说明关闭缓存后的最低占用行为。
         CacheUpperLimitEnum.No -> JvmCacheLimitProfile(
             kicker = "OFF",
-            strategy = "不缓存",
-            description = "关闭播放缓存，仅保留当前流式播放。",
-            footLabel = "占用",
-            footValue = "最低",
+            strategy = stringResource(Res.string.jvm_cache_limit_screen_text_20),
+            description = stringResource(Res.string.jvm_cache_limit_screen_text_21),
+            footLabel = stringResource(Res.string.jvm_cache_limit_screen_text_22),
+            footValue = stringResource(Res.string.jvm_cache_limit_screen_text_23),
         )
         // 小容量档位统一归为轻量策略，适合磁盘空间更紧张的桌面环境。
         CacheUpperLimitEnum.OneHundred,
@@ -583,44 +586,44 @@ private fun CacheUpperLimitEnum.cacheLimitProfile(): JvmCacheLimitProfile {
         CacheUpperLimitEnum.OneG,
         CacheUpperLimitEnum.ThreeG -> JvmCacheLimitProfile(
             kicker = "LOW",
-            strategy = "轻量",
-            description = "适合系统盘空间紧张的桌面环境。",
-            footLabel = "保守",
-            footValue = "低占用",
+            strategy = stringResource(Res.string.jvm_cache_limit_screen_text_24),
+            description = stringResource(Res.string.jvm_cache_limit_screen_text_25),
+            footLabel = stringResource(Res.string.jvm_cache_limit_screen_text_26),
+            footValue = stringResource(Res.string.jvm_cache_limit_screen_text_27),
         )
         // 4GB 是日常轻度使用档位，偏短期缓存和基础复听。
         CacheUpperLimitEnum.FourG -> JvmCacheLimitProfile(
             kicker = "4GB",
-            strategy = "日常",
-            description = "适合普通在线播放和少量重复收听。",
-            footLabel = "基础",
-            footValue = "短期",
+            strategy = stringResource(Res.string.jvm_cache_limit_screen_text_28),
+            description = stringResource(Res.string.jvm_cache_limit_screen_text_29),
+            footLabel = stringResource(Res.string.jvm_cache_limit_screen_text_30),
+            footValue = stringResource(Res.string.jvm_cache_limit_screen_text_31),
         )
         // 8GB 是桌面端默认推荐档位，兼顾缓存命中和磁盘占用。
         CacheUpperLimitEnum.EightG -> JvmCacheLimitProfile(
             kicker = "8GB",
-            strategy = "均衡",
-            description = "覆盖日常播放和短期重复收听。",
-            footLabel = "默认",
-            footValue = "均衡",
+            strategy = stringResource(Res.string.jvm_cache_limit_screen_text_32),
+            description = stringResource(Res.string.jvm_cache_limit_screen_text_33),
+            footLabel = stringResource(Res.string.jvm_cache_limit_screen_text_34),
+            footValue = stringResource(Res.string.jvm_cache_limit_screen_text_32),
         )
         // 16GB 适合无损音源或大曲库的高频试听场景。
         CacheUpperLimitEnum.SixteenG -> JvmCacheLimitProfile(
             kicker = "16GB",
-            strategy = "高频",
-            description = "适合大曲库和无损音源频繁试听。",
-            footLabel = "宽松",
-            footValue = "长期",
+            strategy = stringResource(Res.string.jvm_cache_limit_screen_text_35),
+            description = stringResource(Res.string.jvm_cache_limit_screen_text_36),
+            footLabel = stringResource(Res.string.jvm_cache_limit_screen_text_37),
+            footValue = stringResource(Res.string.jvm_cache_limit_screen_text_38),
         )
         // 更大的容量档位归为高级策略，通常需要用户明确预留独立缓存空间。
         CacheUpperLimitEnum.ThirtyTwoG,
         CacheUpperLimitEnum.SixtyFourG,
         CacheUpperLimitEnum.OneHundredTwentyEightG -> JvmCacheLimitProfile(
             kicker = "MAX",
-            strategy = "大容量",
-            description = "适合独立缓存盘或长时间离线重播。",
-            footLabel = "高级",
-            footValue = "手动",
+            strategy = stringResource(Res.string.jvm_cache_limit_screen_text_39),
+            description = stringResource(Res.string.jvm_cache_limit_screen_text_40),
+            footLabel = stringResource(Res.string.jvm_cache_limit_screen_text_41),
+            footValue = stringResource(Res.string.jvm_cache_limit_screen_text_42),
         )
     }
 }

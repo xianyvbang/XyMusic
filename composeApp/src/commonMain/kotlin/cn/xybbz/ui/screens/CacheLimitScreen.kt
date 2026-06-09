@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.music.cacheUpperLimitOptions
+import cn.xybbz.ui.components.displayMessage
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.theme.XyTheme
@@ -88,7 +89,7 @@ fun CacheLimitScreen(
             items(cacheLimitOptions) {
                 Column {
                     XyItemRadioButton(
-                        text = it.message,
+                        text = it.displayMessage(),
                         sub = if (it.limit == CacheUpperLimitEnum.Auto)
                             stringResource(
                                 Res.string.current_auto_cache_limit,

@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -65,12 +65,15 @@ import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
+import cn.xybbz.ui.components.displayAudioBitRateText
+import cn.xybbz.ui.components.displayMessage
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.about
 import xymusic_kmp.composeapp.generated.resources.album_24px
@@ -116,23 +119,23 @@ fun JvmSettingScreen(
     val copySuccess = stringResource(Res.string.copy_success)
     val cacheLimitLabel = cacheUpperLimitOptions()
         .firstOrNull { it.limit == settings.cacheUpperLimit }
-        ?.message
+        ?.displayMessage()
         ?: settings.cacheUpperLimit.name
     val selectedQuality = TranscodeAudioBitRateType
         .getTranscodeAudioBitRate(settings.wifiNetworkAudioBitRate)
-        .audioBitRateStr
-    val dataSourceLabel = settings.dataSourceType?.title ?: "未连接"
+        .displayAudioBitRateText()
+    val dataSourceLabel = settings.dataSourceType?.title ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
 
     JvmSettingPageScaffold() {
         JvmSettingPageHeader(
             title = stringResource(Res.string.settings),
-            description = "把桌面端常用配置集中为更可扫读的设置中心：播放缓存、连接管理、下载队列、界面语言和扩展能力都保留当前入口。",
+            description = stringResource(Res.string.jvm_setting_screen_text_01),
         ) {
             JvmSettingStatusCard(
                 items = listOf(
-                    JvmSettingStatusCardItem(label = "当前数据源", value = dataSourceLabel),
-                    JvmSettingStatusCardItem(label = "在线品质", value = selectedQuality),
-                    JvmSettingStatusCardItem(label = "下载并发", value = settings.maxConcurrentDownloads.toString()),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_02), value = dataSourceLabel),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_03), value = selectedQuality),
+                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_04), value = settings.maxConcurrentDownloads.toString()),
                 )
             )
         }
@@ -148,14 +151,14 @@ fun JvmSettingScreen(
         JvmSettingTwoPaneContent(
             leftContent = {
                 JvmSettingSection(
-                    title = "播放与缓存",
-                    subtitle = "控制在线播放策略、缓存位置和跨设备播放行为。",
-                    badge = "核心",
+                    title = stringResource(Res.string.jvm_setting_screen_text_05),
+                    subtitle = stringResource(Res.string.jvm_setting_screen_text_06),
+                    badge = stringResource(Res.string.jvm_setting_screen_text_07),
                 ) {
                     JvmSettingSwitchRow(
                         icon = Res.drawable.download_24px,
                         title = stringResource(Res.string.broadcast_while_down),
-                        description = "播放时缓存音频资源，弱网重播更稳定。",
+                        description = stringResource(Res.string.jvm_setting_screen_text_08),
                         checked = settings.ifEnableEdgeDownload,
                         onCheckedChange = { checked ->
                             coroutineScope.launch {
@@ -168,7 +171,7 @@ fun JvmSettingScreen(
                         JvmSettingNavigationRow(
                             icon = Res.drawable.folder_managed_24px,
                             title = stringResource(Res.string.cache_limit),
-                            description = "设置播放缓存最大占用空间。",
+                            description = stringResource(Res.string.jvm_setting_screen_text_09),
                             value = cacheLimitLabel,
                             onClick = {
                                 navigator.navigate(CacheLimit)
@@ -179,7 +182,7 @@ fun JvmSettingScreen(
                     JvmSettingNavigationRow(
                         icon = Res.drawable.music_note_24px,
                         title = stringResource(Res.string.online_music_quality),
-                        description = "选择桌面端在线音频品质与转码格式。",
+                        description = stringResource(Res.string.jvm_setting_screen_text_10),
                         value = "$selectedQuality · ${settings.transcodeFormat.uppercase()}",
                         onClick = {
                             navigator.navigate(StreamingQuality)
@@ -189,7 +192,7 @@ fun JvmSettingScreen(
                     JvmSettingSwitchRow(
                         icon = Res.drawable.album_24px,
                         title = stringResource(Res.string.album_playback_history),
-                        description = "记录专辑播放进度，便于下次继续。",
+                        description = stringResource(Res.string.jvm_setting_screen_text_11),
                         checked = settings.ifEnableAlbumHistory,
                         onCheckedChange = { checked ->
                             coroutineScope.launch {
@@ -201,7 +204,7 @@ fun JvmSettingScreen(
                     JvmSettingSwitchRow(
                         icon = Res.drawable.volume_up_24px,
                         title = stringResource(Res.string.allow_simultaneous_playback),
-                        description = "保留系统音频焦点，不主动打断其他声音。",
+                        description = stringResource(Res.string.jvm_setting_screen_text_12),
                         checked = settings.ifHandleAudioFocus,
                         onCheckedChange = { checked ->
                             coroutineScope.launch {
@@ -213,7 +216,7 @@ fun JvmSettingScreen(
                     JvmSettingSwitchRow(
                         icon = Res.drawable.av_timer_24px,
                         title = stringResource(Res.string.enabled_sync_play_progress),
-                        description = "向服务端同步当前播放位置。",
+                        description = stringResource(Res.string.jvm_setting_screen_text_13),
                         checked = settings.ifEnableSyncPlayProgress,
                         onCheckedChange = { checked ->
                             coroutineScope.launch {
@@ -236,9 +239,9 @@ fun JvmSettingScreen(
                 }
 
                 JvmSettingSection(
-                    title = "下载与存储",
-                    subtitle = "下载并发、歌曲缓存路径与本地空间管理。",
-                    badge = "本机",
+                    title = stringResource(Res.string.jvm_setting_screen_text_14),
+                    subtitle = stringResource(Res.string.jvm_setting_screen_text_15),
+                    badge = stringResource(Res.string.jvm_setting_screen_text_16),
                 ) {
                     JvmSettingDownloadRow(
                         selected = settings.maxConcurrentDownloads,
@@ -264,8 +267,8 @@ fun JvmSettingScreen(
                     JvmSettingNavigationRow(
                         icon = Res.drawable.folder_managed_24px,
                         title = stringResource(Res.string.storage_management),
-                        description = "查看缓存占用并清理本地文件。",
-                        value = "打开存储管理",
+                        description = stringResource(Res.string.jvm_setting_screen_text_17),
+                        value = stringResource(Res.string.jvm_setting_screen_text_18),
                         onClick = {
                             navigator.navigate(MemoryManagement)
                         }
@@ -274,14 +277,14 @@ fun JvmSettingScreen(
             },
             rightContent = {
                 JvmSettingSection(
-                    title = "连接",
-                    subtitle = "管理音乐服务地址和当前连接。",
-                    badge = "在线",
+                    title = stringResource(Res.string.connect),
+                    subtitle = stringResource(Res.string.jvm_setting_screen_text_19),
+                    badge = stringResource(Res.string.jvm_connection_config_info_screen_text_10),
                 ) {
                     JvmSettingNavigationRow(
                         icon = Res.drawable.http_24px,
                         title = stringResource(Res.string.connection_management),
-                        description = "切换或编辑 Jellyfin、Navidrome 等数据源。",
+                        description = stringResource(Res.string.jvm_setting_screen_text_20),
                         value = dataSourceLabel,
                         onClick = {
                             navigator.navigate(ConnectionManagement)
@@ -291,8 +294,8 @@ fun JvmSettingScreen(
                     JvmSettingNavigationRow(
                         icon = Res.drawable.signal_cellular_alt_24px,
                         title = stringResource(Res.string.poxy_config),
-                        description = "配置服务访问代理和网络转发。",
-                        value = "网络",
+                        description = stringResource(Res.string.jvm_setting_screen_text_21),
+                        value = stringResource(Res.string.jvm_setting_screen_text_22),
                         onClick = {
                             navigator.navigate(ProxyConfig)
                         }
@@ -300,12 +303,12 @@ fun JvmSettingScreen(
                 }
 
                 JvmSettingSection(
-                    title = "通用",
-                    subtitle = "界面、语言、自定义资源和应用信息。",
-                    badge = "偏好",
+                    title = stringResource(Res.string.jvm_setting_screen_text_23),
+                    subtitle = stringResource(Res.string.jvm_setting_screen_text_24),
+                    badge = stringResource(Res.string.jvm_interface_setting_screen_text_17),
                     contentContainerColor = Color.Transparent,
                     contentContainerBorderColor = Color.Transparent,
-                    qualityNote = "设置项保持原有路由和数据写入行为，桌面端只调整信息架构和视觉密度。",
+                    qualityNote = stringResource(Res.string.jvm_setting_screen_text_25),
                 ) {
                     JvmSettingActionGrid(
                         onInterfaceClick = {
@@ -366,30 +369,30 @@ private fun jvmSettingActionEntries(
     return listOf(
         JvmSettingActionEntry(
             icon = Res.drawable.settings_24px,
-            kicker = "显示",
+            kicker = stringResource(Res.string.jvm_setting_screen_text_26),
             title = stringResource(Res.string.interface_settings),
-            description = "主题、背景图片与桌面显示偏好。",
+            description = stringResource(Res.string.jvm_setting_screen_text_27),
             onClick = onInterfaceClick,
         ),
         JvmSettingActionEntry(
             icon = Res.drawable.info_24px,
-            kicker = "本地化",
+            kicker = stringResource(Res.string.jvm_language_config_screen_text_02),
             title = stringResource(Res.string.language),
-            description = "切换跟随系统或固定语言。",
+            description = stringResource(Res.string.jvm_setting_screen_text_28),
             onClick = onLanguageClick,
         ),
         JvmSettingActionEntry(
             icon = Res.drawable.music_note_24px,
-            kicker = "资源",
+            kicker = stringResource(Res.string.jvm_setting_screen_text_29),
             title = stringResource(Res.string.customize_lyric_settings),
-            description = "自定义歌词与封面服务地址。",
+            description = stringResource(Res.string.jvm_setting_screen_text_30),
             onClick = onCustomApiClick,
         ),
         JvmSettingActionEntry(
             icon = Res.drawable.info_24px,
-            kicker = "应用",
+            kicker = stringResource(Res.string.jvm_setting_screen_text_31),
             title = stringResource(Res.string.about),
-            description = "版本信息、检查更新与项目说明。",
+            description = stringResource(Res.string.jvm_setting_screen_text_32),
             onClick = onAboutClick,
         ),
     )
@@ -419,25 +422,25 @@ private fun JvmSettingOverview(
             JvmSettingOverviewTile(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 icon = Res.drawable.download_24px,
-                kicker = "播放缓存",
-                value = if (settings.ifEnableEdgeDownload) "边下边播已开启" else "边下边播已关闭",
-                sub = "缓存上限 · $cacheLimitLabel"
+                kicker = stringResource(Res.string.jvm_setting_screen_text_33),
+                value = if (settings.ifEnableEdgeDownload) stringResource(Res.string.jvm_setting_screen_text_34) else stringResource(Res.string.jvm_setting_screen_text_35),
+                sub = stringResource(Res.string.jvm_setting_screen_text_36, cacheLimitLabel)
             )
             Spacer(modifier = Modifier.width(gap))
             JvmSettingOverviewTile(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 icon = Res.drawable.av_timer_24px,
-                kicker = "播放同步",
-                value = if (settings.ifEnableSyncPlayProgress) "进度同步已开启" else "进度同步已关闭",
-                sub = if (settings.ifEnableAlbumHistory) "播放历史 · 专辑启用" else "播放历史 · 专辑关闭"
+                kicker = stringResource(Res.string.jvm_setting_screen_text_37),
+                value = if (settings.ifEnableSyncPlayProgress) stringResource(Res.string.jvm_setting_screen_text_38) else stringResource(Res.string.jvm_setting_screen_text_39),
+                sub = if (settings.ifEnableAlbumHistory) stringResource(Res.string.jvm_setting_screen_text_40) else stringResource(Res.string.jvm_setting_screen_text_41)
             )
             Spacer(modifier = Modifier.width(gap))
             JvmSettingOverviewTile(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 icon = Res.drawable.folder_managed_24px,
-                kicker = "存储管理",
-                value = "打开存储管理",
-                sub = "真实占用在存储管理页查看",
+                kicker = stringResource(Res.string.storage_management),
+                value = stringResource(Res.string.jvm_setting_screen_text_18),
+                sub = stringResource(Res.string.jvm_setting_screen_text_42),
                 onClick = onStorageClick,
             )
         }

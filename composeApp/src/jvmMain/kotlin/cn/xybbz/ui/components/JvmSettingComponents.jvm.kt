@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -76,6 +76,7 @@ import cn.xybbz.ui.xy.XyTextSub
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
 import xymusic_kmp.composeapp.generated.resources.download_24px
@@ -756,12 +757,12 @@ internal fun JvmSettingPathRow(
     JvmSettingBaseRow(
         icon = icon,
         title = title,
-        description = path.ifBlank { "路径尚未生成" },
+        description = path.ifBlank { stringResource(Res.string.jvm_setting_components_text_01) },
         descriptionStyle = JvmSettingRowDescriptionStyle.Path,
         descriptionMaxLines = 2,
         onClick = onClick,
         trailing = {
-            JvmSettingValuePill(value = "点击复制")
+            JvmSettingValuePill(value = stringResource(Res.string.jvm_setting_components_text_02))
         }
     )
 }
@@ -780,7 +781,7 @@ internal fun JvmSettingDownloadRow(
     JvmSettingBaseRow(
         icon = Res.drawable.download_24px,
         title = stringResource(Res.string.download_max_list),
-        description = "限制并行下载任务数量，避免占满带宽。",
+        description = stringResource(Res.string.jvm_setting_components_text_03),
         trailing = {
             Row(
                 modifier = Modifier

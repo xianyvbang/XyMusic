@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -98,6 +98,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.*
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_connection
 import xymusic_kmp.composeapp.generated.resources.check_24px
@@ -140,6 +141,7 @@ fun JvmConnectionManagement(
     val connections = connectionManagementViewModel.connectionList
     val currentConnectionId = connectionManagementViewModel.connectionId
     val currentConnectionText = stringResource(Res.string.current_connection)
+    val inactiveConnectionText = stringResource(Res.string.jvm_connection_config_info_screen_text_05)
     val readOnlyText = stringResource(Res.string.connection_permission_read_only)
     val warningText = stringResource(Res.string.warning)
     val deleteText = stringResource(Res.string.delete_prefix)
@@ -164,14 +166,15 @@ fun JvmConnectionManagement(
             libraryLabel = selectedLibraryText
                 ?.let { stringResource(Res.string.connection_media_library_label, it) }
                 ?: allLibraryText,
-            libraryValue = selectedLibraryText ?: "全部",
+            libraryValue = selectedLibraryText ?: stringResource(Res.string.jvm_connection_management_text_01),
             serverVersionLabel = serverVersionText
                 ?.let { stringResource(Res.string.connection_server_version_label, it) }
                 ?: unknownVersionText,
-            serverVersionValue = serverVersionText ?: "未知",
+            serverVersionValue = serverVersionText ?: stringResource(Res.string.unknown),
             capabilityLabel = stringResource(Res.string.connection_permissions_label, capabilityValue),
             capabilityValue = capabilityValue,
             currentConnectionText = currentConnectionText,
+            inactiveConnectionText = inactiveConnectionText,
         )
     }
     val currentDisplayItem = displayItems.firstOrNull { it.selected } ?: displayItems.firstOrNull()
@@ -184,7 +187,7 @@ fun JvmConnectionManagement(
     ) {
         JvmSettingPageHeader(
             title = stringResource(Res.string.connection_settings_list),
-            description = "集中管理桌面端音乐服务连接：查看当前数据源、切换连接、编辑账号地址，并为每个连接维护可见媒体库范围。",
+            description = stringResource(Res.string.jvm_connection_management_text_02),
         ) {
             XyIconTextButton(
                 modifier = Modifier.widthIn(min = 128.dp),
@@ -202,9 +205,9 @@ fun JvmConnectionManagement(
         )
 
         JvmSettingSection(
-            title = "连接管理",
-            subtitle = "卡片承载连接身份与状态，右侧保留当前连接的详细信息和常用操作。",
-            badge = "${connections.size} 个连接",
+            title = stringResource(Res.string.connection_management),
+            subtitle = stringResource(Res.string.jvm_connection_management_text_03),
+            badge = stringResource(Res.string.jvm_connection_management_text_04, connections.size),
             contentContainerEnabled = false,
         ) {
             JvmSettingResponsiveRow(
@@ -291,23 +294,23 @@ private fun JvmConnectionOverview(
             JvmSettingOverviewTile(
                 modifier = Modifier.width(tileWidth),
                 icon = Res.drawable.http_24px,
-                kicker = "当前连接",
-                value = currentDisplayItem?.config?.type?.title ?: "未连接",
-                sub = currentDisplayItem?.config?.address ?: "添加连接后可切换数据源",
+                kicker = stringResource(Res.string.jvm_connection_config_info_screen_text_08),
+                value = currentDisplayItem?.config?.type?.title ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01),
+                sub = currentDisplayItem?.config?.address ?: stringResource(Res.string.jvm_connection_management_text_05),
             )
             JvmSettingOverviewTile(
                 modifier = Modifier.width(tileWidth),
                 icon = Res.drawable.folder_managed_24px,
-                kicker = "媒体库范围",
-                value = currentDisplayItem?.libraryValue ?: "暂无",
-                sub = currentDisplayItem?.title ?: "${connectionCount} 个连接",
+                kicker = stringResource(Res.string.jvm_connection_management_text_06),
+                value = currentDisplayItem?.libraryValue ?: stringResource(Res.string.jvm_connection_management_text_07),
+                sub = currentDisplayItem?.title ?: stringResource(Res.string.jvm_connection_management_text_04, connectionCount),
             )
             JvmSettingOverviewTile(
                 modifier = Modifier.width(tileWidth),
                 icon = Res.drawable.download_24px,
-                kicker = "权限能力",
-                value = currentDisplayItem?.capabilityValue ?: "只读",
-                sub = currentDisplayItem?.serverVersionLabel ?: "服务端未知",
+                kicker = stringResource(Res.string.jvm_connection_management_text_08),
+                value = currentDisplayItem?.capabilityValue ?: stringResource(Res.string.connection_permission_read_only),
+                sub = currentDisplayItem?.serverVersionLabel ?: stringResource(Res.string.jvm_connection_management_text_09),
             )
         }
     }
@@ -605,7 +608,7 @@ private fun JvmConnectionDetailPane(
                     JvmSettingBaseRow(
                         icon = Res.drawable.edit_24px,
                         title = stringResource(Res.string.modify_connection),
-                        description = "地址、账号和服务类型",
+                        description = stringResource(Res.string.jvm_connection_management_text_10),
                         onClick = {
                             onEditConnection(displayItem.config)
                         },
@@ -614,7 +617,7 @@ private fun JvmConnectionDetailPane(
                     JvmSettingBaseRow(
                         icon = Res.drawable.folder_managed_24px,
                         title = stringResource(Res.string.music_library),
-                        description = "选择可见媒体库",
+                        description = stringResource(Res.string.jvm_connection_management_text_11),
                         onClick = {
                             onSelectLibrary(displayItem.config)
                         },
@@ -687,10 +690,10 @@ private fun JvmConnectionDetailRows(displayItem: JvmConnectionDisplayItem) {
             .padding(XyTheme.dimens.contentPadding),
         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
     ) {
-        JvmConnectionDetailRow(label = "媒体库", value = displayItem.libraryValue)
-        JvmConnectionDetailRow(label = "服务端", value = displayItem.serverVersionValue)
-        JvmConnectionDetailRow(label = "权限", value = displayItem.capabilityValue)
-        JvmConnectionDetailRow(label = "状态", value = displayItem.status)
+        JvmConnectionDetailRow(label = stringResource(Res.string.music_library), value = displayItem.libraryValue)
+        JvmConnectionDetailRow(label = stringResource(Res.string.jvm_connection_management_text_12), value = displayItem.serverVersionValue)
+        JvmConnectionDetailRow(label = stringResource(Res.string.jvm_connection_config_info_screen_text_21), value = displayItem.capabilityValue)
+        JvmConnectionDetailRow(label = stringResource(Res.string.jvm_connection_management_text_13), value = displayItem.status)
     }
 }
 
@@ -872,12 +875,12 @@ private fun JvmConnectionEmptyState() {
             JvmConnectionEmptyIcon(icon = Res.drawable.library_add_24px)
             Spacer(modifier = Modifier.height(XyTheme.dimens.contentPadding))
             XyText(
-                text = "还没有连接",
+                text = stringResource(Res.string.jvm_connection_management_text_14),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             XyTextSub(
-                text = "添加连接后可以在这里切换数据源并管理媒体库范围。",
+                text = stringResource(Res.string.jvm_connection_management_text_15),
                 style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -901,12 +904,12 @@ private fun JvmConnectionDetailEmptyState() {
         JvmConnectionEmptyIcon(icon = Res.drawable.info_24px)
         Spacer(modifier = Modifier.height(XyTheme.dimens.contentPadding))
         XyText(
-            text = "暂无当前连接",
+            text = stringResource(Res.string.jvm_connection_management_text_16),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
         XyTextSub(
-            text = "选择或添加连接后，这里会展示服务端、权限和媒体库信息。",
+            text = stringResource(Res.string.jvm_connection_management_text_17),
             style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1004,6 +1007,7 @@ private data class JvmConnectionDisplayItem(
  * @param capabilityLabel 权限卡片标签。
  * @param capabilityValue 权限详情值。
  * @param currentConnectionText 当前连接文案。
+ * @param inactiveConnectionText 非当前连接文案。
  */
 private fun ConnectionConfig.toJvmConnectionDisplayItem(
     selected: Boolean,
@@ -1014,6 +1018,7 @@ private fun ConnectionConfig.toJvmConnectionDisplayItem(
     capabilityLabel: String,
     capabilityValue: String,
     currentConnectionText: String,
+    inactiveConnectionText: String,
 ): JvmConnectionDisplayItem {
     return JvmConnectionDisplayItem(
         config = this,
@@ -1025,7 +1030,7 @@ private fun ConnectionConfig.toJvmConnectionDisplayItem(
         serverVersionValue = serverVersionValue,
         capabilityLabel = capabilityLabel,
         capabilityValue = capabilityValue,
-        status = if (selected) currentConnectionText else "备用连接",
+        status = if (selected) currentConnectionText else inactiveConnectionText,
     )
 }
 
