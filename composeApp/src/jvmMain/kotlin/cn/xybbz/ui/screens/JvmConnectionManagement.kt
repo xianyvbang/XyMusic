@@ -67,7 +67,6 @@ import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingConnectionAvatarSize
 import cn.xybbz.ui.components.JvmSettingConnectionBoardTwoPaneBreakpoint
 import cn.xybbz.ui.components.JvmSettingConnectionCardMinWidth
-import cn.xybbz.ui.components.JvmSettingConnectionDetailAvatarSize
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingOverviewThreeColumnWidth
@@ -630,7 +629,7 @@ private fun JvmConnectionDetailHeader(displayItem: JvmConnectionDisplayItem) {
         JvmConnectionAvatar(
             connectionConfig = displayItem.config,
             selected = true,
-            size = JvmSettingConnectionDetailAvatarSize,
+            size = JvmSettingConnectionAvatarSize,
         )
         Column(
             modifier = Modifier.weight(1f),
