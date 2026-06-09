@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XyMusic Windows UI 原型</title>
+    <!-- 引入外部字体和图标库 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* 颜色变量：默认暗黑主题 */
+            --bg-base: #000000;
+            --bg-elevated: #121212;
+            --bg-highlight: #1a1a1a;
+            --bg-hover: #282828;
+            --text-primary: #ffffff;
+            --text-secondary: #a7a7a7;
+            --theme-color: #1DB954; /* 占位主题色，可替换为你项目的 Primary Color */
+            --divider: rgba(255,255,255,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            user-select: none; /* 桌面端应用防止文本被意外选中 */
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            height: 100vh;
+            display: grid;
+            grid-template-rows: 1fr 90px; /* 底部播放条高度 90px */
+            grid-template-columns: 240px 1fr; /* 左侧边栏 240px */
+            grid-template-areas:
+                "sidebar main"
+                "player player";
+            overflow: hidden;
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        /* --- 左侧边栏 --- */
+        .sidebar {
+            grid-area: sidebar;
+            background-color: var(--bg-base);
+            padding: 24px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .logo i {
+            color: var(--theme-color);
+            font-size: 24px;
+        }
+
+        .nav-menu {
+            list-style: none;
+            background-color: var(--bg-elevated);
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            color: var(--text-primary);
+            background-color: var(--bg-hover);
+        }
+
+        .nav-item i {
+            font-size: 20px;
+        }
+
+        .library-section {
+            background-color: var(--bg-elevated);
+            border-radius: 8px;
+            flex: 1;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .library-header {
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .library-list {
+            flex: 1;
+            overflow-y: auto;
+            list-style: none;
+            padding-top: 8px;
+        }
+
+        .playlist-item {
+            padding: 10px 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.2s;
+        }
+
+        .playlist-item:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .playlist-cover {
+            width: 48px;
+            height: 48px;
+            border-radius: 4px;
+            background-color: #333;
+            object-fit: cover;
+        }
+
+        .playlist-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .playlist-title {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        
+        .playlist-desc {
+            font-size: 12px;
+        }
+
+        /* --- 主内容区 --- */
+        .main-content {
+            grid-area: main;
+            background: linear-gradient(180deg, #323232 0%, var(--bg-elevated) 300px);
+            border-radius: 8px;
+            margin: 8px 8px 0 0;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(18, 18, 18, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .profile-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #333;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* 数据源选择器 */
+        .source-selector-btn {
+            background-color: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 4px 12px 4px 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .source-selector-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .source-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #333;
+            object-fit: cover;
+        }
+
+        .source-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .source-selector-btn i {
+            font-size: 12px;
+            margin-left: 4px;
+        }
+
+        .content-section {
+            padding: 24px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        /* 专辑卡片网格 */
+        .album-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .album-card {
+            background-color: var(--bg-highlight);
+            padding: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            position: relative;
+        }
+
+        .album-card:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .album-card:hover .play-btn-overlay {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .album-cover {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 4px;
+            background-color: #444;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .album-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .album-artist {
+            font-size: 14px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .play-btn-overlay {
+            position: absolute;
+            bottom: 80px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--theme-color);
+            color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            box-shadow: 0 8px 8px rgba(0,0,0,0.3);
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.3s ease;
+        }
+        
+        .play-btn-overlay:hover {
+            transform: scale(1.05);
+            background-color: #1ed760;
+        }
+
+        /* 歌曲列表 */
+        .song-list {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .song-list th {
+            text-align: left;
+            color: var(--text-secondary);
+            font-weight: 400;
+            font-size: 14px;
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--divider);
+        }
+
+        .song-row {
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .song-row:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .song-row td {
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .song-row td:first-child {
+            width: 40px;
+            text-align: center;
+        }
+
+        .song-row td:last-child {
+            text-align: right;
+        }
+
+        .song-info-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .song-info-cell img {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            background-color: #333;
+        }
+
+        .song-title {
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        /* --- 底部播放条 --- */
+        .player-bar {
+            grid-area: player;
+            background-color: rgba(0, 0, 0, 0.85); /* 亚克力效果底色 */
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--divider);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 100;
+        }
+
+        .player-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 30%;
+        }
+
+        .current-cover {
+            width: 56px;
+            height: 56px;
+            border-radius: 4px;
+            background-color: #333;
+            background-image: url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=100');
+            background-size: cover;
+        }
+
+        .current-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .current-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .current-title:hover {
+            text-decoration: underline;
+        }
+
+        .current-artist {
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .current-artist:hover {
+            color: var(--text-primary);
+            text-decoration: underline;
+        }
+
+        .player-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 40%;
+            max-width: 722px;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 8px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 16px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .control-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .play-btn {
+            background-color: white;
+            color: black;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            transition: transform 0.1s;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            color: black;
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            min-width: 40px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background-color: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            flex: 1;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--text-primary);
+            border-radius: 2px;
+            width: 30%;
+        }
+
+        .progress-bar:hover .progress-fill {
+            background-color: var(--theme-color);
+        }
+
+        .player-right {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 16px;
+            width: 30%;
+        }
+
+        .volume-bar {
+            width: 90px;
+            height: 4px;
+            background-color: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            cursor: pointer;
+        }
+        
+        .volume-fill {
+            height: 100%;
+            background-color: var(--text-primary);
+            border-radius: 2px;
+            width: 60%;
+        }
+        .volume-bar:hover .volume-fill {
+            background-color: var(--theme-color);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 左侧边栏 -->
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fa-solid fa-compact-disc"></i>
+            XyMusic
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item active">
+                <i class="fa-solid fa-house"></i>
+                主页
+            </li>
+            <li class="nav-item">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                搜索
+            </li>
+        </ul>
+
+        <div class="library-section">
+            <div class="library-header">
+                <span><i class="fa-solid fa-book-open"></i> 我的音乐库</span>
+                <i class="fa-solid fa-plus" style="cursor:pointer; font-size: 14px;"></i>
+            </div>
+            <ul class="library-list">
+                <li class="playlist-item">
+                    <img src="https://images.unsplash.com/photo-1493225457124-a1a2a5f5f4a6?auto=format&fit=crop&q=80&w=100" class="playlist-cover">
+                    <div class="playlist-info">
+                        <span class="playlist-title">我喜欢的音乐</span>
+                        <span class="playlist-desc">歌单 • 128首</span>
+                    </div>
+                </li>
+                <li class="playlist-item">
+                    <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=100" class="playlist-cover">
+                    <div class="playlist-info">
+                        <span class="playlist-title">工作轻音乐</span>
+                        <span class="playlist-desc">歌单 • Xianyvbang</span>
+                    </div>
+                </li>
+                <li class="playlist-item">
+                    <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=100" class="playlist-cover">
+                    <div class="playlist-info">
+                        <span class="playlist-title">2023 年度总结</span>
+                        <span class="playlist-desc">歌单 • 官方</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="nav-buttons">
+                <button class="nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            
+            <!-- 数据源选择器 -->
+            <button class="source-selector-btn">
+                <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=32" class="source-icon" alt="source">
+                <span class="source-name">网易云音乐</span>
+                <i class="fa-solid fa-caret-down"></i>
+            </button>
+        </header>
+
+        <div class="content-section">
+            <!-- 推荐音乐 -->
+            <h2 class="section-title">推荐音乐</h2>
+            <table class="song-list" style="margin-bottom: 40px;">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>标题</th>
+                        <th>专辑</th>
+                        <th>添加时间</th>
+                        <th><i class="fa-regular fa-clock"></i></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="song-row">
+                        <td>1</td>
+                        <td>
+                            <div class="song-info-cell">
+                                <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=100">
+                                <div>
+                                    <div class="song-title">Neon Lights</div>
+                                    <div style="font-size: 14px;">The Synth Band</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>Midnight Sounds</td>
+                        <td>3天前</td>
+                        <td>3:42</td>
+                    </tr>
+                    <tr class="song-row">
+                        <td>2</td>
+                        <td>
+                            <div class="song-info-cell">
+                                <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=100">
+                                <div>
+                                    <div class="song-title">Bass Drop</div>
+                                    <div style="font-size: 14px;">DJ Alex</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>Electronic Vibes</td>
+                        <td>5天前</td>
+                        <td>4:15</td>
+                    </tr>
+                    <tr class="song-row">
+                        <td>3</td>
+                        <td>
+                            <div class="song-info-cell">
+                                <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=100">
+                                <div>
+                                    <div class="song-title">Sunrise Stroll</div>
+                                    <div style="font-size: 14px;">Sarah Guitars</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>Acoustic Morning</td>
+                        <td>1周前</td>
+                        <td>2:58</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- 最新专辑 -->
+            <h2 class="section-title">最新专辑</h2>
+            <div class="album-grid">
+                <div class="album-card">
+                    <div class="album-cover" style="background-image: url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=300');"></div>
+                    <div class="play-btn-overlay"><i class="fa-solid fa-play"></i></div>
+                    <div class="album-title">Midnight Sounds</div>
+                    <div class="album-artist">The Synth Band</div>
+                </div>
+                <div class="album-card">
+                    <div class="album-cover" style="background-image: url('https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=300');"></div>
+                    <div class="play-btn-overlay"><i class="fa-solid fa-play"></i></div>
+                    <div class="album-title">Electronic Vibes</div>
+                    <div class="album-artist">DJ Alex</div>
+                </div>
+                <div class="album-card">
+                    <div class="album-cover" style="background-image: url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=300');"></div>
+                    <div class="play-btn-overlay"><i class="fa-solid fa-play"></i></div>
+                    <div class="album-title">Acoustic Morning</div>
+                    <div class="album-artist">Sarah Guitars</div>
+                </div>
+                <div class="album-card">
+                    <div class="album-cover" style="background-image: url('https://images.unsplash.com/photo-1493225457124-a1a2a5f5f4a6?auto=format&fit=crop&q=80&w=300');"></div>
+                    <div class="play-btn-overlay"><i class="fa-solid fa-play"></i></div>
+                    <div class="album-title">Jazz Cafe</div>
+                    <div class="album-artist">The Trio</div>
+                </div>
+            </div>
+
+            <!-- 最近播放音乐 -->
+            <h2 class="section-title">最近播放音乐</h2>
+            <table class="song-list" style="margin-bottom: 40px;">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>标题</th>
+                        <th>专辑</th>
+                        <th>添加时间</th>
+                        <th><i class="fa-regular fa-clock"></i></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="song-row">
+                        <td>1</td>
+                        <td>
+                            <div class="song-info-cell">
+                                <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=100">
+                                <div>
+                                    <div class="song-title">Shape of My Heart</div>
+                                    <div style="font-size: 14px;">Sting</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>Ten Summoner's Tales</td>
+                        <td>2小时前</td>
+                        <td>4:38</td>
+                    </tr>
+                    <tr class="song-row">
+                        <td>2</td>
+                        <td>
+                            <div class="song-info-cell">
+                                <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=100">
+                                <div>
+                                    <div class="song-title">Lose Yourself</div>
+                                    <div style="font-size: 14px;">Eminem</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>8 Mile</td>
+                        <td>5小时前</td>
+                        <td>5:26</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- 最近播放专辑 -->
+            <h2 class="section-title">最近播放专辑</h2>
+            <div class="album-grid">
+                <div class="album-card">
+                    <div class="album-cover" style="background-image: url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=300');"></div>
+                    <div class="play-btn-overlay"><i class="fa-solid fa-play"></i></div>
+                    <div class="album-title">Acoustic Morning</div>
+                    <div class="album-artist">Sarah Guitars</div>
+                </div>
+                <div class="album-card">
+                    <div class="album-cover" style="background-image: url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=300');"></div>
+                    <div class="play-btn-overlay"><i class="fa-solid fa-play"></i></div>
+                    <div class="album-title">Midnight Sounds</div>
+                    <div class="album-artist">The Synth Band</div>
+                </div>
+            </div>
+
+            <!-- 热门专辑 -->
+            <h2 class="section-title">热门专辑</h2>
+            <div class="album-grid">
+                <div class="album-card">
+                    <div class="album-cover" style="background-image: url('https://images.unsplash.com/photo-1493225457124-a1a2a5f5f4a6?auto=format&fit=crop&q=80&w=300');"></div>
+                    <div class="play-btn-overlay"><i class="fa-solid fa-play"></i></div>
+                    <div class="album-title">Jazz Cafe</div>
+                    <div class="album-artist">The Trio</div>
+                </div>
+                <div class="album-card">
+                    <div class="album-cover" style="background-image: url('https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=300');"></div>
+                    <div class="play-btn-overlay"><i class="fa-solid fa-play"></i></div>
+                    <div class="album-title">Electronic Vibes</div>
+                    <div class="album-artist">DJ Alex</div>
+                </div>
+                <div class="album-card">
+                    <div class="album-cover" style="background-image: url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=300');"></div>
+                    <div class="play-btn-overlay"><i class="fa-solid fa-play"></i></div>
+                    <div class="album-title">Global Top 50</div>
+                    <div class="album-artist">Various Artists</div>
+                </div>
+            </div>
+
+        </div>
+        <!-- 底部留白，防止被播放条遮挡 -->
+        <div style="height: 40px;"></div>
+    </main>
+
+    <!-- 底部播放控制条 -->
+    <footer class="player-bar">
+        <!-- 左侧信息 -->
+        <div class="player-left">
+            <div class="current-cover"></div>
+            <div class="current-info">
+                <span class="current-title">Neon Lights</span>
+                <span class="current-artist">The Synth Band</span>
+            </div>
+            <button class="control-btn" style="color: var(--theme-color);"><i class="fa-solid fa-heart"></i></button>
+        </div>
+
+        <!-- 中间控制 -->
+        <div class="player-center">
+            <div class="player-controls">
+                <button class="control-btn"><i class="fa-solid fa-shuffle"></i></button>
+                <button class="control-btn"><i class="fa-solid fa-backward-step"></i></button>
+                <button class="play-btn"><i class="fa-solid fa-play"></i></button>
+                <button class="control-btn"><i class="fa-solid fa-forward-step"></i></button>
+                <button class="control-btn"><i class="fa-solid fa-repeat"></i></button>
+            </div>
+            <div class="progress-container">
+                <span class="time">1:12</span>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <span class="time">3:42</span>
+            </div>
+        </div>
+
+        <!-- 右侧音量等 -->
+        <div class="player-right">
+            <button class="control-btn"><i class="fa-solid fa-microphone"></i></button>
+            <button class="control-btn"><i class="fa-solid fa-list-ul"></i></button>
+            <button class="control-btn"><i class="fa-solid fa-volume-high"></i></button>
+            <div class="volume-bar">
+                <div class="volume-fill"></div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

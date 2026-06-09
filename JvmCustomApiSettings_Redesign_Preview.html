@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XyMusic JVM 自定义 API 设置预览</title>
+    <style>
+        :root {
+            --accent: #0470E6;
+            --accent-border: rgba(4, 112, 230, 0.72);
+            --bg: #1A1A1A;
+            --surface-low: #242424;
+            --surface-high: #363636;
+            --surface-hover: #3C3C3C;
+            --line: rgba(255, 255, 255, 0.10);
+            --line-strong: rgba(255, 255, 255, 0.16);
+            --text: #EBEEF1;
+            --muted: #A7A7A7;
+            --dim: #727272;
+            --danger: #E76F51;
+            --warm: #E9C46A;
+            --teal: #2A9D8F;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            color: var(--text);
+            background: var(--bg);
+            font-family: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+            overflow: hidden;
+            letter-spacing: 0;
+        }
+        button, input { font: inherit; }
+
+        .app-shell {
+            display: grid;
+            grid-template-columns: 248px minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr) 88px;
+            grid-template-areas: "sidebar main" "player player";
+            height: 100vh;
+            min-width: 880px;
+            background: linear-gradient(180deg, rgba(4, 112, 230, 0.09), rgba(26, 26, 26, 0) 260px), var(--bg);
+        }
+        .sidebar {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+            padding: 18px 12px 12px;
+            background: #111111;
+            border-right: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 44px;
+            padding: 0 12px;
+            color: #FFFFFF;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), #31A8FF);
+            box-shadow: 0 8px 20px rgba(4, 112, 230, 0.28);
+        }
+        .brand-mark::before {
+            content: "";
+            width: 12px;
+            height: 16px;
+            border-right: 4px solid #FFFFFF;
+            border-bottom: 4px solid #FFFFFF;
+            border-radius: 0 0 8px 0;
+            transform: rotate(8deg);
+        }
+        .nav-panel, .library-panel {
+            border-radius: var(--radius);
+            background: var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .nav-panel { padding: 8px; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            height: 42px;
+            padding: 0 12px;
+            color: var(--muted);
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .nav-item.active { color: var(--text); background: var(--surface-high); }
+        .nav-icon { display: grid; place-items: center; width: 22px; height: 22px; font-size: 15px; }
+        .library-panel { display: flex; flex: 1; min-height: 0; flex-direction: column; padding: 10px; }
+        .library-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 36px;
+            padding: 0 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .library-list { display: grid; gap: 6px; margin-top: 6px; overflow: hidden; }
+        .library-row {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .library-row.current { background: rgba(255, 255, 255, 0.05); }
+        .cover { width: 42px; height: 42px; border-radius: 8px; background: linear-gradient(135deg, #274060, var(--teal)); }
+        .cover.alt { background: linear-gradient(135deg, #5F4B8B, var(--warm)); }
+        .cover.third { background: linear-gradient(135deg, #183A37, var(--accent)); }
+        .line-title, .line-sub, .setting-title, .setting-desc, .endpoint-url {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .line-title { color: #FFFFFF; font-size: 14px; font-weight: 700; }
+        .line-sub { margin-top: 4px; color: var(--dim); font-size: 12px; }
+
+        .main {
+            grid-area: main;
+            min-width: 0;
+            margin: 8px 8px 0;
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, rgba(4, 112, 230, 0.18), rgba(47, 47, 47, 0) 230px), var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            padding: 0 24px;
+            background: rgba(31, 31, 31, 0.72);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(18px);
+        }
+        .window-actions { display: flex; align-items: center; gap: 8px; }
+        .round-button, .icon-button {
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.24);
+        }
+        .round-button { width: 34px; height: 34px; border-radius: 50%; }
+        .icon-button { width: 36px; height: 36px; border-radius: 10px; }
+        .source-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 36px;
+            padding: 0 12px 0 8px;
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .source-dot { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--teal)); }
+        .content-scroll { height: calc(100vh - 160px); overflow: auto; }
+        .content-scroll::-webkit-scrollbar { width: 10px; }
+        .content-scroll::-webkit-scrollbar-thumb {
+            border: 3px solid transparent;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.24);
+            background-clip: content-box;
+        }
+        .content { width: min(1080px, calc(100% - 48px)); margin: 0 auto; padding: 34px 0 42px; }
+        .page-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 24px;
+            align-items: end;
+            margin-bottom: 24px;
+        }
+        .eyebrow { margin-bottom: 10px; color: #8FC4FF; font-size: 13px; font-weight: 700; }
+        h1 { margin: 0; color: #FFFFFF; font-size: 32px; line-height: 1.18; font-weight: 750; letter-spacing: 0; }
+        .summary { margin: 10px 0 0; max-width: 660px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+        .status-card {
+            display: grid;
+            gap: 10px;
+            min-width: 278px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+        .status-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 13px; }
+        .status-value { color: var(--text); font-weight: 700; }
+        .layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.7fr); gap: 16px; align-items: start; }
+        .stack { display: grid; gap: 16px; min-width: 0; }
+        .section {
+            padding: 20px;
+            border-radius: var(--radius);
+            background: rgba(47, 47, 47, 0.82);
+            border: 1px solid var(--line);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+        }
+        .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 16px; }
+        .section-title { margin: 0; color: #FFFFFF; font-size: 17px; line-height: 1.35; font-weight: 700; }
+        .section-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+        .badge, .pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            color: #BBD9FF;
+            background: rgba(4, 112, 230, 0.12);
+            border: 1px solid rgba(4, 112, 230, 0.28);
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .endpoint-list { display: grid; gap: 12px; }
+        .endpoint-card {
+            display: grid;
+            grid-template-columns: 44px minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            padding: 14px;
+            border-radius: var(--radius);
+            background: var(--surface-high);
+            border: 1px solid var(--line);
+        }
+        .endpoint-icon {
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.20);
+            border: 1px solid rgba(4, 112, 230, 0.26);
+        }
+        .endpoint-name { color: #FFFFFF; font-size: 14px; font-weight: 700; }
+        .endpoint-url { margin-top: 6px; color: var(--dim); font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+        .endpoint-trailing { display: flex; align-items: center; gap: 10px; }
+        .form-grid { display: grid; gap: 12px; }
+        .field {
+            display: grid;
+            gap: 8px;
+            min-width: 0;
+            padding: 14px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.045);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .field-label { color: var(--muted); font-size: 12px; font-weight: 700; }
+        .input-box {
+            width: 100%;
+            height: 40px;
+            min-width: 0;
+            padding: 0 12px;
+            color: #FFFFFF;
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 9px;
+            outline: 0;
+        }
+        .input-box:focus { border-color: var(--accent-border); box-shadow: 0 0 0 3px rgba(4, 112, 230, 0.16); }
+        .setting-list { display: grid; overflow: hidden; border-radius: var(--radius); background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.07); }
+        .setting-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+            min-height: 62px;
+            padding: 12px 14px;
+            color: var(--text);
+            background: transparent;
+            border: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            text-align: left;
+        }
+        .setting-row:last-child { border-bottom: 0; }
+        .setting-title-line { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .setting-icon { display: grid; flex: 0 0 auto; place-items: center; width: 32px; height: 32px; border-radius: 9px; color: #DCEEFF; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.09); }
+        .setting-title { color: #FFFFFF; font-size: 14px; font-weight: 700; }
+        .setting-desc { margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+        .setting-trailing { display: flex; align-items: center; gap: 10px; }
+        .switch {
+            position: relative;
+            width: 46px;
+            height: 26px;
+            flex: 0 0 auto;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            cursor: pointer;
+            transition: background-color 160ms ease;
+        }
+        .switch::before {
+            content: "";
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #FFFFFF;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.24);
+            transition: transform 160ms ease;
+        }
+        .switch.on { background: var(--accent); box-shadow: 0 8px 18px rgba(4, 112, 230, 0.24); }
+        .switch.on::before { transform: translateX(20px); }
+        .primary-button {
+            height: 40px;
+            padding: 0 14px;
+            border: 0;
+            border-radius: 9px;
+            color: #FFFFFF;
+            background: var(--accent);
+            font-weight: 700;
+            box-shadow: 0 10px 24px rgba(4, 112, 230, 0.24);
+        }
+        .secondary-button {
+            height: 40px;
+            padding: 0 14px;
+            border-radius: 9px;
+            color: var(--text);
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.10);
+            font-weight: 700;
+        }
+        .test-panel {
+            display: grid;
+            gap: 14px;
+            padding: 18px;
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, rgba(4,112,230,0.15), rgba(255,255,255,0.05)), var(--surface-high);
+            border: 1px solid rgba(4,112,230,0.28);
+        }
+        .test-title { color: #FFFFFF; font-size: 22px; font-weight: 780; }
+        .test-desc { color: var(--muted); font-size: 13px; line-height: 1.6; }
+        .result-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .result { padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+        .result-label { color: var(--dim); font-size: 11px; }
+        .result-value { margin-top: 7px; color: #FFFFFF; font-size: 16px; font-weight: 780; }
+        .note-row {
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .note-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; color: #FFFFFF; background: rgba(4, 112, 230, 0.20); border: 1px solid rgba(4, 112, 230, 0.26); }
+        .toast {
+            position: fixed;
+            right: 24px;
+            bottom: 108px;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: #FFFFFF;
+            background: rgba(36, 36, 36, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+            backdrop-filter: blur(18px);
+            font-size: 13px;
+        }
+        .toast.show { display: flex; }
+        .bar { height: 8px; overflow: hidden; border-radius: 999px; background: rgba(255, 255, 255, 0.13); }
+        .bar-fill { height: 100%; border-radius: inherit; background: var(--accent); }
+        .player {
+            grid-area: player;
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(360px, 520px) minmax(220px, 1fr);
+            gap: 18px;
+            align-items: center;
+            padding: 12px 18px;
+            background: #121212;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .now-playing { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 12px; align-items: center; min-width: 0; }
+        .album-art { width: 54px; height: 54px; border-radius: 8px; background: linear-gradient(135deg, rgba(233, 196, 106, 0.92), rgba(4, 112, 230, 0.86)); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28); }
+        .player-title { overflow: hidden; color: #FFFFFF; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+        .player-subtitle { overflow: hidden; margin-top: 5px; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+        .transport { display: grid; gap: 10px; justify-items: center; }
+        .transport-buttons { display: flex; align-items: center; gap: 14px; }
+        .transport-button { display: grid; place-items: center; width: 28px; height: 28px; color: var(--muted); background: transparent; border: 0; }
+        .play-button { display: grid; place-items: center; width: 36px; height: 36px; color: #FFFFFF; background: var(--accent); border: 0; border-radius: 50%; box-shadow: 0 10px 24px rgba(4, 112, 230, 0.28); }
+        .progress { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; align-items: center; width: 100%; color: var(--dim); font-size: 11px; }
+        .player-tools { display: flex; align-items: center; justify-content: flex-end; gap: 12px; color: var(--muted); font-size: 12px; }
+        .volume { width: min(120px, 32%); }
+
+        @media (max-width: 1180px) {
+            .app-shell { grid-template-columns: 218px minmax(0, 1fr); }
+            .content { width: calc(100% - 36px); }
+            .page-head, .layout { grid-template-columns: 1fr; }
+            .status-card { min-width: 0; }
+        }
+        @media (max-width: 920px) {
+            body { overflow: auto; }
+            .app-shell {
+                min-width: 0;
+                height: auto;
+                min-height: 100vh;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto minmax(0, 1fr) 88px;
+                grid-template-areas: "sidebar" "main" "player";
+            }
+            .sidebar { flex-direction: row; align-items: center; overflow: hidden; border-right: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+            .brand { flex: 0 0 auto; }
+            .nav-panel { display: flex; flex: 1; min-width: 0; }
+            .nav-item { justify-content: center; min-width: 42px; padding: 0 10px; }
+            .nav-item span:not(.nav-icon) { display: none; }
+            .library-panel { display: none; }
+            .main { margin: 8px; }
+            .content-scroll { height: auto; overflow: visible; }
+            .player { grid-template-columns: minmax(0, 1fr) auto; }
+            .transport { display: none; }
+        }
+        @media (max-width: 560px) {
+            .topbar { padding: 0 12px; }
+            .source-pill { display: none; }
+            h1 { font-size: 28px; }
+            .content { width: calc(100% - 24px); padding-top: 24px; }
+            .section { padding: 16px; }
+            .endpoint-card, .setting-row, .result-grid { grid-template-columns: 1fr; }
+            .endpoint-trailing, .setting-trailing { justify-content: flex-start; }
+            .player-tools { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" aria-label="桌面导航">
+        <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>XyMusic</span></div>
+        <nav class="nav-panel" aria-label="主导航">
+            <button class="nav-item" type="button"><span class="nav-icon" aria-hidden="true">⌂</span><span>首页</span></button>
+            <button class="nav-item" type="button"><span class="nav-icon" aria-hidden="true">♪</span><span>音乐库</span></button>
+            <button class="nav-item active" type="button"><span class="nav-icon" aria-hidden="true">⚙</span><span>设置</span></button>
+        </nav>
+        <section class="library-panel" aria-label="播放列表">
+            <div class="library-header"><span>最近播放</span><span aria-hidden="true">+</span></div>
+            <div class="library-list">
+                <div class="library-row current"><div class="cover"></div><div><div class="line-title">Daily Mix</div><div class="line-sub">Navidrome · 48 首</div></div></div>
+                <div class="library-row"><div class="cover alt"></div><div><div class="line-title">夜间电台</div><div class="line-sub">Jellyfin · 收藏</div></div></div>
+                <div class="library-row"><div class="cover third"></div><div><div class="line-title">高解析度试听</div><div class="line-sub">本地缓存</div></div></div>
+            </div>
+        </section>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="window-actions" aria-label="历史导航">
+                <button class="round-button" type="button" aria-label="返回">‹</button>
+                <button class="round-button" type="button" aria-label="前进">›</button>
+            </div>
+            <div class="window-actions">
+                <div class="source-pill"><span class="source-dot" aria-hidden="true"></span><span>Navidrome · 在线</span></div>
+                <button class="icon-button" type="button" aria-label="搜索">⌕</button>
+                <button class="icon-button" type="button" aria-label="设置">⚙</button>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+            <div class="content">
+                <section class="page-head">
+                    <div>
+                        <div class="eyebrow">桌面端设置</div>
+                        <h1>自定义 API 设置</h1>
+                        <p class="summary">把歌词、封面和元数据补全等外部服务统一为可启用、可测试、可回退的端点列表，避免自定义能力散落在多个页面。</p>
+                    </div>
+                    <aside class="status-card" aria-label="当前配置摘要">
+                        <div class="status-row"><span>已启用端点</span><span class="status-value" id="enabled-status">2 / 3</span></div>
+                        <div class="status-row"><span>最近测试</span><span class="status-value" id="test-status">未测试</span></div>
+                        <div class="status-row"><span>失败回退</span><span class="status-value">服务端默认</span></div>
+                    </aside>
+                </section>
+
+                <div class="layout">
+                    <section class="section" aria-labelledby="endpoint-title">
+                        <div class="section-head">
+                            <div>
+                                <h2 class="section-title" id="endpoint-title">服务端点</h2>
+                                <p class="section-subtitle">每个端点显示用途、地址和启用状态，适合桌面端快速扫描。</p>
+                            </div>
+                            <span class="badge">CustomMediaApi</span>
+                        </div>
+                        <div class="endpoint-list">
+                            <div class="endpoint-card">
+                                <div class="endpoint-icon" aria-hidden="true">L</div>
+                                <div><div class="endpoint-name">歌词接口</div><div class="endpoint-url">https://api.example.com/lyrics?artist={artist}&title={title}</div></div>
+                                <div class="endpoint-trailing"><span class="pill">优先</span><button class="switch on" type="button" role="switch" aria-checked="true" data-switch="歌词接口"></button></div>
+                            </div>
+                            <div class="endpoint-card">
+                                <div class="endpoint-icon" aria-hidden="true">▧</div>
+                                <div><div class="endpoint-name">封面接口</div><div class="endpoint-url">https://api.example.com/cover?album={album}&artist={artist}</div></div>
+                                <div class="endpoint-trailing"><span class="pill">启用</span><button class="switch on" type="button" role="switch" aria-checked="true" data-switch="封面接口"></button></div>
+                            </div>
+                            <div class="endpoint-card">
+                                <div class="endpoint-icon" aria-hidden="true">◎</div>
+                                <div><div class="endpoint-name">元数据补全</div><div class="endpoint-url">https://api.example.com/meta?id={musicId}</div></div>
+                                <div class="endpoint-trailing"><span class="pill">关闭</span><button class="switch" type="button" role="switch" aria-checked="false" data-switch="元数据补全"></button></div>
+                            </div>
+                        </div>
+                        <div class="note-row">
+                            <div class="note-icon" aria-hidden="true">i</div>
+                            <div>自定义接口失败时继续使用当前数据源返回的歌词、封面或元数据，避免影响播放主流程。</div>
+                        </div>
+                    </section>
+
+                    <aside class="stack">
+                        <section class="test-panel" aria-labelledby="test-title">
+                            <div class="test-title" id="test-title">端点测试</div>
+                            <div class="test-desc">用当前播放歌曲模拟请求，检查响应耗时和返回字段完整度。</div>
+                            <div class="result-grid">
+                                <div class="result"><div class="result-label">歌词</div><div class="result-value" id="lyrics-result">待测</div></div>
+                                <div class="result"><div class="result-label">封面</div><div class="result-value" id="cover-result">待测</div></div>
+                                <div class="result"><div class="result-label">元数据</div><div class="result-value" id="meta-result">待测</div></div>
+                            </div>
+                            <button class="primary-button" type="button" id="test-button">测试所有端点</button>
+                        </section>
+                    </aside>
+                </div>
+
+                <div class="layout" style="margin-top: 16px;">
+                    <section class="section" aria-labelledby="edit-title">
+                        <div class="section-head">
+                            <div>
+                                <h2 class="section-title" id="edit-title">编辑歌词接口</h2>
+                                <p class="section-subtitle">把模板变量放在示例旁边，用户不需要记忆参数名。</p>
+                            </div>
+                            <span class="badge">示例端点</span>
+                        </div>
+                        <div class="form-grid">
+                            <label class="field">
+                                <span class="field-label">请求地址</span>
+                                <input class="input-box" value="https://api.example.com/lyrics?artist={artist}&title={title}" aria-label="歌词接口请求地址">
+                            </label>
+                            <label class="field">
+                                <span class="field-label">鉴权 Header</span>
+                                <input class="input-box" value="Authorization: Bearer ${token}" aria-label="歌词接口鉴权 Header">
+                            </label>
+                            <label class="field">
+                                <span class="field-label">响应路径</span>
+                                <input class="input-box" value="data.lyrics" aria-label="歌词接口响应路径">
+                            </label>
+                        </div>
+                    </section>
+
+                    <aside class="stack">
+                        <section class="section" aria-labelledby="rules-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="rules-title">请求策略</h2>
+                                    <p class="section-subtitle">控制自定义服务如何参与主流程。</p>
+                                </div>
+                            </div>
+                            <div class="setting-list">
+                                <div class="setting-row">
+                                    <div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">↻</span><span class="setting-title">失败后自动回退</span></div><div class="setting-desc">请求失败时继续读取服务端默认资源。</div></div>
+                                    <div class="setting-trailing"><button class="switch on" type="button" role="switch" aria-checked="true" data-switch="自动回退"></button></div>
+                                </div>
+                                <div class="setting-row">
+                                    <div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">◷</span><span class="setting-title">超时时间</span></div><div class="setting-desc">单个端点超过 3 秒即回退。</div></div>
+                                    <div class="setting-trailing"><span class="pill">3s</span></div>
+                                </div>
+                                <div class="setting-row">
+                                    <div><div class="setting-title-line"><span class="setting-icon" aria-hidden="true">▣</span><span class="setting-title">缓存自定义响应</span></div><div class="setting-desc">减少重复歌词和封面请求。</div></div>
+                                    <div class="setting-trailing"><button class="switch on" type="button" role="switch" aria-checked="true" data-switch="缓存自定义响应"></button></div>
+                                </div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="player" aria-label="播放控制栏">
+        <div class="now-playing"><div class="album-art" aria-hidden="true"></div><div><div class="player-title">Blue Hour</div><div class="player-subtitle">XyMusic Preview · 自定义 API 设置</div></div></div>
+        <div class="transport">
+            <div class="transport-buttons"><button class="transport-button" type="button" aria-label="随机播放">⤨</button><button class="transport-button" type="button" aria-label="上一首">‹‹</button><button class="play-button" type="button" aria-label="播放">▶</button><button class="transport-button" type="button" aria-label="下一首">››</button><button class="transport-button" type="button" aria-label="循环播放">↻</button></div>
+            <div class="progress"><span>1:24</span><div class="bar" aria-hidden="true"><div class="bar-fill" style="width: 38%;"></div></div><span>3:41</span></div>
+        </div>
+        <div class="player-tools"><span>列表</span><span>歌词</span><span>音量</span><div class="bar volume" aria-hidden="true"><div class="bar-fill" style="width: 68%;"></div></div></div>
+    </footer>
+    <div class="toast" id="toast" role="status" aria-live="polite"><span class="note-icon" aria-hidden="true">✓</span><span id="toast-text">已更新</span></div>
+</div>
+<script>
+    const toast = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
+    let toastTimer = null;
+
+    function showToast(text) {
+        toastText.textContent = text;
+        toast.classList.add("show");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("show"), 1500);
+    }
+
+    function updateEnabledCount() {
+        const switches = Array.from(document.querySelectorAll(".endpoint-card .switch"));
+        const enabled = switches.filter((item) => item.classList.contains("on")).length;
+        document.getElementById("enabled-status").textContent = `${enabled} / ${switches.length}`;
+    }
+
+    document.querySelectorAll(".switch").forEach((switcher) => {
+        switcher.addEventListener("click", () => {
+            const checked = !switcher.classList.contains("on");
+            switcher.classList.toggle("on", checked);
+            switcher.setAttribute("aria-checked", checked ? "true" : "false");
+            updateEnabledCount();
+            showToast(`${switcher.dataset.switch}${checked ? "已开启" : "已关闭"}`);
+        });
+    });
+
+    document.getElementById("test-button").addEventListener("click", () => {
+        document.getElementById("lyrics-result").textContent = "126ms";
+        document.getElementById("cover-result").textContent = "204ms";
+        document.getElementById("meta-result").textContent = "跳过";
+        document.getElementById("test-status").textContent = "刚刚成功";
+        showToast("自定义 API 测试完成");
+    });
+</script>
+</body>
+</html>

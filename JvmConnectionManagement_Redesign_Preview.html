@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XyMusic JVM 连接管理页预览</title>
+    <style>
+        /* 页面预览样式：沿用 JVM 设置页预览的深色桌面视觉。 */
+        :root {
+            --accent: #0470E6;
+            --accent-soft: rgba(4, 112, 230, 0.16);
+            --accent-border: rgba(4, 112, 230, 0.72);
+            --bg: #1A1A1A;
+            --surface: #2F2F2F;
+            --surface-low: #242424;
+            --surface-high: #363636;
+            --surface-hover: #3C3C3C;
+            --line: rgba(255, 255, 255, 0.10);
+            --line-strong: rgba(255, 255, 255, 0.16);
+            --text: #EBEEF1;
+            --muted: #A7A7A7;
+            --dim: #727272;
+            --danger: #E76F51;
+            --warm: #E9C46A;
+            --teal: #2A9D8F;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            color: var(--text);
+            background: var(--bg);
+            font-family: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+            overflow: hidden;
+            letter-spacing: 0;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .app-shell {
+            display: grid;
+            grid-template-columns: 248px minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr) 88px;
+            grid-template-areas:
+                "sidebar main"
+                "player player";
+            height: 100vh;
+            min-width: 880px;
+            background:
+                linear-gradient(180deg, rgba(4, 112, 230, 0.09), rgba(26, 26, 26, 0) 260px),
+                var(--bg);
+        }
+
+        /* 左侧导航区：保持和设置页预览一致的桌面外壳。 */
+        .sidebar {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+            padding: 18px 12px 12px;
+            background: #111111;
+            border-right: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 44px;
+            padding: 0 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), #31A8FF);
+            box-shadow: 0 8px 20px rgba(4, 112, 230, 0.28);
+        }
+
+        .brand-mark::before {
+            content: "";
+            width: 12px;
+            height: 16px;
+            border-right: 4px solid #FFFFFF;
+            border-bottom: 4px solid #FFFFFF;
+            border-radius: 0 0 8px 0;
+            transform: rotate(8deg);
+        }
+
+        .nav-panel,
+        .library-panel {
+            border-radius: var(--radius);
+            background: var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .nav-panel {
+            padding: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            height: 42px;
+            padding: 0 12px;
+            color: var(--muted);
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            text-align: left;
+            cursor: default;
+        }
+
+        .nav-item.active {
+            color: var(--text);
+            background: var(--surface-high);
+        }
+
+        .nav-icon {
+            display: grid;
+            place-items: center;
+            width: 22px;
+            height: 22px;
+            color: currentColor;
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .library-panel {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .library-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 36px;
+            padding: 0 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .library-list {
+            display: grid;
+            gap: 6px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .library-row {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            min-width: 0;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .library-row.current {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .cover {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #274060, #2A9D8F);
+        }
+
+        .cover.alt {
+            background: linear-gradient(135deg, #5F4B8B, #E9C46A);
+        }
+
+        .cover.third {
+            background: linear-gradient(135deg, #183A37, #0470E6);
+        }
+
+        .line-title,
+        .line-sub {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .line-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .line-sub {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--dim);
+        }
+
+        .main {
+            grid-area: main;
+            min-width: 0;
+            margin: 8px 8px 0 8px;
+            border-radius: var(--radius);
+            background:
+                linear-gradient(180deg, rgba(4, 112, 230, 0.18), rgba(47, 47, 47, 0) 230px),
+                var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            padding: 0 24px;
+            background: rgba(31, 31, 31, 0.72);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(18px);
+        }
+
+        .window-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .round-button,
+        .icon-button,
+        .primary-action,
+        .ghost-action {
+            display: inline-grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.24);
+            cursor: pointer;
+            transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+        }
+
+        .primary-action,
+        .ghost-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .round-button {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+        }
+
+        .icon-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+
+        .round-button:hover,
+        .icon-button:hover,
+        .ghost-action:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.16);
+        }
+
+        .primary-action {
+            grid-auto-flow: column;
+            gap: 9px;
+            height: 40px;
+            padding: 0 16px;
+            border-radius: 10px;
+            color: #FFFFFF;
+            background: var(--accent);
+            border-color: var(--accent-border);
+            font-size: 13px;
+            font-weight: 760;
+            box-shadow: 0 10px 24px rgba(4, 112, 230, 0.24);
+        }
+
+        .primary-action:hover {
+            transform: translateY(-1px);
+            background: #0A7DF5;
+        }
+
+        .ghost-action {
+            grid-auto-flow: column;
+            gap: 8px;
+            height: 36px;
+            padding: 0 12px;
+            border-radius: 10px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .source-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            height: 36px;
+            padding: 0 12px 0 8px;
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .source-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--teal));
+        }
+
+        .content-scroll {
+            height: calc(100vh - 160px);
+            overflow: auto;
+        }
+
+        .content-scroll::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .content-scroll::-webkit-scrollbar-thumb {
+            border: 3px solid transparent;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.24);
+            background-clip: content-box;
+        }
+
+        .content {
+            width: min(1120px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 34px 0 42px;
+        }
+
+        .page-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 24px;
+            align-items: end;
+            margin-bottom: 24px;
+        }
+
+        .eyebrow {
+            margin-bottom: 10px;
+            color: #8FC4FF;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            line-height: 1.18;
+            font-weight: 750;
+            color: #FFFFFF;
+            letter-spacing: 0;
+        }
+
+        .summary {
+            margin: 10px 0 0;
+            max-width: 700px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .overview-tile {
+            min-width: 0;
+            min-height: 106px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: var(--surface-high);
+            border: 1px solid var(--line);
+        }
+
+        .overview-kicker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .overview-icon {
+            display: grid;
+            place-items: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.20);
+            border: 1px solid rgba(4, 112, 230, 0.26);
+            line-height: 1;
+        }
+
+        .overview-icon.teal {
+            background: rgba(42, 157, 143, 0.20);
+            border-color: rgba(42, 157, 143, 0.28);
+        }
+
+        .overview-icon.warm {
+            background: rgba(233, 196, 106, 0.18);
+            border-color: rgba(233, 196, 106, 0.28);
+        }
+
+        .overview-value {
+            overflow: hidden;
+            margin-top: 16px;
+            color: #FFFFFF;
+            font-size: 22px;
+            line-height: 1.1;
+            font-weight: 780;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .overview-sub {
+            overflow: hidden;
+            margin-top: 8px;
+            color: var(--dim);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .connection-board {
+            padding: 20px;
+            border-radius: var(--radius);
+            background: rgba(47, 47, 47, 0.82);
+            border: 1px solid var(--line);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+        }
+
+        .board-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            margin: 0;
+            font-size: 17px;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .board-tools {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 0 0 auto;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            color: #BBD9FF;
+            background: rgba(4, 112, 230, 0.12);
+            border: 1px solid rgba(4, 112, 230, 0.28);
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .connection-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 0.44fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .connection-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(320px, 1fr));
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .connection-card {
+            display: grid;
+            gap: 14px;
+            min-width: 0;
+            min-height: 174px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius);
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.05);
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+        }
+
+        .connection-card:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: var(--line-strong);
+        }
+
+        .connection-card.current {
+            background:
+                linear-gradient(180deg, rgba(4, 112, 230, 0.18), rgba(255, 255, 255, 0.06)),
+                rgba(255, 255, 255, 0.06);
+            border-color: rgba(4, 112, 230, 0.36);
+            box-shadow: inset 0 0 0 1px rgba(4, 112, 230, 0.14);
+        }
+
+        .card-top {
+            display: grid;
+            grid-template-columns: 50px minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .connection-avatar {
+            display: grid;
+            place-items: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            color: #FFFFFF;
+            background: linear-gradient(135deg, #0470E6, #2A9D8F);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 18px;
+            font-weight: 780;
+        }
+
+        .connection-avatar.jellyfin {
+            background: linear-gradient(135deg, #5F4B8B, #E9C46A);
+        }
+
+        .connection-avatar.subsonic {
+            background: linear-gradient(135deg, #274060, #31A8FF);
+        }
+
+        .connection-avatar.demo {
+            background: linear-gradient(135deg, #3B3B3B, #E76F51);
+        }
+
+        .connection-title {
+            display: block;
+            overflow: hidden;
+            color: #FFFFFF;
+            font-size: 15px;
+            line-height: 1.35;
+            font-weight: 760;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .connection-address {
+            display: block;
+            overflow: hidden;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .current-pill {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            height: 26px;
+            padding: 0 9px;
+            border-radius: 999px;
+            color: #DCEEFF;
+            background: rgba(4, 112, 230, 0.18);
+            border: 1px solid rgba(4, 112, 230, 0.30);
+            font-size: 12px;
+            font-weight: 760;
+            white-space: nowrap;
+        }
+
+        .connection-card.current .current-pill {
+            display: inline-flex;
+        }
+
+        .chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            min-width: 0;
+            max-width: 100%;
+            height: 26px;
+            padding: 0 9px;
+            border-radius: 999px;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .chip span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chip.strong {
+            color: #BBD9FF;
+            background: rgba(4, 112, 230, 0.12);
+            border-color: rgba(4, 112, 230, 0.24);
+        }
+
+        .card-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .card-actions .icon-button {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.20);
+        }
+
+        .icon-button.danger {
+            color: #FFD0C7;
+            border-color: rgba(231, 111, 81, 0.28);
+        }
+
+        .icon-button.danger:hover {
+            background: rgba(231, 111, 81, 0.16);
+            border-color: rgba(231, 111, 81, 0.40);
+        }
+
+        .detail-pane {
+            display: grid;
+            gap: 14px;
+            min-width: 0;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .detail-head {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .detail-avatar {
+            display: grid;
+            place-items: center;
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            color: #FFFFFF;
+            background: linear-gradient(135deg, var(--accent), var(--teal));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 20px;
+            font-weight: 780;
+        }
+
+        .detail-avatar.jellyfin {
+            background: linear-gradient(135deg, #5F4B8B, #E9C46A);
+        }
+
+        .detail-avatar.subsonic {
+            background: linear-gradient(135deg, #274060, #31A8FF);
+        }
+
+        .detail-avatar.demo {
+            background: linear-gradient(135deg, #3B3B3B, #E76F51);
+        }
+
+        .detail-title {
+            overflow: hidden;
+            color: #FFFFFF;
+            font-size: 18px;
+            line-height: 1.25;
+            font-weight: 780;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .detail-subtitle {
+            overflow: hidden;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .detail-list {
+            display: grid;
+            overflow: hidden;
+            border-radius: var(--radius);
+            background: rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .detail-row {
+            display: grid;
+            grid-template-columns: minmax(92px, 0.34fr) minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            min-height: 48px;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            font-size: 13px;
+        }
+
+        .detail-row:last-child {
+            border-bottom: 0;
+        }
+
+        .detail-label {
+            color: var(--dim);
+            white-space: nowrap;
+        }
+
+        .detail-value {
+            overflow: hidden;
+            color: var(--text);
+            font-weight: 650;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .detail-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .detail-action {
+            display: grid;
+            grid-template-columns: 30px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            min-width: 0;
+            min-height: 54px;
+            padding: 10px;
+            border-radius: 10px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .detail-action:hover {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .detail-action-icon {
+            display: grid;
+            place-items: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            color: #DCEEFF;
+            background: rgba(4, 112, 230, 0.16);
+            border: 1px solid rgba(4, 112, 230, 0.24);
+        }
+
+        .detail-action-title {
+            display: block;
+            overflow: hidden;
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 740;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .detail-action-sub {
+            display: block;
+            overflow: hidden;
+            margin-top: 3px;
+            color: var(--dim);
+            font-size: 11px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .player {
+            grid-area: player;
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(360px, 520px) minmax(220px, 1fr);
+            gap: 18px;
+            align-items: center;
+            padding: 12px 18px;
+            background: #121212;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .now-playing {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .album-art {
+            width: 54px;
+            height: 54px;
+            border-radius: 10px;
+            background:
+                radial-gradient(circle at 68% 26%, rgba(255, 255, 255, 0.52), transparent 0 16%),
+                linear-gradient(135deg, #0470E6, #2A9D8F 52%, #E9C46A);
+        }
+
+        .player-title,
+        .player-subtitle {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .player-title {
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .player-subtitle {
+            margin-top: 4px;
+            color: var(--dim);
+            font-size: 12px;
+        }
+
+        .transport {
+            display: grid;
+            gap: 8px;
+        }
+
+        .transport-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+        }
+
+        .transport-button,
+        .play-button {
+            display: grid;
+            place-items: center;
+            border: 0;
+            color: var(--text);
+            background: transparent;
+        }
+
+        .transport-button {
+            width: 30px;
+            height: 30px;
+            color: var(--muted);
+        }
+
+        .play-button {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            color: #111111;
+            background: #FFFFFF;
+        }
+
+        .progress {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr) 42px;
+            gap: 10px;
+            align-items: center;
+            color: var(--dim);
+            font-size: 11px;
+        }
+
+        .bar {
+            height: 4px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .bar-fill {
+            width: 38%;
+            height: 100%;
+            border-radius: inherit;
+            background: #FFFFFF;
+        }
+
+        .player-tools {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 14px;
+            min-width: 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .volume {
+            width: 112px;
+        }
+
+        .toast {
+            position: fixed;
+            right: 24px;
+            bottom: 108px;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: #FFFFFF;
+            background: rgba(36, 36, 36, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+            backdrop-filter: blur(18px);
+            font-size: 13px;
+        }
+
+        .toast.show {
+            display: flex;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: none;
+            place-items: center;
+            padding: 24px;
+            background: rgba(0, 0, 0, 0.52);
+            backdrop-filter: blur(12px);
+        }
+
+        .modal-backdrop.show {
+            display: grid;
+        }
+
+        .dialog {
+            width: min(420px, 100%);
+            padding: 20px;
+            border-radius: var(--radius);
+            color: var(--text);
+            background: rgba(36, 36, 36, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            box-shadow: 0 28px 72px rgba(0, 0, 0, 0.42);
+        }
+
+        .dialog-title {
+            margin: 0;
+            color: #FFFFFF;
+            font-size: 18px;
+            font-weight: 760;
+        }
+
+        .dialog-text {
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .dialog-button {
+            min-width: 82px;
+            height: 38px;
+            padding: 0 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.07);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .dialog-button.danger {
+            color: #FFFFFF;
+            background: var(--danger);
+            border-color: rgba(231, 111, 81, 0.72);
+        }
+
+        @media (max-width: 1280px) {
+            .connection-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-pane {
+                grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1fr);
+                align-items: start;
+            }
+
+            .detail-actions {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 1040px) {
+            .connection-list {
+                grid-template-columns: 1fr;
+            }
+
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 920px) {
+            body {
+                overflow: auto;
+                overflow-x: hidden;
+            }
+
+            .app-shell {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto minmax(0, 1fr) auto;
+                grid-template-areas:
+                    "sidebar"
+                    "main"
+                    "player";
+                min-width: 0;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            .sidebar {
+                display: block;
+                padding: 12px;
+                border-right: 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            }
+
+            .brand {
+                margin-bottom: 10px;
+            }
+
+            .nav-panel {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 6px;
+            }
+
+            .nav-item {
+                justify-content: center;
+                padding: 0 8px;
+            }
+
+            .library-panel {
+                display: none;
+            }
+
+            .main {
+                margin: 8px;
+            }
+
+            .content-scroll {
+                height: auto;
+                overflow: visible;
+            }
+
+            .page-head,
+            .detail-pane {
+                grid-template-columns: 1fr;
+            }
+
+            .board-head {
+                flex-direction: column;
+            }
+
+            .board-tools {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .player {
+                grid-template-columns: 1fr;
+            }
+
+            .player-tools {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .topbar {
+                padding: 0 12px;
+                gap: 8px;
+            }
+
+            .window-actions {
+                gap: 6px;
+            }
+
+            .topbar .window-actions:first-child .round-button:last-child,
+            .topbar .window-actions:last-child .icon-button {
+                display: none;
+            }
+
+            .source-pill {
+                max-width: 190px;
+            }
+
+            .source-pill span:last-child {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .nav-item {
+                gap: 6px;
+                font-size: 13px;
+            }
+
+            .content {
+                width: min(100% - 24px, 1120px);
+                padding: 24px 0 32px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .connection-board {
+                padding: 14px;
+            }
+
+            .primary-action {
+                width: 100%;
+            }
+
+            .card-top {
+                grid-template-columns: 44px minmax(0, 1fr);
+            }
+
+            .connection-avatar {
+                width: 44px;
+                height: 44px;
+                border-radius: 11px;
+            }
+
+            .current-pill {
+                grid-column: 1 / -1;
+                justify-self: start;
+            }
+
+            .detail-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .player-tools {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" aria-label="桌面导航">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span>XyMusic</span>
+        </div>
+
+        <nav class="nav-panel" aria-label="主导航">
+            <button class="nav-item" type="button">
+                <span class="nav-icon" aria-hidden="true">⌂</span>
+                <span>首页</span>
+            </button>
+            <button class="nav-item" type="button">
+                <span class="nav-icon" aria-hidden="true">♪</span>
+                <span>音乐库</span>
+            </button>
+            <button class="nav-item active" type="button">
+                <span class="nav-icon" aria-hidden="true">⚙</span>
+                <span>设置</span>
+            </button>
+        </nav>
+
+        <section class="library-panel" aria-label="播放列表">
+            <div class="library-header">
+                <span>最近播放</span>
+                <span aria-hidden="true">+</span>
+            </div>
+            <div class="library-list">
+                <div class="library-row current">
+                    <div class="cover"></div>
+                    <div>
+                        <div class="line-title">Daily Mix</div>
+                        <div class="line-sub">Navidrome · 48 首</div>
+                    </div>
+                </div>
+                <div class="library-row">
+                    <div class="cover alt"></div>
+                    <div>
+                        <div class="line-title">夜间电台</div>
+                        <div class="line-sub">Jellyfin · 收藏</div>
+                    </div>
+                </div>
+                <div class="library-row">
+                    <div class="cover third"></div>
+                    <div>
+                        <div class="line-title">高解析度试听</div>
+                        <div class="line-sub">本地缓存</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="window-actions" aria-label="历史导航">
+                <button class="round-button" type="button" aria-label="返回">‹</button>
+                <button class="round-button" type="button" aria-label="前进">›</button>
+            </div>
+            <div class="window-actions">
+                <div class="source-pill">
+                    <span class="source-dot" aria-hidden="true"></span>
+                    <span id="top-source">Navidrome · 在线</span>
+                </div>
+                <button class="icon-button" type="button" aria-label="搜索">⌕</button>
+                <button class="icon-button" type="button" aria-label="设置">⚙</button>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+            <div class="content">
+                <section class="page-head">
+                    <div>
+                        <div class="eyebrow">桌面端设置</div>
+                        <h1>连接设置列表</h1>
+                        <p class="summary">把连接切换、媒体库范围、服务端版本和权限能力合在同一个可扫读页面。当前连接保持高亮，其余连接保持弱化但可直接切换。</p>
+                    </div>
+                    <button class="primary-action" type="button" data-toast="打开新增连接">
+                        <span aria-hidden="true">＋</span>
+                        <span>新增连接</span>
+                    </button>
+                </section>
+
+                <section class="overview-grid" aria-label="连接概览">
+                    <div class="overview-tile">
+                        <div class="overview-kicker">
+                            <span class="overview-icon" aria-hidden="true">⌁</span>
+                            当前连接
+                        </div>
+                        <div class="overview-value" id="overview-current">Navidrome</div>
+                        <div class="overview-sub" id="overview-address">https://music.xybbz.cn</div>
+                    </div>
+                    <div class="overview-tile">
+                        <div class="overview-kicker">
+                            <span class="overview-icon teal" aria-hidden="true">▣</span>
+                            媒体库范围
+                        </div>
+                        <div class="overview-value" id="overview-library">全部</div>
+                        <div class="overview-sub">当前连接可访问的媒体库</div>
+                    </div>
+                    <div class="overview-tile">
+                        <div class="overview-kicker">
+                            <span class="overview-icon warm" aria-hidden="true">✓</span>
+                            权限能力
+                        </div>
+                        <div class="overview-value" id="overview-permission">下载 / 删除</div>
+                        <div class="overview-sub" id="overview-version">服务端 0.53.3</div>
+                    </div>
+                </section>
+
+                <section class="connection-board" aria-labelledby="connection-board-title">
+                    <div class="board-head">
+                        <div>
+                            <h2 class="section-title" id="connection-board-title">连接管理</h2>
+                            <p class="section-subtitle">卡片承载连接身份与状态，右侧保留当前连接的详细信息和常用操作。</p>
+                        </div>
+                        <div class="board-tools">
+                            <span class="badge">
+                                <span aria-hidden="true">4</span>
+                                <span>个连接</span>
+                            </span>
+                            <button class="ghost-action" type="button" data-toast="刷新连接状态">
+                                <span aria-hidden="true">↻</span>
+                                <span>刷新</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="connection-layout">
+                        <div class="connection-list" aria-label="连接列表">
+                            <button class="connection-card current" type="button" data-connection="navidrome">
+                                <span class="card-top">
+                                    <span class="connection-avatar" aria-hidden="true">N</span>
+                                    <span>
+                                        <span class="connection-title">Navidrome - xybbz</span>
+                                        <span class="connection-address">https://music.xybbz.cn</span>
+                                    </span>
+                                    <span class="current-pill">
+                                        <span aria-hidden="true">✓</span>
+                                        当前
+                                    </span>
+                                </span>
+                                <span class="chip-row">
+                                    <span class="chip strong"><span>媒体库：全部</span></span>
+                                    <span class="chip"><span>服务端：0.53.3</span></span>
+                                    <span class="chip"><span>权限：下载 / 删除</span></span>
+                                </span>
+                                <span class="card-actions">
+                                    <span class="icon-button" role="button" tabindex="0" title="修改连接" aria-label="修改连接" data-action="edit">✎</span>
+                                    <span class="icon-button" role="button" tabindex="0" title="音乐库" aria-label="音乐库" data-action="library">▣</span>
+                                    <span class="icon-button danger" role="button" tabindex="0" title="删除连接" aria-label="删除连接" data-action="delete">⌫</span>
+                                </span>
+                            </button>
+
+                            <button class="connection-card" type="button" data-connection="jellyfin">
+                                <span class="card-top">
+                                    <span class="connection-avatar jellyfin" aria-hidden="true">J</span>
+                                    <span>
+                                        <span class="connection-title">Jellyfin - studio</span>
+                                        <span class="connection-address">http://192.168.2.6:8096</span>
+                                    </span>
+                                    <span class="current-pill">
+                                        <span aria-hidden="true">✓</span>
+                                        当前
+                                    </span>
+                                </span>
+                                <span class="chip-row">
+                                    <span class="chip strong"><span>媒体库：夜间电台 / 现场</span></span>
+                                    <span class="chip"><span>服务端：10.9.11</span></span>
+                                    <span class="chip"><span>权限：只读</span></span>
+                                </span>
+                                <span class="card-actions">
+                                    <span class="icon-button" role="button" tabindex="0" title="修改连接" aria-label="修改连接" data-action="edit">✎</span>
+                                    <span class="icon-button" role="button" tabindex="0" title="音乐库" aria-label="音乐库" data-action="library">▣</span>
+                                    <span class="icon-button danger" role="button" tabindex="0" title="删除连接" aria-label="删除连接" data-action="delete">⌫</span>
+                                </span>
+                            </button>
+
+                            <button class="connection-card" type="button" data-connection="subsonic">
+                                <span class="card-top">
+                                    <span class="connection-avatar subsonic" aria-hidden="true">S</span>
+                                    <span>
+                                        <span class="connection-title">Subsonic - nas</span>
+                                        <span class="connection-address">https://nas.local:4040</span>
+                                    </span>
+                                    <span class="current-pill">
+                                        <span aria-hidden="true">✓</span>
+                                        当前
+                                    </span>
+                                </span>
+                                <span class="chip-row">
+                                    <span class="chip strong"><span>媒体库：Hi-Res</span></span>
+                                    <span class="chip"><span>服务端：未知</span></span>
+                                    <span class="chip"><span>权限：下载</span></span>
+                                </span>
+                                <span class="card-actions">
+                                    <span class="icon-button" role="button" tabindex="0" title="修改连接" aria-label="修改连接" data-action="edit">✎</span>
+                                    <span class="icon-button" role="button" tabindex="0" title="音乐库" aria-label="音乐库" data-action="library">▣</span>
+                                    <span class="icon-button danger" role="button" tabindex="0" title="删除连接" aria-label="删除连接" data-action="delete">⌫</span>
+                                </span>
+                            </button>
+
+                            <button class="connection-card" type="button" data-connection="demo">
+                                <span class="card-top">
+                                    <span class="connection-avatar demo" aria-hidden="true">D</span>
+                                    <span>
+                                        <span class="connection-title">Demo - guest</span>
+                                        <span class="connection-address">https://demo.xybbz.cn</span>
+                                    </span>
+                                    <span class="current-pill">
+                                        <span aria-hidden="true">✓</span>
+                                        当前
+                                    </span>
+                                </span>
+                                <span class="chip-row">
+                                    <span class="chip strong"><span>媒体库：试听</span></span>
+                                    <span class="chip"><span>服务端：0.51.1</span></span>
+                                    <span class="chip"><span>权限：只读</span></span>
+                                </span>
+                                <span class="card-actions">
+                                    <span class="icon-button" role="button" tabindex="0" title="修改连接" aria-label="修改连接" data-action="edit">✎</span>
+                                    <span class="icon-button" role="button" tabindex="0" title="音乐库" aria-label="音乐库" data-action="library">▣</span>
+                                    <span class="icon-button danger" role="button" tabindex="0" title="删除连接" aria-label="删除连接" data-action="delete">⌫</span>
+                                </span>
+                            </button>
+                        </div>
+
+                        <aside class="detail-pane" aria-label="当前连接详情">
+                            <div class="detail-head">
+                                <div class="detail-avatar" id="detail-avatar" aria-hidden="true">N</div>
+                                <div>
+                                    <div class="detail-title" id="detail-title">Navidrome - xybbz</div>
+                                    <div class="detail-subtitle" id="detail-address">https://music.xybbz.cn</div>
+                                </div>
+                            </div>
+
+                            <div class="detail-list">
+                                <div class="detail-row">
+                                    <span class="detail-label">媒体库</span>
+                                    <span class="detail-value" id="detail-library">全部</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">服务端</span>
+                                    <span class="detail-value" id="detail-version">0.53.3</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">权限</span>
+                                    <span class="detail-value" id="detail-permission">下载 / 删除</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">状态</span>
+                                    <span class="detail-value">当前数据源</span>
+                                </div>
+                            </div>
+
+                            <div class="detail-actions">
+                                <button class="detail-action" type="button" data-toast="打开连接编辑">
+                                    <span class="detail-action-icon" aria-hidden="true">✎</span>
+                                    <span>
+                                        <span class="detail-action-title">修改连接</span>
+                                        <span class="detail-action-sub">地址、账号和服务类型</span>
+                                    </span>
+                                </button>
+                                <button class="detail-action" type="button" data-toast="打开媒体库选择">
+                                    <span class="detail-action-icon" aria-hidden="true">▣</span>
+                                    <span>
+                                        <span class="detail-action-title">音乐库</span>
+                                        <span class="detail-action-sub">选择可见媒体库</span>
+                                    </span>
+                                </button>
+                            </div>
+                        </aside>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="player" aria-label="播放控制栏">
+        <div class="now-playing">
+            <div class="album-art" aria-hidden="true"></div>
+            <div>
+                <div class="player-title">Blue Hour</div>
+                <div class="player-subtitle">XyMusic Preview · 连接管理页预览</div>
+            </div>
+        </div>
+
+        <div class="transport">
+            <div class="transport-buttons">
+                <button class="transport-button" type="button" aria-label="随机播放">⤨</button>
+                <button class="transport-button" type="button" aria-label="上一首">‹‹</button>
+                <button class="play-button" type="button" aria-label="播放">▶</button>
+                <button class="transport-button" type="button" aria-label="下一首">››</button>
+                <button class="transport-button" type="button" aria-label="循环播放">↻</button>
+            </div>
+            <div class="progress">
+                <span>1:24</span>
+                <div class="bar" aria-hidden="true"><div class="bar-fill"></div></div>
+                <span>3:41</span>
+            </div>
+        </div>
+
+        <div class="player-tools">
+            <span>列表</span>
+            <span>歌词</span>
+            <span>音量</span>
+            <div class="bar volume" aria-hidden="true"><div class="bar-fill" style="width: 68%;"></div></div>
+        </div>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+        <span class="overview-icon" aria-hidden="true">✓</span>
+        <span id="toast-text">已更新</span>
+    </div>
+
+    <div class="modal-backdrop" id="delete-modal" role="presentation">
+        <section class="dialog" role="dialog" aria-labelledby="delete-title" aria-modal="true">
+            <h2 class="dialog-title" id="delete-title">删除连接</h2>
+            <p class="dialog-text" id="delete-text">确定要删除当前连接信息吗?</p>
+            <div class="dialog-actions">
+                <button class="dialog-button" type="button" data-dialog-close>取消</button>
+                <button class="dialog-button danger" type="button" data-dialog-confirm>删除</button>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    // 连接预览数据：对应 Compose 页面中 connectionList 的关键展示字段。
+    const connections = {
+        navidrome: {
+            shortName: "Navidrome",
+            title: "Navidrome - xybbz",
+            address: "https://music.xybbz.cn",
+            library: "全部",
+            version: "0.53.3",
+            permission: "下载 / 删除",
+            avatar: "N",
+            avatarClass: ""
+        },
+        jellyfin: {
+            shortName: "Jellyfin",
+            title: "Jellyfin - studio",
+            address: "http://192.168.2.6:8096",
+            library: "夜间电台 / 现场",
+            version: "10.9.11",
+            permission: "只读",
+            avatar: "J",
+            avatarClass: "jellyfin"
+        },
+        subsonic: {
+            shortName: "Subsonic",
+            title: "Subsonic - nas",
+            address: "https://nas.local:4040",
+            library: "Hi-Res",
+            version: "未知",
+            permission: "下载",
+            avatar: "S",
+            avatarClass: "subsonic"
+        },
+        demo: {
+            shortName: "Demo",
+            title: "Demo - guest",
+            address: "https://demo.xybbz.cn",
+            library: "试听",
+            version: "0.51.1",
+            permission: "只读",
+            avatar: "D",
+            avatarClass: "demo"
+        }
+    };
+
+    const toast = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
+    const deleteModal = document.getElementById("delete-modal");
+    const deleteText = document.getElementById("delete-text");
+    let toastTimer = null;
+    let pendingDeleteName = "";
+
+    // 提示消息方法：模拟桌面端点击操作后的短反馈。
+    function showToast(text) {
+        toastText.textContent = text;
+        toast.classList.add("show");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => {
+            toast.classList.remove("show");
+        }, 1500);
+    }
+
+    // 当前连接更新方法：同步卡片高亮、顶部数据源、概览和详情面板。
+    function selectConnection(id) {
+        const connection = connections[id];
+        document.querySelectorAll(".connection-card").forEach((card) => {
+            card.classList.toggle("current", card.dataset.connection === id);
+        });
+
+        document.getElementById("top-source").textContent = `${connection.shortName} · 在线`;
+        document.getElementById("overview-current").textContent = connection.shortName;
+        document.getElementById("overview-address").textContent = connection.address;
+        document.getElementById("overview-library").textContent = connection.library;
+        document.getElementById("overview-permission").textContent = connection.permission;
+        document.getElementById("overview-version").textContent = connection.version === "未知" ? "服务端未知" : `服务端 ${connection.version}`;
+
+        const detailAvatar = document.getElementById("detail-avatar");
+        detailAvatar.textContent = connection.avatar;
+        detailAvatar.className = `detail-avatar ${connection.avatarClass}`;
+        document.getElementById("detail-title").textContent = connection.title;
+        document.getElementById("detail-address").textContent = connection.address;
+        document.getElementById("detail-library").textContent = connection.library;
+        document.getElementById("detail-version").textContent = connection.version;
+        document.getElementById("detail-permission").textContent = connection.permission;
+    }
+
+    // 删除确认方法：模拟 Compose AlertDialogObject 的确认流程。
+    function openDeleteDialog(name) {
+        pendingDeleteName = name;
+        deleteText.textContent = `确定要删除「${name}」连接信息吗?`;
+        deleteModal.classList.add("show");
+    }
+
+    document.querySelectorAll(".connection-card").forEach((card) => {
+        card.addEventListener("click", (event) => {
+            const action = event.target.closest("[data-action]");
+            const connection = connections[card.dataset.connection];
+
+            if (action) {
+                event.stopPropagation();
+                if (action.dataset.action === "delete") {
+                    openDeleteDialog(connection.title);
+                    return;
+                }
+
+                showToast(action.dataset.action === "library" ? "打开媒体库选择" : "打开连接编辑");
+                return;
+            }
+
+            if (!card.classList.contains("current")) {
+                selectConnection(card.dataset.connection);
+                showToast(`已切换到 ${connection.shortName}`);
+            }
+        });
+    });
+
+    document.querySelectorAll("[data-toast]").forEach((button) => {
+        button.addEventListener("click", () => showToast(button.dataset.toast));
+    });
+
+    document.querySelector("[data-dialog-close]").addEventListener("click", () => {
+        deleteModal.classList.remove("show");
+    });
+
+    document.querySelector("[data-dialog-confirm]").addEventListener("click", () => {
+        deleteModal.classList.remove("show");
+        showToast(`已删除 ${pendingDeleteName}`);
+    });
+
+    deleteModal.addEventListener("click", (event) => {
+        if (event.target === deleteModal) {
+            deleteModal.classList.remove("show");
+        }
+    });
+</script>
+</body>
+</html>

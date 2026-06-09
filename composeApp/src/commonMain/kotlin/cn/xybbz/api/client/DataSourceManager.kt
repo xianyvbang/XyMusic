@@ -1,0 +1,1599 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.api.client
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.paging.PagingData
+import androidx.room.Transaction
+import cn.xybbz.api.client.data.ClientLoginInfoReq
+import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
+import cn.xybbz.api.client.version.VersionApiClient
+import cn.xybbz.api.exception.ServiceException
+import cn.xybbz.api.state.ClientLoginInfoState
+import cn.xybbz.api.state.Source
+import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.DownloadTypes
+import cn.xybbz.common.enums.LoginStateType
+import cn.xybbz.common.enums.LoginType
+import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.common.enums.SortTypeEnum
+import cn.xybbz.common.enums.koinQualifier
+import cn.xybbz.common.utils.Log
+import cn.xybbz.common.utils.MessageUtils
+import cn.xybbz.common.utils.OperationTipUtils
+import cn.xybbz.common.utils.PlaylistParser
+import cn.xybbz.config.info.shouldShowLoginMessageTips
+import cn.xybbz.config.scope.IoScoped
+import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.entity.data.LoginStateData
+import cn.xybbz.entity.data.LrcEntryData
+import cn.xybbz.entity.data.ResourceData
+import cn.xybbz.entity.data.SearchData
+import cn.xybbz.entity.data.Sort
+import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
+import cn.xybbz.localdata.config.LocalDatabaseClient
+import cn.xybbz.localdata.data.album.XyAlbum
+import cn.xybbz.localdata.data.artist.XyArtist
+import cn.xybbz.localdata.data.artist.XyArtistExt
+import cn.xybbz.localdata.data.connection.ConnectionConfig
+import cn.xybbz.localdata.data.count.XyDataCount
+import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
+import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import io.ktor.client.HttpClient
+import io.ktor.client.network.sockets.SocketTimeoutException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import org.koin.core.component.get
+import kotlin.time.Clock
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.add_music_to_playlist_failed
+import xymusic_kmp.composeapp.generated.resources.add_music_to_playlist_success
+import xymusic_kmp.composeapp.generated.resources.adding_music_to_playlist
+import xymusic_kmp.composeapp.generated.resources.connection_successful
+import xymusic_kmp.composeapp.generated.resources.create_playlist_failed
+import xymusic_kmp.composeapp.generated.resources.create_playlist_success
+import xymusic_kmp.composeapp.generated.resources.creating_playlist
+import xymusic_kmp.composeapp.generated.resources.delete_playlist_failed
+import xymusic_kmp.composeapp.generated.resources.delete_playlist_success
+import xymusic_kmp.composeapp.generated.resources.deleting_playlist
+import xymusic_kmp.composeapp.generated.resources.edit_playlist_name_failed
+import xymusic_kmp.composeapp.generated.resources.edit_playlist_name_success
+import xymusic_kmp.composeapp.generated.resources.editing_playlist_name
+import xymusic_kmp.composeapp.generated.resources.empty_info
+import xymusic_kmp.composeapp.generated.resources.get_server_resources_failed
+import xymusic_kmp.composeapp.generated.resources.import_playlist_failed
+import xymusic_kmp.composeapp.generated.resources.import_playlist_success
+import xymusic_kmp.composeapp.generated.resources.importing_playlist
+import xymusic_kmp.composeapp.generated.resources.login_failed
+import xymusic_kmp.composeapp.generated.resources.login_failed_no_token
+import xymusic_kmp.composeapp.generated.resources.no_connection_selected
+import xymusic_kmp.composeapp.generated.resources.remove_music_from_playlist_failed
+import xymusic_kmp.composeapp.generated.resources.remove_music_from_playlist_success
+import xymusic_kmp.composeapp.generated.resources.removing_music_from_playlist
+import xymusic_kmp.composeapp.generated.resources.server_connection_error
+import xymusic_kmp.composeapp.generated.resources.server_connection_timeout
+
+
+/**
+ * 本地数据源管理类
+ * @author xybbz
+ * @date 2024/06/12
+ */
+open class DataSourceManager(
+    private val db: LocalDatabaseClient,
+    private val versionApiClient: VersionApiClient,
+) : IDataSourceServer, IoScoped() {
+
+    companion object {
+        private const val ARTIST_POPULAR_CACHE_TTL_MS = 24L * 60L * 60L * 1000L
+        private const val SIMILAR_MUSIC_CACHE_TTL_MS = 6L * 60L * 60L * 1000L
+        private const val ACTIVE_RELOGIN_INTERVAL_MS = 5L * 60L * 1000L
+    }
+
+
+    /**
+     * 全局设置管理器。
+     * 这里保留 Koin 懒解析，避免构造 DataSourceManager 时扩大启动期依赖面。
+     */
+    val settingsManager: SettingsManager = get()
+
+    /**
+     * 当前已切换的数据源类型。
+     * 只代表本地服务对象已切换，不代表网络登录已经完成。
+     */
+    var dataSourceType by mutableStateOf<DataSourceType?>(null)
+        private set
+
+    init {
+        createScope()
+    }
+
+    /**
+     * 当前可安全读取的数据源服务对象。
+     * MainScreen 的主壳门禁只看这个值是否非空，不再等待 serverLogin 全链路完成。
+     */
+    private val _dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
+    val dataSourceServerFlow: StateFlow<IDataSourceParentServer?> = _dataSourceServerFlow.asStateFlow()
+
+    /**
+     * 当前连接 ID 的内部可写状态。
+     * 0 表示还没有可用连接，避免下游在启动期读取旧连接。
+     */
+    private val _connectionIdFlow = MutableStateFlow(0L)
+
+    /**
+     * 当前连接 ID 的只读流。
+     * 首页下载统计等依赖连接 ID 的观察者通过它延后启动，避免首帧前直接调用 DataSourceManager 方法。
+     */
+    val connectionIdFlow: StateFlow<Long> = _connectionIdFlow.asStateFlow()
+
+    /**
+     * 安全读取当前数据源服务。
+     * 启动自动登录还未切换数据源时返回 null，让调用方走空态兜底。
+     */
+    private fun currentDataSourceServerOrNull(): IDataSourceParentServer? =
+        _dataSourceServerFlow.value
+
+    /**
+     * 读取必须已经初始化的数据源服务。
+     */
+    private fun requireDataSourceServer(): IDataSourceParentServer =
+        currentDataSourceServerOrNull()
+            ?: throw IllegalStateException("Data source server is not initialized")
+
+    /**
+     * 当前数据源服务发出的登录状态流。
+     * 数据源服务尚未恢复前不会发出状态，防止启动阶段误触发首页刷新。
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val loginStateFlow: Flow<LoginStateType> =
+        dataSourceServerFlow
+            .filterNotNull()
+            .flatMapLatest { server ->
+                server.loginSuccessEvent
+            }.filter { it != LoginStateType.UNKNOWN }
+
+
+    /**
+     * 媒体库 ID 变化流。
+     * 跳过初始值，只把用户切库或服务端刷新后的变化交给首页刷新逻辑。
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val mediaLibraryIdFlow: Flow<String?> =
+        dataSourceServerFlow
+            .filterNotNull()
+            .flatMapLatest { server ->
+                server.mediaLibraryIdFlow.drop(1)
+            }.distinctUntilChanged()
+
+    /**
+     * 带来源标记的登录状态变化，供首页统一判断刷新原因。
+     */
+    val taggedLoginFlow = loginStateFlow.map { Source.Login(it) }
+
+    /**
+     * 带来源标记的媒体库变化，供首页统一判断刷新原因。
+     */
+    val taggedMediaFlow = mediaLibraryIdFlow.map { Source.Library(it) }
+
+    /**
+     * 首页数据刷新触发流。
+     * 登录成功和媒体库变化都会进入同一条流，调用方按 Source 类型区分刷新原因。
+     */
+    val mergeFlow = merge(
+        taggedLoginFlow,
+        taggedMediaFlow
+    ).filter { (it is Source.Login && it.value != LoginStateType.UNKNOWN) || (it is Source.Library /*&& it.value != null*/) }
+
+
+    //加载状态
+    var loading by mutableStateOf(false)
+        private set
+
+    /**
+     * 自动登录是否正在后台执行。
+     * 启动时创建数据源服务后即可进入主壳，这个状态只用于局部 loading 或提示。
+     */
+    private val _autoLoginRunning = MutableStateFlow(false)
+    val autoLoginRunning: StateFlow<Boolean> = _autoLoginRunning.asStateFlow()
+
+    /**
+     * 自动登录最近一次状态。
+     * IDataSourceParentServer.autoLogin 内部会 catch 异常并 emit 状态，这里不再额外 catch。
+     */
+    private val _autoLoginState = MutableStateFlow<ClientLoginInfoState?>(null)
+    val autoLoginState: StateFlow<ClientLoginInfoState?> = _autoLoginState.asStateFlow()
+
+    //是够登陆异常
+    var ifLoginError by mutableStateOf(false)
+        private set
+
+    //报错信息
+    var errorHint by mutableStateOf(Res.string.empty_info)
+        private set
+
+    var errorMessage by mutableStateOf("")
+        private set
+
+    private var appInactiveAtMs: Long? = null
+    private var activeReloginJob: Job? = null
+
+
+    /**
+     * 事件监听
+     */
+    private val listeners = mutableListOf<OnDatasourceListener>()
+
+    /**
+     * 标记应用进入非活跃状态。
+     *
+     * 该时间戳只作为重新活跃时是否需要刷新登录的门禁，不代表网络登录状态。
+     */
+    fun markAppInactive() {
+        appInactiveAtMs = Clock.System.now().toEpochMilliseconds()
+    }
+
+    /**
+     * 应用重新活跃时按间隔触发一次重登录。
+     *
+     * 平台层只负责上报活跃状态；连接存在性、并发保护和登录入口都在这里统一处理。
+     */
+    fun requestReloginOnAppActive() {
+        val inactiveAt = appInactiveAtMs ?: return
+        val now = Clock.System.now().toEpochMilliseconds()
+        val inactiveDurationMs = now - inactiveAt
+        appInactiveAtMs = null
+        if (inactiveDurationMs < ACTIVE_RELOGIN_INTERVAL_MS) {
+            return
+        }
+        if (loading || _autoLoginRunning.value || activeReloginJob?.isActive == true) {
+            return
+        }
+        if (currentDataSourceServerOrNull() == null || getConnectionId() == 0L) {
+            return
+        }
+        activeReloginJob = scope.launch {
+            if (loading || _autoLoginRunning.value || currentDataSourceServerOrNull() == null) {
+                return@launch
+            }
+            val connectionConfig = db.connectionConfigDao.selectConnectionConfig() ?: return@launch
+            serverLogin(LoginType.API, connectionConfig)
+        }
+    }
+
+    /**
+     * 兼容旧入口的数据源初始化方法。
+     * 现在只监听设置变化、恢复本地数据源上下文并后台登录，不再作为 App 启动门闩。
+     */
+    suspend fun initDataSource() {
+        settingsManager.settings.collect {
+            val connectionConfig = restoreLocalDataSourceContext(
+                connectionId = it.connectionId,
+                dataSourceType = it.dataSourceType
+            )
+            if (connectionConfig != null) {
+                startAutoLogin(connectionConfig)
+            }
+        }
+
+    }
+
+    /**
+     * 只恢复本地连接上下文，不执行网络登录。
+     * 首页可以先使用本地缓存；真正登录由首页首帧后的 DataSourceBootstrapper 触发。
+     *
+     * @return 当前设置对应的连接配置；没有完整连接信息时返回 null。
+     */
+    suspend fun restoreLocalDataSourceContext(): ConnectionConfig? {
+        // 直接读最新数据库设置，避免状态流初始值还没同步时误判连接配置。
+        val latestSettings = settingsManager.getLatest()
+        return restoreLocalDataSourceContext(
+            connectionId = latestSettings.connectionId,
+            dataSourceType = latestSettings.dataSourceType
+        )
+    }
+
+    /**
+     * 按指定连接 ID 和数据源类型恢复本地数据源服务对象。
+     * 只做本地服务切换和连接绑定，不发起网络请求。
+     *
+     * @param connectionId 本地连接配置 ID。
+     * @param dataSourceType 数据源类型。
+     * @return 恢复出的本地连接配置；参数不完整时返回 null。
+     */
+    suspend fun restoreLocalDataSourceContext(
+        connectionId: Long?,
+        dataSourceType: DataSourceType?
+    ): ConnectionConfig? {
+        if (connectionId == null || dataSourceType == null) {
+            // 没有完整连接信息时，直接返回空，让调用方走连接页或空态兜底。
+            return null
+        }
+        val connectionConfig = db.connectionConfigDao.selectById(connectionId)
+        // 这里只恢复本地连接上下文，不发起网络登录，保证首页可以先渲染。
+        switchDataSource(dataSourceType, connectionConfig)
+        return connectionConfig
+    }
+
+    /**
+     * 后台启动自动登录。
+     * 调用后立即返回，登录进度通过 autoLoginRunning 和 autoLoginState 对外暴露。
+     *
+     * @param connectionConfig 要登录的连接配置。
+     * @param loginType 登录方式，默认使用接口登录。
+     */
+    fun startAutoLogin(
+        connectionConfig: ConnectionConfig,
+        loginType: LoginType = LoginType.API
+    ) {
+        // 保持旧的后台自动登录行为，但不阻塞调用方。
+        scope.launch {
+            loginConnection(loginType, connectionConfig)
+        }
+    }
+
+    /**
+     * 执行一次带监听回调的连接登录。
+     * 手动切换连接和首页后置登录都走这里，避免回调顺序分散在多个入口。
+     *
+     * @param loginType 登录方式。
+     * @param connectionConfig 要登录的连接配置。
+     */
+    suspend fun loginConnection(
+        loginType: LoginType = LoginType.API,
+        connectionConfig: ConnectionConfig
+    ) {
+        // 统一封装登录前后回调，避免启动入口和手动切换连接重复写监听逻辑。
+        for (listener in listeners) {
+            listener.autoLoginBefore(connectionConfig)
+        }
+        serverLogin(loginType, connectionConfig)
+        for (listener in listeners) {
+            listener.autoLoginSuccessAfter(connectionConfig)
+        }
+    }
+
+    /**
+     * 根据下载类型获得数据源
+     */
+    fun getApiClient(downloadTypes: DownloadTypes): DownloadFactory {
+        return when (downloadTypes) {
+            DownloadTypes.APK -> {
+                versionApiClient
+            }
+
+            else -> {
+                requireDataSourceServer().getApiClient()
+            }
+        }
+    }
+
+    /**
+     * 登陆服务端
+     */
+    suspend fun serverLogin(
+        loginType: LoginType = LoginType.API,
+        connectionConfig: ConnectionConfig?
+    ) {
+        // 手动刷新登录时先同步本地连接配置，避免 UI 和后续同步读取到旧连接上下文。
+        connectionConfig?.let { currentDataSourceServerOrNull()?.bindLocalConnectionConfig(it) }
+        ifLoginError = false
+        // serverLogin 只消费 autoLogin 发出的状态；异常已经在数据源 flow 内转成 ClientLoginInfoState。
+        _autoLoginRunning.value = true
+        try {
+            autoLogin(loginType, connectionConfig).collect { loginState ->
+                // 登录状态只写入 autoLoginState，避免 loginStatus 和 StateFlow 维护两份状态。
+                _autoLoginState.value = loginState
+                val loginSateInfo = getLoginSateInfo(loginState)
+                errorHint = loginSateInfo.errorHint ?: Res.string.empty_info
+                errorMessage = loginSateInfo.errorMessage ?: ""
+                ifLoginError = loginSateInfo.isError
+                loading = loginSateInfo.loading
+                _autoLoginRunning.value = loginSateInfo.loading
+                if (!shouldShowLoginMessageTips()) {
+                    return@collect
+                }
+                if (loginSateInfo.isError) {
+                    MessageUtils.sendPopTipError(
+                        Res.string.login_failed,
+                        delay = 2000
+                    )
+                } else if (loginSateInfo.isLoginSuccess) {
+                    MessageUtils.sendPopTipSuccess(
+                        Res.string.connection_successful,
+                        delay = 2000
+                    )
+                }
+            }
+        } finally {
+            loading = false
+            _autoLoginRunning.value = false
+        }
+    }
+
+    /**
+     * 根据登录状态返回不同登录信息
+     */
+    fun getLoginSateInfo(loginState: ClientLoginInfoState): LoginStateData {
+        return when (loginState) {
+            is ClientLoginInfoState.Connected -> {
+                Log.i("=====", "连接中")
+                LoginStateData(loading = true)
+            }
+
+            is ClientLoginInfoState.ConnectError -> {
+                Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接错误")
+                LoginStateData(
+                    loading = false,
+                    isError = true,
+                    errorHint = Res.string.server_connection_error
+                )
+            }
+
+            ClientLoginInfoState.ServiceTimeOutState -> {
+                Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接超时")
+                LoginStateData(
+                    loading = false,
+                    isError = true,
+                    errorHint = Res.string.server_connection_timeout
+                )
+            }
+
+            is ClientLoginInfoState.ErrorState -> {
+                Log.i(Constants.LOG_ERROR_PREFIX, loginState.error.message.toString())
+                LoginStateData(
+                    loading = false,
+                    isError = true,
+                    errorHint = Res.string.server_connection_error,
+                    errorMessage = loginState.error.message.toString()
+                )
+            }
+
+            ClientLoginInfoState.SelectServer -> {
+                Log.i(Constants.LOG_ERROR_PREFIX, "未选择连接")
+                LoginStateData(
+                    loading = false,
+                    isError = true,
+                    errorHint = Res.string.no_connection_selected
+                )
+            }
+
+            ClientLoginInfoState.UnauthorizedErrorState -> {
+                Log.i(Constants.LOG_ERROR_PREFIX, "登录失败,账号或密码错误")
+                LoginStateData(
+                    loading = false,
+                    isError = true,
+                    errorHint = Res.string.login_failed_no_token
+                )
+            }
+
+            ClientLoginInfoState.UserLoginSuccess -> {
+                Log.i("=====", "登陆成功")
+                LoginStateData(
+                    loading = false,
+                    isError = false,
+                    isLoginSuccess = true
+                )
+            }
+        }
+    }
+
+    /**
+     * 切换数据源
+     * @param [dataSourceType] 数据源类型
+     * @param [connectionConfig] 本地连接配置；首次新增连接时尚未保存，所以允许为空。
+     */
+    fun switchDataSource(
+        dataSourceType: DataSourceType,
+        connectionConfig: ConnectionConfig? = null
+    ) {
+        if (
+            this.dataSourceType == dataSourceType &&
+            connectionConfig != null &&
+            getConnectionId() == connectionConfig.id &&
+            currentDataSourceServerOrNull() != null
+        ) {
+            // 已经是同一个连接时，只重新绑定本地上下文并更新连接 ID，避免重复切换服务对象。
+            currentDataSourceServerOrNull()?.bindLocalConnectionConfig(connectionConfig)
+            _connectionIdFlow.value = connectionConfig.id
+            return
+        }
+        updateDataSourceType(dataSourceType)
+        Log.i("=====", "数据源开始切换")
+        getDataSourceServerByType(dataSourceType, false).let {
+            // 发布服务前先绑定本地连接配置，getConnectionId 不再依赖额外缓存状态。
+            connectionConfig?.let(it::bindLocalConnectionConfig)
+            // 当前生效的连接 ID 由这里统一发出，给首页和下载统计等场景订阅。
+            _connectionIdFlow.value = connectionConfig?.id ?: 0L
+            // 发布非空服务对象后，MainScreen 即可创建主壳；自动登录仍可继续后台执行。
+            _dataSourceServerFlow.value = it
+        }
+        Log.i("=====", "数据源切换完成")
+    }
+
+    fun updateDataSourceType(type: DataSourceType) {
+        this.dataSourceType = type
+    }
+
+    /**
+     * 根据数据源获得相应的服务类
+     */
+    fun getDataSourceServerByType(
+        dataSourceType: DataSourceType,
+        ifTmp: Boolean
+    ): IDataSourceParentServer {
+        val iDataSourceParentServer: IDataSourceParentServer = get(dataSourceType.koinQualifier())
+        iDataSourceParentServer.updateIfTmpObject(ifTmp)
+        return iDataSourceParentServer
+    }
+
+    /**
+     * 切换连接服务
+     */
+    suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
+        release()
+        // 切换连接时先绑定本地连接配置，等待自动登录期间 UI 仍可展示当前选择。
+        switchDataSource(connectionConfig.type, connectionConfig)
+        loginConnection(connectionConfig = connectionConfig)
+    }
+
+
+    /**
+     * 绑定地址
+     */
+    override suspend fun addClientAndLogin(
+        clientLoginInfoReq: ClientLoginInfoReq,
+        connectionConfig: ConnectionConfig?
+    ): Flow<ClientLoginInfoState> {
+        // 新增连接成功后，具体数据源会在登录流程中写入自己的连接配置；这里不再维护第二份连接 ID。
+        return requireDataSourceServer().addClientAndLogin(clientLoginInfoReq, connectionConfig)
+    }
+
+    override suspend fun autoLogin(
+        loginType: LoginType,
+        connectionConfig: ConnectionConfig?
+    ): Flow<ClientLoginInfoState> {
+        loading = true
+        Log.i("=====", "开始登录.............")
+        return requireDataSourceServer().autoLogin(loginType, connectionConfig)
+    }
+
+    /**
+     * 获得资源地址
+     */
+    override suspend fun getResources(
+        clientLoginInfoReq: ClientLoginInfoReq
+    ): List<ResourceData> {
+        return try {
+            requireDataSourceServer().getResources(clientLoginInfoReq)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得服务器资源失败", e)
+            throw ServiceException(message = getString(Res.string.get_server_resources_failed))
+        }
+    }
+
+    /**
+     * 获得OkHttpClient
+     */
+    override fun getHttpClient(): HttpClient {
+        return requireDataSourceServer().getHttpClient()
+    }
+
+    /**
+     * 获得连接id
+     */
+    override fun getConnectionId(): Long {
+        // 连接 ID 的唯一来源是当前可用数据源服务；没有配置时保持原来的 0 兜底。
+        return currentDataSourceServerOrNull()?.getConnectionId()?.takeIf { it != 0L } ?: 0L
+    }
+
+    /**
+     * 获得连接地址
+     */
+    override fun getConnectionAddress(): String {
+        // 数据源尚未初始化时返回空地址，避免组合阶段因 lateinit 未就绪崩溃。
+        return currentDataSourceServerOrNull()?.getConnectionAddress().orEmpty()
+    }
+
+    /**
+     * 更新连接设置
+     */
+    override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
+        requireDataSourceServer().updateConnectionConfig(connectionConfig)
+    }
+
+    /**
+     * 更新媒体库id
+     */
+    override suspend fun updateLibraryId(libraryIds: List<String>?, connectionId: Long) {
+        return requireDataSourceServer().updateLibraryId(libraryIds, connectionId)
+    }
+
+    /**
+     * 获得专辑,艺术家,音频,歌单数量
+     */
+    override suspend fun getDataInfoCount(connectionId: Long) {
+        requireDataSourceServer().getDataInfoCount(connectionId)
+    }
+
+    /**
+     * 按需刷新专辑,艺术家,音频,歌单数量
+     */
+    override suspend fun refreshDataInfoCountIfNeeded(
+        connectionId: Long,
+        force: Boolean
+    ): XyDataCount? {
+        val server = currentDataSourceServerOrNull()
+            ?: return db.dataCountDao.selectOne(connectionId)
+        return try {
+            server.refreshDataInfoCountIfNeeded(connectionId, force)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "按需刷新统计数量失败", e)
+            db.dataCountDao.selectOne(connectionId)
+        }
+    }
+
+
+    /**
+     * 初始化收藏数据
+     */
+    override suspend fun initFavoriteData(connectionId: Long) {
+        return requireDataSourceServer().initFavoriteData(connectionId)
+    }
+
+    /**
+     * 获得专辑数据
+     */
+    override fun selectAlbumFlowList(
+        sort: Sort
+    ): Flow<PagingData<XyAlbum>> {
+        return requireDataSourceServer().selectAlbumFlowList(sort)
+    }
+
+    /**
+     * 获得音乐数据
+     */
+    override fun selectMusicFlowList(
+        sort: Sort
+    ): Flow<PagingData<XyMusic>> {
+        return requireDataSourceServer().selectMusicFlowList(sort)
+    }
+
+    /**
+     * 获得艺术家
+     */
+    override fun selectArtistFlowList(): Flow<PagingData<XyArtistExt>> {
+        return requireDataSourceServer().selectArtistFlowList()
+    }
+
+    /**
+     * 搜索音乐,艺术家,专辑
+     */
+    override suspend fun searchAll(search: String): SearchData {
+        return requireDataSourceServer().searchAll(search)
+    }
+
+    /**
+     * 获得最近播放音乐
+     */
+    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
+        try {
+            requireDataSourceServer().playRecordMusicOrAlbumList(pageSize)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新超时", e)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新失败", e)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐未知错误失败", e)
+        }
+    }
+
+    /**
+     * 获得最近播放音乐列表
+     */
+    override suspend fun getPlayRecordMusicList(pageSize: Int): List<XyMusic> {
+        return requireDataSourceServer().getPlayRecordMusicList(pageSize)
+    }
+
+    /**
+     * 获得最多播放
+     */
+    override suspend fun getMostPlayerMusicList() {
+        try {
+            requireDataSourceServer().getMostPlayerMusicList()
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最多播放专辑失败", e)
+        }
+    }
+
+    /**
+     * 获得最新专辑
+     */
+    override suspend fun getNewestAlbumList() {
+        try {
+            requireDataSourceServer().getNewestAlbumList()
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最新专辑失败", e)
+        }
+    }
+
+
+    /**
+     * 获得专辑信息
+     * @param [albumId] 专辑id
+     * @return 专辑+艺术家信息
+     */
+    override suspend fun selectAlbumInfoById(
+        albumId: String,
+        dataType: MusicDataTypeEnum
+    ): XyAlbum? {
+        return try {
+            requireDataSourceServer().selectAlbumInfoById(albumId, dataType)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取专辑信息超时", e)
+            return null
+        } catch (e: ServiceException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取专辑信息失败", e)
+            return null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取专辑信息未知异常失败", e)
+            return null
+        }
+
+    }
+
+    /**
+     * 从本地缓存获得专辑信息
+     */
+    override suspend fun selectLocalAlbumInfoById(albumId: String): XyAlbum? {
+        return try {
+            requireDataSourceServer().selectLocalAlbumInfoById(albumId)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取本地专辑信息超时", e)
+            null
+        } catch (e: ServiceException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取本地专辑信息失败", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取本地专辑信息未知异常失败", e)
+            null
+        }
+    }
+
+    /**
+     * 从远程获得专辑信息
+     */
+    override suspend fun selectServerAlbumInfoById(
+        albumId: String,
+        dataType: MusicDataTypeEnum
+    ): XyAlbum? {
+        return try {
+            requireDataSourceServer().selectServerAlbumInfoById(albumId, dataType)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取远程专辑信息超时", e)
+            null
+        } catch (e: ServiceException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取远程专辑信息失败", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取远程专辑信息未知异常失败", e)
+            null
+        }
+    }
+
+    override suspend fun selectMusicInfoById(itemId: String): XyMusic? {
+        return try {
+            requireDataSourceServer().selectMusicInfoById(itemId)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌曲信息超时", e)
+            null
+        } catch (e: ServiceException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌曲信息失败", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌曲信息未知异常失败", e)
+            null
+        }
+    }
+
+    /**
+     * 获得专辑内音乐列表
+     * @param [itemId] 专辑id
+     */
+    override fun selectMusicListByParentId(
+        itemId: String,
+        dataType: MusicDataTypeEnum,
+        sort: Sort
+    ): Flow<PagingData<XyMusic>> {
+        return requireDataSourceServer().selectMusicListByParentId(
+            itemId = itemId,
+            dataType = dataType,
+            sort = sort
+        )
+    }
+
+    /**
+     * 根据艺术家获得专辑列表
+     */
+    override fun selectAlbumListByArtistId(artistId: String): Flow<PagingData<XyAlbum>> {
+        return requireDataSourceServer().selectAlbumListByArtistId(artistId)
+    }
+
+    /**
+     * 根据艺术家获得音乐列表
+     */
+    override fun selectMusicListByArtistId(
+        artistId: String,
+        artistName: String
+    ): Flow<PagingData<XyMusic>> {
+        return requireDataSourceServer().selectMusicListByArtistId(artistId, artistName)
+    }
+
+    /**
+     * 获得歌曲列表
+     */
+    override suspend fun getMusicList(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return try {
+            requireDataSourceServer().getMusicList(pageSize, pageNum)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            null
+        }
+    }
+
+    /**
+     * 根据专辑获得歌曲列表
+     */
+    override suspend fun getMusicListByAlbumId(
+        albumId: String,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return try {
+            requireDataSourceServer().getMusicListByAlbumId(albumId, pageSize, pageNum)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            null
+        }
+    }
+
+    /**
+     * 根据艺术家获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistId(
+        artistId: String,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return try {
+            requireDataSourceServer().getMusicListByArtistId(artistId, pageSize, pageNum)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            null
+        }
+    }
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return try {
+            requireDataSourceServer().getMusicListByArtistIds(artistIds, pageSize)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据艺术家列表获得歌曲列表失败", e)
+            null
+        }
+    }
+
+    /**
+     * 获得收藏歌曲列表
+     */
+    override suspend fun getMusicListByFavorite(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return try {
+            requireDataSourceServer().getMusicListByFavorite(pageSize, pageNum)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            null
+        }
+    }
+
+    /**
+     * 获取远程服务器的专辑和歌单音乐列表
+     * @param [startIndex] 开始索引
+     * @param [pageSize] 页面大小
+     * @param [isFavorite] 是否收藏
+     * @param [sortType] 排序类型
+     * @param [years] 年列表
+     * @param [parentId] 上级id
+     * @param [dataType] 数据类型
+     * @return [AllResponse<XyMusic>]
+     */
+    override suspend fun getRemoteServerMusicListByAlbumOrPlaylist(
+        startIndex: Int,
+        pageSize: Int,
+        isFavorite: Boolean?,
+        sortType: SortTypeEnum?,
+        years: List<Int>?,
+        parentId: String,
+        dataType: MusicDataTypeEnum
+    ): XyResponse<XyMusic> {
+        return requireDataSourceServer().getRemoteServerMusicListByAlbumOrPlaylist(
+            startIndex = startIndex,
+            pageSize = pageSize,
+            isFavorite = isFavorite,
+            sortType = sortType,
+            years = years,
+            parentId = parentId,
+            dataType = dataType
+        )
+    }
+
+
+    /**
+     * 获得随机音乐
+     */
+    override suspend fun getRandomMusicList(
+        pageSize: Int,
+        pageNum: Int,
+    ): List<XyMusic>? {
+        return try {
+            requireDataSourceServer().getRandomMusicList(pageSize, pageNum)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
+            return null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            return null
+        }
+    }
+
+    /**
+     * 获得随机音乐
+     */
+    override suspend fun getRandomMusicExtendList(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return try {
+            requireDataSourceServer().getRandomMusicExtendList(pageSize, pageNum)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
+            return null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            return null
+        }
+    }
+
+    /**
+     * 根据音乐获得歌词信息
+     * @param [itemId] 音乐id
+     * @return 返回歌词列表
+     */
+    override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
+        return try {
+            requireDataSourceServer().getMusicLyricList(itemId)?.takeIf { it.isNotEmpty() }
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词超时", e)
+            null
+        } catch (e: ServiceException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词失败", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词未知异常失败", e)
+            null
+        }
+    }
+
+
+    /**
+     * 获取歌单列表
+     * @return [List<XyPlaylist>?]
+     */
+    override suspend fun getPlaylists(): List<XyAlbum>? {
+        // 首次进入侧边栏时可能还没完成自动登录，未就绪就跳过这次远程刷新。
+        val server = currentDataSourceServerOrNull() ?: return null
+        return try {
+            server.getPlaylists()
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
+            null
+        }
+    }
+
+    /**
+     * 按需获取歌单列表
+     */
+    override suspend fun refreshPlaylistsIfNeeded(force: Boolean): List<XyAlbum>? {
+        // 首次打开添加歌单弹窗时可能还没完成自动登录，未就绪就跳过这次远程刷新。
+        val server = currentDataSourceServerOrNull() ?: return db.albumDao.selectPlaylist()
+        return try {
+            server.refreshPlaylistsIfNeeded(force)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "按需获取歌单失败", e)
+            db.albumDao.selectPlaylist()
+        }
+    }
+
+    /**
+     * 增加歌单
+     * @param [name] 名称
+     * @return [String?] 歌单id
+     */
+    override suspend fun addPlaylist(name: String): Boolean {
+        return OperationTipUtils.operationTipNotToBlock(
+            loadingMessage = Res.string.creating_playlist,
+            successMessage = Res.string.create_playlist_success,
+            errorMessage = Res.string.create_playlist_failed
+        ) {
+            requireDataSourceServer().addPlaylist(name)
+        }
+    }
+
+    /**
+     * 导入歌单
+     */
+    override suspend fun importPlaylist(
+        playlistData: PlaylistParser.Playlist,
+        playlistId: String
+    ): Boolean {
+        return OperationTipUtils.operationTipNotToBlock(
+            loadingMessage = Res.string.importing_playlist,
+            successMessage = Res.string.import_playlist_success,
+            errorMessage = Res.string.import_playlist_failed
+        ) {
+            try {
+                requireDataSourceServer().importPlaylist(playlistData, playlistId)
+            } catch (e: Exception) {
+                Log.e(Constants.LOG_ERROR_PREFIX, "导入歌单失败", e)
+                false
+            }
+
+        }
+
+    }
+
+    /**
+     * 编辑歌单名称
+     * @param [id] ID
+     * @param [name] 姓名
+     */
+    override suspend fun editPlaylistName(id: String, name: String): Boolean {
+        return OperationTipUtils.operationTipNotToBlock(
+            loadingMessage = Res.string.editing_playlist_name,
+            successMessage = Res.string.edit_playlist_name_success,
+            errorMessage = Res.string.edit_playlist_name_failed
+        ) {
+            try {
+                requireDataSourceServer().editPlaylistName(id, name)
+            } catch (e: Exception) {
+                Log.e(Constants.LOG_ERROR_PREFIX, "编辑歌单名称失败", e)
+                false
+            }
+
+        }
+    }
+
+    /**
+     * 删除歌单
+     * @param [id] ID
+     */
+    override suspend fun removePlaylist(id: String): Boolean {
+        return OperationTipUtils.operationTipNotToBlock(
+            loadingMessage = Res.string.deleting_playlist,
+            successMessage = Res.string.delete_playlist_success,
+            errorMessage = Res.string.delete_playlist_failed
+        ) {
+            try {
+                requireDataSourceServer().removePlaylist(id)
+            } catch (e: Exception) {
+                Log.e(Constants.LOG_ERROR_PREFIX, "删除歌单失败", e)
+                false
+            }
+        }
+
+    }
+
+    /**
+     * 保存自建歌单中的音乐
+     * @param [playlistId] 歌单id
+     * @param [musicIds] 音乐id
+     */
+    override suspend fun saveMusicPlaylist(
+        playlistId: String,
+        musicIds: List<String>
+    ): Boolean {
+        return OperationTipUtils.operationTipNotToBlock(
+            loadingMessage = Res.string.adding_music_to_playlist,
+            successMessage = Res.string.add_music_to_playlist_success,
+            errorMessage = Res.string.add_music_to_playlist_failed
+        ) {
+            try {
+                requireDataSourceServer().saveMusicPlaylist(playlistId, musicIds)
+            } catch (e: Exception) {
+                Log.e(Constants.LOG_ERROR_PREFIX, "保存自建歌单中的音乐失败", e)
+                false
+            }
+
+        }
+    }
+
+    /**
+     * 删除自建歌单中的音乐
+     * @param [playlistId] 歌单id
+     * @param [musicIds] 音乐id集合
+     */
+    override suspend fun removeMusicPlaylist(
+        playlistId: String,
+        musicIds: List<String>
+    ): Boolean {
+        return OperationTipUtils.operationTipNotToBlock(
+            loadingMessage = Res.string.removing_music_from_playlist,
+            successMessage = Res.string.remove_music_from_playlist_success,
+            errorMessage = Res.string.remove_music_from_playlist_failed
+        ) {
+            try {
+                requireDataSourceServer().removeMusicPlaylist(playlistId, musicIds)
+            } catch (e: Exception) {
+                Log.e(Constants.LOG_ERROR_PREFIX, "删除自建歌单中的音乐失败", e)
+                false
+            }
+
+        }
+    }
+
+
+    /**
+     * 获得艺术家信息
+     */
+    override suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist> {
+        return requireDataSourceServer().selectArtistInfoByIds(artistIds)
+    }
+
+    /**
+     * 获得艺术家信息
+     */
+    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
+        return try {
+            requireDataSourceServer().selectArtistInfoById(artistId)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据id从远程获得艺术家信息失败", e)
+            null
+        }
+    }
+
+    /**
+     * 从远程获得艺术家描述
+     */
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
+        return try {
+            requireDataSourceServer().selectServerArtistInfo(artistId)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据id从远程获得艺术家描述失败", e)
+            null
+        }
+    }
+
+    /**
+     * 获得歌手热门歌曲列表
+     */
+    override suspend fun getArtistPopularMusicList(
+        artistId: String?,
+        artistName: String?
+    ): List<XyMusic> {
+        val artistKey = artistId.orEmpty().ifBlank { artistName.orEmpty() }
+        val connectionId = getConnectionId()
+        if (artistKey.isBlank() || connectionId == 0L) {
+            return getArtistPopularMusicListRemotely(artistId, artistName) ?: emptyList()
+        }
+
+        val cached = db.musicDao.selectArtistPopularMusicList(artistKey, connectionId)
+        val cachedAt = db.musicDao.selectArtistPopularMusicCachedAt(artistKey, connectionId)
+        if (cached.isNotEmpty() && !isCacheExpired(cachedAt, ARTIST_POPULAR_CACHE_TTL_MS)) {
+            return cached
+        }
+
+        val remote = getArtistPopularMusicListRemotely(artistId, artistName) ?: return cached
+        return remote.also {
+            db.musicDao.saveBatch(
+                data = it,
+                dataType = MusicDataTypeEnum.ARTIST_POPULAR,
+                connectionId = connectionId,
+                artistId = artistKey
+            )
+        }
+    }
+
+    private suspend fun getArtistPopularMusicListRemotely(
+        artistId: String?,
+        artistName: String?
+    ): List<XyMusic>? {
+        return try {
+            requireDataSourceServer().getArtistPopularMusicList(artistId, artistName) ?: emptyList()
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
+            null
+        }
+    }
+
+    /**
+     * 远程获得相似艺术家
+     */
+    override suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): List<XyArtist> {
+        return try {
+            requireDataSourceServer().getSimilarArtistsRemotely(artistId, startIndex, pageSize)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
+            null
+        } ?: emptyList()
+    }
+
+    /**
+     * 获得流派列表
+     */
+    override suspend fun selectGenresPage(): Flow<PagingData<XyGenre>> {
+        return requireDataSourceServer().selectGenresPage()
+    }
+
+    /**
+     * 获得流派详情
+     */
+    override suspend fun getGenreById(genreId: String): XyGenre? {
+        return try {
+            return requireDataSourceServer().getGenreById(genreId)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得流派详情失败", e)
+            null
+        }
+    }
+
+    /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreId] 流派id
+     */
+    override fun selectAlbumListByGenreId(genreId: String): Flow<PagingData<XyAlbum>> {
+        return requireDataSourceServer().selectAlbumListByGenreId(genreId)
+    }
+
+    /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreIds] 流派名称
+     */
+    override suspend fun selectMusicListByGenreIds(
+        genreIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return try {
+            requireDataSourceServer().selectMusicListByGenreIds(genreIds, pageSize)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得流派内音乐列表失败", e)
+            null
+        }
+    }
+
+    /**
+     * 获得收藏歌曲列表
+     */
+    override fun selectFavoriteMusicFlowList(): Flow<PagingData<XyMusic>> {
+        return requireDataSourceServer().selectFavoriteMusicFlowList()
+    }
+
+    /**
+     * 将项目标记为收藏
+     * @param [itemId] 专辑/音乐id
+     */
+    override suspend fun markFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
+        return try {
+            requireDataSourceServer().markFavoriteItem(itemId, dataType)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "收藏超时", e)
+            return false
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "收藏失败", e)
+            return false
+        }
+
+    }
+
+    /**
+     * 取消项目收藏
+     * @param [itemId] 专辑/音乐id
+     */
+    override suspend fun unmarkFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
+        return try {
+            requireDataSourceServer().unmarkFavoriteItem(itemId, dataType)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "取消收藏超时", e)
+            return true
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "取消收藏失败", e)
+            return true
+        }
+
+    }
+
+    /**
+     * 获得播放连接
+     */
+    override suspend fun getMusicPlayUrl(
+        musicId: String,
+        plexPlayKey: String?
+    ): TranscodingAndMusicUrlData {
+        return requireDataSourceServer().getMusicPlayUrl(
+            musicId,
+            plexPlayKey
+        )
+    }
+
+    /**
+     * 上报播放
+     */
+    override suspend fun reportPlaying(
+        musicId: String,
+        playSessionId: String,
+        isPaused: Boolean,
+        positionTicks: Long?
+    ) {
+
+        try {
+            requireDataSourceServer().reportPlaying(musicId, playSessionId, isPaused, positionTicks)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
+        }
+    }
+
+    /**
+     * 上报播放进度
+     */
+    override suspend fun reportProgress(
+        musicId: String,
+        playSessionId: String,
+        positionTicks: Long?
+    ) {
+        try {
+            requireDataSourceServer().reportProgress(musicId, playSessionId, positionTicks)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
+        }
+    }
+
+    /**
+     * 取消上报播放进度
+     */
+    override suspend fun cancelReportProgress(musicId: String) {
+        try {
+            requireDataSourceServer().cancelReportProgress(musicId)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "取消播放上报失败", e)
+        }
+    }
+
+    /**
+     * 获得相似歌曲列表
+     */
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusic> {
+        val connectionId = getConnectionId()
+        if (musicId.isBlank() || connectionId == 0L) {
+            return getSimilarMusicListRemotely(musicId) ?: emptyList()
+        }
+
+        val cached = db.musicDao.selectSimilarMusicList(musicId, connectionId)
+        val cachedAt = db.musicDao.selectSimilarMusicCachedAt(musicId, connectionId)
+        if (cached.isNotEmpty() && !isCacheExpired(cachedAt, SIMILAR_MUSIC_CACHE_TTL_MS)) {
+            return cached
+        }
+
+        val remote = getSimilarMusicListRemotely(musicId) ?: return cached
+        return remote.also {
+            db.musicDao.saveBatch(
+                data = it,
+                dataType = MusicDataTypeEnum.SIMILAR_MUSIC,
+                connectionId = connectionId,
+                sourceMusicId = musicId
+            )
+        }
+    }
+
+    private suspend fun getSimilarMusicListRemotely(musicId: String): List<XyMusic>? {
+        return try {
+            requireDataSourceServer().getSimilarMusicList(musicId) ?: emptyList()
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得相似歌曲列表失败", e)
+            null
+        }
+    }
+
+    private fun isCacheExpired(cachedAt: Long?, ttlMs: Long): Boolean {
+        if (cachedAt == null) {
+            return true
+        }
+        return Clock.System.now().toEpochMilliseconds() - cachedAt >= ttlMs
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return try {
+            requireDataSourceServer().getTranscodingType()
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取转码类型失败", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * 获得是否可以下载
+     */
+    fun getCanDownload(): Boolean {
+        return requireDataSourceServer().getCanDownload()
+    }
+
+    fun getCanDelete(): Boolean {
+        return requireDataSourceServer().getCanDelete()
+    }
+
+    /**
+     * 设置收藏音乐信息
+     */
+    @Transaction
+    suspend fun setFavoriteData(
+        type: MusicTypeEnum,
+        itemId: String,
+        ifFavorite: Boolean
+    ): Boolean {
+        return requireDataSourceServer().setFavoriteData(
+            type = type,
+            itemId = itemId,
+            ifFavorite = ifFavorite
+        )
+    }
+
+
+    /**
+     * 根据musicId删除音乐数据
+     * @param [musicId] 音乐id
+     */
+    @Transaction
+    suspend fun removeMusicById(musicId: String) {
+        OperationTipUtils.operationTipNotToBlock {
+            val bool = requireDataSourceServer().removeById(musicId)
+            db.musicDao.removeByItemId(musicId)
+            bool
+        }
+    }
+
+    /**
+     * 根据musicIds删除音乐数据
+     * @param [musicIds] 音乐id
+     */
+    @Transaction
+    suspend fun removeMusicByIds(musicIds: List<String>): Boolean {
+        return OperationTipUtils.operationTipNotToBlock {
+            val bool = try {
+                requireDataSourceServer().removeByIds(musicIds)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
+            db.musicDao.removeByItemIds(musicIds)
+            bool
+        }
+    }
+
+    /**
+     * 更新数据源远程键数据管理
+     */
+    suspend fun updateDataSourceRemoteKey(remoteCurrentId: String) {
+        requireDataSourceServer().updateDataSourceRemoteKey(remoteCurrentId)
+    }
+
+
+    /**
+     * 暴露数据源内部 IO 作用域。
+     * DataSourceBootstrapper 使用它承载后置登录、播放器恢复和重登录监听，确保和数据源生命周期一致。
+     */
+    fun dataSourceScope() = scope
+
+
+    /**
+     * 注册数据源自动登录监听器。
+     * 监听器用于在登录前后同步 UI 状态或触发数据刷新。
+     */
+    fun addListener(listener: OnDatasourceListener) {
+        listeners.add(listener)
+    }
+
+    /**
+     * 移除数据源自动登录监听器。
+     */
+    fun removeListener(listener: OnDatasourceListener) {
+        listeners.remove(listener)
+    }
+
+    /**
+     * 释放当前数据源服务和登录状态。
+     * 切换连接或关闭管理器时调用，避免旧连接状态继续影响后续页面。
+     */
+    fun release() {
+        activeReloginJob?.cancel()
+        activeReloginJob = null
+        val dataSourceServer = currentDataSourceServerOrNull()
+        // 先把服务置空，主界面会退回局部 loading，避免继续读旧数据源。
+        _dataSourceServerFlow.value = null
+        dataSourceServer?.close()
+        dataSourceType = null
+        // 连接被释放时同步清空连接 ID，避免下游继续监听旧连接的数据。
+        _connectionIdFlow.value = 0L
+        // 清空自动登录状态，防止下一次启动/切换复用旧状态展示。
+        _autoLoginState.value = null
+        _autoLoginRunning.value = false
+        appInactiveAtMs = null
+    }
+
+    override fun close() {
+        super.close()
+        versionApiClient.release()
+        release()
+    }
+}

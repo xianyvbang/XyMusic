@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XyMusic JVM 连接信息页预览</title>
+    <style>
+        /* 新增页面主题变量，用于对齐 JVM 设置页预览的桌面深色风格。 */
+        :root {
+            --accent: #0470E6;
+            --accent-soft: rgba(4, 112, 230, 0.16);
+            --accent-border: rgba(4, 112, 230, 0.72);
+            --bg: #1A1A1A;
+            --surface: #2F2F2F;
+            --surface-low: #242424;
+            --surface-high: #363636;
+            --surface-hover: #3C3C3C;
+            --line: rgba(255, 255, 255, 0.10);
+            --line-strong: rgba(255, 255, 255, 0.16);
+            --text: #EBEEF1;
+            --muted: #A7A7A7;
+            --dim: #727272;
+            --danger: #E76F51;
+            --warm: #E9C46A;
+            --teal: #2A9D8F;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            color: var(--text);
+            background: var(--bg);
+            font-family: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+            overflow: hidden;
+            letter-spacing: 0;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            cursor: default;
+        }
+
+        /* 新增桌面应用壳，保留设置页预览中的侧栏、主区和播放栏关系。 */
+        .app-shell {
+            display: grid;
+            grid-template-columns: 248px minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr) 88px;
+            grid-template-areas:
+                "sidebar main"
+                "player player";
+            height: 100vh;
+            min-width: 900px;
+            background:
+                linear-gradient(180deg, rgba(4, 112, 230, 0.09), rgba(26, 26, 26, 0) 260px),
+                var(--bg);
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+            padding: 18px 12px 12px;
+            background: #111111;
+            border-right: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 44px;
+            padding: 0 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), #31A8FF);
+            box-shadow: 0 8px 20px rgba(4, 112, 230, 0.28);
+        }
+
+        .brand-mark::before {
+            content: "";
+            width: 12px;
+            height: 16px;
+            border-right: 4px solid #FFFFFF;
+            border-bottom: 4px solid #FFFFFF;
+            border-radius: 0 0 8px 0;
+            transform: rotate(8deg);
+        }
+
+        .nav-panel,
+        .library-panel {
+            border-radius: var(--radius);
+            background: var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .nav-panel {
+            padding: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            height: 42px;
+            padding: 0 12px;
+            color: var(--muted);
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .nav-item.active {
+            color: var(--text);
+            background: var(--surface-high);
+        }
+
+        .nav-icon {
+            display: grid;
+            place-items: center;
+            width: 22px;
+            height: 22px;
+            color: currentColor;
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .library-panel {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .library-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 36px;
+            padding: 0 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .library-list {
+            display: grid;
+            gap: 6px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .library-row {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            min-width: 0;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .library-row.current {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .cover {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #274060, #2A9D8F);
+        }
+
+        .cover.alt {
+            background: linear-gradient(135deg, #5F4B8B, #E9C46A);
+        }
+
+        .cover.third {
+            background: linear-gradient(135deg, #183A37, #0470E6);
+        }
+
+        .line-title,
+        .line-sub {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .line-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .line-sub {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--dim);
+        }
+
+        .main {
+            grid-area: main;
+            min-width: 0;
+            margin: 8px 8px 0;
+            border-radius: var(--radius);
+            background:
+                linear-gradient(180deg, rgba(4, 112, 230, 0.18), rgba(47, 47, 47, 0) 230px),
+                var(--surface-low);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            padding: 0 24px;
+            background: rgba(31, 31, 31, 0.72);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(18px);
+        }
+
+        .topbar-left,
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .round-button,
+        .icon-button {
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.24);
+        }
+
+        .round-button {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            font-size: 18px;
+        }
+
+        .icon-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .source-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            height: 36px;
+            padding: 0 12px 0 8px;
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .source-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--teal));
+        }
+
+        .dirty-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 30px;
+            padding: 0 11px;
+            border-radius: 999px;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .dirty-pill.active {
+            color: #FFE5B0;
+            background: rgba(233, 196, 106, 0.13);
+            border-color: rgba(233, 196, 106, 0.30);
+        }
+
+        .primary-button,
+        .secondary-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 38px;
+            min-width: 92px;
+            padding: 0 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 750;
+        }
+
+        .primary-button {
+            color: #FFFFFF;
+            background: var(--accent);
+            border: 1px solid var(--accent-border);
+            box-shadow: 0 10px 24px rgba(4, 112, 230, 0.26);
+        }
+
+        .primary-button:disabled {
+            color: rgba(255, 255, 255, 0.46);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.10);
+            box-shadow: none;
+        }
+
+        .secondary-button {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.11);
+        }
+
+        .content-scroll {
+            height: calc(100vh - 160px);
+            overflow: auto;
+        }
+
+        .content-scroll::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .content-scroll::-webkit-scrollbar-thumb {
+            border: 3px solid transparent;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.24);
+            background-clip: content-box;
+        }
+
+        .content {
+            width: min(1080px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 34px 0 42px;
+        }
+
+        .page-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 24px;
+            align-items: end;
+            margin-bottom: 24px;
+        }
+
+        .eyebrow {
+            margin-bottom: 10px;
+            color: #8FC4FF;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin: 0;
+        }
+
+        h1 {
+            color: #FFFFFF;
+            font-size: 32px;
+            line-height: 1.18;
+            font-weight: 780;
+            letter-spacing: 0;
+        }
+
+        .summary {
+            margin-top: 10px;
+            max-width: 660px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .status-card {
+            display: grid;
+            gap: 10px;
+            min-width: 278px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .status-value {
+            overflow: hidden;
+            max-width: 150px;
+            color: var(--text);
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 新增连接页主体布局，左侧编辑表单，右侧显示保存影响和当前连接状态。 */
+        .connection-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .stack {
+            display: grid;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .section {
+            padding: 20px;
+            border-radius: var(--radius);
+            background: rgba(47, 47, 47, 0.82);
+            border: 1px solid var(--line);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+        }
+
+        .section-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            color: #FFFFFF;
+            font-size: 17px;
+            line-height: 1.35;
+            font-weight: 730;
+        }
+
+        .section-subtitle {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .badge {
+            flex: 0 0 auto;
+            padding: 6px 10px;
+            border-radius: 999px;
+            color: #BBD9FF;
+            background: rgba(4, 112, 230, 0.12);
+            border: 1px solid rgba(4, 112, 230, 0.28);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .badge.warning {
+            color: #FFE5B0;
+            background: rgba(233, 196, 106, 0.12);
+            border-color: rgba(233, 196, 106, 0.28);
+        }
+
+        .connection-hero {
+            display: grid;
+            grid-template-columns: 74px minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+            min-width: 0;
+            padding: 18px;
+            border-radius: var(--radius);
+            background:
+                linear-gradient(135deg, rgba(4, 112, 230, 0.20), rgba(42, 157, 143, 0.08)),
+                rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+        }
+
+        .connection-avatar {
+            display: grid;
+            place-items: center;
+            width: 74px;
+            height: 74px;
+            border-radius: 18px;
+            color: #FFFFFF;
+            background: linear-gradient(135deg, var(--accent), var(--teal));
+            box-shadow: 0 18px 34px rgba(4, 112, 230, 0.26);
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .connection-name {
+            overflow: hidden;
+            color: #FFFFFF;
+            font-size: 24px;
+            line-height: 1.16;
+            font-weight: 800;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .connection-address {
+            overflow: hidden;
+            margin-top: 8px;
+            color: var(--muted);
+            font-family: "Cascadia Mono", Consolas, monospace;
+            font-size: 13px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .live-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 30px;
+            padding: 0 11px;
+            border-radius: 999px;
+            color: #BFF7E5;
+            background: rgba(42, 157, 143, 0.13);
+            border: 1px solid rgba(42, 157, 143, 0.30);
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--teal);
+            box-shadow: 0 0 0 4px rgba(42, 157, 143, 0.14);
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .overview-tile {
+            min-width: 0;
+            min-height: 104px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: var(--surface-high);
+            border: 1px solid var(--line);
+        }
+
+        .overview-kicker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .overview-icon {
+            display: grid;
+            place-items: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.20);
+            border: 1px solid rgba(4, 112, 230, 0.26);
+        }
+
+        .overview-value {
+            overflow: hidden;
+            margin-top: 15px;
+            color: #FFFFFF;
+            font-size: 20px;
+            line-height: 1.15;
+            font-weight: 780;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .overview-sub {
+            overflow: hidden;
+            margin-top: 8px;
+            color: var(--dim);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 新增表单样式，映射 Compose 页面现有地址、用户名、密码和别名字段。 */
+        .form-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 12px;
+            min-width: 0;
+            padding: 14px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.045);
+            border: 1px solid rgba(255, 255, 255, 0.075);
+        }
+
+        .form-row:focus-within {
+            border-color: rgba(4, 112, 230, 0.52);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 0 3px rgba(4, 112, 230, 0.10);
+        }
+
+        .form-icon {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            color: #DCEEFF;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            font-size: 16px;
+        }
+
+        .field-meta {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .field-label {
+            color: #FFFFFF;
+            font-size: 14px;
+            line-height: 1.35;
+            font-weight: 730;
+        }
+
+        .field-helper {
+            margin-top: 4px;
+            color: var(--dim);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .field-state {
+            flex: 0 0 auto;
+            padding: 4px 8px;
+            border-radius: 999px;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .field-state.required {
+            color: #FFE5B0;
+            background: rgba(233, 196, 106, 0.11);
+            border-color: rgba(233, 196, 106, 0.25);
+        }
+
+        .input-wrap {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+            margin-top: 12px;
+            min-width: 0;
+        }
+
+        .text-input {
+            width: 100%;
+            min-width: 0;
+            height: 42px;
+            padding: 0 12px;
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 10px;
+            outline: none;
+        }
+
+        .text-input::placeholder {
+            color: rgba(255, 255, 255, 0.34);
+        }
+
+        .text-input:focus {
+            border-color: rgba(4, 112, 230, 0.70);
+        }
+
+        .password-toggle {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            color: var(--muted);
+            background: rgba(0, 0, 0, 0.20);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+        }
+
+        .form-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .footer-copy {
+            min-width: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .footer-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 0 0 auto;
+        }
+
+        .info-list {
+            display: grid;
+            overflow: hidden;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .info-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+            min-height: 56px;
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .info-row:last-child {
+            border-bottom: 0;
+        }
+
+        .info-label {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .info-value {
+            overflow: hidden;
+            max-width: 170px;
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 720;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .impact-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .impact-item {
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr);
+            gap: 12px;
+            align-items: start;
+            padding: 12px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.045);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .impact-icon {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            color: #FFFFFF;
+            background: rgba(4, 112, 230, 0.19);
+            border: 1px solid rgba(4, 112, 230, 0.24);
+        }
+
+        .impact-title {
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 730;
+        }
+
+        .impact-desc {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .danger-zone {
+            display: grid;
+            gap: 10px;
+        }
+
+        .danger-button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            min-height: 50px;
+            padding: 0 14px;
+            border-radius: 10px;
+            color: #FFD8CE;
+            background: rgba(231, 111, 81, 0.10);
+            border: 1px solid rgba(231, 111, 81, 0.24);
+            text-align: left;
+        }
+
+        .player {
+            grid-area: player;
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(360px, 1.25fr) minmax(220px, 1fr);
+            gap: 20px;
+            align-items: center;
+            min-width: 0;
+            padding: 12px 22px;
+            background: #151515;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .now-playing,
+        .player-tools,
+        .transport,
+        .transport-buttons,
+        .progress {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .now-playing {
+            gap: 12px;
+        }
+
+        .album-art {
+            width: 54px;
+            height: 54px;
+            flex: 0 0 auto;
+            border-radius: 10px;
+            background:
+                radial-gradient(circle at 26% 24%, rgba(255, 255, 255, 0.88), transparent 16%),
+                linear-gradient(135deg, #0470E6, #2A9D8F 56%, #E9C46A);
+        }
+
+        .player-title {
+            overflow: hidden;
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 720;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .player-subtitle {
+            overflow: hidden;
+            margin-top: 5px;
+            color: var(--dim);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .transport {
+            flex-direction: column;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .transport-buttons {
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .transport-button,
+        .play-button {
+            display: grid;
+            place-items: center;
+            border: 0;
+            color: var(--text);
+            background: transparent;
+        }
+
+        .transport-button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            color: var(--muted);
+        }
+
+        .play-button {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            color: #FFFFFF;
+            background: var(--accent);
+            box-shadow: 0 8px 18px rgba(4, 112, 230, 0.28);
+        }
+
+        .progress {
+            width: min(520px, 100%);
+            gap: 10px;
+            color: var(--dim);
+            font-size: 12px;
+        }
+
+        .bar {
+            position: relative;
+            flex: 1;
+            height: 5px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.13);
+        }
+
+        .bar-fill {
+            width: 38%;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--accent);
+        }
+
+        .player-tools {
+            justify-content: flex-end;
+            gap: 14px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .volume {
+            max-width: 92px;
+        }
+
+        .toast {
+            position: fixed;
+            right: 28px;
+            bottom: 112px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 158px;
+            padding: 12px 14px;
+            color: var(--text);
+            background: rgba(42, 42, 42, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--radius);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.36);
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: opacity 160ms ease, transform 160ms ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 1120px) {
+            .connection-layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .page-head {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .status-card {
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 980px) {
+            .app-shell {
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-areas:
+                    "main"
+                    "player";
+                min-width: 760px;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .player {
+                grid-template-columns: minmax(220px, 1fr) minmax(300px, 1.2fr);
+            }
+
+            .player-tools {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <!-- 新增侧边栏预览，用于保持 JVM 设置页一致的桌面导航上下文。 -->
+    <aside class="sidebar" aria-label="侧边栏">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span>XyMusic</span>
+        </div>
+
+        <nav class="nav-panel" aria-label="主导航">
+            <button class="nav-item" type="button">
+                <span class="nav-icon" aria-hidden="true">⌂</span>
+                首页
+            </button>
+            <button class="nav-item" type="button">
+                <span class="nav-icon" aria-hidden="true">♫</span>
+                音乐库
+            </button>
+            <button class="nav-item" type="button">
+                <span class="nav-icon" aria-hidden="true">▤</span>
+                播放列表
+            </button>
+            <button class="nav-item active" type="button">
+                <span class="nav-icon" aria-hidden="true">⚙</span>
+                设置
+            </button>
+        </nav>
+
+        <section class="library-panel" aria-labelledby="library-title">
+            <div class="library-header">
+                <span id="library-title">最近播放</span>
+                <span>12</span>
+            </div>
+            <div class="library-list">
+                <div class="library-row current">
+                    <div class="cover" aria-hidden="true"></div>
+                    <div>
+                        <div class="line-title">Blue Hour</div>
+                        <div class="line-sub">XyMusic Preview</div>
+                    </div>
+                </div>
+                <div class="library-row">
+                    <div class="cover alt" aria-hidden="true"></div>
+                    <div>
+                        <div class="line-title">Midnight Drive</div>
+                        <div class="line-sub">Desktop Library</div>
+                    </div>
+                </div>
+                <div class="library-row">
+                    <div class="cover third" aria-hidden="true"></div>
+                    <div>
+                        <div class="line-title">North Star</div>
+                        <div class="line-sub">Navidrome</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </aside>
+
+    <main class="main" aria-label="连接信息">
+        <!-- 新增顶部工具栏，对应 Compose 页面中的返回和保存入口。 -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="round-button" type="button" data-toast="返回连接设置列表" aria-label="返回">‹</button>
+                <div class="source-pill">
+                    <span class="source-dot" aria-hidden="true"></span>
+                    <span>Navidrome · 家庭音乐库</span>
+                </div>
+            </div>
+
+            <div class="topbar-actions">
+                <span class="dirty-pill" id="dirty-pill">未修改</span>
+                <button class="primary-button" id="top-save" type="button" disabled>
+                    <span aria-hidden="true">✓</span>
+                    保存
+                </button>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+            <div class="content">
+                <div class="page-head">
+                    <div>
+                        <div class="eyebrow">连接配置</div>
+                        <h1>连接信息</h1>
+                        <p class="summary">维护当前音乐服务地址、账号凭据和显示别名；地址、用户名或密码变更后，保存会触发当前连接重新登录。</p>
+                    </div>
+
+                    <aside class="status-card" aria-label="连接状态">
+                        <div class="status-row">
+                            <span>连接状态</span>
+                            <span class="status-value">当前连接</span>
+                        </div>
+                        <div class="status-row">
+                            <span>服务端版本</span>
+                            <span class="status-value">版本：0.53.3</span>
+                        </div>
+                        <div class="status-row">
+                            <span>登录方式</span>
+                            <span class="status-value">API</span>
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="connection-layout">
+                    <div class="stack">
+                        <!-- 新增连接摘要区，突出连接名、地址和当前在线状态。 -->
+                        <section class="section" aria-labelledby="summary-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="summary-title">当前连接</h2>
+                                    <p class="section-subtitle">用于桌面端播放、媒体库浏览和数据同步的数据源。</p>
+                                </div>
+                                <span class="badge">在线</span>
+                            </div>
+
+                            <div class="connection-hero">
+                                <div class="connection-avatar" aria-hidden="true">N</div>
+                                <div>
+                                    <div class="connection-name" id="summary-name">家里的 Navidrome</div>
+                                    <div class="connection-address" id="summary-address">https://music.example.com</div>
+                                </div>
+                                <div class="live-chip">
+                                    <span class="live-dot" aria-hidden="true"></span>
+                                    当前
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- 新增概览卡片，提供转 Compose 时可复用的信息密度参考。 -->
+                        <section class="overview-grid" aria-label="连接概览">
+                            <div class="overview-tile">
+                                <div class="overview-kicker">
+                                    <span class="overview-icon" aria-hidden="true">⌁</span>
+                                    服务地址
+                                </div>
+                                <div class="overview-value" id="overview-host">music.example.com</div>
+                                <div class="overview-sub">HTTPS · 8096</div>
+                            </div>
+                            <div class="overview-tile">
+                                <div class="overview-kicker">
+                                    <span class="overview-icon" aria-hidden="true">◎</span>
+                                    用户名
+                                </div>
+                                <div class="overview-value" id="overview-user">xybbz</div>
+                                <div class="overview-sub">保存后用于重新登录</div>
+                            </div>
+                            <div class="overview-tile">
+                                <div class="overview-kicker">
+                                    <span class="overview-icon" aria-hidden="true">▣</span>
+                                    服务版本
+                                </div>
+                                <div class="overview-value">0.53.3</div>
+                                <div class="overview-sub">Navidrome Server</div>
+                            </div>
+                        </section>
+
+                        <!-- 新增连接表单区，对应 JvmConnectionConfigInfoScreen.kt 中的四个输入项。 -->
+                        <section class="section" aria-labelledby="form-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="form-title">连接设置</h2>
+                                    <p class="section-subtitle">修改服务地址、登录账号、密码和本地显示别名。</p>
+                                </div>
+                                <span class="badge warning">需保存</span>
+                            </div>
+
+                            <div class="form-list">
+                                <label class="form-row">
+                                    <span class="form-icon" aria-hidden="true">⌁</span>
+                                    <span>
+                                        <span class="field-meta">
+                                            <span>
+                                                <span class="field-label">链接地址</span>
+                                                <span class="field-helper">示例：http://192.168.1.2:8096 或 https://music.example.com</span>
+                                            </span>
+                                            <span class="field-state required">必填</span>
+                                        </span>
+                                        <span class="input-wrap">
+                                            <input class="text-input" id="address-input" type="url" value="https://music.example.com" autocomplete="off">
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <label class="form-row">
+                                    <span class="form-icon" aria-hidden="true">◎</span>
+                                    <span>
+                                        <span class="field-meta">
+                                            <span>
+                                                <span class="field-label">用户名</span>
+                                                <span class="field-helper">保存后作为服务端 API 登录账号。</span>
+                                            </span>
+                                            <span class="field-state">账号</span>
+                                        </span>
+                                        <span class="input-wrap">
+                                            <input class="text-input" id="username-input" type="text" value="xybbz" autocomplete="username">
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <label class="form-row">
+                                    <span class="form-icon" aria-hidden="true">●</span>
+                                    <span>
+                                        <span class="field-meta">
+                                            <span>
+                                                <span class="field-label">密码</span>
+                                                <span class="field-helper">密码会在本地加密保存。</span>
+                                            </span>
+                                            <span class="field-state">加密</span>
+                                        </span>
+                                        <span class="input-wrap">
+                                            <input class="text-input" id="password-input" type="password" value="preview-password" autocomplete="current-password">
+                                            <button class="password-toggle" id="password-toggle" type="button" aria-label="显示或隐藏密码">◉</button>
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <label class="form-row">
+                                    <span class="form-icon" aria-hidden="true">✎</span>
+                                    <span>
+                                        <span class="field-meta">
+                                            <span>
+                                                <span class="field-label">设置别名</span>
+                                                <span class="field-helper">别名只影响本地列表和页面标题展示。</span>
+                                            </span>
+                                            <span class="field-state required">必填</span>
+                                        </span>
+                                        <span class="input-wrap">
+                                            <input class="text-input" id="alias-input" type="text" value="家里的 Navidrome" autocomplete="off">
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div class="form-footer">
+                                <div class="footer-copy" id="save-impact">当前没有待保存的修改。</div>
+                                <div class="footer-actions">
+                                    <button class="secondary-button" id="reset-button" type="button" disabled>撤销</button>
+                                    <button class="primary-button" id="footer-save" type="button" disabled>
+                                        <span aria-hidden="true">✓</span>
+                                        保存更改
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <aside class="stack">
+                        <!-- 新增信息侧栏，用于展示不会被直接编辑的连接元数据。 -->
+                        <section class="section" aria-labelledby="meta-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="meta-title">连接详情</h2>
+                                    <p class="section-subtitle">来自当前 ConnectionConfig 的关键状态。</p>
+                                </div>
+                            </div>
+
+                            <div class="info-list">
+                                <div class="info-row">
+                                    <span class="info-label">连接 ID</span>
+                                    <span class="info-value">#1001</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">服务类型</span>
+                                    <span class="info-value">Navidrome</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">媒体库</span>
+                                    <span class="info-value">全部</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">权限</span>
+                                    <span class="info-value">只读</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- 新增保存影响提示，映射 ViewModel 中地址、用户名、密码变更后的重新登录行为。 -->
+                        <section class="section" aria-labelledby="impact-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="impact-title">保存影响</h2>
+                                    <p class="section-subtitle">保存按钮会更新本地配置，并按当前连接状态处理登录。</p>
+                                </div>
+                            </div>
+
+                            <div class="impact-list">
+                                <div class="impact-item">
+                                    <div class="impact-icon" aria-hidden="true">↻</div>
+                                    <div>
+                                        <div class="impact-title">地址、用户名、密码变更</div>
+                                        <div class="impact-desc">如果正在使用这个连接，保存后会立即重新登录。</div>
+                                    </div>
+                                </div>
+                                <div class="impact-item">
+                                    <div class="impact-icon" aria-hidden="true">✎</div>
+                                    <div>
+                                        <div class="impact-title">别名变更</div>
+                                        <div class="impact-desc">只更新本地显示名，不额外触发服务端请求。</div>
+                                    </div>
+                                </div>
+                                <div class="impact-item">
+                                    <div class="impact-icon" aria-hidden="true">!</div>
+                                    <div>
+                                        <div class="impact-title">空值校验</div>
+                                        <div class="impact-desc">链接地址和别名为空时不允许保存。</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- 新增危险操作预览，保留连接管理页可能进入的删除语义参考。 -->
+                        <section class="section" aria-labelledby="danger-title">
+                            <div class="section-head">
+                                <div>
+                                    <h2 class="section-title" id="danger-title">管理</h2>
+                                    <p class="section-subtitle">连接删除建议仍放在连接管理入口中处理。</p>
+                                </div>
+                            </div>
+
+                            <div class="danger-zone">
+                                <button class="danger-button" type="button" data-toast="删除连接建议保留二次确认">
+                                    <span>删除连接</span>
+                                    <span aria-hidden="true">›</span>
+                                </button>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 新增播放器栏预览，对齐 JVM 设置页 HTML 的底部桌面结构。 -->
+    <footer class="player" aria-label="播放控制栏">
+        <div class="now-playing">
+            <div class="album-art" aria-hidden="true"></div>
+            <div>
+                <div class="player-title">Blue Hour</div>
+                <div class="player-subtitle">XyMusic Preview · 连接信息预览</div>
+            </div>
+        </div>
+
+        <div class="transport">
+            <div class="transport-buttons">
+                <button class="transport-button" type="button" aria-label="随机播放">⤨</button>
+                <button class="transport-button" type="button" aria-label="上一首">‹‹</button>
+                <button class="play-button" type="button" aria-label="播放">▶</button>
+                <button class="transport-button" type="button" aria-label="下一首">››</button>
+                <button class="transport-button" type="button" aria-label="循环播放">↻</button>
+            </div>
+            <div class="progress">
+                <span>1:24</span>
+                <div class="bar" aria-hidden="true"><div class="bar-fill"></div></div>
+                <span>3:41</span>
+            </div>
+        </div>
+
+        <div class="player-tools">
+            <span>列表</span>
+            <span>歌词</span>
+            <span>音量</span>
+            <div class="bar volume" aria-hidden="true"><div class="bar-fill" style="width: 68%;"></div></div>
+        </div>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+        <span class="overview-icon" aria-hidden="true">✓</span>
+        <span id="toast-text">已更新</span>
+    </div>
+</div>
+
+<script>
+    // 新增表单初始值对象，用于在静态预览中模拟 Compose 状态回填。
+    const initialValues = {
+        address: "https://music.example.com",
+        username: "xybbz",
+        password: "preview-password",
+        alias: "家里的 Navidrome"
+    };
+
+    // 新增 DOM 引用对象，集中管理预览页面的输入框和状态节点。
+    const fields = {
+        address: document.getElementById("address-input"),
+        username: document.getElementById("username-input"),
+        password: document.getElementById("password-input"),
+        alias: document.getElementById("alias-input")
+    };
+
+    // 新增页面状态节点对象，用于更新保存按钮、摘要和提示文案。
+    const ui = {
+        topSave: document.getElementById("top-save"),
+        footerSave: document.getElementById("footer-save"),
+        reset: document.getElementById("reset-button"),
+        dirtyPill: document.getElementById("dirty-pill"),
+        saveImpact: document.getElementById("save-impact"),
+        summaryName: document.getElementById("summary-name"),
+        summaryAddress: document.getElementById("summary-address"),
+        overviewHost: document.getElementById("overview-host"),
+        overviewUser: document.getElementById("overview-user"),
+        toast: document.getElementById("toast"),
+        toastText: document.getElementById("toast-text")
+    };
+
+    let toastTimer = null;
+
+    // 新增提示展示方法，用于模拟保存成功和操作反馈。
+    function showToast(text) {
+        ui.toastText.textContent = text;
+        ui.toast.classList.add("show");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => {
+            ui.toast.classList.remove("show");
+        }, 1500);
+    }
+
+    // 新增主机名解析方法，用于把服务地址同步到概览卡片。
+    function getHostLabel(value) {
+        try {
+            return new URL(value).host || value;
+        } catch (error) {
+            return value || "未填写";
+        }
+    }
+
+    // 新增脏状态计算方法，用于模拟 ViewModel 字段变化后的保存按钮状态。
+    function getDirtyKeys() {
+        return Object.keys(fields).filter((key) => fields[key].value !== initialValues[key]);
+    }
+
+    // 新增表单状态刷新方法，统一更新摘要、按钮启用状态和保存影响提示。
+    function refreshFormState() {
+        const dirtyKeys = getDirtyKeys();
+        const hasDirty = dirtyKeys.length > 0;
+        const addressBlank = fields.address.value.trim() === "";
+        const aliasBlank = fields.alias.value.trim() === "";
+        const canSave = hasDirty && !addressBlank && !aliasBlank;
+        const needsRelogin = dirtyKeys.some((key) => key === "address" || key === "username" || key === "password");
+
+        ui.summaryName.textContent = fields.alias.value || "未命名连接";
+        ui.summaryAddress.textContent = fields.address.value || "未填写链接地址";
+        ui.overviewHost.textContent = getHostLabel(fields.address.value);
+        ui.overviewUser.textContent = fields.username.value || "未填写";
+
+        ui.topSave.disabled = !canSave;
+        ui.footerSave.disabled = !canSave;
+        ui.reset.disabled = !hasDirty;
+        ui.dirtyPill.classList.toggle("active", hasDirty);
+        ui.dirtyPill.textContent = hasDirty ? `已修改 ${dirtyKeys.length} 项` : "未修改";
+
+        if (!hasDirty) {
+            ui.saveImpact.textContent = "当前没有待保存的修改。";
+        } else if (addressBlank || aliasBlank) {
+            ui.saveImpact.textContent = "链接地址和别名不能为空。";
+        } else if (needsRelogin) {
+            ui.saveImpact.textContent = "保存后会更新连接配置，并对当前连接重新登录。";
+        } else {
+            ui.saveImpact.textContent = "保存后只更新本地连接别名。";
+        }
+    }
+
+    // 新增保存模拟方法，用于把当前输入值设为新的静态基准值。
+    function saveChanges() {
+        if (ui.footerSave.disabled) {
+            return;
+        }
+
+        Object.keys(fields).forEach((key) => {
+            initialValues[key] = fields[key].value;
+        });
+        refreshFormState();
+        showToast("连接信息已保存");
+    }
+
+    // 新增撤销模拟方法，用于把表单恢复到最近一次保存状态。
+    function resetChanges() {
+        Object.keys(fields).forEach((key) => {
+            fields[key].value = initialValues[key];
+        });
+        refreshFormState();
+        showToast("已撤销修改");
+    }
+
+    Object.values(fields).forEach((field) => {
+        field.addEventListener("input", refreshFormState);
+    });
+
+    document.getElementById("password-toggle").addEventListener("click", () => {
+        const nextType = fields.password.type === "password" ? "text" : "password";
+        fields.password.type = nextType;
+        showToast(nextType === "text" ? "密码已显示" : "密码已隐藏");
+    });
+
+    ui.topSave.addEventListener("click", saveChanges);
+    ui.footerSave.addEventListener("click", saveChanges);
+    ui.reset.addEventListener("click", resetChanges);
+
+    document.querySelectorAll("[data-toast]").forEach((item) => {
+        item.addEventListener("click", () => showToast(item.dataset.toast));
+    });
+
+    refreshFormState();
+</script>
+</body>
+</html>

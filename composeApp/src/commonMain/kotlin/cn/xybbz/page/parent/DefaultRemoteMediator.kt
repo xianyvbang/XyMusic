@@ -1,0 +1,125 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.page.parent
+
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.LoadType
+import androidx.paging.PagingState
+import androidx.paging.RemoteMediator
+import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.common.constants.Constants
+import cn.xybbz.database.withTransaction
+import cn.xybbz.localdata.config.LocalDatabaseClient
+import cn.xybbz.localdata.data.remote.RemoteCurrent
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.DurationUnit
+
+@OptIn(ExperimentalPagingApi::class)
+abstract class DefaultRemoteMediator<T : Any, K : Any>(
+    private val db: LocalDatabaseClient,
+    protected val remoteId: String,
+    private val connectionId: Long
+) : RemoteMediator<Int, T>() {
+
+    protected val remoteKeyDao = db.remoteCurrentDao
+
+    override suspend fun load(
+        loadType: LoadType,
+        state: PagingState<Int, T>
+    ): MediatorResult {
+        return try {
+
+            val loadKey: Int = when (loadType) {
+                LoadType.REFRESH -> 0
+                LoadType.PREPEND -> return MediatorResult.Success(
+                    endOfPaginationReached = true
+                )
+
+                LoadType.APPEND -> {
+                    val remoteKey = db.withTransaction {
+                        remoteKeyDao.remoteKeyById(remoteId)
+                    }
+                    if (remoteKey == null || (remoteKey.nextKey + 1 * state.config.pageSize) >= remoteKey.total
+                    ) {
+                        return MediatorResult.Success(
+                            endOfPaginationReached = true
+                        )
+                    }
+                    remoteKey.nextKey.plus(1)
+                }
+            }
+
+            val response = getRemoteServerObjectList(loadKey, state.config.pageSize)
+
+            db.withTransaction {
+                if (loadType == LoadType.REFRESH) {
+                    remoteKeyDao.deleteById(remoteId)
+                    removeLocalObjectList()
+                }
+
+                remoteKeyDao.insertOrReplace(
+                    RemoteCurrent(
+                        id = remoteId,
+                        nextKey = loadKey,
+                        total = response.totalRecordCount,
+                        connectionId = connectionId,
+                        refresh = false
+                    )
+                )
+                response.items?.let {
+                    saveBatchLocalObjectList(it)
+                }
+
+            }
+            MediatorResult.Success(
+                endOfPaginationReached = response.items.isNullOrEmpty()
+                        || (if (loadKey == 0) state.config.pageSize else (loadKey * state.config.pageSize)) >= response.totalRecordCount
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            MediatorResult.Error(e)
+        }
+    }
+
+    override suspend fun initialize(): InitializeAction {
+        return getInitializeAction()
+    }
+
+    open suspend fun getInitializeAction(): InitializeAction {
+        val cacheTimeout = Constants.PAGE_TIME_FAILURE.minutes.toLong(DurationUnit.MILLISECONDS)
+        return getInitializeAction(remoteKeyDao,remoteId,cacheTimeout)
+    }
+
+    /**
+     * 获得远程服务对象列表
+     * @param [loadKey] 页码 从0开始
+     * @param [pageSize] 页面大小
+     */
+    abstract suspend fun getRemoteServerObjectList(loadKey: Int, pageSize: Int): XyResponse<K>
+
+    /**
+     * 删除本地数据库对象列表
+     */
+    abstract suspend fun removeLocalObjectList()
+
+    /**
+     * 存储对象列表到本地数据库
+     */
+    abstract suspend fun saveBatchLocalObjectList(items: List<K>)
+}

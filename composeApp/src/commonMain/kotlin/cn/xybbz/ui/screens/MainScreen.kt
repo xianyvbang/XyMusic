@@ -1,0 +1,177 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+@file:OptIn(ExperimentalMaterial3Api::class)
+
+package cn.xybbz.ui.screens
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavKey
+import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.utils.Log
+import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.compositionLocal.LocalPlayerChromeState
+import cn.xybbz.router.Connection
+import cn.xybbz.router.NavigationState
+import cn.xybbz.router.Navigator
+import cn.xybbz.router.OnDestinationChangedListener
+import cn.xybbz.router.PlatformNavigationConfig
+import cn.xybbz.router.RouterCompose
+import cn.xybbz.ui.components.AddPlaylistBottomComponent
+import cn.xybbz.ui.components.AlertDialogComponent
+import cn.xybbz.ui.components.BottomSheetCompose
+import cn.xybbz.ui.components.LifecycleEffect
+import cn.xybbz.ui.components.LoadingCompose
+import cn.xybbz.ui.components.PlatformActiveReloginEffect
+import cn.xybbz.ui.state.PlayerChromeState
+import cn.xybbz.viewmodel.MainViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+
+
+@Composable
+fun MainScreen(
+    navigationConfig: PlatformNavigationConfig,
+    navigationState: NavigationState,
+    navigator: Navigator,
+    modifier: Modifier = Modifier,
+    mainViewModel: MainViewModel = koinViewModel<MainViewModel>(),
+) {
+
+    val coroutineScope = rememberCoroutineScope()
+    val dataSourceManager = koinInject<DataSourceManager>()
+    // 播放器外壳状态由 Koin 单例持有，主壳只负责下发给播放器相关组件。
+    val playerChromeState = koinInject<PlayerChromeState>()
+    val selectUiState by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val currentSelectUiState = rememberUpdatedState(selectUiState)
+
+    DisposableEffect(navigator, mainViewModel, coroutineScope) {
+        val snackbarListener = object : OnDestinationChangedListener {
+            override fun onDestinationChanged(
+                navigator: Navigator,
+                destination: NavKey
+            ) {
+                mainViewModel.updateIfShowSnackBar(destination !is Connection)
+            }
+        }
+        val selectDismissListener = object : OnDestinationChangedListener {
+            override fun onDestinationChanged(
+                navigator: Navigator,
+                destination: NavKey
+            ) {
+                coroutineScope.launch(Dispatchers.Main.immediate) {
+                    withFrameNanos {
+                        if (currentSelectUiState.value.isOpen) {
+                            mainViewModel.selectControl.dismiss()
+                        }
+                    }
+                }
+            }
+        }
+        navigator.addOnDestinationChangedListener(snackbarListener)
+        navigator.addOnDestinationChangedListener(selectDismissListener)
+        onDispose {
+            navigator.removeOnDestinationChangedListener(snackbarListener)
+            navigator.removeOnDestinationChangedListener(selectDismissListener)
+        }
+    }
+
+    SideEffect {
+        Log.d("=====", "MainScreen重组一次")
+    }
+
+    CompositionLocalProvider(
+        LocalMainViewModel provides mainViewModel,
+        // 下发播放器外壳状态，播放器相关组件通过 LocalPlayerChromeState 读写页面表现状态。
+        LocalPlayerChromeState provides playerChromeState,
+    ) {
+        val mainViewModel = LocalMainViewModel.current
+        // 当前主壳下共享的播放器外壳状态。
+        val playerChromeState = LocalPlayerChromeState.current
+
+        Box(modifier = modifier) {
+            PlatformActiveReloginEffect(dataSourceManager)
+            //todo putDataSourceState 这个属性应该放在全局的object类里,不是放在mainViewModel里
+
+            LifecycleEffect(
+                onCreate = {
+                    Log.i("=====", "初始化")
+                },
+                onStart = {
+                    Log.i("=====", "创建")
+                    // 主壳进入前台时允许迷你播放条标题重新滚动一次。
+                    playerChromeState.putMarqueeIterations(1)
+                }, onDestroy = {
+                    Log.i("=====", "onDestroy")
+                    // 主壳销毁时停止迷你播放条标题跑马灯，避免后台继续触发页面表现状态。
+                    playerChromeState.putMarqueeIterations(0)
+//                mainViewModel.clearRemoteCurrent()
+                }, onStop = {
+                    //后台
+                    Log.i("=====", "创建1")
+                    // 主壳进入后台时暂停迷你播放条标题跑马灯。
+                    playerChromeState.putMarqueeIterations(0)
+                }, onPause = {
+                    //后台
+                    Log.i("=====", "创建2")
+
+                }, onResume = {
+                    //todo 这里准备一次重新登陆,做成有间隔时间的重新登陆,不能每次重新打开就登陆
+                    Log.i("=====", "创建3")
+
+                })
+
+            AlertDialogComponent()
+            BottomSheetCompose()
+            AddPlaylistBottomComponent()
+
+            // App.kt 已经完成启动页、首次连接页和主壳 ready 的外层分流；MainScreen 只负责主壳内部内容。
+            MainScreenScaffold(
+                navigationConfig = navigationConfig,
+                navigationState = navigationState,
+                navigator = navigator,
+                snackbarHost = {
+                    MainScreenSnackBarHost()
+                }
+            ) {
+                Box {
+                    RouterCompose(
+                        paddingValues = it,
+                        navigationState = navigationState,
+                        enableAnimations = navigationConfig.enableAnimations
+                    )
+                    LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
+                }
+            }
+        }
+    }
+}

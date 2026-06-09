@@ -1,0 +1,96 @@
+name: Package XyMusic KMP
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Build Android release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Build Android APK and AAB
+        run: ./gradlew :androidApp:assembleRelease :androidApp:bundleRelease --stacktrace
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: |
+            androidApp/build/outputs/apk/release/*.apk
+            androidApp/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
+  desktop:
+    name: Build desktop package
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact-name: desktop-windows-msi
+            artifact-path: desktopApp/build/compose/binaries/main-release/msi/*.msi
+          - os: macos-latest
+            artifact-name: desktop-macos-dmg
+            artifact-path: desktopApp/build/compose/binaries/main-release/dmg/*.dmg
+          - os: ubuntu-latest
+            artifact-name: desktop-linux-deb
+            artifact-path: desktopApp/build/compose/binaries/main-release/deb/*.deb
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Linux packaging tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y fakeroot
+
+      - name: Install WiX for MSI
+        if: runner.os == 'Windows'
+        run: choco install wixtoolset --no-progress -y
+
+      - name: Build desktop package
+        if: runner.os != 'Windows'
+        run: ./gradlew :desktopApp:packageDistributionForCurrentOS --stacktrace
+
+      - name: Build desktop package
+        if: runner.os == 'Windows'
+        run: .\gradlew.bat :desktopApp:packageDistributionForCurrentOS --stacktrace
+
+      - name: Upload desktop artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.artifact-path }}
+          if-no-files-found: error

@@ -1,0 +1,449 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.ui.screens
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import cn.xybbz.common.enums.TranscodeAudioBitRateType
+import cn.xybbz.common.utils.MessageUtils
+import cn.xybbz.common.utils.copyTextToClipboard
+import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.localdata.data.setting.XySettings
+import cn.xybbz.music.cacheUpperLimitOptions
+import cn.xybbz.router.About
+import cn.xybbz.router.CacheLimit
+import cn.xybbz.router.ConnectionManagement
+import cn.xybbz.router.CustomApi
+import cn.xybbz.router.InterfaceSetting
+import cn.xybbz.router.LanguageConfig
+import cn.xybbz.router.MemoryManagement
+import cn.xybbz.router.ProxyConfig
+import cn.xybbz.router.StreamingQuality
+import cn.xybbz.ui.components.JvmSettingActionEntry
+import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
+import cn.xybbz.ui.components.JvmSettingDownloadRow
+import cn.xybbz.ui.components.JvmSettingFlowRow
+import cn.xybbz.ui.components.JvmSettingNavigationRow
+import cn.xybbz.ui.components.JvmSettingOverviewTile
+import cn.xybbz.ui.components.JvmSettingOverviewThreeColumnWidth
+import cn.xybbz.ui.components.JvmSettingPageHeader
+import cn.xybbz.ui.components.JvmSettingPageScaffold
+import cn.xybbz.ui.components.JvmSettingPathRow
+import cn.xybbz.ui.components.JvmSettingSection
+import cn.xybbz.ui.components.JvmSettingStatusCard
+import cn.xybbz.ui.components.JvmSettingStatusCardItem
+import cn.xybbz.ui.components.JvmSettingSwitchRow
+import cn.xybbz.ui.components.JvmSettingTwoPaneContent
+import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.viewmodel.SettingsViewModel
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.about
+import xymusic_kmp.composeapp.generated.resources.album_24px
+import xymusic_kmp.composeapp.generated.resources.album_playback_history
+import xymusic_kmp.composeapp.generated.resources.allow_simultaneous_playback
+import xymusic_kmp.composeapp.generated.resources.av_timer_24px
+import xymusic_kmp.composeapp.generated.resources.broadcast_while_down
+import xymusic_kmp.composeapp.generated.resources.cache_limit
+import xymusic_kmp.composeapp.generated.resources.cache_location
+import xymusic_kmp.composeapp.generated.resources.connection_management
+import xymusic_kmp.composeapp.generated.resources.copy_success
+import xymusic_kmp.composeapp.generated.resources.customize_lyric_settings
+import xymusic_kmp.composeapp.generated.resources.download_24px
+import xymusic_kmp.composeapp.generated.resources.enabled_sync_play_progress
+import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
+import xymusic_kmp.composeapp.generated.resources.http_24px
+import xymusic_kmp.composeapp.generated.resources.info_24px
+import xymusic_kmp.composeapp.generated.resources.interface_settings
+import xymusic_kmp.composeapp.generated.resources.language
+import xymusic_kmp.composeapp.generated.resources.music_note_24px
+import xymusic_kmp.composeapp.generated.resources.online_music_quality
+import xymusic_kmp.composeapp.generated.resources.poxy_config
+import xymusic_kmp.composeapp.generated.resources.queue_music_24px
+import xymusic_kmp.composeapp.generated.resources.settings
+import xymusic_kmp.composeapp.generated.resources.settings_24px
+import xymusic_kmp.composeapp.generated.resources.signal_cellular_alt_24px
+import xymusic_kmp.composeapp.generated.resources.song_cache_location
+import xymusic_kmp.composeapp.generated.resources.storage_management
+import xymusic_kmp.composeapp.generated.resources.volume_up_24px
+
+/**
+ * 设置页面
+ */
+@Composable
+fun JvmSettingScreen(
+    settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModel>()
+) {
+    val navigator = LocalNavigator.current
+    val coroutineScope = rememberCoroutineScope()
+    val settings = settingsViewModel.settingDataNow
+    val cacheFilePath by settingsViewModel.settingsManager.cacheFilePath.collectAsState()
+    val songStoragePath = settingsViewModel.songStoragePath
+    val copySuccess = stringResource(Res.string.copy_success)
+    val cacheLimitLabel = cacheUpperLimitOptions()
+        .firstOrNull { it.limit == settings.cacheUpperLimit }
+        ?.message
+        ?: settings.cacheUpperLimit.name
+    val selectedQuality = TranscodeAudioBitRateType
+        .getTranscodeAudioBitRate(settings.wifiNetworkAudioBitRate)
+        .audioBitRateStr
+    val dataSourceLabel = settings.dataSourceType?.title ?: "未连接"
+
+    JvmSettingPageScaffold() {
+        JvmSettingPageHeader(
+            title = stringResource(Res.string.settings),
+            description = "把桌面端常用配置集中为更可扫读的设置中心：播放缓存、连接管理、下载队列、界面语言和扩展能力都保留当前入口。",
+        ) {
+            JvmSettingStatusCard(
+                items = listOf(
+                    JvmSettingStatusCardItem(label = "当前数据源", value = dataSourceLabel),
+                    JvmSettingStatusCardItem(label = "在线品质", value = selectedQuality),
+                    JvmSettingStatusCardItem(label = "下载并发", value = settings.maxConcurrentDownloads.toString()),
+                )
+            )
+        }
+
+        JvmSettingOverview(
+            settings = settings,
+            cacheLimitLabel = cacheLimitLabel,
+            onStorageClick = {
+                navigator.navigate(MemoryManagement)
+            },
+        )
+
+        JvmSettingTwoPaneContent(
+            leftContent = {
+                JvmSettingSection(
+                    title = "播放与缓存",
+                    subtitle = "控制在线播放策略、缓存位置和跨设备播放行为。",
+                    badge = "核心",
+                ) {
+                    JvmSettingSwitchRow(
+                        icon = Res.drawable.download_24px,
+                        title = stringResource(Res.string.broadcast_while_down),
+                        description = "播放时缓存音频资源，弱网重播更稳定。",
+                        checked = settings.ifEnableEdgeDownload,
+                        onCheckedChange = { checked ->
+                            coroutineScope.launch {
+                                settingsViewModel.settingsManager.setIfEnableEdgeDownload(checked)
+                            }
+                        }
+                    )
+
+                    AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
+                        JvmSettingNavigationRow(
+                            icon = Res.drawable.folder_managed_24px,
+                            title = stringResource(Res.string.cache_limit),
+                            description = "设置播放缓存最大占用空间。",
+                            value = cacheLimitLabel,
+                            onClick = {
+                                navigator.navigate(CacheLimit)
+                            }
+                        )
+                    }
+
+                    JvmSettingNavigationRow(
+                        icon = Res.drawable.music_note_24px,
+                        title = stringResource(Res.string.online_music_quality),
+                        description = "选择桌面端在线音频品质与转码格式。",
+                        value = "$selectedQuality · ${settings.transcodeFormat.uppercase()}",
+                        onClick = {
+                            navigator.navigate(StreamingQuality)
+                        }
+                    )
+
+                    JvmSettingSwitchRow(
+                        icon = Res.drawable.album_24px,
+                        title = stringResource(Res.string.album_playback_history),
+                        description = "记录专辑播放进度，便于下次继续。",
+                        checked = settings.ifEnableAlbumHistory,
+                        onCheckedChange = { checked ->
+                            coroutineScope.launch {
+                                settingsViewModel.settingsManager.setIfEnableAlbumHistory(checked)
+                            }
+                        }
+                    )
+
+                    JvmSettingSwitchRow(
+                        icon = Res.drawable.volume_up_24px,
+                        title = stringResource(Res.string.allow_simultaneous_playback),
+                        description = "保留系统音频焦点，不主动打断其他声音。",
+                        checked = settings.ifHandleAudioFocus,
+                        onCheckedChange = { checked ->
+                            coroutineScope.launch {
+                                settingsViewModel.settingsManager.setIfHandleAudioFocus(checked)
+                            }
+                        }
+                    )
+
+                    JvmSettingSwitchRow(
+                        icon = Res.drawable.av_timer_24px,
+                        title = stringResource(Res.string.enabled_sync_play_progress),
+                        description = "向服务端同步当前播放位置。",
+                        checked = settings.ifEnableSyncPlayProgress,
+                        onCheckedChange = { checked ->
+                            coroutineScope.launch {
+                                settingsViewModel.setSyncPlayProgressEnabled(checked)
+                            }
+                        }
+                    )
+
+                    JvmSettingPathRow(
+                        icon = Res.drawable.folder_managed_24px,
+                        title = stringResource(Res.string.cache_location),
+                        path = cacheFilePath,
+                        onClick = {
+                            if (cacheFilePath.isNotBlank()) {
+                                copyTextToClipboard(cacheFilePath)
+                                MessageUtils.sendPopTip(copySuccess)
+                            }
+                        }
+                    )
+                }
+
+                JvmSettingSection(
+                    title = "下载与存储",
+                    subtitle = "下载并发、歌曲缓存路径与本地空间管理。",
+                    badge = "本机",
+                ) {
+                    JvmSettingDownloadRow(
+                        selected = settings.maxConcurrentDownloads,
+                        onSelected = { maxConcurrentDownloads ->
+                            coroutineScope.launch {
+                                settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
+                            }
+                        }
+                    )
+
+                    JvmSettingPathRow(
+                        icon = Res.drawable.queue_music_24px,
+                        title = stringResource(Res.string.song_cache_location),
+                        path = songStoragePath,
+                        onClick = {
+                            if (songStoragePath.isNotBlank()) {
+                                copyTextToClipboard(songStoragePath)
+                                MessageUtils.sendPopTip(copySuccess)
+                            }
+                        }
+                    )
+
+                    JvmSettingNavigationRow(
+                        icon = Res.drawable.folder_managed_24px,
+                        title = stringResource(Res.string.storage_management),
+                        description = "查看缓存占用并清理本地文件。",
+                        value = "打开存储管理",
+                        onClick = {
+                            navigator.navigate(MemoryManagement)
+                        }
+                    )
+                }
+            },
+            rightContent = {
+                JvmSettingSection(
+                    title = "连接",
+                    subtitle = "管理音乐服务地址和当前连接。",
+                    badge = "在线",
+                ) {
+                    JvmSettingNavigationRow(
+                        icon = Res.drawable.http_24px,
+                        title = stringResource(Res.string.connection_management),
+                        description = "切换或编辑 Jellyfin、Navidrome 等数据源。",
+                        value = dataSourceLabel,
+                        onClick = {
+                            navigator.navigate(ConnectionManagement)
+                        }
+                    )
+
+                    JvmSettingNavigationRow(
+                        icon = Res.drawable.signal_cellular_alt_24px,
+                        title = stringResource(Res.string.poxy_config),
+                        description = "配置服务访问代理和网络转发。",
+                        value = "网络",
+                        onClick = {
+                            navigator.navigate(ProxyConfig)
+                        }
+                    )
+                }
+
+                JvmSettingSection(
+                    title = "通用",
+                    subtitle = "界面、语言、自定义资源和应用信息。",
+                    badge = "偏好",
+                    contentContainerColor = Color.Transparent,
+                    contentContainerBorderColor = Color.Transparent,
+                    qualityNote = "设置项保持原有路由和数据写入行为，桌面端只调整信息架构和视觉密度。",
+                ) {
+                    JvmSettingActionGrid(
+                        onInterfaceClick = {
+                            navigator.navigate(InterfaceSetting)
+                        },
+                        onLanguageClick = {
+                            navigator.navigate(LanguageConfig)
+                        },
+                        onCustomApiClick = {
+                            navigator.navigate(CustomApi)
+                        },
+                        onAboutClick = {
+                            navigator.navigate(About)
+                        },
+                    )
+                }
+            }
+        )
+    }
+}
+
+/**
+ * 设置页通用入口卡片网格。
+ *
+ * @param onInterfaceClick 界面设置入口点击事件。
+ * @param onLanguageClick 语言设置入口点击事件。
+ * @param onCustomApiClick 自定义资源入口点击事件。
+ * @param onAboutClick 关于页面入口点击事件。
+ */
+@Composable
+private fun JvmSettingActionGrid(
+    onInterfaceClick: () -> Unit,
+    onLanguageClick: () -> Unit,
+    onCustomApiClick: () -> Unit,
+    onAboutClick: () -> Unit,
+) {
+    // 设置页只关心四个固定入口，通用网格负责真正的宽度计算和卡片渲染。
+    JvmSettingActionEntryGrid(
+        actionEntries = jvmSettingActionEntries(
+            onInterfaceClick = onInterfaceClick,
+            onLanguageClick = onLanguageClick,
+            onCustomApiClick = onCustomApiClick,
+            onAboutClick = onAboutClick,
+        )
+    )
+}
+
+/**
+ * 组装设置页右栏“通用”分组中的四个入口卡片。
+ */
+@Composable
+private fun jvmSettingActionEntries(
+    onInterfaceClick: () -> Unit,
+    onLanguageClick: () -> Unit,
+    onCustomApiClick: () -> Unit,
+    onAboutClick: () -> Unit,
+): List<JvmSettingActionEntry> {
+    return listOf(
+        JvmSettingActionEntry(
+            icon = Res.drawable.settings_24px,
+            kicker = "显示",
+            title = stringResource(Res.string.interface_settings),
+            description = "主题、背景图片与桌面显示偏好。",
+            onClick = onInterfaceClick,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.info_24px,
+            kicker = "本地化",
+            title = stringResource(Res.string.language),
+            description = "切换跟随系统或固定语言。",
+            onClick = onLanguageClick,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.music_note_24px,
+            kicker = "资源",
+            title = stringResource(Res.string.customize_lyric_settings),
+            description = "自定义歌词与封面服务地址。",
+            onClick = onCustomApiClick,
+        ),
+        JvmSettingActionEntry(
+            icon = Res.drawable.info_24px,
+            kicker = "应用",
+            title = stringResource(Res.string.about),
+            description = "版本信息、检查更新与项目说明。",
+            onClick = onAboutClick,
+        ),
+    )
+}
+
+/**
+ * 设置概览卡片区。
+ *
+ * 宽屏时保持三张卡片一行，窄屏时每张卡片独占一行。
+ */
+@Composable
+private fun JvmSettingOverview(
+    settings: XySettings,
+    cacheLimitLabel: String,
+    onStorageClick: () -> Unit,
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val gap = XyTheme.dimens.contentPadding
+        // 三张概览卡只有在足够宽时才同排，避免卡片文字被挤压。
+        val useThreeColumns = maxWidth >= JvmSettingOverviewThreeColumnWidth
+        // 概览区和下方主体使用同一个宽度基准，保证三张 item 总宽与下面内容对齐。
+        val contentWidth = maxWidth
+        val tileWidth = if (useThreeColumns) {
+            // 三列时扣除横向间距，再平均分配每张卡片宽度。
+            (contentWidth - gap) / 3f
+        } else {
+            // 单列时铺满可用宽度，避免窄屏出现过窄卡片。
+            maxWidth
+        }
+
+        XyRow(
+            modifier = Modifier.fillMaxWidth(),
+            // 卡片不再铺满整行时居中摆放，视觉上更接近预览稿。
+            horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            JvmSettingOverviewTile(
+                modifier = Modifier.width(tileWidth),
+                icon = Res.drawable.download_24px,
+                kicker = "播放缓存",
+                value = if (settings.ifEnableEdgeDownload) "边下边播已开启" else "边下边播已关闭",
+                sub = "缓存上限 · $cacheLimitLabel"
+            )
+            JvmSettingOverviewTile(
+                modifier = Modifier.width(tileWidth),
+                icon = Res.drawable.av_timer_24px,
+                kicker = "播放同步",
+                value = if (settings.ifEnableSyncPlayProgress) "进度同步已开启" else "进度同步已关闭",
+                sub = if (settings.ifEnableAlbumHistory) "播放历史 · 专辑启用" else "播放历史 · 专辑关闭"
+            )
+            JvmSettingOverviewTile(
+                modifier = Modifier.width(tileWidth),
+                icon = Res.drawable.folder_managed_24px,
+                kicker = "存储管理",
+                value = "打开存储管理",
+                sub = "真实占用在存储管理页查看",
+                onClick = onStorageClick,
+            )
+        }
+    }
+}

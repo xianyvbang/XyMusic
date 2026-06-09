@@ -1,0 +1,173 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.download.database.dao
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import cn.xybbz.download.database.data.XyDownload
+import cn.xybbz.download.enums.DownloadStatus
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface XyDownloadDao {
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(vararg xyDownload: XyDownload): List<Long>
+
+    @Query("select * from xy_download where id = :id")
+    suspend fun selectById(id: Long): XyDownload?
+
+    @Query("update xy_download set status = :status where id = :id")
+    suspend fun updateStatus(id: Long, status: DownloadStatus)
+
+    @Query("update xy_download set progress = :progress, downloadedBytes = :downloadedBytes, totalBytes = :totalBytes, updateTime = :updateTime where id = :id")
+    suspend fun updateProgress(
+        id: Long,
+        progress: Float,
+        downloadedBytes: Long,
+        totalBytes: Long,
+        updateTime: Long
+    )
+
+    @Query("SELECT status FROM xy_download WHERE id = :id")
+    suspend fun getStatusById(id: Long): DownloadStatus?
+
+    @Query("UPDATE xy_download SET status = :status, error = :error, updateTime = :updateTime WHERE id = :id")
+    suspend fun updateOnError(
+        id: Long,
+        status: DownloadStatus,
+        error: String?,
+        updateTime: Long
+    )
+
+    @Query("update xy_download set status = :status, progress = 100, downloadedBytes = totalBytes, updateTime = :updateTime, filePath = :finalPath WHERE id = :id")
+    suspend fun updateOnSuccess(
+        id: Long,
+        status: DownloadStatus = DownloadStatus.COMPLETED,
+        finalPath: String,
+        updateTime: Long
+    )
+
+    @Query("UPDATE xy_download SET status = :status, updateTime = :updateTime WHERE id IN (:ids)")
+    suspend fun updateStatuses(ids: List<Long>, status: DownloadStatus, updateTime: Long)
+
+
+    @Query("DELETE FROM xy_download WHERE id IN (:id)")
+    suspend fun deleteById(vararg id: Long)
+
+    @Query("DELETE FROM xy_download")
+    suspend fun removeAll()
+
+
+    @Query("SELECT * FROM xy_download WHERE id IN (:ids)")
+    suspend fun getByIds(ids: List<Long>): List<XyDownload>
+
+    @Query("SELECT * FROM xy_download WHERE uid IN (:musicIds) and status = :status and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId)")
+    suspend fun getDataByUids(
+        musicIds: List<String>,
+        status: DownloadStatus = DownloadStatus.COMPLETED,
+        mediaLibraryId: String?
+    ): List<XyDownload>
+
+    @Query("SELECT * FROM xy_download where ((:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) or typeData = :typeData)")
+    suspend fun getAllTasksSuspend(
+        mediaLibraryId: String?,
+        typeData: String? = null
+    ): List<XyDownload>
+
+    @Query("SELECT * FROM xy_download where typeData =:typeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
+    fun getAllTasksFlow(typeData: String, mediaLibraryId: String?): Flow<List<XyDownload>>
+
+    @Query("SELECT * FROM xy_download where typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
+    fun getAllMusicTasksFlow(
+        notTypeData: String? = null,
+        mediaLibraryId: String?
+    ): Flow<List<XyDownload>>
+
+    @Query("SELECT * FROM xy_download where status = :status and typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
+    fun getAllMusicTasksFlow(
+        notTypeData: String,
+        status: DownloadStatus,
+        mediaLibraryId: String?
+    ): Flow<List<XyDownload>>
+
+    @Query("SELECT uid FROM xy_download where status = :status and typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
+    fun getAllMusicTaskUidsFlow(
+        notTypeData: String,
+        status: DownloadStatus = DownloadStatus.COMPLETED,
+        mediaLibraryId: String?
+    ): Flow<List<String>>
+
+    @Query("SELECT count(id) FROM xy_download where status = :status and typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
+    fun getAllMusicTasksCountFlow(
+        notTypeData: String,
+        status: DownloadStatus,
+        mediaLibraryId: String?
+    ): Flow<Int>
+
+    @Query("SELECT count(id) FROM xy_download where status in (:status) and typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
+    fun getAllMusicTasksDownloadCountFlow(
+        notTypeData: String,
+        status: List<DownloadStatus>,
+        mediaLibraryId: String?
+    ): Flow<Int>
+
+    @Query("SELECT * FROM xy_download where typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
+    suspend fun getAllMusicTasks(
+        notTypeData: String,
+        mediaLibraryId: String?
+    ): List<XyDownload>
+
+    @Query("SELECT * FROM xy_download where uid = :uid and typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC limit 1")
+    suspend fun getMusicTaskByUid(
+        notTypeData: String,
+        uid: String,
+        mediaLibraryId: String?
+    ): XyDownload?
+
+    @Query("SELECT * FROM xy_download where uid = :uid and typeData != :notTypeData and status = :status and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC limit 1")
+    suspend fun getMusicCompleteTaskByUid(
+        uid: String,
+        notTypeData: String,
+        status: DownloadStatus = DownloadStatus.COMPLETED,
+        mediaLibraryId: String?
+    ): XyDownload?
+
+    @Query("select * from xy_download where typeData = :typeData and url = :url and status != :notStatus limit 1")
+    suspend fun getByTypeAndUrl(
+        typeData: String,
+        url: String,
+        notStatus: DownloadStatus = DownloadStatus.CANCEL
+    ): XyDownload?
+
+
+    @Query("SELECT * FROM xy_download where typeData = :typeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC limit 1")
+    fun getOneFlow(typeData: String, mediaLibraryId: String?): Flow<XyDownload?>
+
+    @Query("SELECT * FROM xy_download where typeData = :typeData and status != :notStatus ORDER BY createTime DESC limit 1")
+    fun getOneApkFlow(
+        typeData: String,
+        notStatus: DownloadStatus = DownloadStatus.CANCEL
+    ): Flow<XyDownload?>
+
+    @Query("SELECT * FROM xy_download where typeData = :typeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC limit 1")
+    suspend fun getOne(typeData: String, mediaLibraryId: String?): XyDownload?
+}

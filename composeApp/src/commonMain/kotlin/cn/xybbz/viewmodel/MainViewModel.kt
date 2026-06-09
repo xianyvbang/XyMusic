@@ -1,0 +1,213 @@
+﻿/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.viewmodel
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import cn.xybbz.common.utils.DateUtil
+import cn.xybbz.common.utils.Log
+import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.config.music.PlayerEventCoordinator
+import cn.xybbz.config.select.SelectControl
+import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.config.setting.TranscodingState
+import cn.xybbz.entity.data.PlayerTypeData
+import cn.xybbz.localdata.config.LocalDatabaseClient
+import cn.xybbz.localdata.data.era.XyEraItem
+import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.enums.PlayerModeEnum
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import org.koin.core.annotation.KoinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.era_title_decade
+import xymusic_kmp.composeapp.generated.resources.list_loop
+import xymusic_kmp.composeapp.generated.resources.repeat_24px
+import xymusic_kmp.composeapp.generated.resources.repeat_one_24px
+import xymusic_kmp.composeapp.generated.resources.shuffle_24px
+import xymusic_kmp.composeapp.generated.resources.shuffle_play
+import xymusic_kmp.composeapp.generated.resources.single_loop
+
+
+@KoinViewModel
+class MainViewModel(
+    val db: LocalDatabaseClient,
+    private val musicController: MusicCommonController,
+    val settingsManager: SettingsManager,
+    private val playerEventCoordinator: PlayerEventCoordinator,
+    val selectControl: SelectControl,
+    private val musicPlayContext:MusicPlayContext
+) : ViewModel() {
+
+    var eraItemList by mutableStateOf<List<XyEraItem>>(emptyList())
+        private set
+
+    //从1900年到当前年份的set列表
+    val yearSet by mutableStateOf(DateUtil.getYearSet())
+
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
+    // 播放页推荐歌曲状态，直接透传协调器中的同一份状态源
+    val recommendationStateFlow = playerEventCoordinator.recommendationStateFlow
+    // 播放列表下一页加载状态
+    val ifNextPageNumListFlow = musicPlayContext.ifNextPageNumListFlow
+
+
+    init {
+        Log.i("=====", "MainViewModel初始化")
+        //初始化年代数据
+        initEraData()
+        //初始化版本信息获取
+        initGetVersionInfo()
+        //设置转码监听
+        initTranscodeListener()
+    }
+
+    //region 音乐循环类型
+    val iconList by mutableStateOf(
+        listOf(
+            PlayerTypeData(icon = Res.drawable.repeat_one_24px, message = Res.string.single_loop),
+            PlayerTypeData(icon = Res.drawable.repeat_24px, message = Res.string.list_loop),
+            PlayerTypeData(icon = Res.drawable.shuffle_24px, message = Res.string.shuffle_play),
+        )
+    )
+
+
+    fun setNowPlayerTypeData() {
+        Log.i("=====", "当前播放类型${musicController.playMode}")
+
+        when (musicController.playMode) {
+            PlayerModeEnum.RANDOM_PLAY -> musicController.setPlayTypeData(PlayerModeEnum.SINGLE_LOOP)
+            PlayerModeEnum.SINGLE_LOOP -> musicController.setPlayTypeData(PlayerModeEnum.SEQUENTIAL_PLAYBACK)
+            PlayerModeEnum.SEQUENTIAL_PLAYBACK -> musicController.setPlayTypeData(
+                PlayerModeEnum.RANDOM_PLAY
+            )
+        }
+    }
+
+    //endregion
+
+    /**
+     * 初始化年代数据
+     */
+    private fun initEraData() {
+        viewModelScope.launch {
+            val eraStart = 1970
+            //当前年代
+            val year = DateUtil.thisYear()
+            val era = (year / 10) * 10
+
+            val eraItemList = db.eraItemDao.selectList()
+            if (eraItemList.isEmpty()) {
+                val eraList = mutableListOf<XyEraItem>()
+                //生成数据
+                val num = (era - eraStart) / 10
+                for (index in 0..num) {
+                    val years = mutableListOf<Int>()
+                    val thisEra = eraStart + index * 10
+
+                    for (i in 0 until 10) {
+                        years.add((thisEra + i))
+                    }
+                    eraList.add(
+                        XyEraItem(
+                            title = "$thisEra",
+                            era = thisEra,
+                            years = years
+                        )
+                    )
+
+                }
+                db.eraItemDao.saveBatch(eraList)
+                Log.i("=====", "当前的年代: $era")
+            } else {
+                val earItem = db.eraItemDao.selectOneByEra(era)
+                if (earItem != null) {
+                    val years = earItem.years
+                    val yearsNew = mutableListOf<String>()
+                    if (!years.contains(year)) {
+                        for (i in 0 until 10) {
+                            yearsNew.add((era + i).toString())
+                        }
+                        db.eraItemDao.updateById(
+                            earItem.copy(
+                                years = years
+                            )
+                        )
+                    }
+
+                } else {
+                    val years = mutableListOf<Int>()
+                    for (i in 0 until 10) {
+                        years.add((era + i))
+                    }
+                    db.eraItemDao.saveBatch(
+                        XyEraItem(
+                            title = getString(Res.string.era_title_decade, era),
+                            era = era,
+                            years = years
+                        )
+                    )
+
+                }
+            }
+            getEraList()
+        }
+    }
+
+
+    /**
+     * 获得年代数据
+     */
+    private suspend fun getEraList() {
+        eraItemList = db.eraItemDao.selectList()
+    }
+
+    /**
+     * 初始化版本信息获取
+     */
+    fun initGetVersionInfo() {
+//        versionCheckScheduler.enqueueIfNeeded()
+    }
+
+    fun initTranscodeListener() {
+        viewModelScope.launch {
+            settingsManager.transcodingFlow.collect {
+                if (it is TranscodingState.NetWorkChange && (settingsManager.get().ifTranscoding
+                            || settingsManager.get().mobileNetworkAudioBitRate
+                            == settingsManager.get().wifiNetworkAudioBitRate
+                            )
+                ) {
+                    return@collect
+                }
+                // 转码配置变化后，需要让当前播放列表中的地址重新替换为最新策略。
+                musicPlayContext.changeMusicPlaylist()
+            }
+        }
+    }
+
+    fun updateIfShowSnackBar(ifShowSnackBar: Boolean) {
+        settingsManager.updateIfShowSnackBar(ifShowSnackBar)
+    }
+
+}
+

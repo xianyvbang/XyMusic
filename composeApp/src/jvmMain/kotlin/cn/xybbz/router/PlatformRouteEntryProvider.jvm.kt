@@ -1,0 +1,85 @@
+package cn.xybbz.router
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.Composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import cn.xybbz.ui.screens.ConnectionScreen
+import cn.xybbz.ui.screens.HomeScreen
+import cn.xybbz.ui.screens.JvmAboutScreen
+import cn.xybbz.ui.screens.JvmAlbumInfoScreen
+import cn.xybbz.ui.screens.JvmAlbumScreen
+import cn.xybbz.ui.screens.JvmArtistInfoScreen
+import cn.xybbz.ui.screens.JvmArtistScreen
+import cn.xybbz.ui.screens.JvmCacheLimitScreen
+import cn.xybbz.ui.screens.JvmConnectionConfigInfoScreen
+import cn.xybbz.ui.screens.JvmConnectionManagement
+import cn.xybbz.ui.screens.JvmCustomApiScreen
+import cn.xybbz.ui.screens.JvmDailyRecommendScreen
+import cn.xybbz.ui.screens.JvmDownloadScreen
+import cn.xybbz.ui.screens.JvmFavoriteScreen
+import cn.xybbz.ui.screens.JvmGenresInfoScreen
+import cn.xybbz.ui.screens.JvmGenresScreen
+import cn.xybbz.ui.screens.JvmInterfaceSettingScreen
+import cn.xybbz.ui.screens.JvmLanguageConfigScreen
+import cn.xybbz.ui.screens.JvmLocalScreen
+import cn.xybbz.ui.screens.JvmMemoryManagementScreen
+import cn.xybbz.ui.screens.JvmMusicScreen
+import cn.xybbz.ui.screens.JvmProxyConfigScreen
+import cn.xybbz.ui.screens.JvmSearchScreen
+import cn.xybbz.ui.screens.JvmSelectLibraryScreen
+import cn.xybbz.ui.screens.JvmSetBackgroundImageScreen
+import cn.xybbz.ui.screens.JvmSettingScreen
+import cn.xybbz.ui.screens.JvmStreamingQualityScreen
+
+private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.desktopNode(noinline content: @Composable (T) -> Unit) {
+    entry<T> {
+        Box {
+            content(it)
+        }
+    }
+}
+
+private val jvmDesktopEntryProvider = buildDefaultRouteEntryProvider()
+
+
+private val jvmDesktopEntryProvider2 = entryProvider {
+    desktopNode<Connection> { ConnectionScreen(it.connectionUiType) }
+    desktopNode<Home> { HomeScreen() }
+    desktopNode<Search> { JvmSearchScreen(searchQuery = it.searchQuery) }
+    desktopNode<Music> { JvmMusicScreen() }
+    desktopNode<Album> { JvmAlbumScreen() }
+    desktopNode<Artist> { JvmArtistScreen() }
+    desktopNode<FavoriteList> { JvmFavoriteScreen() }
+    desktopNode<AlbumInfo> { JvmAlbumInfoScreen(it.itemId, it.dataType) }
+    desktopNode<ArtistInfo> { JvmArtistInfoScreen(it.artistId, it.artistName) }
+
+    desktopNode<Setting> { JvmSettingScreen() }
+    desktopNode<ConnectionManagement> { JvmConnectionManagement() }
+    desktopNode<ConnectionInfo> { JvmConnectionConfigInfoScreen(connectionId = it.connectionId) }
+    desktopNode<MemoryManagement> { JvmMemoryManagementScreen() }
+    desktopNode<InterfaceSetting> { JvmInterfaceSettingScreen(showBackButton = false) }
+    desktopNode<LanguageConfig> { JvmLanguageConfigScreen() }
+    desktopNode<Genres> { JvmGenresScreen() }
+    desktopNode<GenreInfo> { JvmGenresInfoScreen(genreId = it.genreId) }
+    desktopNode<About> { JvmAboutScreen() }
+    desktopNode<CacheLimit> { JvmCacheLimitScreen() }
+    desktopNode<SelectLibrary> {
+        JvmSelectLibraryScreen(
+            connectionId = it.connectionId,
+            thisLibraryId = it.libraryIds,
+            showBackButton = false
+        )
+    }
+    desktopNode<DailyRecommend> { JvmDailyRecommendScreen() }
+    desktopNode<Download> { JvmDownloadScreen() }
+    desktopNode<Local> { JvmLocalScreen() }
+    desktopNode<SetBackgroundImage> { JvmSetBackgroundImageScreen() }
+    desktopNode<ProxyConfig> { JvmProxyConfigScreen() }
+    desktopNode<StreamingQuality> { JvmStreamingQualityScreen() }
+    desktopNode<CustomApi> { JvmCustomApiScreen() }
+}
+
+actual val platformEntryProvider: (NavKey) -> NavEntry<NavKey> = jvmDesktopEntryProvider2

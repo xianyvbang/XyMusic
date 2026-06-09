@@ -1,0 +1,420 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.viewmodel
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.state.Source
+import cn.xybbz.assembler.MusicPlayAssembler
+import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.constants.RemoteIdConstants
+import cn.xybbz.common.enums.DownloadTypes
+import cn.xybbz.common.enums.HomeRefreshReason
+import cn.xybbz.common.enums.LoginType
+import cn.xybbz.common.utils.DataRefreshEstimateUtils
+import cn.xybbz.common.utils.DataSourceChangeUtils
+import cn.xybbz.common.utils.Log
+import cn.xybbz.config.HomeDataRepository
+import cn.xybbz.config.download.enqueueMusicDownload
+import cn.xybbz.config.ifLoadHomeRefreshAuxiliaryData
+import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.config.recommender.DailyRecommender
+import cn.xybbz.download.DownloaderManager
+import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.download.enums.DownloadStatus
+import cn.xybbz.entity.data.music.OnMusicPlayParameter
+import cn.xybbz.localdata.config.LocalDatabaseClient
+import cn.xybbz.localdata.data.connection.ConnectionConfig
+import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.enums.PlayerModeEnum
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
+import org.koin.core.annotation.KoinViewModel
+
+@KoinViewModel
+class HomeViewModel(
+    private val db: LocalDatabaseClient,
+    private val downloadDb: DownloadDatabaseClient,
+    val dataSourceManager: DataSourceManager,
+    val musicPlayContext: MusicPlayContext,
+    val musicController: MusicCommonController,
+    private val dailyRecommender: DailyRecommender,
+    val homeDataRepository: HomeDataRepository,
+    private val downloaderManager: DownloaderManager,
+) : ViewModel() {
+
+    var isRefreshing by mutableStateOf(false)
+        private set
+
+    /**
+     * 本地音乐数量
+     */
+    var localCount by mutableStateOf<String?>(null)
+        private set
+
+    /**
+     * 下载中的任务的数量
+     */
+    var downloadCount by mutableIntStateOf(0)
+        private set
+
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
+
+
+    /**
+     * 所有链接信息
+     */
+    var connectionList by mutableStateOf<List<ConnectionConfig>>(emptyList())
+        private set
+
+    private var localMusicCountJob: Job? = null
+    private var downloadCountJob: Job? = null
+
+
+    init {
+        observeLoginSuccess()
+        observeLoginSuccessRoomData()
+        getConnectionListData()
+        initLoginChangeMonitor()
+    }
+
+    /**
+     * 监听登录状态加载数据
+     */
+    private fun initLoginChangeMonitor() {
+        viewModelScope.launch {
+            homeDataRepository.initLoginChangeMonitor()
+        }
+    }
+
+    private fun observeLoginSuccessRoomData() {
+        viewModelScope.launch {
+            startHomeDataObservers()
+        }
+    }
+
+    private fun startHomeDataObservers() {
+        startDownloadDataObservers()
+    }
+
+    /**
+     * 监听当前连接下的下载统计。
+     * 连接 ID 由 DataSourceManager 恢复本地上下文后发出，避免首页初始化时直接读取未恢复的数据源。
+     */
+    private fun startDownloadDataObservers() {
+        // 取消之前的 Job，避免重复监听
+        localMusicCountJob?.cancel()
+        downloadCountJob?.cancel()
+
+        // 本地音乐数量；切换连接时 collectLatest 会自动取消旧连接的统计监听。
+        localMusicCountJob = viewModelScope.launch {
+            dataSourceManager.connectionIdFlow
+                .filter { it != 0L }
+                .collectLatest { connectionId ->
+                    downloadDb.downloadDao
+                        .getAllMusicTasksCountFlow(
+                            notTypeData = DownloadTypes.APK.toString(),
+                            status = DownloadStatus.COMPLETED,
+                            mediaLibraryId = connectionId.toString()
+                        )
+                        .collect { count ->
+                            localCount = if (count == 0) null else count.toString()
+                        }
+                }
+        }
+
+        // 下载列表数量；等待有效连接 ID 后再创建数据库 Flow。
+        downloadCountJob = viewModelScope.launch {
+            dataSourceManager.connectionIdFlow
+                .filter { it != 0L }
+                .collectLatest { connectionId ->
+                    downloadDb.downloadDao
+                        .getAllMusicTasksDownloadCountFlow(
+                            notTypeData = DownloadTypes.APK.toString(),
+                            status = listOf(DownloadStatus.QUEUED, DownloadStatus.DOWNLOADING),
+                            mediaLibraryId = connectionId.toString()
+                        )
+                        .collect { count ->
+                            downloadCount = count
+                        }
+                }
+        }
+    }
+
+    /**
+     * 保存歌单
+     * @param [name] 歌单名称
+     */
+    suspend fun savePlaylist(name: String) {
+        dataSourceManager.addPlaylist(name)
+    }
+
+
+    /**
+     * 修改歌单名称
+     * @param [id] ID
+     * @param [name] 名称
+     */
+    fun editPlaylistName(id: String, name: String) {
+        viewModelScope.launch {
+            dataSourceManager.editPlaylistName(id, name)
+        }
+    }
+
+    /**
+     * 删除歌单
+     * @param [id] ID
+     */
+    fun removePlaylist(id: String) {
+        viewModelScope.launch {
+            dataSourceManager.removePlaylist(id)
+        }
+    }
+
+    /**
+     * 获得服务端歌单
+     * @param [force] 是否按用户手动刷新语义请求歌单。
+     */
+    suspend fun getServerPlaylists(force: Boolean = false) {
+        dataSourceManager.refreshPlaylistsIfNeeded(force)
+    }
+
+    /**
+     * 手动刷新
+     */
+    fun onManualRefresh() {
+        viewModelScope.launch {
+            tryRefreshHome(
+                isRefresh = true,
+                reason = HomeRefreshReason.Manual
+            )
+        }
+    }
+
+    /**
+     * 登陆成功后监听一次
+     */
+    private fun observeLoginSuccess() {
+        viewModelScope.launch {
+
+            /*dataSourceManager.combinedFlow.collect {
+                val reason =
+                    if (oldCombined?.second != it.second) {
+                        HomeRefreshReason.Manual
+                    } else {
+                        HomeRefreshReason.Login
+                    }
+                oldCombined = it
+                Log.i("home", "登录数据变化22222${it}--- ${reason}")
+                tryRefreshHome(
+                    isRefresh = true,
+                    reason = reason
+                )
+            }*/
+
+            dataSourceManager.mergeFlow.collect {
+                val reason = when (it) {
+                    is Source.Login ->
+                        HomeRefreshReason.Login
+
+                    is Source.Library ->
+                        HomeRefreshReason.Manual
+                }
+
+                Log.i("home", "登录数据变化22222${it}--- $reason")
+                tryRefreshHome(
+                    isRefresh = true,
+                    reason = reason
+                )
+            }
+
+            /*dataSourceManager.loginStateFlow.collect {
+                Log.i("home", "登录数据变化${it}")
+                tryRefreshHome(
+                    isRefresh = true,
+                    reason = HomeRefreshReason.Manual
+                )
+            }*/
+        }
+    }
+
+    /**
+     * 初始化获得数据
+     */
+    suspend fun tryRefreshHome(
+        isRefresh: Boolean = false,
+        reason: HomeRefreshReason,
+        onEnd: ((Boolean) -> Unit)? = null,
+    ) {
+        val connectionId = dataSourceManager.getConnectionId()
+        val key = RemoteIdConstants.HOME_REFRESH + connectionId
+        if (!DataRefreshEstimateUtils.shouldRefresh(reason, db, key)) {
+            onEnd?.invoke(false)
+            return
+        }
+        refreshDataAll(onEnd, isRefresh, reason)
+        DataRefreshEstimateUtils.updateHomeRefreshTime(connectionId, db, key)
+    }
+
+    /**
+     * 刷新数据
+     * @param [reason] 首页刷新原因，用于区分用户手动下拉和登录自动刷新。
+     */
+    fun refreshDataAll(
+        onEnd: ((Boolean) -> Unit)? = null,
+        isRefresh: Boolean = false,
+        reason: HomeRefreshReason = HomeRefreshReason.EnterHome
+    ) {
+        isRefreshing = true
+        viewModelScope.launch {
+            if (dataSourceManager.ifLoginError) {
+                if (isRefresh) {
+                    autoLogin()
+                }
+            } else {
+                Log.i("home", "开始刷新数据")
+                // 首页基础刷新任务，JVM 端只保留这些核心数据。
+                val refreshTasks = mutableListOf(
+                    async {
+                        dataSourceManager.getMostPlayerMusicList()
+                    },
+                    async {
+                        dataSourceManager.getNewestAlbumList()
+                    },
+                    async {
+                        dataSourceManager.playRecordMusicOrAlbumList()
+                    }
+                )
+
+                if (ifLoadHomeRefreshAuxiliaryData) {
+                    refreshTasks.add(
+                        async {
+                            getServerPlaylists(reason == HomeRefreshReason.Manual)
+                        }
+                    )
+                    refreshTasks.add(
+                        async {
+                            getServerDataCount(reason == HomeRefreshReason.Manual)
+                        }
+                    )
+                }
+
+                if (isRefresh)
+                    launch {
+                        generateRecommendedMusicList()
+                    }
+
+                refreshTasks.awaitAll()
+            }
+            isRefreshing = false
+            onEnd?.invoke(false)
+        }
+    }
+
+    /**
+     * 获取连接信息
+     */
+    private fun getConnectionListData() {
+        viewModelScope.launch {
+            db.connectionConfigDao.selectAllDataFlow().collect {
+                connectionList = it
+            }
+        }
+    }
+
+    /**
+     * 切换连接服务
+     */
+    suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
+        DataSourceChangeUtils.changeDataSource(
+            connectionConfig,
+            dataSourceManager,
+            musicController
+        )
+    }
+
+    /**
+     * 按需刷新服务端统计数量，移动端下拉刷新可请求强制刷新但仍会走短冷却。
+     */
+    private suspend fun getServerDataCount(force: Boolean = false) {
+        dataSourceManager.refreshDataInfoCountIfNeeded(dataSourceManager.getConnectionId(), force)
+    }
+
+    private suspend fun generateRecommendedMusicList() {
+        try {
+            Log.i("DailyRecommender", "生成每日推荐")
+            dailyRecommender.generate()
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "生成每日推荐错误", e)
+        }
+    }
+
+    /**
+     * 播放音乐列表
+     * @param [musicList] 音乐清单
+     * @param [onMusicPlayParameter] 关于音乐播放参数
+     * @param [playerModeEnum] 播放顺序类型
+     */
+    fun musicList(
+        onMusicPlayParameter: OnMusicPlayParameter,
+        musicList: List<XyMusic>,
+        playerModeEnum: PlayerModeEnum? = null
+    ) {
+        viewModelScope.launch {
+            val playMusicList = MusicPlayAssembler.toPlayMusicList(
+                musicList = musicList,
+                downloadDb = downloadDb,
+                mediaLibraryId = dataSourceManager.getConnectionId().toString()
+            ) ?: emptyList()
+            musicPlayContext.musicList(
+                onMusicPlayParameter,
+                playMusicList,
+                playerModeEnum
+            )
+        }
+    }
+
+    fun toggleFavorite(itemId: String) {
+        musicController.invokingOnFavorite(itemId)
+    }
+
+    fun downloadMusic(musicData: XyMusic) {
+        viewModelScope.launch {
+            downloaderManager.enqueueMusicDownload(musicData, dataSourceManager)
+        }
+    }
+
+    fun autoLogin() {
+        viewModelScope.launch {
+            dataSourceManager.serverLogin(
+                LoginType.API,
+                db.connectionConfigDao.selectConnectionConfig())
+        }
+    }
+}

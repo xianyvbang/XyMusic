@@ -1,0 +1,612 @@
+﻿/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.ui.components
+
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.captionBar
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.compositionLocal.LocalPlayerChromeState
+import cn.xybbz.config.image.rememberPlayMusicCoverUrls
+import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.entity.data.ext.joinToString
+import cn.xybbz.localdata.data.music.XyPlayMusic
+import cn.xybbz.localdata.enums.PlayerModeEnum
+import cn.xybbz.ui.components.lrc.LrcViewNewCompose
+import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.ModalBottomSheetExtendFillMaxSizeComponent
+import cn.xybbz.ui.xy.XyColumn
+import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.viewmodel.MusicPlayerViewModel
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.album_cover
+import xymusic_kmp.composeapp.generated.resources.close_player_screen
+import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
+import xymusic_kmp.composeapp.generated.resources.more_vert_24px
+import xymusic_kmp.composeapp.generated.resources.music_list
+import xymusic_kmp.composeapp.generated.resources.next_track
+import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
+import xymusic_kmp.composeapp.generated.resources.pause
+import xymusic_kmp.composeapp.generated.resources.pause_24px
+import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
+import xymusic_kmp.composeapp.generated.resources.playing
+import xymusic_kmp.composeapp.generated.resources.previous_track
+import xymusic_kmp.composeapp.generated.resources.queue_music_24px
+import xymusic_kmp.composeapp.generated.resources.skip_next_24px
+import xymusic_kmp.composeapp.generated.resources.skip_previous_24px
+import xymusic_kmp.composeapp.generated.resources.unknown_artist
+import kotlin.math.roundToInt
+import cn.xybbz.ui.xy.XyIconButton as IconButton
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MusicPlayerComponent(
+    music: XyPlayMusic,
+    picByte: ByteArray? = null,
+    sheetStateR: SheetState,
+    toNext: () -> Unit,
+    backNext: () -> Unit,
+    onSetState: (Boolean) -> Unit
+) {
+    // 完整播放器页通过播放器外壳状态控制显隐和关闭后的标题跑马灯。
+    val playerChromeState = LocalPlayerChromeState.current
+    // 收集完整播放器页显隐状态，供底部弹层同步显示或隐藏。
+    val isPlayerSheetVisible by playerChromeState.isPlayerSheetVisibleFlow.collectAsStateWithLifecycle()
+    val coroutineScope = rememberCoroutineScope()
+    /*  val sheetStateR = rememberModalBottomSheetState(
+          skipPartiallyExpanded = true
+      )*/
+
+    val horPagerState =
+        rememberPagerState {
+            3
+        }
+    val listState = rememberLazyListState()
+    val similarPopularListState = rememberLazyListState()
+
+    val bottomSheetScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                // 这里你可以根据需要自定义滚动逻辑
+                if (horPagerState.currentPage == 1)
+                    listState.dispatchRawDelta(-available.y)
+                else if (horPagerState.currentPage == 2)
+                    similarPopularListState.dispatchRawDelta(-available.y)
+                return Offset(0f, available.y)  // 表示不消费滚动事件
+            }
+        }
+    }
+
+    ModalBottomSheetExtendFillMaxSizeComponent(
+        modifier = Modifier.nestedScroll(bottomSheetScrollConnection),
+        bottomSheetState = sheetStateR,
+        onIfDisplay = { isPlayerSheetVisible },
+        onClose = {
+            // 下滑或外部关闭完整播放器时恢复迷你播放条标题滚动，并同步隐藏共享播放器页状态。
+            playerChromeState.putMarqueeIterations(1)
+            playerChromeState.hidePlayerSheet()
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = { WindowInsets.captionBar },
+    ) {
+        MusicPlayerScreen(
+            musicDetail = music,
+            picByte = picByte,
+            onCloseSheet = {
+                coroutineScope.launch {
+                    sheetStateR.hide()
+                }.invokeOnCompletion {
+                    // 点击播放器内关闭按钮后恢复迷你播放条标题滚动，并同步隐藏共享播放器页状态。
+                    playerChromeState.putMarqueeIterations(1)
+                    playerChromeState.hidePlayerSheet()
+                }
+            },
+            onSeekToNext = toNext,
+            onSeekBack = backNext,
+            onSetState = onSetState,
+            lrcListState = listState,
+            similarPopularListState = similarPopularListState,
+            horPagerState = horPagerState
+        )
+    }
+}
+
+
+/**
+ * 播放页面弹窗
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MusicPlayerScreen(
+    musicDetail: XyPlayMusic,
+    picByte: ByteArray? = null,
+    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel<MusicPlayerViewModel>(),
+    onCloseSheet: () -> Unit,
+    onSeekToNext: () -> Unit,
+    onSeekBack: () -> Unit,
+    onSetState: (Boolean) -> Unit,
+    lrcListState: LazyListState = rememberLazyListState(),
+    similarPopularListState: LazyListState = rememberLazyListState(),
+    horPagerState: PagerState
+) {
+
+
+    val cacheScheduleData by musicPlayerViewModel.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
+    val musicInfo by musicPlayerViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
+    val coverRefreshVersion by musicPlayerViewModel.musicController.coverRefreshVersionFlow.collectAsStateWithLifecycle()
+    val originMusicList by musicPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
+    val lrcState by musicPlayerViewModel.lrcStateFlow.collectAsStateWithLifecycle()
+    val favoriteList by musicPlayerViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val coverUrls = rememberPlayMusicCoverUrls(
+        musicDetail,
+        coverRefreshVersion
+    )
+    val coverModels = resolvePlayerCoverModels(coverUrls, picByte)
+
+    val coroutineScope = rememberCoroutineScope()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        PlayerCoverImage(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxSize(),
+            model = coverModels.model,
+            backModel = coverModels.backModel,
+            alpha = 0.2f,
+            contentDescription = stringResource(Res.string.album_cover),
+        )
+        XyColumnScreen(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(
+                    top = WindowInsets.statusBars.asPaddingValues()
+                        .calculateTopPadding()
+                ),
+            background = Color.Transparent
+        ) {
+            TopAppBarComponent(
+                modifier = Modifier,
+                title = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        musicPlayerViewModel.dataList.forEachIndexed { index, item ->
+
+                            TextButton(onClick = {
+                                coroutineScope
+                                    .launch {
+                                        horPagerState.animateScrollToPage(index)
+                                    }
+                            }) {
+                                Text(
+                                    text = stringResource(item),
+                                    maxLines = 2,
+                                    color = if (horPagerState.currentPage == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = {
+                            onCloseSheet()
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.keyboard_arrow_down_24px),
+                            contentDescription = stringResource(Res.string.close_player_screen)
+                        )
+                    }
+                }, actions = {
+                    IconButton(
+                        onClick = {
+                        },
+                    ) {
+                        // todo 加个隐藏按钮操作,打开开发者页面
+                    }
+                }
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Transparent),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                HorizontalPager(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(4f),
+                    state = horPagerState,
+                    // 在底部弹窗里关闭 Pager 的边缘回弹，避免翻页落位后再次左右抖动
+                    overscrollEffect = null
+                ) { page ->
+                    when (page) {
+                        0 -> {
+                            Box(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                PlayerCoverImage(
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .size(300.dp)
+                                        .clip(
+                                            CircleShape
+                                        ),
+                                    model = coverModels.model,
+                                    backModel = coverModels.backModel,
+                                    /*.graphicsLayer(rotationZ = rotationState)*/
+                                    contentDescription = stringResource(Res.string.album_cover),
+                                )
+                            }
+
+                        }
+
+                        1 -> {
+                            LrcViewNewCompose(
+                                listState = lrcListState,
+                                onSetLrcOffset = { offsetMs ->
+                                    // 歌词偏移保存统一收口到播放器 ViewModel，避免页面直接写 LrcServer。
+                                    musicPlayerViewModel.updateLyricsOffset(offsetMs)
+                                }
+                            )
+                        }
+
+                        else -> {
+                            MusicPlayerSimilarPopularComponent(
+                                listState = similarPopularListState,
+                                onFavoriteSet = { emptySet() },
+                                onDownloadMusicIds = { emptyList() },
+                                playMusicList = originMusicList,
+                                onAddPlayMusic = { musicPlayerViewModel.addNextPlayer(it) }
+                            )
+                        }
+                    }
+                }
+
+
+                XyColumn(
+                    verticalArrangement = Arrangement.Bottom,
+                    modifier = Modifier
+                    /*.weight(2.8f)*/,
+                    paddingValues = PaddingValues(0.dp),
+                    clipSize = 0.dp,
+                    backgroundColor = Color.Transparent
+                ) {
+//                    Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
+                    XyRow {
+                        Column(
+                            modifier = Modifier
+                                .width(200.dp)
+                        ) {
+                            Text(
+                                text = musicDetail.name,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.W700,
+                                lineHeight = 31.86.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Visible,
+                                modifier = Modifier
+                                    .basicMarquee(iterations = Int.MAX_VALUE)
+                            )
+
+                            Text(
+                                text = if (musicDetail.artists.isNullOrEmpty()) stringResource(Res.string.unknown_artist) else musicDetail.artists?.joinToString()
+                                    ?: "",
+                                color = Color(0xff7B7B8B),
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.W400,
+                                lineHeight = 15.93.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.basicMarquee(
+                                    iterations = 0
+                                )
+                            )
+                        }
+
+                        FavoriteMusicIconComponent(
+                            musicDetail = musicDetail,
+                            musicController = musicPlayerViewModel.musicController,
+                            onFavoriteMusicIdSet = { favoriteList }
+                        )
+                        IconButton(
+                            modifier = Modifier.offset(x = (10).dp),
+                            onClick = {
+                                coroutineScope.launch {
+                                    val itemId =
+                                        musicInfo?.itemId
+                                    itemId?.let {
+                                        musicPlayerViewModel.dataSourceManager.selectMusicInfoById(
+                                            it
+                                        )?.show()
+                                    }
+                                }
+                            },
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.more_vert_24px),
+                                contentDescription = "${musicInfo?.name}${
+                                    stringResource(
+                                        Res.string.other_operations_button_suffix
+                                    )
+                                }"
+                            )
+                        }
+                    }
+                    AnimatedVisibility(
+                        visible = !lrcState.lrcText.isNullOrBlank() && horPagerState.currentPage == 0
+                    ) {
+                        XyRow(modifier = Modifier/*.height(30.dp)*/) {
+                            LrcViewOneComponent(lrcText = lrcState.lrcText)
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        PlayerCurrentPosition(
+                            musicController = musicPlayerViewModel.musicController,
+                            onCacheProgress = {
+                                cacheScheduleData
+                            })
+                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+                        XyRow(modifier = Modifier/*.weight(1f)*/) {
+                            PlayerTypeComponent(musicController = musicPlayerViewModel.musicController)
+                            Icon(
+                                painter = painterResource(Res.drawable.skip_previous_24px),
+                                contentDescription = stringResource(Res.string.previous_track),
+                                modifier = Modifier
+                                    .size(30.dp, 35.dp)
+                                    .debounceClickable {
+                                        coroutineScope.launch {
+                                            onSeekBack()
+                                        }
+                                    }
+                            )
+
+                            PlayerStateComponent(musicController = musicPlayerViewModel.musicController)
+
+                            Icon(
+                                painter = painterResource(Res.drawable.skip_next_24px),
+                                contentDescription = stringResource(Res.string.next_track),
+                                modifier = Modifier
+                                    .size(30.dp, 35.dp)
+                                    .debounceClickable {
+                                        coroutineScope.launch {
+                                            onSeekToNext()
+                                        }
+                                    }
+                            )
+
+                            IconButton(
+                                onClick = {
+                                    if (originMusicList.isNotEmpty()) {
+                                        onSetState(true)
+                                    }
+                                },
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.queue_music_24px),
+                                    contentDescription = stringResource(Res.string.music_list)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding * 4))
+                    }
+                }
+
+            }
+
+        }
+    }
+
+}
+
+/**
+ * 播放类型
+ */
+@Composable
+private fun PlayerTypeComponent(
+    musicController: MusicCommonController
+) {
+    val mainViewModel = LocalMainViewModel.current
+    val playMode by musicController.playModeFlow.collectAsStateWithLifecycle()
+    IconButton(
+        onClick = {
+            mainViewModel.setNowPlayerTypeData()
+        },
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            if (playMode.code == PlayerModeEnum.SINGLE_LOOP.code) {
+                Text(text = "1", fontSize = 10.sp)
+            }
+            Icon(
+                painter = painterResource(mainViewModel.iconList[playMode.code].icon),
+                contentDescription = stringResource(mainViewModel.iconList[playMode.code].message),
+            )
+        }
+
+    }
+}
+
+/**
+ * 音乐进度
+ */
+@Composable
+private fun PlayerCurrentPosition(
+    musicController: MusicCommonController,
+    onCacheProgress: () -> Float
+) {
+
+    val currentPosition by musicController.progressStateFlow.collectAsStateWithLifecycle()
+    val duration by musicController.durationFlow.collectAsStateWithLifecycle()
+
+    XyColumn(
+        backgroundColor = Color.Transparent,
+        clipSize = 0.dp
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+
+            MusicProgressBar(
+                currentTime = currentPosition,
+                progressStateFlow = musicController.progressStateFlow,
+                totalTime = duration,
+                cacheProgress = onCacheProgress(),
+                onProgressChanged = { newProgress ->
+                    musicController.seekTo(
+                        (duration * newProgress).roundToInt().toLong()
+                    )
+                })
+        }
+    }
+}
+
+/**
+ * 音乐状态
+ */
+@Composable
+fun PlayerStateComponent(
+    size: Dp = 60.dp,
+    musicController: MusicCommonController
+) {
+    val state by musicController.stateFlow.collectAsStateWithLifecycle()
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+    ) {
+
+        Icon(
+            painter = painterResource(
+                if (state == PlayStateEnum.Playing
+                    || state == PlayStateEnum.Loading
+                ) Res.drawable.pause_24px else Res.drawable.play_arrow_24px
+            ),
+            contentDescription = if (state == PlayStateEnum.Playing) stringResource(
+                Res.string.playing
+            ) else stringResource(Res.string.pause),
+            modifier = Modifier
+                .size(size)
+                .clip(CircleShape)
+                .debounceClickable {
+                    if (state != PlayStateEnum.Pause) {
+                        musicController.pause()
+                    } else {
+                        musicController.resume()
+                    }
+
+                }
+        )
+        if (state == PlayStateEnum.Loading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .clip(CircleShape),
+                strokeWidth = size
+            )
+        }
+    }
+}
+
+/**
+ * 音乐收藏
+ */
+@Composable
+private fun FavoriteMusicIconComponent(
+    musicDetail: XyPlayMusic,
+    musicController: MusicCommonController,
+    onFavoriteMusicIdSet: () -> List<String>
+) {
+    FavoriteIconButton(
+        isFavorite = musicDetail.itemId in onFavoriteMusicIdSet(),
+        onClick = {
+            musicController.invokingOnFavorite(musicDetail.itemId)
+        },
+        iconModifier = Modifier.size(60.dp),
+    )
+
+}
+
+

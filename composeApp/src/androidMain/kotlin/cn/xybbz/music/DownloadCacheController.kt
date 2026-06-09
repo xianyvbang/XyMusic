@@ -1,0 +1,356 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.music
+
+import android.annotation.SuppressLint
+import android.content.Context
+import android.util.Log
+import androidx.core.net.toUri
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
+import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.cache.Cache
+import androidx.media3.datasource.cache.CacheDataSink
+import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.cache.SimpleCache
+import androidx.media3.datasource.okhttp.OkHttpDataSource
+import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.offline.Download
+import androidx.media3.exoplayer.offline.DownloadHelper
+import androidx.media3.exoplayer.offline.DownloadManager
+import androidx.media3.exoplayer.offline.DownloadRequest
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
+import cn.xybbz.api.client.CacheApiClient
+import cn.xybbz.config.music.DownloadCacheCommonController
+import cn.xybbz.config.setting.OnSettingsChangeListener
+import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.download.DownloaderManager
+import cn.xybbz.localdata.data.music.XyPlayMusic
+import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.koin.core.component.get
+import java.io.IOException
+import java.util.concurrent.Executors
+
+
+@SuppressLint("UnsafeOptInUsageError")
+class DownloadCacheController(
+    private val context: Context,
+) : DownloadCacheCommonController() {
+
+    private val xyDownloaderManager: DownloaderManager = get()
+
+    val cache: Cache
+    var cacheDataSourceFactory: CacheDataSource.Factory
+    var downloadCacheDataSourceFactory: CacheDataSource.Factory
+    private var cacheDataSource: CacheDataSource
+    private var upstreamDataSourceFactory: DataSource.Factory
+    var downloadManager: DownloadManager
+        private set
+    private val downloadCacheProgressTicker: DownloadCacheProgressTicker
+
+
+//    private val cacheTask: ConcurrentHashMap<String, CacheTask> = ConcurrentHashMap()
+
+    /** 只允许一个任务 */
+    private var download: Download? = null
+    private var currentTaskId: String? = null
+
+    private val cacheDir = resolveAndroidPlaybackCacheDirectory(context, settingsManager)
+    private val defaultCacheDir = defaultAndroidPlaybackCacheDirectory(context)
+
+
+    init {
+        val cacheApiClient: CacheApiClient = get()
+        Log.i("music", "缓存初始化 $cacheDir")
+        // 设置缓存目录和缓存机制，如果不需要清除缓存可以使用NoOpCacheEvictor
+
+        settingsManager.updateCacheFilePath(cacheDir.absolutePath)
+        cache = SimpleCache(
+            cacheDir,
+            //读取配置
+//            LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024)
+            XyCacheEvictor(settingsManager), ExampleDatabaseProvider(context)
+        )
+
+        // 根据缓存目录创建缓存数据源
+        val factory = DefaultDataSource.Factory(
+            context,
+            OkHttpDataSource.Factory(cacheApiClient.okhttpClientFunction())
+        )
+        upstreamDataSourceFactory = XyDefaultDataSourceFactory(
+            factory,
+            baseUrlProvider = { settingsManager.baseUrl.value },
+            downloadDirectoryProvider = { xyDownloaderManager.config.finalDirectory }
+        )
+        cacheDataSourceFactory = CacheDataSource.Factory()
+            .setCache(cache)
+            .setUpstreamDataSourceFactory(
+                upstreamDataSourceFactory
+            ).setCacheWriteDataSinkFactory(null)
+            .setCacheWriteDataSinkFactory(
+                CacheDataSink.Factory()
+                    .setCache(cache)
+                    .setFragmentSize(2 * 1024 * 1024) // 2MB 分片写入
+            )
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+
+        downloadCacheDataSourceFactory = CacheDataSource.Factory()
+            .setCache(cache)
+            .setUpstreamDataSourceFactory(
+                upstreamDataSourceFactory
+            )
+            .setCacheWriteDataSinkFactory(
+                CacheDataSink.Factory()
+                    .setCache(cache)
+                    .setFragmentSize(2 * 1024 * 1024) // 2MB 分片写入
+            )
+
+        cacheDataSource = cacheDataSourceFactory.createDataSource()
+
+
+        downloadManager =
+            DownloadManager(
+                context,
+                StandaloneDatabaseProvider(context),
+                cache,
+                downloadCacheDataSourceFactory,
+                Executors.newFixedThreadPool( /* nThreads= */6)
+            )
+
+        downloadManager.addListener(object : DownloadManager.Listener {
+            override fun onIdle(downloadManager: DownloadManager) {
+                getCacheSize()
+            }
+        })
+
+        downloadCacheProgressTicker = DownloadCacheProgressTicker(
+            this,
+            1000L,
+            {
+                Log.i("music", "缓存进度 $it")
+//                切换当前数据源?
+                updateCacheSchedule(it / 100.0f)
+            }
+        )
+
+        settingsManager.setOnListener(object : OnSettingsChangeListener {
+            override fun onCacheMaxBytesChanged(
+                cacheUpperLimit: CacheUpperLimitEnum,
+                oldCacheUpperLimit: CacheUpperLimitEnum
+            ) {
+                if (cacheUpperLimit == CacheUpperLimitEnum.No) {
+                    clearCache()
+                }
+            }
+
+        })
+    }
+
+    override fun cacheMedia(
+        music: XyPlayMusic,
+        ifStatic: Boolean
+    ) {
+        if (settingsManager.get().cacheUpperLimit == CacheUpperLimitEnum.No || !settingsManager.get().ifEnableEdgeDownload) return
+
+        val itemId = getCacheKey(music.itemId)
+        val url = music.musicUrl
+        scope.launch(Dispatchers.IO) {
+            Log.i("music", "开始缓存1 ${music.name}")
+            /** 切换缓存 → 取消旧任务 */
+            if (currentTaskId != null && currentTaskId != itemId) {
+                cancelCurrentCache()
+            }
+            val nowIfStatic = when (settingsManager.get().dataSourceType?.ifHls) {
+                true if !ifStatic -> false
+                false if !ifStatic
+                    -> true
+
+                else -> ifStatic
+            }
+            startNewCacheLocked(itemId, url, nowIfStatic)
+        }
+    }
+
+    private fun startNewCacheLocked(
+        itemId: String,
+        url: String,
+        ifStatic: Boolean
+    ) {
+        currentTaskId = itemId
+        val oldDownload = downloadManager.downloadIndex.getDownload(itemId)
+        if (oldDownload != null) {
+            download = oldDownload
+            updateCacheSchedule(oldDownload.percentDownloaded / 100.0f)
+            if (oldDownload.percentDownloaded == 100f) {
+                return
+            }
+            resumeCache()
+            return
+        }
+        if (ifStatic) {
+            val downloadRequest = DownloadRequest.Builder(itemId, url.toUri()).build()
+            downloadManager.addDownload(downloadRequest)
+            downloadManager.resumeDownloads()
+            downloadCacheProgressTicker.start(itemId)
+        } else {
+            val downloadHelper =
+                DownloadHelper.Factory()
+                    .setRenderersFactory(DefaultRenderersFactory(context))
+                    .create(getDownloadMediaSource(url))
+            downloadHelper.prepare(object : DownloadHelper.Callback {
+                override fun onPrepared(
+                    helper: DownloadHelper,
+                    tracksInfoAvailable: Boolean
+                ) {
+                    Log.i("music", "缓存准备完成: $itemId")
+                    val data = ByteArray(8 * 1024)
+
+                    val downloadRequest = helper.getDownloadRequest(itemId, data)
+                    downloadManager.addDownload(downloadRequest)
+                    downloadManager.resumeDownloads()
+                    Log.i("music", "开始缓存: $itemId")
+
+                    download = downloadManager.downloadIndex.getDownload(itemId)
+                    downloadCacheProgressTicker.start(itemId)
+                }
+
+                override fun onPrepareError(
+                    helper: DownloadHelper,
+                    e: IOException
+                ) {
+                    Log.e("music", "缓存报错: $itemId", e)
+                }
+            })
+        }
+
+
+    }
+
+    /**
+     * 取消当前缓存
+     */
+    private fun cancelCurrentCache() {
+        pauseCache()
+        updateCacheSchedule(0f)
+        download = null
+        currentTaskId = null
+        Log.i("music", "已取消当前缓存")
+    }
+
+    /**
+     * 暂停当前缓存
+     */
+    fun pauseCache() {
+        downloadManager.setStopReason(currentTaskId, 1)
+        downloadCacheProgressTicker.stop()
+    }
+
+    /**
+     * 恢复开始缓存
+     */
+    fun resumeCache() {
+        currentTaskId?.let {
+            downloadManager.setStopReason(it, Download.STOP_REASON_NONE)
+            downloadManager.resumeDownloads()
+            downloadCacheProgressTicker.start(it)
+        }
+
+    }
+
+    /**
+     * 取消所有缓存
+     */
+    override fun cancelAllCache() {
+        downloadManager.setStopReason(null, 1)
+    }
+
+    /**
+     * 根据缓存key获得mediaItem
+     */
+    override fun getMediaItem(cacheKey: String): MediaItem? {
+        return downloadManager.downloadIndex.getDownload(cacheKey)?.request?.toMediaItem()
+    }
+
+    override val cacheDirectoryPath: String
+        get() = cacheDir.absolutePath
+
+    override val isDefaultCacheDirectory: Boolean
+        get() = cacheDir.isSameDirectory(defaultCacheDir)
+
+    fun getMediaSourceFactory(): MediaSource.Factory {
+        // 创建逐步加载数据的数据源
+
+//        val mediaSourceFactory = ProgressiveMediaSource.Factory(cacheDataSourceFactory)
+        val mediaSourceFactory =
+            DefaultMediaSourceFactory(context).setDataSourceFactory(cacheDataSourceFactory)
+//        val mediaSourceFactory = HlsMediaSource.Factory(cacheDataSourceFactory)
+                .setLoadErrorHandlingPolicy(DefaultLoadErrorHandlingPolicy(2))
+        return mediaSourceFactory
+    }
+
+    fun getDownloadMediaSource(url: String): MediaSource {
+        return DefaultMediaSourceFactory(context)
+            .setDataSourceFactory(
+                downloadCacheDataSourceFactory
+            )
+            .setLoadErrorHandlingPolicy(DefaultLoadErrorHandlingPolicy(2))
+            .createMediaSource(
+                MediaItem.Builder().setUri(url)
+                    .setMimeType(MimeTypes.APPLICATION_M3U8).build()
+            )
+    }
+
+    /**
+     * 获得所有缓存大小
+     */
+    override fun getCacheSize() {
+        val cacheSize = downloadManager.currentDownloads.sumOf {
+            it.bytesDownloaded
+        }
+        Log.i("music", "缓存大小${cacheSize}")
+        //缓存大小
+        updateCacheSizeFlow(cacheSize)
+    }
+
+
+
+    /**
+     * 清空缓存
+     */
+    override fun clearCache() {
+        downloadManager.removeAllDownloads()
+        updateCacheSizeFlow(0)
+    }
+
+    override fun close() {
+        release()
+        super.close()
+    }
+
+    private fun release() {
+        pauseCache()
+        cache.release()
+    }
+}

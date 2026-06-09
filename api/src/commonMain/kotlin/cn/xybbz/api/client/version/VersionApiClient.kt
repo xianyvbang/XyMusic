@@ -1,0 +1,79 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.api.client.version
+
+import cn.xybbz.api.client.ApiFactory
+import cn.xybbz.api.client.DownloadFactory
+import cn.xybbz.api.client.provideClient
+import cn.xybbz.api.client.version.service.GitHubVersionApi
+import cn.xybbz.api.constants.ApiConstants
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.statement.request
+
+class VersionApiClient : ApiFactory, DownloadFactory {
+
+    private lateinit var httpClient: HttpClient
+
+    private lateinit var gitHubVersionApi: GitHubVersionApi
+
+    init {
+        createHttpClient("", false)
+    }
+    private val logger = KotlinLogging.logger {}
+
+    override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
+        httpClient = provideClient().config {
+            install(DefaultRequest) {
+                url("${ApiConstants.HTTPS}api.github.com/")
+            }
+            install(HttpRequestRetry) {
+                maxRetries = 2
+            }
+
+            HttpResponseValidator {
+                validateResponse { response ->
+                    logger.info{"⬅️ Response code: ${response.status}"}
+                    logger.info {"⬅️ Response URL: ${response.request.url}"}
+                }
+            }
+        }
+    }
+
+
+    /**
+     * 清空数据
+     */
+    override fun release() {
+        httpClient.close()
+    }
+
+    /**
+     * 获取版本号信息的Api
+     */
+    override fun downloadApi(restart: Boolean): GitHubVersionApi {
+        if (!this::gitHubVersionApi.isInitialized || restart) {
+            gitHubVersionApi = GitHubVersionApi(httpClient)
+        }
+        return gitHubVersionApi
+    }
+}
