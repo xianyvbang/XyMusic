@@ -70,7 +70,7 @@ import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
-import cn.xybbz.ui.components.JvmSettingLibraryAvatarSize
+import cn.xybbz.ui.components.JvmSettingAvatarSize
 import cn.xybbz.ui.components.JvmSettingLibraryOverviewTwoColumnWidth
 import cn.xybbz.ui.components.JvmSettingLibraryRowMinHeight
 import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
@@ -451,7 +451,7 @@ private fun JvmSelectLibraryAvatar(
 
     Box(
         modifier = Modifier
-            .size(JvmSettingLibraryAvatarSize)
+            .size(JvmSettingAvatarSize)
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
             .background(accentColor.copy(alpha = if (selected || isAllLibrary) 0.22f else 0.14f))
             .border(

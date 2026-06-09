@@ -64,7 +64,7 @@ import cn.xybbz.router.ConnectionInfo
 import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.JvmSettingBaseRow
-import cn.xybbz.ui.components.JvmSettingConnectionAvatarSize
+import cn.xybbz.ui.components.JvmSettingAvatarSize
 import cn.xybbz.ui.components.JvmSettingConnectionBoardTwoPaneBreakpoint
 import cn.xybbz.ui.components.JvmSettingConnectionCardMinWidth
 import cn.xybbz.ui.components.JvmSettingFlowRow
@@ -441,7 +441,7 @@ private fun JvmConnectionCard(
                 JvmConnectionAvatar(
                     connectionConfig = displayItem.config,
                     selected = selected,
-                    size = JvmSettingConnectionAvatarSize,
+                    size = JvmSettingAvatarSize,
                 )
                 Column(
                     modifier = Modifier.weight(1f),
@@ -629,7 +629,7 @@ private fun JvmConnectionDetailHeader(displayItem: JvmConnectionDisplayItem) {
         JvmConnectionAvatar(
             connectionConfig = displayItem.config,
             selected = true,
-            size = JvmSettingConnectionAvatarSize,
+            size = JvmSettingAvatarSize,
         )
         Column(
             modifier = Modifier.weight(1f),

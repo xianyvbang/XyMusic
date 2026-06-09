@@ -99,8 +99,8 @@ internal val JvmSettingConnectionCardMinWidth = 240.dp
 /** JVM 设置页连接管理面板切换为左右双栏的宽度断点。 */
 internal val JvmSettingConnectionBoardTwoPaneBreakpoint = 900.dp
 
-/** JVM 设置页连接头像统一尺寸，列表卡片和详情区域共用。 */
-internal val JvmSettingConnectionAvatarSize = 56.dp
+/** JVM 设置页头像统一尺寸，连接和媒体库等头像类入口共用。 */
+internal val JvmSettingAvatarSize = 56.dp
 
 /** JVM 设置页连接表单卡片的最小高度。 */
 internal val JvmSettingConnectionFormCardMinHeight = 118.dp
@@ -137,9 +137,6 @@ internal val JvmSettingLibraryOverviewTwoColumnWidth = 640.dp
 
 /** JVM 设置页媒体库列表单行最小高度。 */
 internal val JvmSettingLibraryRowMinHeight = 76.dp
-
-/** JVM 设置页媒体库头像尺寸。 */
-internal val JvmSettingLibraryAvatarSize = 46.dp
 
 /** JVM 设置页界面预览卡片的最小高度。 */
 internal val JvmSettingInterfaceMiniPreviewHeight = 230.dp
