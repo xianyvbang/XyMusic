@@ -55,7 +55,6 @@ import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingConnectionFormCardMinHeight
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingOverviewTile
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -152,7 +151,6 @@ fun JvmConnectionConfigInfoScreen(
     }
 
     JvmSettingPageScaffold(
-        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3
@@ -161,7 +159,6 @@ fun JvmConnectionConfigInfoScreen(
         JvmSettingPageHeader(
             title = pageTitle,
             description = "维护当前音乐服务地址、账号凭据和显示别名；地址、用户名或密码变更后，保存会触发当前连接重新登录。",
-            contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,

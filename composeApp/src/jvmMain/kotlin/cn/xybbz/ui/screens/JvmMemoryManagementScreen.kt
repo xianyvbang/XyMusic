@@ -63,7 +63,6 @@ import cn.xybbz.ui.components.JvmSettingActionGrid
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingPageHeader
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
@@ -241,7 +240,6 @@ fun JvmMemoryManagementScreen(
 
     JvmSettingPageScaffold(
         modifier = Modifier.fillMaxSize(),
-        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3,
@@ -311,7 +309,6 @@ private fun JvmMemoryContent(
 ) {
     Column(
         modifier = Modifier
-            .widthIn(max = JvmSettingPageContentMaxWidth)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2)
     ) {

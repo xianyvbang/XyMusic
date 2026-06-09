@@ -64,7 +64,6 @@ import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.router.ConnectionManagement
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -136,7 +135,6 @@ fun JvmSelectLibraryScreen(
     }
 
     JvmSettingPageScaffold(
-        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3
@@ -164,7 +162,6 @@ fun JvmSelectLibraryScreen(
         JvmSettingPageHeader(
             title = pageTitle,
             description = "为当前连接指定桌面端可见的媒体库范围；专辑、歌曲、搜索和播放队列都会按照这个范围加载。",
-            contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,

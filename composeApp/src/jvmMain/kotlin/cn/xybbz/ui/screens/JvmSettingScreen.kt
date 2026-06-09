@@ -54,7 +54,6 @@ import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingOverviewThreeColumnWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingPathRow
 import cn.xybbz.ui.components.JvmSettingSection
@@ -120,11 +119,10 @@ fun JvmSettingScreen(
         .audioBitRateStr
     val dataSourceLabel = settings.dataSourceType?.title ?: "未连接"
 
-    JvmSettingPageScaffold(contentMaxWidth = JvmSettingPageContentMaxWidth) {
+    JvmSettingPageScaffold() {
         JvmSettingPageHeader(
             title = stringResource(Res.string.settings),
             description = "把桌面端常用配置集中为更可扫读的设置中心：播放缓存、连接管理、下载队列、界面语言和扩展能力都保留当前入口。",
-            contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
                 items = listOf(
@@ -409,7 +407,7 @@ private fun JvmSettingOverview(
         // 三张概览卡只有在足够宽时才同排，避免卡片文字被挤压。
         val useThreeColumns = maxWidth >= JvmSettingOverviewThreeColumnWidth
         // 概览区和下方主体使用同一个宽度基准，保证三张 item 总宽与下面内容对齐。
-        val contentWidth = minOf(maxWidth, JvmSettingPageContentMaxWidth)
+        val contentWidth = maxWidth
         val tileWidth = if (useThreeColumns) {
             // 三列时扣除横向间距，再平均分配每张卡片宽度。
             (contentWidth - gap) / 3f

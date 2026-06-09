@@ -61,7 +61,6 @@ import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingNavigationRow
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -132,7 +131,6 @@ fun JvmCacheLimitScreen(
 
     JvmSettingPageScaffold(
         modifier = Modifier.fillMaxSize(),
-        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3,
@@ -141,7 +139,6 @@ fun JvmCacheLimitScreen(
         JvmSettingPageHeader(
             title = stringResource(Res.string.music_cache_limit_title),
             description = "把边下边播产生的播放缓存上限做成可扫读的容量面板。固定档位适合给桌面磁盘预留明确空间预算。",
-            contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,

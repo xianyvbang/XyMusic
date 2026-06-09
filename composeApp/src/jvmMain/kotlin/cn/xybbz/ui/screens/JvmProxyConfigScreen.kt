@@ -41,7 +41,6 @@ import cn.xybbz.api.utils.withDefaultHttpScheme
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingNote
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -121,7 +120,6 @@ fun JvmProxyConfigScreen(
     val parsedProxy = addressText.toJvmProxyParsedAddress()
 
     JvmSettingPageScaffold(
-        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3
@@ -130,7 +128,6 @@ fun JvmProxyConfigScreen(
         JvmSettingPageHeader(
             title = pageTitle,
             description = "把代理开关、服务器地址和连通性测试集中在一个页面内，便于桌面端排查服务访问失败。当前配置会应用到后续服务端请求。",
-            contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,

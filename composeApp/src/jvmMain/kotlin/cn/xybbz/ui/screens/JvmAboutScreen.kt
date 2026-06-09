@@ -58,7 +58,6 @@ import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingOverviewTileMinWidth
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -123,7 +122,6 @@ fun JvmAboutScreen(
 
     JvmSettingPageScaffold(
         modifier = Modifier.fillMaxWidth(),
-        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3
@@ -132,7 +130,6 @@ fun JvmAboutScreen(
         JvmSettingPageHeader(
             title = pageTitle,
             description = "查看桌面端应用信息、当前版本、项目入口和核心技术栈。",
-            contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
                 prominentValue = true,
@@ -206,7 +203,6 @@ private fun JvmAboutContent(
     // 单个双栏容器承载整页主体，避免多个双栏块各自计算宽度导致左右列不齐。
     JvmSettingTwoPaneContent(
         modifier = Modifier
-            .widthIn(max = JvmSettingPageContentMaxWidth)
             .fillMaxWidth(),
         leftContent = {
             // 左栏放更像“主内容”的品牌、版本和项目入口。

@@ -61,7 +61,6 @@ import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingNote
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -129,7 +128,6 @@ fun JvmInterfaceSettingScreen(
     }
 
     JvmSettingPageScaffold(
-        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3
@@ -139,7 +137,6 @@ fun JvmInterfaceSettingScreen(
         JvmSettingPageHeader(
             title = interfaceSettingsTitle,
             description = "把主题、背景和桌面显示偏好放进同一张可预览的控制台，保持紧凑，同时能快速看到当前视觉结果。",
-            contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,

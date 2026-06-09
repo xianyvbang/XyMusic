@@ -34,7 +34,6 @@ import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGridArrangement
 import cn.xybbz.ui.components.JvmSettingComfortActionCardHeight
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -66,7 +65,7 @@ fun JvmStreamingQualityScreen(
         ?.name
         ?: streamingQualityViewModel.transcodeFormat.uppercase()
 
-    JvmSettingPageScaffold(contentMaxWidth = JvmSettingPageContentMaxWidth) {
+    JvmSettingPageScaffold() {
         JvmSettingPageHeader(
             title = pageTitle,
             description = "选择桌面端播放时使用的在线音频品质和服务端转码格式。当前桌面端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。",

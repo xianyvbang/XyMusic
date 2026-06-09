@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -67,7 +67,6 @@ import cn.xybbz.ui.components.JvmSettingCustomApiEndpointGridBreakpoint
 import cn.xybbz.ui.components.JvmSettingCustomApiTokenGridBreakpoint
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingNote
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -130,7 +129,6 @@ fun JvmCustomApiScreen(
     )
 
     JvmSettingPageScaffold(
-        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3
@@ -139,7 +137,6 @@ fun JvmCustomApiScreen(
         JvmSettingPageHeader(
             title = pageTitle,
             description = "统一管理桌面端歌词与封面自定义接口。配置为空时继续使用音乐服务返回的资源，保存后会应用到后续播放和封面解析流程。",
-            contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmCustomApiSummaryCard(
                 configuredEndpointCount = configuredEndpointCount,

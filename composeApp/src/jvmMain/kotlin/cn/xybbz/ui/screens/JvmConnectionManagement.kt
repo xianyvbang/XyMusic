@@ -70,7 +70,6 @@ import cn.xybbz.ui.components.JvmSettingConnectionCardMinWidth
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingOverviewThreeColumnWidth
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingResponsiveRow
@@ -171,7 +170,6 @@ fun JvmConnectionManagement(
     val currentDisplayItem = displayItems.firstOrNull { it.selected } ?: displayItems.firstOrNull()
 
     JvmSettingPageScaffold(
-        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3
@@ -180,7 +178,6 @@ fun JvmConnectionManagement(
         JvmSettingPageHeader(
             title = stringResource(Res.string.connection_settings_list),
             description = "集中管理桌面端音乐服务连接：查看当前数据源、切换连接、编辑账号地址，并为每个连接维护可见媒体库范围。",
-            contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             XyIconTextButton(
                 modifier = Modifier.widthIn(min = 128.dp),
@@ -273,7 +270,7 @@ private fun JvmConnectionOverview(
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.contentPadding
         val useThreeColumns = maxWidth >= JvmSettingOverviewThreeColumnWidth
-        val contentWidth = minOf(maxWidth, JvmSettingPageContentMaxWidth)
+        val contentWidth = maxWidth
         val tileWidth = if (useThreeColumns) {
             (contentWidth - gap * 2) / 3f
         } else {

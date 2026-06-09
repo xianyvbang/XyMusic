@@ -64,7 +64,6 @@ import cn.xybbz.ui.components.JvmSettingBackgroundPreviewPlayerHeight
 import cn.xybbz.ui.components.JvmSettingBackgroundPreviewSideWidth
 import cn.xybbz.ui.components.JvmSettingBackgroundPreviewTopBarHeight
 import cn.xybbz.ui.components.JvmSettingNote
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingRowDescriptionStyle
@@ -133,7 +132,6 @@ fun JvmSetBackgroundImageScreen(
 
     key(XyTheme.brash.backgroundImageUri) {
         JvmSettingPageScaffold(
-            contentMaxWidth = JvmSettingPageContentMaxWidth,
             contentPadding = PaddingValues(
                 horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
                 vertical = XyTheme.dimens.outerVerticalPadding * 3
@@ -142,7 +140,6 @@ fun JvmSetBackgroundImageScreen(
             JvmSettingPageHeader(
                 title = pageTitle,
                 description = "将背景图选择、清除和裁剪预览放在同一个桌面工作区，保存前即可看到它与侧栏、内容区和播放栏叠加后的状态。",
-                contentMaxWidth = JvmSettingPageContentMaxWidth,
             ) {
                 JvmSettingStatusCard(
                     width = JvmSettingSummaryCardWidth,

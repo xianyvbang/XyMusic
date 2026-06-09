@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.sp
 import cn.xybbz.localdata.enums.LanguageType
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingNote
-import cn.xybbz.ui.components.JvmSettingPageContentMaxWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -75,7 +74,6 @@ fun JvmLanguageConfigScreen(
     val languageModeLabel = if (configuredLanguageType == null) "跟随系统" else "固定语言"
 
     JvmSettingPageScaffold(
-        contentMaxWidth = JvmSettingPageContentMaxWidth,
         contentPadding = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
             vertical = XyTheme.dimens.outerVerticalPadding * 3
@@ -84,7 +82,6 @@ fun JvmLanguageConfigScreen(
         JvmSettingPageHeader(
             title = "本地化",
             description = "语言选择、文本预览和翻译覆盖状态集中呈现。页面强调当前生效语言。",
-            contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
                 width = JvmSettingSummaryCardWidth,

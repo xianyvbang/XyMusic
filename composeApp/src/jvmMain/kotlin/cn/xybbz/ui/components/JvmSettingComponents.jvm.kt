@@ -81,9 +81,6 @@ import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
 import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.download_max_list
 
-/** JVM 设置类页面主体最大宽度，设置页、关于页和存储管理页共用。 */
-internal val JvmSettingPageContentMaxWidth = 1080.dp
-
 /** JVM 设置页头部摘要卡统一宽度，按连接、代理和媒体库等信息密度更高的页面取值。 */
 internal val JvmSettingSummaryCardWidth = 284.dp
 
@@ -243,7 +240,6 @@ internal fun JvmSettingFlowRow(
  * JVM 设置类页面的通用列表外壳。
  *
  * @param modifier 传给内部列表的修饰符。
- * @param contentMaxWidth 页面主体最大宽度，用来控制桌面宽屏阅读线。
  * @param contentPadding 列表内容内边距。
  * @param verticalArrangement 列表条目之间的纵向间距。
  * @param topBar 页面顶部栏；为空时不显示。
@@ -252,7 +248,6 @@ internal fun JvmSettingFlowRow(
 @Composable
 internal fun JvmSettingPageScaffold(
     modifier: Modifier = Modifier,
-    contentMaxWidth: Dp,
     contentPadding: PaddingValues = PaddingValues(
         horizontal = XyTheme.dimens.outerHorizontalPadding,
     ),
@@ -274,9 +269,7 @@ internal fun JvmSettingPageScaffold(
         ) {
             item {
                 Column(
-                    modifier = Modifier
-                        .widthIn(max = contentMaxWidth)
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
                     content = content
                 )
@@ -340,7 +333,6 @@ internal fun JvmSettingResponsiveRow(
  * 宽屏时使用设置页的左主栏 + 右侧栏比例；窄屏时左右内容按上下顺序铺满整行。
  *
  * @param modifier 外层修饰符。
- * @param contentMaxWidth 双栏内容最大宽度。
  * @param breakpoint 小于该宽度时改为上下堆叠。
  * @param leftContent 左侧主栏内容。
  * @param rightContent 右侧侧栏内容。
@@ -348,7 +340,6 @@ internal fun JvmSettingResponsiveRow(
 @Composable
 internal fun JvmSettingTwoPaneContent(
     modifier: Modifier = Modifier,
-    contentMaxWidth: Dp = JvmSettingPageContentMaxWidth,
     breakpoint: Dp = JvmSettingTwoPaneBreakpoint,
     leftContent: @Composable ColumnScope.() -> Unit,
     rightContent: @Composable ColumnScope.() -> Unit,
@@ -356,12 +347,11 @@ internal fun JvmSettingTwoPaneContent(
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val gap = XyTheme.dimens.outerHorizontalPadding
         val useTwoColumns = maxWidth >= breakpoint
-        val layoutWidth = minOf(maxWidth, contentMaxWidth)
         val totalWeight = JvmSettingTwoPaneLeftWeight + JvmSettingTwoPaneRightWeight
         val contentWidth = if (useTwoColumns) {
-            layoutWidth - gap
+            maxWidth - gap
         } else {
-            layoutWidth
+            maxWidth
         }
         val leftWidth = if (useTwoColumns) {
             contentWidth * (JvmSettingTwoPaneLeftWeight / totalWeight)
@@ -413,7 +403,6 @@ private fun JvmSettingPaneStack(
  * @param modifier 头部外层修饰符。
  * @param title 页面标题。
  * @param description 页面说明文案。
- * @param contentMaxWidth 可选的头部宽度上限；为空时铺满当前内容宽度。
  * @param statusContent 右侧状态摘要卡片。
  */
 @Composable
@@ -421,46 +410,34 @@ internal fun JvmSettingPageHeader(
     modifier: Modifier = Modifier,
     title: String,
     description: String,
-    contentMaxWidth: Dp? = null,
     statusContent: @Composable () -> Unit,
 ) {
-    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        val gap = XyTheme.dimens.contentPadding * 2
-        // 设置首页需要和下方主体同宽，在线音乐品质页则沿用外层内容宽度。
-        val headerWidth = contentMaxWidth?.let { maxWidth -> minOf(this.maxWidth, maxWidth) }
-        val rowModifier = if (headerWidth == null) {
-            Modifier.fillMaxWidth()
-        } else {
-            Modifier
-                .width(headerWidth)
-                .align(Alignment.Center)
-        }
+    val gap = XyTheme.dimens.contentPadding * 2
 
-        Row(
-            modifier = rowModifier,
-            horizontalArrangement = Arrangement.spacedBy(gap),
-            verticalAlignment = Alignment.Bottom
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(gap),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        Column(
+            modifier = Modifier
+                // 标题说明只吃状态卡之外的剩余空间，保证头部摘要始终在同一行。
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
         ) {
-            Column(
-                modifier = Modifier
-                    // 标题说明只吃状态卡之外的剩余空间，保证头部摘要始终在同一行。
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-            ) {
-                XyTextLarge(
-                    text = title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                XyTextSub(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            statusContent()
+            XyTextLarge(
+                text = title,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            XyTextSub(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
+
+        statusContent()
     }
 }
 
