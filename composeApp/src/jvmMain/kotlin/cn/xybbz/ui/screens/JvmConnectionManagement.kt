@@ -18,9 +18,14 @@
 
 package cn.xybbz.ui.screens
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -34,6 +39,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -44,6 +50,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -396,6 +404,14 @@ private fun JvmConnectionCard(
     val shape = RoundedCornerShape(XyTheme.dimens.corner)
     val colorScheme = MaterialTheme.colorScheme
     val selected = displayItem.selected
+    // 复用桌面音乐卡片的悬停上移动效，让连接卡片也有一致的鼠标反馈。
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val liftOffset by animateDpAsState(
+        targetValue = if (hovered) (-6).dp else 0.dp,
+        animationSpec = tween(durationMillis = 160),
+        label = "connection_card_lift_offset",
+    )
     val containerColor = if (selected) {
         colorScheme.primary.copy(alpha = if (XyTheme.configs.isDarkTheme) 0.18f else 0.10f)
     } else {
@@ -407,15 +423,16 @@ private fun JvmConnectionCard(
         colorScheme.onSurface.copy(alpha = 0.08f)
     }
     val clickModifier = if (selected) {
-        Modifier
+        Modifier.hoverable(interactionSource = interactionSource)
     } else {
-        Modifier.jvmHoverDebounceClickable {
+        Modifier.jvmHoverDebounceClickable(interactionSource = interactionSource) {
             onSelectConnection(displayItem.config)
         }
     }
 
     Surface(
         modifier = modifier
+            .offset(y = liftOffset)
             .heightIn(min = 174.dp)
             .then(clickModifier),
         shape = shape,
