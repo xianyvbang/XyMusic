@@ -84,14 +84,8 @@ import xymusic_kmp.composeapp.generated.resources.download_max_list
 /** JVM 设置类页面主体最大宽度，设置页、关于页和存储管理页共用。 */
 internal val JvmSettingPageContentMaxWidth = 1080.dp
 
-/** JVM 设置页头部标准摘要卡宽度，复用在缓存、界面、语言和背景等页面。 */
-internal val JvmSettingSummaryCardWidth = 278.dp
-
-/** JVM 设置页头部较宽摘要卡宽度，适合连接、代理和媒体库等信息密度更高的页面。 */
-internal val JvmSettingSummaryCardWideWidth = 284.dp
-
-/** JVM 设置页头部紧凑摘要卡宽度，适合自定义接口页的保存按钮组合。 */
-internal val JvmSettingSummaryCardCompactWidth = 268.dp
+/** JVM 设置页头部摘要卡统一宽度，按连接、代理和媒体库等信息密度更高的页面取值。 */
+internal val JvmSettingSummaryCardWidth = 284.dp
 
 /** JVM 设置页概览区切换为三列卡片的宽度断点。 */
 internal val JvmSettingOverviewThreeColumnWidth = 760.dp

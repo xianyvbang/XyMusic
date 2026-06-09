@@ -73,7 +73,7 @@ import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingLibraryAvatarSize
 import cn.xybbz.ui.components.JvmSettingLibraryOverviewTwoColumnWidth
 import cn.xybbz.ui.components.JvmSettingLibraryRowMinHeight
-import cn.xybbz.ui.components.JvmSettingSummaryCardWideWidth
+import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -167,7 +167,7 @@ fun JvmSelectLibraryScreen(
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
-                width = JvmSettingSummaryCardWideWidth,
+                width = JvmSettingSummaryCardWidth,
                 prominentValue = true,
                 items = listOf(
                     JvmSettingStatusCardItem(label = "数据源", value = dataSourceLabel),

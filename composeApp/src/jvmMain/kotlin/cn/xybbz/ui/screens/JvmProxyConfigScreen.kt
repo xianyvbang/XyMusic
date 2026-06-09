@@ -48,7 +48,7 @@ import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingProxyModeCardHeight
-import cn.xybbz.ui.components.JvmSettingSummaryCardWideWidth
+import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyButton
@@ -133,7 +133,7 @@ fun JvmProxyConfigScreen(
             contentMaxWidth = JvmSettingPageContentMaxWidth,
         ) {
             JvmSettingStatusCard(
-                width = JvmSettingSummaryCardWideWidth,
+                width = JvmSettingSummaryCardWidth,
                 prominentValue = true,
                 items = listOf(
                     JvmSettingStatusCardItem(label = "代理状态", value = proxyModeLabel),

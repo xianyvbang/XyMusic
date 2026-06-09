@@ -74,7 +74,7 @@ import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingSwitchRow
-import cn.xybbz.ui.components.JvmSettingSummaryCardCompactWidth
+import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyEdit
@@ -300,11 +300,11 @@ private fun JvmCustomApiSummaryCard(
     onSave: () -> Unit,
 ) {
     Column(
-        modifier = Modifier.width(JvmSettingSummaryCardCompactWidth),
+        modifier = Modifier.width(JvmSettingSummaryCardWidth),
         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
     ) {
         JvmSettingStatusCard(
-            width = JvmSettingSummaryCardCompactWidth,
+            width = JvmSettingSummaryCardWidth,
             items = listOf(
                 JvmSettingStatusCardItem(label = "已配置端点", value = "$configuredEndpointCount / 2"),
                 JvmSettingStatusCardItem(label = "当前优先", value = priorityLabel),
