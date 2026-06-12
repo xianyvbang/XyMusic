@@ -6,6 +6,22 @@ plugins {
     alias(libs.plugins.composeCompiler)
 }
 
+// CI 正式包签名文件路径，由 GitHub Actions 从 base64 Secret 解码后注入。
+val releaseStoreFilePath = providers.environmentVariable("ANDROID_RELEASE_KEYSTORE_PATH")
+// CI 正式包签名库密码，通过 GitHub Secrets 注入，避免写入仓库。
+val releaseStorePassword = providers.environmentVariable("ANDROID_RELEASE_KEYSTORE_PASSWORD")
+// CI 正式包签名别名，通过 GitHub Secrets 注入并匹配 release keystore。
+val releaseKeyAlias = providers.environmentVariable("ANDROID_RELEASE_KEY_ALIAS")
+// CI 正式包签名 key 密码，通过 GitHub Secrets 注入。
+val releaseKeyPassword = providers.environmentVariable("ANDROID_RELEASE_KEY_PASSWORD")
+// CI 正式包签名变量完整时才启用签名，保证本地普通构建不依赖私钥。
+val hasReleaseSigningConfig = listOf(
+    releaseStoreFilePath,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword
+).all { it.orNull?.isNotBlank() == true }
+
 kotlin {
     target {
         compilerOptions {
@@ -50,9 +66,25 @@ android {
         }
     }
 
+    signingConfigs {
+        if (hasReleaseSigningConfig) {
+            // Android 正式发布签名配置，只在 CI 或本地显式提供密钥变量时创建。
+            create("release") {
+                storeFile = file(releaseStoreFilePath.get())
+                storePassword = releaseStorePassword.get()
+                keyAlias = releaseKeyAlias.get()
+                keyPassword = releaseKeyPassword.get()
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
+            // CI 正式包使用 release keystore 签名；未提供密钥时保留默认未签名构建行为。
+            if (hasReleaseSigningConfig) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

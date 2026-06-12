@@ -1,0 +1,182 @@
+# Android 正式发布工作流：构建 release APK/AAB，并上传到 GitHub Release。
+name: 发布 Android 正式应用
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: 发布说明；留空时自动生成基础说明。
+        required: false
+        type: string
+      prerelease:
+        description: 是否标记为预发布版本。
+        required: false
+        default: false
+        type: boolean
+
+# 自动创建 tag 和上传 Release 资源需要 contents 写权限。
+permissions:
+  contents: write
+
+# 同一分支同时触发多个端的正式发布时排队执行，避免 Release 产物互相覆盖。
+concurrency:
+  group: xymusic-release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  android-release:
+    name: 构建并上传 Android 正式包
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      # 发布 tag 需要完整历史和 tag 信息，用于校验同名 tag 是否指向当前提交。
+      - name: 拉取源码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 统一设置 JDK 21 和 Gradle 缓存，保持与 KMP 官方文档的拆分方式一致。
+      - name: 设置 Gradle 环境
+        uses: ./.github/actions/gradle-setup
+
+      # compileSdk=36 的 Android SDK 在 runner 上不一定预装，发布前显式安装。
+      - name: 安装 Android SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      # tag 使用版本目录中的 app-versionName，保证 GitHub Release 与应用版本一致。
+      - name: 解析正式发布版本
+        id: release_meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          version_name="$(awk -F '"' '/^app-versionName[[:space:]]*=/{ print $2; exit }' gradle/libs.versions.toml)"
+          version_code="$(awk -F '"' '/^app-versionCode[[:space:]]*=/{ print $2; exit }' gradle/libs.versions.toml)"
+          if [ -z "$version_name" ] || [ -z "$version_code" ]; then
+            echo "::error::无法从 gradle/libs.versions.toml 读取 app-versionName 或 app-versionCode"
+            exit 1
+          fi
+          tag_name="v${version_name}"
+          echo "version_name=${version_name}" >> "$GITHUB_OUTPUT"
+          echo "version_code=${version_code}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${tag_name}" >> "$GITHUB_OUTPUT"
+
+      # 正式包必须使用 release keystore；缺少任何 Secret 都直接失败，避免生成测试/未签名产物。
+      - name: 还原 Android 正式签名文件
+        shell: bash
+        env:
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "$ANDROID_RELEASE_KEYSTORE_BASE64" ] || missing+=("ANDROID_RELEASE_KEYSTORE_BASE64")
+          [ -n "$ANDROID_RELEASE_KEYSTORE_PASSWORD" ] || missing+=("ANDROID_RELEASE_KEYSTORE_PASSWORD")
+          [ -n "$ANDROID_RELEASE_KEY_ALIAS" ] || missing+=("ANDROID_RELEASE_KEY_ALIAS")
+          [ -n "$ANDROID_RELEASE_KEY_PASSWORD" ] || missing+=("ANDROID_RELEASE_KEY_PASSWORD")
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::缺少 GitHub Secrets: ${missing[*]}"
+            exit 1
+          fi
+          keystore_path="$RUNNER_TEMP/xymusic-release.jks"
+          printf '%s' "$ANDROID_RELEASE_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+          echo "ANDROID_RELEASE_KEYSTORE_PATH=${keystore_path}" >> "$GITHUB_ENV"
+
+      # 这里明确构建 release APK/AAB，不构建 debug 包、androidTest 包或测试应用。
+      - name: 构建 Android release APK 和 AAB
+        shell: bash
+        env:
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          ./gradlew --no-daemon :androidApp:assembleRelease :androidApp:bundleRelease --stacktrace
+
+      # 发布前校验并重命名正式产物，便于 GitHub Release 下载列表识别。
+      - name: 整理正式包产物
+        id: artifacts
+        shell: bash
+        env:
+          VERSION_NAME: ${{ steps.release_meta.outputs.version_name }}
+          VERSION_CODE: ${{ steps.release_meta.outputs.version_code }}
+        run: |
+          set -euo pipefail
+          mkdir -p release-artifacts
+          apk_file="$(find androidApp/build/outputs/apk/release -type f -name '*.apk' | sort | head -n 1)"
+          aab_file="$(find androidApp/build/outputs/bundle/release -type f -name '*.aab' | sort | head -n 1)"
+          if [ -z "$apk_file" ] || [ -z "$aab_file" ]; then
+            echo "::error::未找到 release APK 或 AAB 产物"
+            exit 1
+          fi
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk_file"
+          jarsigner -verify -strict "$aab_file" > /dev/null
+          cp "$apk_file" "release-artifacts/XyMusic-${VERSION_NAME}-${VERSION_CODE}-release.apk"
+          cp "$aab_file" "release-artifacts/XyMusic-${VERSION_NAME}-${VERSION_CODE}-release.aab"
+          (cd release-artifacts && sha256sum * > SHA256SUMS.txt)
+
+      # Actions artifact 保留一份构建产物，方便排查 Release 上传失败的情况。
+      - name: 上传 Actions 构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-${{ steps.release_meta.outputs.tag_name }}
+          path: release-artifacts/*
+          if-no-files-found: error
+
+      # gh release create 会在 tag 不存在时基于当前提交自动创建 tag，并上传正式包。
+      - name: 创建 GitHub Release 并上传正式包
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.release_meta.outputs.tag_name }}
+          RELEASE_TITLE: XyMusic ${{ steps.release_meta.outputs.tag_name }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+          IS_PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+          if git rev-parse "refs/tags/${TAG_NAME}" > /dev/null 2>&1; then
+            tag_commit="$(git rev-list -n 1 "refs/tags/${TAG_NAME}")"
+            head_commit="$(git rev-parse HEAD)"
+            if [ "$tag_commit" != "$head_commit" ]; then
+              echo "::error::${TAG_NAME} 已存在，但不是当前提交。请先提升 app-versionName，或确认旧 tag 后再重新发布。"
+              exit 1
+            fi
+          fi
+
+          mapfile -t release_files < <(find release-artifacts -maxdepth 1 -type f | sort)
+          if [ "${#release_files[@]}" -eq 0 ]; then
+            echo "::error::没有可上传到 GitHub Release 的正式产物"
+            exit 1
+          fi
+
+          notes_file="$RUNNER_TEMP/release-notes.md"
+          if [ -n "$RELEASE_NOTES" ]; then
+            printf '%s\n' "$RELEASE_NOTES" > "$notes_file"
+          else
+            printf 'XyMusic %s 正式构建。\n\n- Android release APK\n- Android release AAB\n- SHA256SUMS.txt 校验文件\n' "$TAG_NAME" > "$notes_file"
+          fi
+
+          prerelease_args=()
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            prerelease_args+=(--prerelease)
+          fi
+
+          if gh release view "$TAG_NAME" > /dev/null 2>&1; then
+            gh release upload "$TAG_NAME" "${release_files[@]}" --clobber
+          else
+            gh release create "$TAG_NAME" "${release_files[@]}" --target "$GITHUB_SHA" --title "$RELEASE_TITLE" --notes-file "$notes_file" "${prerelease_args[@]}"
+          fi
+
+      # 正式签名文件只在 runner 临时目录短暂存在，任务结束前主动删除。
+      - name: 清理 Android 正式签名文件
+        if: always()
+        shell: bash
+        run: rm -f "$ANDROID_RELEASE_KEYSTORE_PATH"

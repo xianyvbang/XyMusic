@@ -5,6 +5,14 @@
 xcuserdata
 !src/**/build/
 local.properties
+# CodeGraph 本地索引目录由开发机生成，不进入仓库。
+.codegraph/
+# Android 正式签名密钥只能放在本地或 GitHub Secrets，不进入仓库。
+*.jks
+*.keystore
+*.p12
+*.pfx
+keystore.base64
 .idea
 .DS_Store
 captures
