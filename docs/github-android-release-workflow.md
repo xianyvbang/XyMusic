@@ -1,6 +1,6 @@
 # GitHub Actions Android 正式发布操作说明
 
-本文档说明如何使用 `.github/workflows/android-release.yml` 构建 XyMusic 的 Android 正式包。该 workflow 参考 Kotlin Multiplatform 官方文档的 GitHub Actions 结构，把 JDK/Gradle 初始化拆到 `.github/actions/gradle-setup/action.yml`，但这里明确构建 `release` APK/AAB，不构建 debug 包、androidTest 包或测试应用。
+本文档说明如何使用 `.github/workflows/release.yml` 构建 XyMusic 的正式发布包。该 workflow 参考 Kotlin Multiplatform 官方文档的 GitHub Actions 结构，把 JDK/Gradle 初始化拆到 `.github/actions/gradle-setup/action.yml`，并在一次发布流程中构建 Android release APK/AAB 和 Windows JVM release MSI。
 
 参考文档：https://kotlinlang.org/docs/multiplatform/github-actions-for-kmp.html#define-the-build-workflow
 
@@ -8,7 +8,9 @@
 
 - `XyMusic-<versionName>-<versionCode>-release.apk`
 - `XyMusic-<versionName>-<versionCode>-release.aab`
-- `SHA256SUMS.txt`
+- `XyMusic-<versionName>-windows-x64.msi`
+- `SHA256SUMS-android.txt`
+- `SHA256SUMS-windows.txt`
 
 workflow 会同时上传到 Actions artifact 和 GitHub Release。GitHub Release 的 tag 默认使用 `gradle/libs.versions.toml` 中的 `app-versionName`，格式为 `v<app-versionName>`，例如 `v1.0.0`。
 
@@ -50,11 +52,11 @@ base64 xymusic-release.jks | tr -d '\n' > keystore.base64
    - `Settings` -> `Actions` -> `General` -> `Workflow permissions`
    - 选择 `Read and write permissions`。
 3. 打开 GitHub 仓库的 `Actions` 页面。
-4. 选择 `发布 Android 正式应用`。
+4. 选择 `发布正式应用`。
 5. 点击 `Run workflow`：
    - `release_notes` 可留空，workflow 会生成基础说明。
    - `prerelease` 只在需要预发布时勾选。
-6. workflow 成功后会创建或复用当前提交上的 `v<app-versionName>` tag，并把 APK/AAB 上传到 GitHub Release。
+6. workflow 成功后会创建或复用当前提交上的 `v<app-versionName>` tag，并把 Android APK/AAB 和 Windows MSI 上传到 GitHub Release。
 
 ## 本地验证
 
@@ -73,5 +75,5 @@ $env:ANDROID_RELEASE_KEY_PASSWORD="你的 key 密码"
 ## 注意事项
 
 - 同名 tag 如果已经存在但不指向当前提交，workflow 会失败；需要先提升 `app-versionName`，或人工确认旧 tag。
-- 本 workflow 只发布 Android 正式包。iOS 正式发布需要 Apple 证书、描述文件和 App Store/TestFlight 流程，不能用模拟器构建替代正式应用。
+- 本 workflow 发布 Android 正式包和 Windows JVM 正式包。iOS 正式发布需要 Apple 证书、描述文件和 App Store/TestFlight 流程，不能用模拟器构建替代正式应用。
 - 本 workflow 不会修改代码或提交 git commit；tag 和 Release 由 GitHub Actions 使用 `GITHUB_TOKEN` 在远端创建。
