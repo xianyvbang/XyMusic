@@ -16,10 +16,10 @@ workflow 会同时上传到 Actions artifact 和 GitHub Release。GitHub Release
 
 在 GitHub 仓库进入 `Settings` -> `Secrets and variables` -> `Actions`，新增以下 Repository secrets：
 
-- `ANDROID_RELEASE_KEYSTORE_BASE64`：release keystore 文件的 base64 内容。
-- `ANDROID_RELEASE_KEYSTORE_PASSWORD`：release keystore 密码。
-- `ANDROID_RELEASE_KEY_ALIAS`：release key alias。
-- `ANDROID_RELEASE_KEY_PASSWORD`：release key 密码。
+- `KEYSTORE_BASE64`：release keystore 文件的 base64 内容。
+- `KEYSTORE_PASSWORD`：release keystore 密码。
+- `KEY_ALIAS`：release key alias。
+- `KEY_PASSWORD`：release key 密码。
 
 如果还没有 release keystore，可以在本地生成：
 

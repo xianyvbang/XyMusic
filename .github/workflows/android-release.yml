@@ -69,17 +69,17 @@ jobs:
       - name: 还原 Android 正式签名文件
         shell: bash
         env:
-          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
-          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
-          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
-          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           set -euo pipefail
           missing=()
-          [ -n "$ANDROID_RELEASE_KEYSTORE_BASE64" ] || missing+=("ANDROID_RELEASE_KEYSTORE_BASE64")
-          [ -n "$ANDROID_RELEASE_KEYSTORE_PASSWORD" ] || missing+=("ANDROID_RELEASE_KEYSTORE_PASSWORD")
-          [ -n "$ANDROID_RELEASE_KEY_ALIAS" ] || missing+=("ANDROID_RELEASE_KEY_ALIAS")
-          [ -n "$ANDROID_RELEASE_KEY_PASSWORD" ] || missing+=("ANDROID_RELEASE_KEY_PASSWORD")
+          [ -n "$ANDROID_RELEASE_KEYSTORE_BASE64" ] || missing+=("KEYSTORE_BASE64")
+          [ -n "$ANDROID_RELEASE_KEYSTORE_PASSWORD" ] || missing+=("KEYSTORE_PASSWORD")
+          [ -n "$ANDROID_RELEASE_KEY_ALIAS" ] || missing+=("KEY_ALIAS")
+          [ -n "$ANDROID_RELEASE_KEY_PASSWORD" ] || missing+=("KEY_PASSWORD")
           if [ "${#missing[@]}" -gt 0 ]; then
             echo "::error::缺少 GitHub Secrets: ${missing[*]}"
             exit 1
@@ -92,9 +92,9 @@ jobs:
       - name: 构建 Android release APK 和 AAB
         shell: bash
         env:
-          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
-          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
-          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           set -euo pipefail
           chmod +x ./gradlew
@@ -126,7 +126,7 @@ jobs:
       - name: 上传 Actions 构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: android-release-${{ steps.release_meta.outputs.tag_name }}
+          name: android-release-${{ steps.release_meta.outputs.version_name }}-${{ steps.release_meta.outputs.version_code }}
           path: release-artifacts/*
           if-no-files-found: error
 

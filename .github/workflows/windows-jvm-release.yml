@@ -109,7 +109,7 @@ jobs:
       - name: 上传 Actions 构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: windows-jvm-release-${{ steps.release_meta.outputs.tag_name }}
+          name: windows-jvm-release-${{ steps.release_meta.outputs.version_name }}
           path: release-artifacts/*
           if-no-files-found: error
 
