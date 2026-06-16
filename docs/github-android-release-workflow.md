@@ -12,7 +12,7 @@
 - `SHA256SUMS-android.txt`
 - `SHA256SUMS-windows.txt`
 
-workflow 会同时上传到 Actions artifact 和 GitHub Release。GitHub Release 的 tag 默认使用 `gradle/libs.versions.toml` 中的 `app-versionName`，格式为 `v<app-versionName>`，例如 `v1.0.0`。
+workflow 会同时上传到 Actions artifact 和 GitHub Release。GitHub Release 的 tag 默认使用 `gradle/libs.versions.toml` 中的 `app-versionName`，格式为 `v<app-versionName>`，例如 `v0.2.6`。
 
 ## 准备 GitHub Secrets
 
@@ -46,7 +46,7 @@ base64 xymusic-release.jks | tr -d '\n' > keystore.base64
 ## 发布步骤
 
 1. 修改 `gradle/libs.versions.toml`：
-   - `app-versionName`：发布版本名，例如 `1.0.1`。
+   - `app-versionName`：发布版本名，例如 `0.2.6`。
    - `app-versionCode`：Android 版本号，需要递增。
 2. 确认 GitHub Actions 权限允许写入：
    - `Settings` -> `Actions` -> `General` -> `Workflow permissions`

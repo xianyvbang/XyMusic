@@ -10,7 +10,7 @@
 - `SHA256SUMS-windows.txt`
 - `SHA256SUMS-android.txt`
 
-workflow 会同时上传到 Actions artifact 和 GitHub Release。GitHub Release 的 tag 默认使用 `gradle/libs.versions.toml` 中的 `app-versionName`，格式为 `v<app-versionName>`，例如 `v1.0.0`。
+workflow 会同时上传到 Actions artifact 和 GitHub Release。GitHub Release 的 tag 默认使用 `gradle/libs.versions.toml` 中的 `app-versionName`，格式为 `v<app-versionName>`，例如 `v0.2.6`。
 
 ## 发布前准备
 
