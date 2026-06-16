@@ -22,6 +22,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import cn.xybbz.database.converter.StringListTypeConverter
+import cn.xybbz.localdata.enums.CredentialStoreType
 import cn.xybbz.localdata.enums.DataSourceType
 import kotlin.time.Clock
 
@@ -71,17 +72,17 @@ data class ConnectionConfig(
      */
     val username: String = "",
     /**
-     * 当前密码 加密存储
+     * 当前密码引用值，由平台安全存储返回。
      */
     val currentPassword: String = "",
     /**
-     * AES iv
+     * 仅供特定平台实现保留的附加字段。
      */
     val iv: String = "",
     /**
-     * AES key
+     * 当前连接使用的凭据存储类型。
      */
-    val key: String = "",
+    val credentialStoreType: CredentialStoreType = CredentialStoreType.NONE,
 
     /**
      * 媒体库Id

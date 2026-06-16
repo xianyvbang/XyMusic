@@ -37,4 +37,14 @@ sealed class ClientLoginInfoState {
      */
     data object SelectServer : ClientLoginInfoState()
 
+    /**
+     * 当前连接没有可用凭据，需要重新登录。
+     */
+    data object NeedReloginState : ClientLoginInfoState()
+
+    /**
+     * 当前平台安全存储不可用。
+     */
+    data class CredentialStoreUnavailableState(val message: String) : ClientLoginInfoState()
+
 }

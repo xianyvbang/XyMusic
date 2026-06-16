@@ -40,7 +40,8 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.common.utils.PasswordUtils
+import cn.xybbz.config.security.ConnectionCredentialManager
+import cn.xybbz.config.security.CredentialStoreException
 import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.info.shouldShowLoginMessageTips
 import cn.xybbz.config.ifSyncDataInfoCountAfterLogin
@@ -49,7 +50,6 @@ import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.database.withTransaction
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
-import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.common.LocalConstants
@@ -67,6 +67,7 @@ import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.remote.RemoteCurrent
+import cn.xybbz.localdata.enums.CredentialStoreType
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.bigPager
@@ -123,6 +124,7 @@ abstract class IDataSourceParentServer(
     protected val settingsManager: SettingsManager = get()
     protected val contextWrapper: ContextWrapper = get()
     protected val downloaderManager: DownloaderManager = get()
+    protected val credentialManager: ConnectionCredentialManager = get()
 
     private var connectionConfig: ConnectionConfig? = null
 
@@ -210,7 +212,10 @@ abstract class IDataSourceParentServer(
         }
         resetLoginRetry()
         return flow {
-            Log.i("=====", "输入的地址: ${clientLoginInfoReq.address}")
+            Log.i(
+                "connection",
+                "开始登录连接 connectionId=${connectionConfig?.id ?: 0L}, type=${getDataSourceType().name}"
+            )
             emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
             var deviceId = getDeviceId()
             connectionConfig?.let {
@@ -228,7 +233,10 @@ abstract class IDataSourceParentServer(
             //获得服务端信息
             val responseData =
                 defaultParentApiClient.login(clientLoginInfoReq)
-            Log.i("=====", "返回响应值: $responseData")
+            Log.i(
+                "connection",
+                "登录响应 connectionId=${connectionConfig?.id ?: 0L}, type=${getDataSourceType().name}, success=true"
+            )
 
             //开始校验版本
             val version = responseData.version
@@ -249,9 +257,7 @@ abstract class IDataSourceParentServer(
             val userId =
                 responseData.userId
 
-            val encryptAES = PasswordUtils.encryptAES(clientLoginInfoReq.password)
-
-            val tmpConfig = connectionConfig?.copy(
+            val baseConfig = connectionConfig?.copy(
                 serverId = responseData.serverId ?: "",
                 name = responseData.serverName ?: getDataSourceType().title,
                 serverName = responseData.serverName ?: "",
@@ -259,9 +265,9 @@ abstract class IDataSourceParentServer(
                 type = getDataSourceType(),
                 userId = userId.toString(),
                 username = clientLoginInfoReq.username,
-                currentPassword = encryptAES.aesData,
-                iv = encryptAES.aesIv,
-                key = encryptAES.aesKey,
+                currentPassword = connectionConfig.currentPassword,
+                iv = "",
+                credentialStoreType = CredentialStoreType.NONE,
                 serverVersion = version,
                 updateTime = Clock.System.now().toEpochMilliseconds(),
                 lastLoginTime = Clock.System.now().toEpochMilliseconds(),
@@ -276,14 +282,15 @@ abstract class IDataSourceParentServer(
                 type = getDataSourceType(),
                 userId = userId.toString(),
                 username = clientLoginInfoReq.username,
-                currentPassword = encryptAES.aesData,
-                iv = encryptAES.aesIv,
-                key = encryptAES.aesKey,
+                currentPassword = "",
+                iv = "",
+                credentialStoreType = CredentialStoreType.NONE,
                 serverVersion = version,
                 deviceId = deviceId,
                 ifEnabledDownload = responseData.ifEnabledDownload,
                 ifEnabledDelete = responseData.ifEnabledDelete
             )
+            val tmpConfig = credentialManager.savePassword(baseConfig, clientLoginInfoReq.password)
             this@IDataSourceParentServer.connectionConfig = tmpConfig
             popTipHint?.dismiss()
             emitAll(loginAfter(tmpConfig))
@@ -302,6 +309,10 @@ abstract class IDataSourceParentServer(
 
                 is UnauthorizedException -> {
                     emit(ClientLoginInfoState.UnauthorizedErrorState)
+                }
+
+                is CredentialStoreException -> {
+                    emit(ClientLoginInfoState.CredentialStoreUnavailableState(it.message.orEmpty()))
                 }
 
                 else -> {
@@ -398,15 +409,14 @@ abstract class IDataSourceParentServer(
         //判断是否能连接
         return flow {
 
-            var password = connectionConfig.currentPassword
-            if (connectionConfig.key.isNotBlank() && connectionConfig.iv.isNotBlank() && connectionConfig.currentPassword.isNotBlank()) {
-                password = PasswordUtils.decryptAES(
-                    EncryptAesData(
-                        aesKey = connectionConfig.key,
-                        aesIv = connectionConfig.iv,
-                        aesData = connectionConfig.currentPassword
-                    )
-                )
+            if (connectionConfig.currentPassword.isBlank() || connectionConfig.credentialStoreType == CredentialStoreType.NONE) {
+                emit(ClientLoginInfoState.NeedReloginState)
+                return@flow
+            }
+            val password = credentialManager.loadPassword(connectionConfig)
+            if (password.isNullOrBlank()) {
+                emit(ClientLoginInfoState.NeedReloginState)
+                return@flow
             }
             val clientLoginInfoReq = ClientLoginInfoReq(
                 username = connectionConfig.username,
@@ -426,7 +436,7 @@ abstract class IDataSourceParentServer(
             )
 
         }.flowOn(Dispatchers.IO).catch {
-            Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}", it)
+            Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常", it)
             when (it) {
                 is SocketTimeoutException -> {
                     emit(ClientLoginInfoState.ServiceTimeOutState)
@@ -434,6 +444,10 @@ abstract class IDataSourceParentServer(
 
                 is UnauthorizedException -> {
                     emit(ClientLoginInfoState.UnauthorizedErrorState)
+                }
+
+                is CredentialStoreException -> {
+                    emit(ClientLoginInfoState.CredentialStoreUnavailableState(it.message.orEmpty()))
                 }
 
                 else -> {

@@ -173,3 +173,85 @@ val Migration_7_8 = object : Migration(7, 8) {
         connection.execSQL("ALTER TABLE xy_connection_config_new RENAME TO xy_connection_config")
     }
 }
+
+val Migration_8_9 = object : Migration(8, 9) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS xy_connection_config_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                serverId TEXT NOT NULL,
+                serverName TEXT NOT NULL,
+                serverVersion TEXT NOT NULL,
+                deviceId TEXT NOT NULL,
+                name TEXT NOT NULL,
+                address TEXT NOT NULL,
+                type TEXT NOT NULL,
+                userId TEXT NOT NULL,
+                username TEXT NOT NULL,
+                currentPassword TEXT NOT NULL,
+                iv TEXT NOT NULL,
+                credentialStoreType TEXT NOT NULL,
+                libraryIds TEXT,
+                extendInfo TEXT,
+                lastLoginTime INTEGER NOT NULL,
+                updateTime INTEGER NOT NULL,
+                createTime INTEGER NOT NULL,
+                ifEnabledDownload INTEGER NOT NULL,
+                ifEnabledDelete INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+        connection.execSQL(
+            """
+            INSERT INTO xy_connection_config_new (
+                id,
+                serverId,
+                serverName,
+                serverVersion,
+                deviceId,
+                name,
+                address,
+                type,
+                userId,
+                username,
+                currentPassword,
+                iv,
+                credentialStoreType,
+                libraryIds,
+                extendInfo,
+                lastLoginTime,
+                updateTime,
+                createTime,
+                ifEnabledDownload,
+                ifEnabledDelete
+            )
+            SELECT
+                id,
+                serverId,
+                serverName,
+                serverVersion,
+                deviceId,
+                name,
+                address,
+                type,
+                userId,
+                username,
+                '',
+                '',
+                'NONE',
+                libraryIds,
+                extendInfo,
+                lastLoginTime,
+                updateTime,
+                createTime,
+                ifEnabledDownload,
+                ifEnabledDelete
+            FROM xy_connection_config
+            """.trimIndent()
+        )
+        connection.execSQL("DROP TABLE xy_connection_config")
+        connection.execSQL("ALTER TABLE xy_connection_config_new RENAME TO xy_connection_config")
+        connection.execSQL("ALTER TABLE xy_settings ADD COLUMN ifSyncPasswordsByICloud INTEGER NOT NULL DEFAULT 0")
+    }
+}

@@ -188,7 +188,6 @@ class PlexDatasourceServer(
         plexLogin(clientLoginInfoReq)
         val systemInfo = plexApiClient.userApi()
             .getSystemInfo("${ApiConstants.HTTPS}plex.tv/api/v2/resources?includeHttps=1&includeRelay=1")
-        Log.i("=====", "服务器信息 $systemInfo")
 
         if (systemInfo.isEmpty()) {
             throw ConnectionException()

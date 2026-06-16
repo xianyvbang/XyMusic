@@ -330,7 +330,7 @@ class PlexApiClient : DefaultParentApiClient() {
         }
         val postPingSystem = try {
             val pingInfo = ping()
-            logger.info { "ping响应数据: $pingInfo" }
+            logger.info { "Plex ping 成功" }
             //获得machineIdentifier
             pingAfter(pingInfo.mediaContainer?.machineIdentifier)
             pingInfo
@@ -376,7 +376,6 @@ class PlexApiClient : DefaultParentApiClient() {
                 "${ApiConstants.HTTPS}plex.tv/api/v2/users/signin",
                 clientLoginInfoReq.toPlexLogin()
             )
-        logger.info { "返回响应值: $responseData" }
         loginAfter(
             responseData.authToken, responseData.id.toString(),
             clientLoginInfoReq = clientLoginInfoReq

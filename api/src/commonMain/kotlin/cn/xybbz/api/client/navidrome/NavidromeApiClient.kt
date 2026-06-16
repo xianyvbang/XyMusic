@@ -213,7 +213,6 @@ class NavidromeApiClient : DefaultParentApiClient() {
      */
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
         val responseData = userApi().login(clientLoginInfoReq.toNavidromeLogin())
-        logger.info { "返回响应值: $responseData" }
         loginAfter(
             accessToken = responseData.token,
             userId = responseData.id,
@@ -233,7 +232,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
             }
         }
         val user = userApi().getUser(username)
-        logger.info { "服务器信息 $systemInfo 用户信息 $user" }
+        logger.info { "Navidrome 登录完成" }
         val serverVersion = systemInfo.subsonicResponse.serverVersion
         return LoginSuccessData(
             userId = responseData.id,

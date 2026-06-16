@@ -41,6 +41,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.copyTextToClipboard
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.config.info.supportsICloudPasswordSync
 import cn.xybbz.router.About
 import cn.xybbz.router.CacheLimit
 import cn.xybbz.router.ConnectionManagement
@@ -79,6 +80,7 @@ import xymusic_kmp.composeapp.generated.resources.copy_success
 import xymusic_kmp.composeapp.generated.resources.customize_lyric_settings
 import xymusic_kmp.composeapp.generated.resources.download_max_list
 import xymusic_kmp.composeapp.generated.resources.enabled_sync_play_progress
+import xymusic_kmp.composeapp.generated.resources.icloud_keychain_password_sync
 import xymusic_kmp.composeapp.generated.resources.interface_settings
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.language
@@ -108,13 +110,11 @@ fun SettingScreen(
         mutableStateOf(false)
     }
 
-    LaunchedEffect(Unit) {
-        Log.i("=====", "MusicSettingScreen: ")
-    }
-
     val copySuccess = stringResource(Res.string.copy_success)
     val cacheFilePath by settingsViewModel.settingsManager.cacheFilePath.collectAsState()
+    val ifSyncPasswordsByICloud by settingsViewModel.settingsManager.ifSyncPasswordsByICloud.collectAsState()
     val songStoragePath = settingsViewModel.songStoragePath
+    val canShowICloudPasswordSync = supportsICloudPasswordSync()
 
     XyColumnScreen {
         TopAppBarComponent(
@@ -193,6 +193,17 @@ fun SettingScreen(
                             settingsViewModel.setSyncPlayProgressEnabled(
                                 bol
                             )
+                        }
+                    }
+
+                    if (canShowICloudPasswordSync) {
+                        MusicSettingSwitchItemComponent(
+                            title = stringResource(Res.string.icloud_keychain_password_sync),
+                            ifChecked = ifSyncPasswordsByICloud
+                        ) { bol ->
+                            coroutineScope.launch {
+                                settingsViewModel.setIfSyncPasswordsByICloud(bol)
+                            }
                         }
                     }
 

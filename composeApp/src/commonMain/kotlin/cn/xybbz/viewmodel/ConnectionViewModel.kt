@@ -125,6 +125,12 @@ class ConnectionViewModel(
         private set
 
     /**
+     * 当前连接页是否提示安全存储不可用。
+     */
+    var isCredentialStoreError by mutableStateOf(false)
+        private set
+
+    /**
      * 新版桌面连接页是否已经进入资源确认区域。
      *
      * 有些业务分支会先展示候选地址或资源加载中的空态，列表数据可能暂时为空，
@@ -295,14 +301,13 @@ class ConnectionViewModel(
                 serverId = plexInfo?.serverId
             )
         tmpDataSourceParentServer?.addClientAndLogin(clientLoginInfoReq)?.onEach {
-            Log.i("=====", "数据获取${it}")
-
             val loginSateInfo = dataSourceManager.getLoginSateInfo(it)
             loading = loginSateInfo.loading
             errorHint = loginSateInfo.errorHint ?: Res.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""
             isLoginSuccess = loginSateInfo.isLoginSuccess
             isLoginError = loginSateInfo.isError
+            isCredentialStoreError = loginSateInfo.isCredentialStoreUnavailable
 
         }?.launchIn(viewModelScope)
 
@@ -336,6 +341,7 @@ class ConnectionViewModel(
         address = ""
         username = ""
         password = ""
+        isCredentialStoreError = false
         clearResourceSelection()
         clearLoginStatus()
         clearResourceLoginStatus()
@@ -453,6 +459,7 @@ class ConnectionViewModel(
         errorMessage = ""
         isLoginSuccess = false
         isLoginError = false
+        isCredentialStoreError = false
     }
 
     /**

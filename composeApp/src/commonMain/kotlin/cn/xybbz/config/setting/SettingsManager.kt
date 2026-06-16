@@ -85,6 +85,12 @@ class SettingsManager(
     val cacheFilePath = settings.map { it.cacheFilePath }.distinctUntilChanged()
         .stateIn(scope, SharingStarted.Eagerly, settings.value.cacheFilePath)
 
+    /**
+     * 是否允许 iOS 通过 iCloud Keychain 同步密码。
+     */
+    val ifSyncPasswordsByICloud = settings.map { it.ifSyncPasswordsByICloud }.distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, settings.value.ifSyncPasswordsByICloud)
+
     //是否为非计费网络
     var isUnmeteredWifi: Boolean = false
 
@@ -442,6 +448,13 @@ class SettingsManager(
      */
     suspend fun setCacheFilePath(cacheFilePath: String) {
         updateSettings { it.copy(cacheFilePath = cacheFilePath) }
+    }
+
+    /**
+     * 设置是否允许 iCloud Keychain 同步密码。
+     */
+    suspend fun setIfSyncPasswordsByICloud(ifSyncPasswordsByICloud: Boolean) {
+        updateSettings { it.copy(ifSyncPasswordsByICloud = ifSyncPasswordsByICloud) }
     }
 
     fun sengTranscodingEvent(transcodingState: TranscodingState = TranscodingState.Transcoding) {

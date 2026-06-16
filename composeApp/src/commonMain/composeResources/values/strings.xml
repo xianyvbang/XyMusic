@@ -249,6 +249,8 @@
     <string name="album_playback_history">专辑播放历史</string>
     <string name="allow_simultaneous_playback">允许与其他应用同时播放</string>
     <string name="enabled_sync_play_progress">开启播放进度同步</string>
+    <string name="icloud_keychain_password_sync">通过 iCloud Keychain 同步服务器密码</string>
+    <string name="icloud_keychain_password_sync_desc">开启后会将已保存的服务器密码迁移到可同步 Keychain；关闭后只保存在当前设备。</string>
     <string name="customize_lyric_settings">自定义API设置</string>
     <string name="prioritize_music_service_api">优先使用音乐服务资源接口</string>
     <string name="lyrics_single_api">歌词单曲接口</string>
@@ -387,6 +389,8 @@
     <string name="server_connection_timeout">服务端连接超时</string>
     <string name="no_connection_selected">未选择连接</string>
     <string name="login_failed_no_token">登陆失败,账号或密码错误</string>
+    <string name="connection_needs_relogin">当前连接缺少可用密码，请重新登录</string>
+    <string name="connection_credential_store_unavailable">当前设备安全存储不可用，无法保存服务器密码</string>
     <string name="login_success">登录成功</string>
     <string name="get_server_resources_failed">获得服务器资源失败</string>
     <string name="creating_playlist">正在创建…</string>

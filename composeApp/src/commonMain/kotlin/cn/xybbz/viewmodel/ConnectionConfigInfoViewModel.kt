@@ -26,23 +26,26 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.common.utils.PasswordUtils
-import cn.xybbz.entity.data.EncryptAesData
+import cn.xybbz.config.security.ConnectionCredentialManager
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import cn.xybbz.localdata.enums.CredentialStoreType
+import cn.xybbz.config.security.CredentialStoreException
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.InjectedParam
 import org.koin.core.annotation.KoinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.alias_cannot_be_empty
 import xymusic_kmp.composeapp.generated.resources.connection_address_cannot_be_empty
+import xymusic_kmp.composeapp.generated.resources.connection_credential_store_unavailable
 import xymusic_kmp.composeapp.generated.resources.modify_success
 
 @KoinViewModel
 class ConnectionConfigInfoViewModel(
     @InjectedParam private val connectionId: Long,
     private val dataSourceManager: DataSourceManager,
-    private val db: LocalDatabaseClient
+    private val db: LocalDatabaseClient,
+    private val credentialManager: ConnectionCredentialManager
 ) : ViewModel() {
     var connectionConfig by mutableStateOf<ConnectionConfig?>(null)
         private set
@@ -87,18 +90,12 @@ class ConnectionConfigInfoViewModel(
                     this@ConnectionConfigInfoViewModel.username = thisConnectionConfig.username
                     this@ConnectionConfigInfoViewModel.address = thisConnectionConfig.address
 
-                    //此处还原密码
-                    if (thisConnectionConfig.currentPassword.isNotBlank()) {
-                        val decryptPassword = PasswordUtils.decryptAES(
-                            EncryptAesData(
-                                aesKey = thisConnectionConfig.key,
-                                aesIv = thisConnectionConfig.iv,
-                                aesData = thisConnectionConfig.currentPassword
-                            )
-                        )
-                        if (decryptPassword.isNotBlank()) {
-                            this@ConnectionConfigInfoViewModel.password = decryptPassword
-                        }
+                    if (thisConnectionConfig.currentPassword.isNotBlank() &&
+                        thisConnectionConfig.credentialStoreType != CredentialStoreType.NONE
+                    ) {
+                        this@ConnectionConfigInfoViewModel.password = runCatching {
+                            credentialManager.loadPassword(thisConnectionConfig).orEmpty()
+                        }.getOrDefault("")
                     }
                     this@ConnectionConfigInfoViewModel.connectionName = thisConnectionConfig.name
                 }
@@ -137,16 +134,19 @@ class ConnectionConfigInfoViewModel(
             return false
         }
 
-        //更新密码
-        val encryptAES = PasswordUtils.encryptAES(password)
-        val updatedConfig = currentConfig.copy(
-            currentPassword = encryptAES.aesData,
-            iv = encryptAES.aesIv,
-            key = encryptAES.aesKey,
+        var updatedConfig = currentConfig.copy(
             name = connectionName,
             username = username,
             address = address
         )
+        if (password.isNotBlank()) {
+            try {
+                updatedConfig = credentialManager.savePassword(updatedConfig, password)
+            } catch (e: CredentialStoreException) {
+                MessageUtils.sendPopTipError(Res.string.connection_credential_store_unavailable)
+                return false
+            }
+        }
         connectionConfig = updatedConfig
         dataSourceManager.updateConnectionConfig(updatedConfig)
         return true

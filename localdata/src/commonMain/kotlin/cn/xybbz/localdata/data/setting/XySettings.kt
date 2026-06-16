@@ -151,4 +151,8 @@ data class XySettings @OptIn(ExperimentalUuidApi::class) constructor(
      * 播放缓存目录。空字符串表示使用平台默认目录。
      */
     val cacheFilePath: String = "",
+    /**
+     * 是否允许 iOS 通过 iCloud Keychain 同步服务器密码。
+     */
+    val ifSyncPasswordsByICloud: Boolean = false,
 )

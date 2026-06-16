@@ -223,14 +223,13 @@ class EmbyApiClient : DefaultParentApiClient() {
         }
         val responseData =
             userApi().authenticateByName(clientLoginInfoReq.toLogin())
-        logger.info { "返回响应值: $responseData" }
         loginAfter(
             responseData.accessToken,
             responseData.user?.id,
             clientLoginInfoReq = clientLoginInfoReq
         )
         val systemInfo = userApi().getSystemInfo()
-        logger.info { "服务器信息 $systemInfo" }
+        logger.info { "Emby 登录完成" }
 
         return LoginSuccessData(
             userId = responseData.user?.id,

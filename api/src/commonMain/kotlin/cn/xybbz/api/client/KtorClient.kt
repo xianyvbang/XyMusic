@@ -17,15 +17,17 @@ expect fun provideClient(): HttpClient
 
 expect fun provideClient(proxy: ProxyConfig?): HttpClient
 
+expect fun isNetworkDebugLoggingEnabled(): Boolean
+
 internal fun HttpClientConfig<*>.installXyCommonClientConfig() {
     install(Logging) {
         logger = object : Logger {
             private val logger = KotlinLogging.logger {}
             override fun log(message: String) {
-                logger.info { message }
+                logger.info { HttpLogSanitizer.sanitize(message) }
             }
         }
-        level = LogLevel.HEADERS
+        level = if (isNetworkDebugLoggingEnabled()) LogLevel.HEADERS else LogLevel.NONE
     }
     install(ContentNegotiation) {
         json(jsonSerializer)

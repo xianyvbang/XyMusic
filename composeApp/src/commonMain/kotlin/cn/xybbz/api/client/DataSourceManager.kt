@@ -100,7 +100,8 @@ import xymusic_kmp.composeapp.generated.resources.import_playlist_failed
 import xymusic_kmp.composeapp.generated.resources.import_playlist_success
 import xymusic_kmp.composeapp.generated.resources.importing_playlist
 import xymusic_kmp.composeapp.generated.resources.login_failed
-import xymusic_kmp.composeapp.generated.resources.login_failed_no_token
+import xymusic_kmp.composeapp.generated.resources.connection_credential_store_unavailable
+import xymusic_kmp.composeapp.generated.resources.connection_needs_relogin
 import xymusic_kmp.composeapp.generated.resources.no_connection_selected
 import xymusic_kmp.composeapp.generated.resources.remove_music_from_playlist_failed
 import xymusic_kmp.composeapp.generated.resources.remove_music_from_playlist_success
@@ -493,17 +494,37 @@ open class DataSourceManager(
                 )
             }
 
+            ClientLoginInfoState.NeedReloginState -> {
+                Log.i(Constants.LOG_ERROR_PREFIX, "连接凭据缺失，需要重新登录")
+                LoginStateData(
+                    loading = false,
+                    isError = true,
+                    errorHint = Res.string.connection_needs_relogin,
+                    needsRelogin = true
+                )
+            }
+
+            is ClientLoginInfoState.CredentialStoreUnavailableState -> {
+                Log.i(Constants.LOG_ERROR_PREFIX, "安全存储不可用")
+                LoginStateData(
+                    loading = false,
+                    isError = true,
+                    errorHint = Res.string.connection_credential_store_unavailable,
+                    errorMessage = loginState.message,
+                    isCredentialStoreUnavailable = true
+                )
+            }
+
             ClientLoginInfoState.UnauthorizedErrorState -> {
                 Log.i(Constants.LOG_ERROR_PREFIX, "登录失败,账号或密码错误")
                 LoginStateData(
                     loading = false,
                     isError = true,
-                    errorHint = Res.string.login_failed_no_token
+                    errorHint = Res.string.login_failed
                 )
             }
 
             ClientLoginInfoState.UserLoginSuccess -> {
-                Log.i("=====", "登陆成功")
                 LoginStateData(
                     loading = false,
                     isError = false,

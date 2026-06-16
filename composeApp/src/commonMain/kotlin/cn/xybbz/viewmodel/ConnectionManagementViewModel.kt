@@ -27,6 +27,7 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.common.utils.DatabaseUtils
+import cn.xybbz.config.security.ConnectionCredentialManager
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.setting.SettingsManager
@@ -45,7 +46,8 @@ class ConnectionManagementViewModel (
     private val downloaderManager: DownloaderManager,
     private val musicController: MusicCommonController,
     private val musicPlayContext: MusicPlayContext,
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    private val credentialManager: ConnectionCredentialManager
 ) : ViewModel() {
 
     //获得所有链接信息
@@ -118,6 +120,10 @@ class ConnectionManagementViewModel (
      * 删除当前连接
      */
     suspend fun removeConnection(connectionId: Long) {
+        runCatching {
+            val connectionConfig = db.connectionConfigDao.selectById(connectionId)
+            credentialManager.clearPassword(connectionConfig)
+        }
         clearDownloadDataByConnectionId(connectionId)
         DatabaseUtils.clearDatabaseByConnectionConfig(
             db,

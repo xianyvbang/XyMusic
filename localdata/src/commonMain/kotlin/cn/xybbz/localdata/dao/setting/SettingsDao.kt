@@ -121,4 +121,7 @@ interface SettingsDao {
 
     @Query("update xy_settings set cacheFilePath = :cacheFilePath where id = :id")
     suspend fun updateCacheFilePath(cacheFilePath: String, id: Long)
+
+    @Query("update xy_settings set ifSyncPasswordsByICloud = :ifSyncPasswordsByICloud where id = :id")
+    suspend fun updateIfSyncPasswordsByICloud(ifSyncPasswordsByICloud: Boolean, id: Long)
 }

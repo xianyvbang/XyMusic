@@ -685,19 +685,28 @@ internal fun JvmSettingSwitchRow(
     title: String,
     description: String,
     checked: Boolean,
+    enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     JvmSettingBaseRow(
         icon = icon,
         title = title,
         description = description,
+        enabled = enabled,
         onClick = {
-            onCheckedChange(!checked)
+            if (enabled) {
+                onCheckedChange(!checked)
+            }
         },
         trailing = {
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChange,
+                enabled = enabled,
+                onCheckedChange = {
+                    if (enabled) {
+                        onCheckedChange(it)
+                    }
+                },
                 colors = SwitchDefaults.colors(
                     checkedTrackColor = MaterialTheme.colorScheme.primary,
                     checkedThumbColor = MaterialTheme.colorScheme.onPrimary,

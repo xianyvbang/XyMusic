@@ -39,6 +39,7 @@ import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.copyTextToClipboard
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.config.info.supportsICloudPasswordSync
 import cn.xybbz.localdata.data.setting.XySettings
 import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.router.About
@@ -115,8 +116,10 @@ fun JvmSettingScreen(
     val coroutineScope = rememberCoroutineScope()
     val settings = settingsViewModel.settingDataNow
     val cacheFilePath by settingsViewModel.settingsManager.cacheFilePath.collectAsState()
+    val ifSyncPasswordsByICloud by settingsViewModel.settingsManager.ifSyncPasswordsByICloud.collectAsState()
     val songStoragePath = settingsViewModel.songStoragePath
     val copySuccess = stringResource(Res.string.copy_success)
+    val canShowICloudPasswordSync = supportsICloudPasswordSync()
     val cacheLimitLabel = cacheUpperLimitOptions()
         .firstOrNull { it.limit == settings.cacheUpperLimit }
         ?.displayMessage()
@@ -224,6 +227,20 @@ fun JvmSettingScreen(
                             }
                         }
                     )
+
+                    if (canShowICloudPasswordSync) {
+                        JvmSettingSwitchRow(
+                            icon = Res.drawable.password_24px,
+                            title = stringResource(Res.string.icloud_keychain_password_sync),
+                            description = stringResource(Res.string.icloud_keychain_password_sync_desc),
+                            checked = ifSyncPasswordsByICloud,
+                            onCheckedChange = { checked ->
+                                coroutineScope.launch {
+                                    settingsViewModel.setIfSyncPasswordsByICloud(checked)
+                                }
+                            }
+                        )
+                    }
 
                     JvmSettingPathRow(
                         icon = Res.drawable.folder_managed_24px,

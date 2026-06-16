@@ -257,7 +257,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
             }
         }
         val user = userApi().getUser(username)
-        logger.info { "服务器信息 $systemInfo 用户信息 $user" }
+        logger.info { "Subsonic 登录完成" }
         return LoginSuccessData(
             userId = clientLoginInfoReq.username,
             serverId = "",

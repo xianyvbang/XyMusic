@@ -11,9 +11,11 @@ import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlaybackProgressReporter
+import cn.xybbz.config.security.ConnectionCredentialManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.localdata.config.LocalDatabaseClient
+import cn.xybbz.localdata.enums.CredentialStoreType
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
@@ -25,7 +27,8 @@ class SettingsViewModel(
     private val musicController: MusicCommonController,
     private val playbackProgressReporter: PlaybackProgressReporter,
     private val dataSourceManager: DataSourceManager,
-    private val downloaderManager: DownloaderManager
+    private val downloaderManager: DownloaderManager,
+    private val credentialManager: ConnectionCredentialManager
 ) : ViewModel() {
 
 
@@ -81,5 +84,37 @@ class SettingsViewModel(
             }
         }
         settingsManager.setIfEnableSyncPlayProgress(enabled)
+    }
+
+    /**
+     * 更新 iCloud Keychain 密码同步开关。
+     */
+    suspend fun setIfSyncPasswordsByICloud(enabled: Boolean) {
+        val currentSettings = settingsManager.getLatest()
+        if (currentSettings.ifSyncPasswordsByICloud == enabled) {
+            return
+        }
+        settingsManager.setIfSyncPasswordsByICloud(enabled)
+        migrateIosStoredCredentials()
+    }
+
+    /**
+     * 在切换 iCloud Keychain 开关后迁移现有连接的凭据条目。
+     */
+    private suspend fun migrateIosStoredCredentials() {
+        val connectionConfigs = db.connectionConfigDao.selectAllData()
+        val migratedConfigs = connectionConfigs.mapNotNull { connectionConfig ->
+            if (
+                connectionConfig.credentialStoreType != CredentialStoreType.IOS_KEYCHAIN_LOCAL &&
+                connectionConfig.credentialStoreType != CredentialStoreType.IOS_KEYCHAIN_SYNCABLE
+            ) {
+                return@mapNotNull null
+            }
+            val updatedConfig = credentialManager.migratePasswordStore(connectionConfig)
+            if (updatedConfig != connectionConfig) updatedConfig else null
+        }
+        if (migratedConfigs.isNotEmpty()) {
+            db.connectionConfigDao.updateBatch(migratedConfigs)
+        }
     }
 }
