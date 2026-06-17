@@ -14,6 +14,7 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import android.util.Base64
+import androidx.core.content.edit
 
 /**
  * Android 连接凭据存储工厂。
@@ -97,13 +98,13 @@ private class AndroidConnectionCredentialStore(
 
     private fun saveToPreferences(key: String, value: String?) {
         val preferences = contextWrapper.context.getSharedPreferences(PREFERENCES_NAME, android.content.Context.MODE_PRIVATE)
-        preferences.edit().apply {
+        preferences.edit {
             if (value == null) {
                 remove(key)
             } else {
                 putString(key, value)
             }
-        }.apply()
+        }
     }
 
     private fun readFromPreferences(key: String): String? {

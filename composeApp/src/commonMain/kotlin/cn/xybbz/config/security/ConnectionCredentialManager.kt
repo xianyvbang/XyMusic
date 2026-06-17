@@ -41,7 +41,7 @@ class ConnectionCredentialManager(
     suspend fun savePassword(connectionConfig: ConnectionConfig, password: String): ConnectionConfig {
         ensureAvailable()
         val reference = credentialStore.save(connectionConfig, password)
-        val storeType = credentialStore.currentStoreType(connectionConfig)
+        val storeType = currentStoreType(connectionConfig)
         return connectionConfig.copy(
             currentPassword = reference,
             iv = "",
@@ -76,7 +76,7 @@ class ConnectionCredentialManager(
      * 按当前平台配置迁移已保存凭据的存储类型。
      */
     suspend fun migratePasswordStore(connectionConfig: ConnectionConfig): ConnectionConfig {
-        val targetStoreType = credentialStore.currentStoreType(connectionConfig)
+        val targetStoreType = currentStoreType(connectionConfig)
         if (connectionConfig.currentPassword.isBlank()) {
             return connectionConfig.copy(
                 iv = "",
@@ -104,7 +104,7 @@ class ConnectionCredentialManager(
     }
 
     private suspend fun ensureAvailable() {
-        if (!credentialStore.isAvailable()) {
+        if (!isAvailable()) {
             throw CredentialStoreException("当前设备安全存储不可用")
         }
     }
