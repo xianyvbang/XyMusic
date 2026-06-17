@@ -86,8 +86,34 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          # GitHub-hosted runner 会预装 Android SDK，但不保证把 sdkmanager 放进 PATH。
+          sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          if [ -z "$sdk_root" ]; then
+            echo "::error::未找到 ANDROID_SDK_ROOT 或 ANDROID_HOME，无法定位 Android SDK"
+            exit 1
+          fi
+
+          # 优先使用 cmdline-tools/latest/bin/sdkmanager；若镜像布局变化，则回退到实际存在的 bin/sdkmanager。
+          sdkmanager_bin=""
+          for candidate in \
+            "$sdk_root/cmdline-tools/latest/bin/sdkmanager" \
+            "$sdk_root/cmdline-tools/bin/sdkmanager"; do
+            if [ -x "$candidate" ]; then
+              sdkmanager_bin="$candidate"
+              break
+            fi
+          done
+          if [ -z "$sdkmanager_bin" ]; then
+            sdkmanager_bin="$(find "$sdk_root/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort | head -n 1 || true)"
+          fi
+          if [ -z "$sdkmanager_bin" ]; then
+            echo "::error::未在 $sdk_root 下找到 sdkmanager，请检查 runner Android cmdline-tools 安装状态"
+            exit 1
+          fi
+
+          # 显式传入 --sdk_root，避免 sdkmanager 因非默认安装位置误判 SDK 根目录。
+          yes | "$sdkmanager_bin" --sdk_root="$sdk_root" --licenses > /dev/null || true
+          "$sdkmanager_bin" --sdk_root="$sdk_root" "platforms;android-36" "build-tools;36.0.0"
 
       # 正式包必须使用 release keystore；缺少任何 Secret 都直接失败，避免生成测试/未签名产物。
       - name: 还原 Android 正式签名文件

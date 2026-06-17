@@ -1,15 +1,15 @@
 # 复用 Kotlin Multiplatform 官方文档的 composite action 思路，集中维护 Gradle 构建环境。
 name: Setup Gradle
-description: 为 XyMusic 正式发布配置 JDK 21 和 Gradle 缓存。
+description: 为 XyMusic 正式发布配置 JetBrains Runtime 21 和 Gradle 缓存。
 
 runs:
   using: composite
   steps:
-    # 正式构建使用项目 Gradle 配置要求的 JDK 21。
+    # 正式构建使用与 Gradle Daemon 约束一致的 JetBrains Runtime 21。
     - name: 设置 JDK 21
       uses: actions/setup-java@v4
       with:
-        distribution: temurin
+        distribution: jetbrains
         java-version: "21"
 
     # Gradle 官方 action 负责依赖缓存和构建扫描友好的 Gradle 初始化。
