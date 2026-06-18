@@ -165,8 +165,19 @@ jobs:
             echo "::error::未找到 release APK 或 AAB 产物"
             exit 1
           fi
+          # APK 的 minSdk 为 28，apksigner 返回 0 即表示当前安装范围内签名有效；v1/v3/v4 为 false 不单独视为失败。
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk_file"
-          jarsigner -verify -strict "$aab_file" > /dev/null
+          # AAB 使用 JAR 签名；Android 上传密钥通常是自签证书，jarsigner -strict 会把正常证书警告升级为退出码 4。
+          if ! aab_verify_output="$(jarsigner -verify "$aab_file" 2>&1)"; then
+            printf '%s\n' "$aab_verify_output"
+            echo "::error::AAB 签名校验命令执行失败"
+            exit 1
+          fi
+          printf '%s\n' "$aab_verify_output"
+          if [[ "$aab_verify_output" != *"jar verified."* ]]; then
+            echo "::error::AAB 未通过 JAR 签名校验"
+            exit 1
+          fi
           cp "$apk_file" "android-release-artifacts/XyMusic-${VERSION_NAME}-${VERSION_CODE}-release.apk"
           cp "$aab_file" "android-release-artifacts/XyMusic-${VERSION_NAME}-${VERSION_CODE}-release.aab"
           (cd android-release-artifacts && sha256sum * > SHA256SUMS-android.txt)
