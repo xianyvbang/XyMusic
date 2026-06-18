@@ -9,7 +9,7 @@ plugins {
 // 桌面端包版本与 Android versionName 统一由版本目录维护。
 val appVersionName = libs.versions.app.versionName.get()
 // macOS 的 DMG/PKG 版本号不接受 0 开头，因此单独映射成可通过校验的版本。
-val macOSPackageVersion = appVersionName.replaceFirst(Regex("^0\\."), "1.")
+// val macOSPackageVersion = appVersionName.replaceFirst(Regex("^0\\."), "1.")
 
 kotlin {
     dependencies {
@@ -47,18 +47,20 @@ compose.desktop {
             configurationFiles.from(project.file("compose-desktop.pro"))
         }
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            // 当前桌面端暂时只打 Windows MSI，macOS 和 Linux 产物先保留注释。
+            // targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Msi)
             packageName = "cn.xybbz"
             packageVersion = appVersionName
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
-            macOS {
-                // 只对 macOS 包做版本兼容转换，避免 DMG 校验拒绝 0 开头的版本号。
-                packageVersion = macOSPackageVersion
-            }
-            linux {
-                // FileKit 的 Linux 原生文件选择器依赖该 JDK 模块访问系统认证/用户信息。
-                modules("jdk.security.auth")
-            }
+            // macOS {
+            //     // 只对 macOS 包做版本兼容转换，避免 DMG 校验拒绝 0 开头的版本号。
+            //     packageVersion = macOSPackageVersion
+            // }
+            // linux {
+            //     // FileKit 的 Linux 原生文件选择器依赖该 JDK 模块访问系统认证/用户信息。
+            //     modules("jdk.security.auth")
+            // }
         }
     }
 }
