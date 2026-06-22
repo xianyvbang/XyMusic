@@ -236,6 +236,9 @@ jobs:
       # 这里明确构建 release MSI，不运行 dev/run/hot reload 或测试任务。
       - name: 构建 Windows release MSI
         shell: pwsh
+        env:
+          # GitHub Windows runner 默认是英文环境；强制 jpackage 选用 JDK 内置中文 MSI 文案。
+          JAVA_TOOL_OPTIONS: -Duser.language=zh -Duser.country=CN
         run: |
           .\gradlew.bat --no-daemon :desktopApp:packageReleaseMsi --stacktrace
           if ($LASTEXITCODE -ne 0) {

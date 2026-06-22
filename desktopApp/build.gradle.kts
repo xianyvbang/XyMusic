@@ -50,9 +50,14 @@ compose.desktop {
             // 当前桌面端暂时只打 Windows MSI，macOS 和 Linux 产物先保留注释。
             // targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             targetFormats(TargetFormat.Msi)
-            packageName = "cn.xybbz"
+            // Windows 安装器显示名，避免把内部包名暴露成用户可见应用名称。
+            packageName = "XyMusic"
             packageVersion = appVersionName
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
+            windows {
+                // Windows MSI 升级标识首次发布后需要长期固定，避免后续版本被识别成不同产品。
+                upgradeUuid = "bb8e424c-b3d6-4e08-8693-9801d4b15ab3"
+            }
             // macOS {
             //     // 只对 macOS 包做版本兼容转换，避免 DMG 校验拒绝 0 开头的版本号。
             //     packageVersion = macOSPackageVersion
