@@ -67,7 +67,7 @@ class ArtistRemoteMediator(
                     val remoteKey = db.withTransaction {
                         remoteKeyDao.remoteKeyById(remoteId)
                     }
-                    if (remoteKey == null || (remoteKey.nextKey + 1 * state.config.pageSize) >= remoteKey.total
+                    if (remoteKey == null || ((remoteKey.nextKey + 1) * state.config.pageSize) >= remoteKey.total
                     ) {
                         return MediatorResult.Success(
                             endOfPaginationReached = true

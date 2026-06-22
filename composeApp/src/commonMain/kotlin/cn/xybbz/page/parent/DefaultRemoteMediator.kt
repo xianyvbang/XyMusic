@@ -55,7 +55,7 @@ abstract class DefaultRemoteMediator<T : Any, K : Any>(
                     val remoteKey = db.withTransaction {
                         remoteKeyDao.remoteKeyById(remoteId)
                     }
-                    if (remoteKey == null || (remoteKey.nextKey + 1 * state.config.pageSize) >= remoteKey.total
+                    if (remoteKey == null || ((remoteKey.nextKey + 1) * state.config.pageSize) >= remoteKey.total
                     ) {
                         return MediatorResult.Success(
                             endOfPaginationReached = true
@@ -89,7 +89,7 @@ abstract class DefaultRemoteMediator<T : Any, K : Any>(
             }
             MediatorResult.Success(
                 endOfPaginationReached = response.items.isNullOrEmpty()
-                        || (if (loadKey == 0) state.config.pageSize else (loadKey * state.config.pageSize)) >= response.totalRecordCount
+                        || ((loadKey + 1) * state.config.pageSize) >= response.totalRecordCount
             )
         } catch (e: Exception) {
             e.printStackTrace()
