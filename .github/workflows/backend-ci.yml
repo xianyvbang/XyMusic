@@ -1,0 +1,124 @@
+# KMP 单元测试工作流：在 push、PR 和手动触发时验证核心 JVM 与 Android 本地单测。
+name: KMP 单元测试
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# 单元测试只需要读取仓库内容，不需要写入 Release、Issue 或 PR。
+permissions:
+  contents: read
+
+# 同一分支的新提交会取消旧测试，减少排队和无效构建时间。
+concurrency:
+  group: xymusic-kmp-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kmp-jvm-unit-test:
+    name: 核心 JVM 单元测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      # 拉取源码用于执行 Gradle KMP 单元测试。
+      - name: 拉取源码
+        uses: actions/checkout@v4
+
+      # 复用仓库已有 Gradle 环境，统一 JDK 21 与 Gradle 缓存策略。
+      - name: 设置 Gradle 环境
+        uses: ./.github/actions/gradle-setup
+
+      # Linux runner 需要显式赋予 Gradle Wrapper 执行权限。
+      - name: 准备 Gradle Wrapper
+        shell: bash
+        run: chmod +x ./gradlew
+
+      # 项目根任务聚合 api、composeApp、download 等核心业务模块的 JVM 单测。
+      - name: 运行核心 JVM 单元测试
+        shell: bash
+        run: ./gradlew --no-daemon xyCoreJvmTest --stacktrace
+
+      # 覆盖率报告复用根项目已维护的 Kover 聚合任务，避免全量多平台测试过重。
+      - name: 生成核心 JVM 覆盖率报告
+        shell: bash
+        run: ./gradlew --no-daemon xyCoreJvmCoverageReport --stacktrace
+
+      # 即使测试失败也上传报告，便于在 Actions 页面定位失败用例。
+      - name: 上传 JVM 测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kmp-jvm-test-reports
+          path: |
+            **/build/test-results/jvmTest/**
+            **/build/reports/tests/jvmTest/**
+            **/build/reports/kover/**
+          if-no-files-found: warn
+
+  android-unit-test:
+    name: Android 本地单元测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      # 拉取源码用于执行 Android App 的本地 JVM 单测。
+      - name: 拉取源码
+        uses: actions/checkout@v4
+
+      # 复用仓库已有 Gradle 环境，保持与发布流程一致的 JDK 21。
+      - name: 设置 Gradle 环境
+        uses: ./.github/actions/gradle-setup
+
+      # compileSdk 36 在 GitHub runner 上不保证预装，这里显式安装。
+      - name: 安装 Android SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          if [ -z "$sdk_root" ]; then
+            echo "::error::未找到 ANDROID_SDK_ROOT 或 ANDROID_HOME，无法定位 Android SDK"
+            exit 1
+          fi
+
+          sdkmanager_bin=""
+          for candidate in \
+            "$sdk_root/cmdline-tools/latest/bin/sdkmanager" \
+            "$sdk_root/cmdline-tools/bin/sdkmanager"; do
+            if [ -x "$candidate" ]; then
+              sdkmanager_bin="$candidate"
+              break
+            fi
+          done
+          if [ -z "$sdkmanager_bin" ]; then
+            sdkmanager_bin="$(find "$sdk_root/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort | head -n 1 || true)"
+          fi
+          if [ -z "$sdkmanager_bin" ]; then
+            echo "::error::未在 $sdk_root 下找到 sdkmanager，请检查 runner Android cmdline-tools 安装状态"
+            exit 1
+          fi
+
+          yes | "$sdkmanager_bin" --sdk_root="$sdk_root" --licenses > /dev/null || true
+          "$sdkmanager_bin" --sdk_root="$sdk_root" "platforms;android-36" "build-tools;36.0.0"
+
+      # Linux runner 需要显式赋予 Gradle Wrapper 执行权限。
+      - name: 准备 Gradle Wrapper
+        shell: bash
+        run: chmod +x ./gradlew
+
+      # Android App 的本地单测运行在 JVM 上，不需要启动模拟器。
+      - name: 运行 Android 本地单元测试
+        shell: bash
+        run: ./gradlew --no-daemon :androidApp:testDebugUnitTest --stacktrace
+
+      # 即使测试失败也上传报告，便于在 Actions 页面定位失败用例。
+      - name: 上传 Android 测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-test-reports
+          path: |
+            androidApp/build/test-results/testDebugUnitTest/**
+            androidApp/build/reports/tests/testDebugUnitTest/**
+          if-no-files-found: warn
