@@ -114,6 +114,9 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     val endTime: Long
         get() = endTimeFlow.value
 
+    // 已触发片尾跳过的歌曲 ID，避免同一首歌的连续进度回调导致重复跳歌。
+    private var tailSkipTriggeredMusicId: String? = null
+
     // 当前播放模式
     private val _playModeFlow = MutableStateFlow(PlayerModeEnum.SEQUENTIAL_PLAYBACK)
     val playModeFlow = _playModeFlow.asStateFlow()
@@ -299,6 +302,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     open fun setHeadAndEntTime(headTime: Long, endTime: Long) {
         _headTimeFlow.value = headTime
         _endTimeFlow.value = endTime
+        resetTailSkipTriggeredMusic()
     }
 
     /**
@@ -345,7 +349,25 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 设置当前播放进度
      */
     fun setCurrentPositionData(currentPosition: Long) {
+        if (shouldSkipTail(currentPosition)) {
+            tailSkipTriggeredMusicId = musicInfo?.itemId
+            seekToNext()
+            return
+        }
         _progressStateFlow.value = currentPosition
+    }
+
+    /**
+     * 当前进度是否需要触发片尾跳过。
+     */
+    private fun shouldSkipTail(currentPosition: Long): Boolean {
+        val currentMusicId = musicInfo?.itemId ?: return false
+        if (tailSkipTriggeredMusicId == currentMusicId) return false
+        if (state != PlayStateEnum.Playing) return false
+        if (endTime <= Constants.ZERO.toLong()) return false
+
+        val endTimeMs = endTime * 1000L
+        return currentPosition >= endTimeMs
     }
 
     /**
@@ -584,7 +606,17 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 更新当前播放音乐
      */
     protected fun updateCurrentMusic(music: XyPlayMusic?) {
+        if (musicInfo?.itemId != music?.itemId) {
+            resetTailSkipTriggeredMusic()
+        }
         _musicInfoFlow.value = music
+    }
+
+    /**
+     * 重置片尾跳过触发记录。
+     */
+    private fun resetTailSkipTriggeredMusic() {
+        tailSkipTriggeredMusicId = null
     }
 
     /**
@@ -664,6 +696,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         _stateFlow.value = PlayStateEnum.None
         _headTimeFlow.value = Constants.ZERO.toLong()
         _endTimeFlow.value = Constants.ZERO.toLong()
+        resetTailSkipTriggeredMusic()
         _pageNumFlow.value = Constants.ZERO
         _pageSizeFlow.value = Constants.ZERO
     }
