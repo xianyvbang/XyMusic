@@ -44,6 +44,8 @@ kotlin {
         //启动页面
         implementation(libs.androidx.core.splashscreen)
         implementation(libs.filekit.dialogs)
+        // Android 本地单元测试依赖 JUnit4，保证 testDebugUnitTest 可以编译默认示例用例。
+        testImplementation(libs.junit)
     }
 }
 android {
