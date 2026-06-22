@@ -929,13 +929,22 @@ class SubsonicDatasourceServer(
             )
 
 
+        val items = subsonicResponse.subsonicResponse.searchResult3?.song?.let {
+            convertToMusicList(
+                it
+            )
+        }
+        val size = items?.size ?: 0
+        // Subsonic 搜索接口不返回总数,根据当前页数量推断分页边界
+        val totalRecordCount = when {
+            items.isNullOrEmpty() -> startIndex
+            size < pageSize -> startIndex + size
+            else -> startIndex + size + 1
+        }
+
         return XyResponse(
-            items = subsonicResponse.subsonicResponse.searchResult3?.song?.let {
-                convertToMusicList(
-                    it
-                )
-            },
-            totalRecordCount = 1000000,
+            items = items,
+            totalRecordCount = totalRecordCount,
             startIndex = startIndex
         )
     }
