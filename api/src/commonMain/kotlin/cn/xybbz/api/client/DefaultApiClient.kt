@@ -73,8 +73,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         updateTokenHeaderName()
         updateTokenOrHeadersOrQuery()
         logger.error { "开始创建 createHttpClient" }
-        //todo 注意关闭
-        httpClient = provideClient().config {
+        val newHttpClient = provideClient().config {
             expectSuccess = true
             followRedirects = true
             install(DefaultRequest) {
@@ -148,6 +147,12 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 }
             }
         }
+        // 重建客户端前关闭旧实例，避免切换服务器或重登录时泄漏连接池。
+        if (this::httpClient.isInitialized) {
+            httpClient.close()
+        }
+        httpClient = newHttpClient
+        restartApiClients()
         downloadApi(true)
     }
 
@@ -312,9 +317,29 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
     }
 
     /**
+     * 重新绑定依赖 HttpClient 的接口服务。
+     */
+    protected open fun restartApiClients() {
+        userApi(true)
+        userLibraryApi(true)
+        itemApi(true)
+        imageApi(true)
+        universalAudioApi(true)
+        lyricsApi(true)
+        userViewsApi(true)
+        playlistsApi(true)
+        artistsApi(true)
+        libraryApi(true)
+        genreApi(true)
+    }
+
+    /**
      * 清空数据
      */
     override fun release() {
-        httpClient.close()
+        // release 可能早于 createHttpClient 调用，先做初始化保护。
+        if (this::httpClient.isInitialized) {
+            httpClient.close()
+        }
     }
 }

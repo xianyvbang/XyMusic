@@ -119,11 +119,16 @@ class CustomMediaApiClient : ApiFactory {
      * 初始化HttpClient
      */
     override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
-        httpClient = provideClient().config {
+        val newHttpClient = provideClient().config {
             install(HttpRequestRetry) {
                 maxRetries = 2
             }
         }
+        // 重建客户端前关闭旧实例，避免重复初始化时泄漏连接池。
+        if (this::httpClient.isInitialized) {
+            httpClient.close()
+        }
+        httpClient = newHttpClient
     }
 
     /**

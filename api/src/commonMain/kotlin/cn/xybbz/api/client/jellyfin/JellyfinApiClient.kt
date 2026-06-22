@@ -434,6 +434,8 @@ class JellyfinApiClient : DefaultParentApiClient() {
      * 清空数据
      */
     override fun release() {
+        // 先释放基类持有的 HttpClient 连接池。
+        super.release()
         createApiClient("", "", "", "")
     }
 

@@ -42,7 +42,7 @@ class VersionApiClient : ApiFactory, DownloadFactory {
     private val logger = KotlinLogging.logger {}
 
     override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
-        httpClient = provideClient().config {
+        val newHttpClient = provideClient().config {
             install(DefaultRequest) {
                 url("${ApiConstants.HTTPS}api.github.com/")
             }
@@ -57,6 +57,13 @@ class VersionApiClient : ApiFactory, DownloadFactory {
                 }
             }
         }
+        // 重建客户端前关闭旧实例，避免重复初始化时泄漏连接池。
+        if (this::httpClient.isInitialized) {
+            httpClient.close()
+        }
+        httpClient = newHttpClient
+        // 重建版本接口包装器，避免继续持有已关闭客户端。
+        downloadApi(true)
     }
 
 
@@ -64,7 +71,10 @@ class VersionApiClient : ApiFactory, DownloadFactory {
      * 清空数据
      */
     override fun release() {
-        httpClient.close()
+        // release 可能早于 createHttpClient 调用，先做初始化保护。
+        if (this::httpClient.isInitialized) {
+            httpClient.close()
+        }
     }
 
     /**
