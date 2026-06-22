@@ -35,6 +35,7 @@ import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.subsonic.ResponseFormatType
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.UnauthorizedException
+import kotlinx.coroutines.CancellationException
 
 class SubsonicApiClient : DefaultParentApiClient() {
 
@@ -249,12 +250,17 @@ class SubsonicApiClient : DefaultParentApiClient() {
         val systemInfo = try {
             ping()
         }catch (e: Exception){
-            e.printStackTrace()
             when (e) {
+                // 协程取消直接透传，避免被包装成登录失败。
+                is CancellationException -> throw e
                 !is UnauthorizedException -> {
+                    e.printStackTrace()
                     throw ConnectionException()
                 }
-                else -> throw e
+                else -> {
+                    e.printStackTrace()
+                    throw e
+                }
             }
         }
         val user = userApi().getUser(username)

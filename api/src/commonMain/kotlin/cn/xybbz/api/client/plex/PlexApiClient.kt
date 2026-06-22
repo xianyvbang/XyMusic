@@ -33,6 +33,7 @@ import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.UnauthorizedException
+import kotlinx.coroutines.CancellationException
 
 class PlexApiClient : DefaultParentApiClient() {
 
@@ -335,13 +336,18 @@ class PlexApiClient : DefaultParentApiClient() {
             pingAfter(pingInfo.mediaContainer?.machineIdentifier)
             pingInfo
         } catch (e: Exception) {
-            logger.error(e) { "ping服务器失败" }
             when (e) {
+                // 协程取消直接透传，避免被包装成登录失败。
+                is CancellationException -> throw e
                 !is UnauthorizedException -> {
+                    logger.error(e) { "ping服务器失败" }
                     throw ConnectionException()
                 }
 
-                else -> throw e
+                else -> {
+                    logger.error(e) { "ping服务器失败" }
+                    throw e
+                }
             }
         }
         return loginSuccessData.copy(
