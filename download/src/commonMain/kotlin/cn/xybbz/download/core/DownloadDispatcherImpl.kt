@@ -230,29 +230,38 @@ class DownloadDispatcherImpl(
         speedBps: Long,
         isSendNotice: Boolean,
     ) {
-        val download = runningTasks[downloadId]
-        download?.let {
-            it.progress = progress
-            it.downloadedBytes = downloadedBytes
-            it.totalBytes = totalBytes
-        }
-        val currentTime = Clock.System.now().toEpochMilliseconds()
+        scope.launch {
+            val currentTime = Clock.System.now().toEpochMilliseconds()
+            var progressSnapshot: XyDownload? = null
+            var dbSnapshots: List<XyDownload>? = null
 
-        if (download != null) {
-            scope.launch {
+            globalMutex.withLock {
+                val download = runningTasks[downloadId] ?: return@withLock
+                download.progress = progress
+                download.downloadedBytes = downloadedBytes
+                download.totalBytes = totalBytes
+
+                // UI 和通知只使用锁内生成的快照，避免锁外继续读取可变任务对象。
+                progressSnapshot = download.copy(updateTime = currentTime)
+
+                if (currentTime - lastDbUpdateTime >= dbUpdateInterval) {
+                    lastDbUpdateTime = currentTime
+                    // 数据库写入使用运行中任务快照，避免锁外遍历 runningTasks。
+                    dbSnapshots = runningTasks.values.map { it.copy(updateTime = currentTime) }
+                }
+            }
+
+            progressSnapshot?.let { snapshot ->
                 if (isSendNotice) {
-                    notificationDelegate.showProgress(download, speedBps)
+                    notificationDelegate.showProgress(snapshot, speedBps)
                 }
                 // UI 层只关心最新快照，这里把更新后的任务重新广播出去。
-                _taskUpdateEventFlow.emit(download.copy(updateTime = currentTime))
+                _taskUpdateEventFlow.emit(snapshot)
             }
-        }
 
-        scope.launch {
-            if (currentTime - lastDbUpdateTime >= dbUpdateInterval) {
-                lastDbUpdateTime = currentTime
-                scope.launch(Dispatchers.IO) {
-                    runningTasks.values.forEach { runningTask ->
+            dbSnapshots?.let { snapshots ->
+                withContext(Dispatchers.IO) {
+                    snapshots.forEach { runningTask ->
                         db.downloadDao.updateProgress(
                             runningTask.id,
                             runningTask.progress,
