@@ -296,7 +296,6 @@ abstract class IDataSourceParentServer(
                 ifEnabledDelete = responseData.ifEnabledDelete
             )
             val tmpConfig = credentialManager.savePassword(baseConfig, clientLoginInfoReq.password)
-            connectionState.updateConnection(tmpConfig)
             popTipHint?.dismiss()
             emitAll(loginAfter(tmpConfig))
         }.flowOn(Dispatchers.IO).catch {
@@ -344,8 +343,11 @@ abstract class IDataSourceParentServer(
 
                 connectionId
             }
-            if (!ifTmpObject()) {
-                connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
+            val savedConnectionConfig = connectionConfig.copy(id = connectionId)
+            if (ifTmpObject()) {
+                connectionState.updateConnection(savedConnectionConfig)
+            } else {
+                connection(savedConnectionConfig)
                 if (shouldShowLoginMessageTips()) {
                     MessageUtils.sendDismiss()
                 }
@@ -1478,9 +1480,8 @@ abstract class IDataSourceParentServer(
     /**
      * 写入连接信息
      */
-    suspend fun connection(connectionConfig: ConnectionConfig, ifAutoLogin: Boolean) {
-        if (!ifAutoLogin)
-            connectionState.updateConnection(connectionConfig)
+    suspend fun connection(connectionConfig: ConnectionConfig) {
+        connectionState.updateConnection(connectionConfig)
         // 登录阶段同步读取本地媒体库缓存，保证依赖媒体库数据的页面能立即加载
         selectMediaLibrary(connectionId = connectionConfig.id)
         updateLibraryIds(connectionState.snapshot().libraryIds, true)
