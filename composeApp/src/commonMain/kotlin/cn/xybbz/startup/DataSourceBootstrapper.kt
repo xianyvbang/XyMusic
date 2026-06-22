@@ -59,7 +59,7 @@ class DataSourceBootstrapper : KoinComponent {
             }
             // 登录、播放器恢复、重登录监听都放到这里统一启动。
             startPlayerInitialization(dataSourceManager, db)
-            startLoginEventBus(dataSourceManager, db)
+            startLoginEventBus(dataSourceManager)
             dataSourceManager.loginConnection(LoginType.API, connectionConfig)
         }
     }
@@ -69,12 +69,10 @@ class DataSourceBootstrapper : KoinComponent {
      * 监听绑定到 DataSourceManager 的作用域，随数据源释放一起结束。
      *
      * @param dataSourceManager 当前数据源管理器，用于读取事件流并发起重登录。
-     * @param db 本地数据库，用于读取当前启用的连接配置。
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun startLoginEventBus(
-        dataSourceManager: DataSourceManager,
-        db: LocalDatabaseClient
+        dataSourceManager: DataSourceManager
     ) {
         // 监听服务端登录态事件，只有真正建立连接后才开始订阅，避免无效的早期收集。
         dataSourceManager.dataSourceServerFlow
@@ -84,10 +82,7 @@ class DataSourceBootstrapper : KoinComponent {
             }
             .onEach { event ->
                 if (event is ReLoginEvent.Unauthorized) {
-                    dataSourceManager.serverLogin(
-                        loginType = LoginType.API,
-                        db.connectionConfigDao.selectConnectionConfig()
-                    )
+                    dataSourceManager.requestReloginOnUnauthorized()
                 }
             }
             .launchIn(dataSourceManager.dataSourceScope())

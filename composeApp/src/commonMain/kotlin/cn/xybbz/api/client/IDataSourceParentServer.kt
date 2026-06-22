@@ -126,10 +126,16 @@ abstract class IDataSourceParentServer(
     protected val downloaderManager: DownloaderManager = get()
     protected val credentialManager: ConnectionCredentialManager = get()
 
-    private var connectionConfig: ConnectionConfig? = null
+    /**
+     * 当前连接上下文状态，统一承载连接配置和媒体库 ID 快照。
+     */
+    private val connectionState = DataSourceConnectionState()
 
-    var libraryIds: List<String>? = null
-        private set
+    /**
+     * 当前连接选中的媒体库 ID 列表，供具体数据源组装远程请求参数。
+     */
+    protected val libraryIds: List<String>?
+        get() = connectionState.snapshot().libraryIds
 
     private val _mediaLibraryIdFlow = MutableStateFlow<String?>(Constants.MINUS_ONE_INT.toString())
     val mediaLibraryIdFlow: StateFlow<String?> = _mediaLibraryIdFlow.asStateFlow()
@@ -178,8 +184,7 @@ abstract class IDataSourceParentServer(
      * 不发送登录成功事件、不保存设置、不触发远程同步，避免把“服务可读”和“登录完成”混在一起。
      */
     fun bindLocalConnectionConfig(connectionConfig: ConnectionConfig) {
-        this.connectionConfig = connectionConfig
-        this.libraryIds = connectionConfig.libraryIds
+        connectionState.bindConnection(connectionConfig)
     }
 
     @OptIn(ExperimentalAtomicApi::class)
@@ -291,7 +296,7 @@ abstract class IDataSourceParentServer(
                 ifEnabledDelete = responseData.ifEnabledDelete
             )
             val tmpConfig = credentialManager.savePassword(baseConfig, clientLoginInfoReq.password)
-            this@IDataSourceParentServer.connectionConfig = tmpConfig
+            connectionState.updateConnection(tmpConfig)
             popTipHint?.dismiss()
             emitAll(loginAfter(tmpConfig))
         }.flowOn(Dispatchers.IO).catch {
@@ -395,12 +400,12 @@ abstract class IDataSourceParentServer(
 
         //获得启用的连接信息
         val connectionConfig =
-            connectionConfig ?: this.connectionConfig
+            connectionConfig ?: connectionState.snapshot().connectionConfig
             ?: db.connectionConfigDao.selectConnectionConfig() ?: return flowOf(
                 ClientLoginInfoState.SelectServer
             )
 
-        this.connectionConfig = connectionConfig
+        connectionState.updateConnection(connectionConfig)
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
 
         val address = connectionConfig.address
@@ -462,14 +467,14 @@ abstract class IDataSourceParentServer(
      * 获得连接id
      */
     override fun getConnectionId(): Long {
-        return connectionConfig?.id ?: 0
+        return connectionState.snapshot().connectionConfig?.id ?: 0
     }
 
     /**
      * 获得连接地址
      */
     override fun getConnectionAddress(): String {
-        return connectionConfig?.address ?: ""
+        return connectionState.snapshot().connectionConfig?.address ?: ""
     }
 
     /**
@@ -1393,14 +1398,14 @@ abstract class IDataSourceParentServer(
      * 获得是否可以下载
      */
     fun getCanDownload(): Boolean {
-        return connectionConfig?.ifEnabledDownload ?: false
+        return connectionState.snapshot().connectionConfig?.ifEnabledDownload ?: false
     }
 
     /**
      * 获取是否可以删除
      */
     fun getCanDelete(): Boolean {
-        return connectionConfig?.ifEnabledDelete ?: false
+        return connectionState.snapshot().connectionConfig?.ifEnabledDelete ?: false
     }
 
     /**
@@ -1467,7 +1472,7 @@ abstract class IDataSourceParentServer(
      * 获得用户id
      */
     protected fun getUserId(): String {
-        return connectionConfig?.userId ?: ""
+        return connectionState.snapshot().connectionConfig?.userId ?: ""
     }
 
     /**
@@ -1475,10 +1480,10 @@ abstract class IDataSourceParentServer(
      */
     suspend fun connection(connectionConfig: ConnectionConfig, ifAutoLogin: Boolean) {
         if (!ifAutoLogin)
-            this.connectionConfig = connectionConfig
+            connectionState.updateConnection(connectionConfig)
         // 登录阶段同步读取本地媒体库缓存，保证依赖媒体库数据的页面能立即加载
         selectMediaLibrary(connectionId = connectionConfig.id)
-        updateLibraryIds(this.connectionConfig?.libraryIds, true)
+        updateLibraryIds(connectionState.snapshot().libraryIds, true)
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
         sendLoginCompleted(LoginStateType.SUCCESS)
     }
@@ -1570,7 +1575,7 @@ abstract class IDataSourceParentServer(
     }
 
     fun unConnection() {
-        connectionConfig = null
+        connectionState.clear()
     }
 
 
@@ -1589,7 +1594,7 @@ abstract class IDataSourceParentServer(
      * 更新本地媒体库数据
      */
     protected suspend fun updateLocalLibraryId(libraryIds: List<String>?) {
-        this.connectionConfig = this.connectionConfig?.copy(libraryIds = libraryIds)
+        connectionState.updateLibraryIds(libraryIds)
         db.connectionConfigDao.updateLibraryId(
             libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
             connectionId = getConnectionId()
@@ -1598,7 +1603,7 @@ abstract class IDataSourceParentServer(
 
     @OptIn(ExperimentalUuidApi::class)
     suspend fun updateLibraryIds(libraryIds: List<String>?, ifLoginSet: Boolean = false) {
-        this.libraryIds = libraryIds
+        connectionState.updateLibraryIds(libraryIds)
         if (!ifLoginSet) {
             updateDataSourceRemoteKey()
             _mediaLibraryIdFlow.update {
@@ -1632,8 +1637,6 @@ abstract class IDataSourceParentServer(
         TokenServer.clearAllData()
         unConnection()
         sendLoginCompleted(LoginStateType.UNKNOWN)
-        //这里这样置空是为了防止触发DataSourceManager.mediaLibraryIdFlow的流变化
-        this.libraryIds = null
     }
 
 }

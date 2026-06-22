@@ -254,6 +254,11 @@ open class DataSourceManager(
     private var appInactiveAtMs: Long? = null
     private var activeReloginJob: Job? = null
 
+    /**
+     * 数据源登录并发协调器。
+     */
+    private val loginCoordinator = DataSourceLoginCoordinator()
+
 
     /**
      * 事件监听
@@ -282,18 +287,35 @@ open class DataSourceManager(
         if (inactiveDurationMs < ACTIVE_RELOGIN_INTERVAL_MS) {
             return
         }
-        if (loading || _autoLoginRunning.value || activeReloginJob?.isActive == true) {
-            return
-        }
-        if (currentDataSourceServerOrNull() == null || getConnectionId() == 0L) {
-            return
-        }
-        activeReloginJob = scope.launch {
-            if (loading || _autoLoginRunning.value || currentDataSourceServerOrNull() == null) {
-                return@launch
+        requestAutomaticRelogin()
+    }
+
+    /**
+     * 401 未授权事件触发的自动重登录入口。
+     */
+    fun requestReloginOnUnauthorized() {
+        requestAutomaticRelogin()
+    }
+
+    /**
+     * 调度一次自动重登录，已有登录或重登录任务时直接跳过。
+     */
+    private fun requestAutomaticRelogin() {
+        val reloginJob = loginCoordinator.tryLaunchAutomaticRelogin(scope) {
+            if (currentDataSourceServerOrNull() == null || getConnectionId() == 0L) {
+                return@tryLaunchAutomaticRelogin
             }
-            val connectionConfig = db.connectionConfigDao.selectConnectionConfig() ?: return@launch
-            serverLogin(LoginType.API, connectionConfig)
+            if (loading || _autoLoginRunning.value || currentDataSourceServerOrNull() == null) {
+                return@tryLaunchAutomaticRelogin
+            }
+            val connectionConfig = db.connectionConfigDao.selectConnectionConfig() ?: return@tryLaunchAutomaticRelogin
+            serverLoginLocked(LoginType.API, connectionConfig)
+        } ?: return
+        activeReloginJob = reloginJob
+        reloginJob.invokeOnCompletion {
+            if (activeReloginJob === reloginJob) {
+                activeReloginJob = null
+            }
         }
     }
 
@@ -379,11 +401,23 @@ open class DataSourceManager(
         loginType: LoginType = LoginType.API,
         connectionConfig: ConnectionConfig
     ) {
+        loginCoordinator.runManualLogin {
+            loginConnectionLocked(loginType, connectionConfig)
+        }
+    }
+
+    /**
+     * 在登录锁内执行一次带监听回调的连接登录。
+     */
+    private suspend fun loginConnectionLocked(
+        loginType: LoginType = LoginType.API,
+        connectionConfig: ConnectionConfig
+    ) {
         // 统一封装登录前后回调，避免启动入口和手动切换连接重复写监听逻辑。
         for (listener in listeners) {
             listener.autoLoginBefore(connectionConfig)
         }
-        serverLogin(loginType, connectionConfig)
+        serverLoginLocked(loginType, connectionConfig)
         for (listener in listeners) {
             listener.autoLoginSuccessAfter(connectionConfig)
         }
@@ -408,6 +442,18 @@ open class DataSourceManager(
      * 登陆服务端
      */
     suspend fun serverLogin(
+        loginType: LoginType = LoginType.API,
+        connectionConfig: ConnectionConfig?
+    ) {
+        loginCoordinator.runManualLogin {
+            serverLoginLocked(loginType, connectionConfig)
+        }
+    }
+
+    /**
+     * 在登录锁内执行服务端登录。
+     */
+    private suspend fun serverLoginLocked(
         loginType: LoginType = LoginType.API,
         connectionConfig: ConnectionConfig?
     ) {
@@ -587,10 +633,12 @@ open class DataSourceManager(
      * 切换连接服务
      */
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
-        release()
-        // 切换连接时先绑定本地连接配置，等待自动登录期间 UI 仍可展示当前选择。
-        switchDataSource(connectionConfig.type, connectionConfig)
-        loginConnection(connectionConfig = connectionConfig)
+        loginCoordinator.runManualLogin {
+            release()
+            // 切换连接时先绑定本地连接配置，等待自动登录期间 UI 仍可展示当前选择。
+            switchDataSource(connectionConfig.type, connectionConfig)
+            loginConnectionLocked(connectionConfig = connectionConfig)
+        }
     }
 
 
