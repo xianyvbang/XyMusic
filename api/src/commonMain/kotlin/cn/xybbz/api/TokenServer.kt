@@ -22,6 +22,7 @@ import cn.xybbz.api.constants.ApiConstants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 /**
  * 公共认证请求状态。
@@ -34,6 +35,23 @@ data class AuthenticatedRequestState(
     val version: Int = 0
 )
 
+/**
+ * 公共认证请求参数快照。
+ *
+ * @property token 当前请求使用的 token。
+ * @property queryMap 当前请求追加的公共 query 参数。
+ * @property headerMap 当前请求追加的公共 header 参数。
+ * @property tokenHeaderName 当前 token 使用的 header 名称。
+ * @property baseUrl 当前连接的服务地址。
+ */
+data class AuthenticatedRequestData(
+    val token: String = "",
+    val queryMap: Map<String, String> = emptyMap(),
+    val headerMap: Map<String, String> = emptyMap(),
+    val tokenHeaderName: String = ApiConstants.AUTHORIZATION,
+    val baseUrl: String = ""
+)
+
 object TokenServer {
 
     private val requiredQueryKeys = setOf("u", "t", "s", "v", "c", "f")
@@ -44,20 +62,30 @@ object TokenServer {
         ApiConstants.PLEX_AUTHORIZATION
     )
 
-    var token: String = ""
-        private set
+    /**
+     * 当前公共认证请求参数快照。
+     */
+    private val _authenticatedRequestDataFlow = MutableStateFlow(AuthenticatedRequestData())
+    val authenticatedRequestDataFlow: StateFlow<AuthenticatedRequestData> =
+        _authenticatedRequestDataFlow.asStateFlow()
 
-    private var baseUrl: String = ""
-//        private set
+    val authenticatedRequestData: AuthenticatedRequestData
+        get() = _authenticatedRequestDataFlow.value
 
-    var queryMap: Map<String, String> = emptyMap()
-        private set
+    val token: String
+        get() = authenticatedRequestData.token
 
-    var headerMap: Map<String, String> = emptyMap()
-        private set
+    private val baseUrl: String
+        get() = authenticatedRequestData.baseUrl
 
-    var tokenHeaderName = ApiConstants.AUTHORIZATION
-        private set
+    val queryMap: Map<String, String>
+        get() = authenticatedRequestData.queryMap
+
+    val headerMap: Map<String, String>
+        get() = authenticatedRequestData.headerMap
+
+    val tokenHeaderName: String
+        get() = authenticatedRequestData.tokenHeaderName
 
     /**
      * 当前公共认证请求状态。
@@ -69,44 +97,23 @@ object TokenServer {
 
     fun setTokenData(token: String) {
         val authenticatedToken = token.takeIf { it.isAuthenticatedTokenValue() } ?: ""
-        val ready = hasAuthenticatedRequestData(authenticatedToken, queryMap, headerMap)
-        val ifAuthDataChanged = TokenServer.token != authenticatedToken
-        val ifReadyChanged = _authenticatedRequestStateFlow.value.ready != ready
-
-        if (!ifAuthDataChanged && !ifReadyChanged) return
-
-        if (ifAuthDataChanged) {
-            TokenServer.token = authenticatedToken
+        updateAuthenticatedRequestData { currentData ->
+            currentData.copy(token = authenticatedToken)
         }
-        notifyAuthChanged(ready = ready)
     }
 
     fun setQueryMapData(queryMap: Map<String, String>) {
         val validQueryMap = queryMap.filterNotBlankValues()
-        val ready = hasAuthenticatedRequestData(token, validQueryMap, headerMap)
-        val ifAuthDataChanged = TokenServer.queryMap != validQueryMap
-        val ifReadyChanged = _authenticatedRequestStateFlow.value.ready != ready
-
-        if (!ifAuthDataChanged && !ifReadyChanged) return
-
-        if (ifAuthDataChanged) {
-            TokenServer.queryMap = validQueryMap
+        updateAuthenticatedRequestData { currentData ->
+            currentData.copy(queryMap = validQueryMap)
         }
-        notifyAuthChanged(ready = ready)
     }
 
     fun setHeaderMapData(headerMap: Map<String, String>) {
         val validHeaderMap = headerMap.filterNotBlankValues()
-        val ready = hasAuthenticatedRequestData(token, queryMap, validHeaderMap)
-        val ifAuthDataChanged = TokenServer.headerMap != validHeaderMap
-        val ifReadyChanged = _authenticatedRequestStateFlow.value.ready != ready
-
-        if (!ifAuthDataChanged && !ifReadyChanged) return
-
-        if (ifAuthDataChanged) {
-            TokenServer.headerMap = validHeaderMap
+        updateAuthenticatedRequestData { currentData ->
+            currentData.copy(headerMap = validHeaderMap)
         }
-        notifyAuthChanged(ready = ready)
     }
 
     /**
@@ -121,61 +128,76 @@ object TokenServer {
         val validToken = token.takeIf { it.isAuthenticatedTokenValue() } ?: ""
         val validQueryMap = queryMap.filterNotBlankValues()
         val validHeaderMap = headerMap.filterNotBlankValues()
-        val ready = hasAuthenticatedRequestData(validToken, validQueryMap, validHeaderMap)
-        val ifAuthDataChanged =
-            TokenServer.token != validToken ||
-                    TokenServer.queryMap != validQueryMap ||
-                    TokenServer.headerMap != validHeaderMap
-        val ifReadyChanged = _authenticatedRequestStateFlow.value.ready != ready
-
-        if (!ifAuthDataChanged && !ifReadyChanged) {
-            return
+        updateAuthenticatedRequestData { currentData ->
+            currentData.copy(
+                token = validToken,
+                queryMap = validQueryMap,
+                headerMap = validHeaderMap
+            )
         }
-
-        if (ifAuthDataChanged) {
-            TokenServer.token = validToken
-            TokenServer.queryMap = validQueryMap
-            TokenServer.headerMap = validHeaderMap
-        }
-        notifyAuthChanged(ready = ready)
     }
 
     fun clearAllData() {
         // 清空连接态时先关闭图片加载门禁，防止旧封面请求继续使用过期认证参数。
-        val ifAuthDataChanged =
-            token.isNotBlank() ||
-                    queryMap.isNotEmpty() ||
-                    headerMap.isNotEmpty()
-        val ifReadyChanged = _authenticatedRequestStateFlow.value.ready
-
-        if (!ifAuthDataChanged && !ifReadyChanged) {
-            return
+        updateAuthenticatedRequestData { currentData ->
+            currentData.copy(
+                token = "",
+                queryMap = emptyMap(),
+                headerMap = emptyMap()
+            )
         }
-
-        token = ""
-        queryMap = emptyMap()
-        headerMap = emptyMap()
-        notifyAuthChanged(ready = false)
     }
 
     fun updateTokenHeaderName(tokenHeaderName: String) {
-        if (this.tokenHeaderName == tokenHeaderName) return
-        this.tokenHeaderName = tokenHeaderName
-        notifyAuthChanged()
+        updateAuthenticatedRequestData { currentData ->
+            currentData.copy(tokenHeaderName = tokenHeaderName)
+        }
     }
 
     fun updateBaseUrl(baseUrl: String) {
-        if (this.baseUrl == baseUrl) return
-        this.baseUrl = baseUrl
-        notifyAuthChanged()
+        updateAuthenticatedRequestData { currentData ->
+            currentData.copy(baseUrl = baseUrl)
+        }
+    }
+
+    /**
+     * 原子更新公共认证参数快照，并同步 ready/version 状态。
+     */
+    private fun updateAuthenticatedRequestData(
+        transform: (AuthenticatedRequestData) -> AuthenticatedRequestData
+    ) {
+        var ifAuthDataChanged = false
+        _authenticatedRequestDataFlow.update { currentData ->
+            val nextData = transform(currentData)
+            if (nextData != currentData) {
+                ifAuthDataChanged = true
+            }
+            nextData
+        }
+
+        val ready = hasAuthenticatedRequestData(authenticatedRequestData)
+        val ifReadyChanged = _authenticatedRequestStateFlow.value.ready != ready
+
+        if (!ifAuthDataChanged && !ifReadyChanged) return
+
+        notifyAuthChanged(ready = ready)
     }
 
     private fun notifyAuthChanged(ready: Boolean = _authenticatedRequestStateFlow.value.ready) {
         // 版本号只作为 Compose remember 的刷新 key 使用，不参与业务请求参数。
-        val currentState = _authenticatedRequestStateFlow.value
-        _authenticatedRequestStateFlow.value = currentState.copy(
-            ready = ready,
-            version = currentState.version + 1
+        _authenticatedRequestStateFlow.update { currentState ->
+            currentState.copy(
+                ready = ready,
+                version = currentState.version + 1
+            )
+        }
+    }
+
+    private fun hasAuthenticatedRequestData(data: AuthenticatedRequestData): Boolean {
+        return hasAuthenticatedRequestData(
+            token = data.token,
+            queryMap = data.queryMap,
+            headerMap = data.headerMap
         )
     }
 

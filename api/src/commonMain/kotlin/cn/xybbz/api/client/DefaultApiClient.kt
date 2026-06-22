@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.client
 
+import cn.xybbz.api.AuthenticatedRequestData
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.base.IDownLoadApi
@@ -83,10 +84,15 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 }
             }
             installXyAuthenticatedRequest(
-                tokenProvider = { token },
-                tokenHeaderNameProvider = { tokenHeaderName },
-                queryMapProvider = { queryMap },
-                headerMapProvider = { headerMap }
+                authenticatedRequestDataProvider = {
+                    // HttpClient 请求发出时一次性读取当前客户端认证参数，避免请求内参数版本混用。
+                    AuthenticatedRequestData(
+                        token = token,
+                        queryMap = queryMap,
+                        headerMap = headerMap,
+                        tokenHeaderName = tokenHeaderName
+                    )
+                }
             )
             /*install(HttpRequestRetry) {
 //                maxRetries = 1

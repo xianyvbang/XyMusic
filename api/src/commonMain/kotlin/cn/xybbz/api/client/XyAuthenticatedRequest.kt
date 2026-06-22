@@ -1,5 +1,6 @@
 package cn.xybbz.api.client
 
+import cn.xybbz.api.AuthenticatedRequestData
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.utils.appendCustomRequestHeaders
 import io.ktor.client.HttpClientConfig
@@ -11,16 +12,10 @@ import io.ktor.util.appendAll
  * 这里用 provider 延迟读取 token/query/header，避免提前创建的 HttpClient 固化旧登录态。
  */
 fun HttpClientConfig<*>.installXyAuthenticatedRequest(
-    tokenProvider: () -> String,
-    tokenHeaderNameProvider: () -> String,
-    queryMapProvider: () -> Map<String, String>,
-    headerMapProvider: () -> Map<String, String>
+    authenticatedRequestDataProvider: () -> AuthenticatedRequestData
 ) {
     install(XyAuthenticatedRequestPlugin) {
-        this.tokenProvider = tokenProvider
-        this.tokenHeaderNameProvider = tokenHeaderNameProvider
-        this.queryMapProvider = queryMapProvider
-        this.headerMapProvider = headerMapProvider
+        this.authenticatedRequestDataProvider = authenticatedRequestDataProvider
     }
 }
 
@@ -30,44 +25,31 @@ fun HttpClientConfig<*>.installXyAuthenticatedRequest(
  */
 fun HttpClientConfig<*>.installTokenServerAuthenticatedRequest() {
     installXyAuthenticatedRequest(
-        tokenProvider = { TokenServer.token },
-        tokenHeaderNameProvider = { TokenServer.tokenHeaderName },
-        queryMapProvider = { TokenServer.queryMap },
-        headerMapProvider = { TokenServer.headerMap }
+        authenticatedRequestDataProvider = { TokenServer.authenticatedRequestData }
     )
 }
 
 private class XyAuthenticatedRequestConfig {
-    /** 当前请求使用的 token。 */
-    var tokenProvider: () -> String = { "" }
-
-    /** 当前请求使用的 token header 名称。 */
-    var tokenHeaderNameProvider: () -> String = { TokenServer.tokenHeaderName }
-
-    /** 当前请求追加的公共 query 参数。 */
-    var queryMapProvider: () -> Map<String, String> = { emptyMap() }
-
-    /** 当前请求追加的公共 header 参数。 */
-    var headerMapProvider: () -> Map<String, String> = { emptyMap() }
+    /** 当前请求使用的认证参数快照。 */
+    var authenticatedRequestDataProvider: () -> AuthenticatedRequestData =
+        { TokenServer.authenticatedRequestData }
 }
 
 private val XyAuthenticatedRequestPlugin = createClientPlugin(
     name = "XyAuthenticatedRequest",
     createConfiguration = ::XyAuthenticatedRequestConfig
 ) {
-    val tokenProvider = pluginConfig.tokenProvider
-    val tokenHeaderNameProvider = pluginConfig.tokenHeaderNameProvider
-    val queryMapProvider = pluginConfig.queryMapProvider
-    val headerMapProvider = pluginConfig.headerMapProvider
+    val authenticatedRequestDataProvider = pluginConfig.authenticatedRequestDataProvider
 
     onRequest { request, _ ->
-        // 每次请求发出前再读取登录态，保证延迟登录后图片和接口请求能带上最新认证信息。
+        // 每次请求只读取一次认证快照，避免同一请求混用不同版本的 token/query/header。
+        val authenticatedRequestData = authenticatedRequestDataProvider()
         request.headers.appendCustomRequestHeaders(
             sourceHeaders = request.headers.build(),
-            token = tokenProvider(),
-            tokenHeaderName = tokenHeaderNameProvider()
+            token = authenticatedRequestData.token,
+            tokenHeaderName = authenticatedRequestData.tokenHeaderName
         )
-        request.headers.appendAll(headerMapProvider())
-        request.url.parameters.appendAll(queryMapProvider())
+        request.headers.appendAll(authenticatedRequestData.headerMap)
+        request.url.parameters.appendAll(authenticatedRequestData.queryMap)
     }
 }

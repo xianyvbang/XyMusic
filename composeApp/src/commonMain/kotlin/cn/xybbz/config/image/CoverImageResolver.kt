@@ -248,7 +248,9 @@ fun String?.normalizeCoverUrl(baseUrl: String?): String? {
         baseUrl.orEmpty() + normalizedValue
     }
     val urlBuilder = URLBuilder(imageUrl)
-    urlBuilder.parameters.appendAll(TokenServer.queryMap)
+    // 封面 URL 拼接只读取一次认证快照，避免 query 参数版本混用。
+    val authenticatedRequestData = TokenServer.authenticatedRequestData
+    urlBuilder.parameters.appendAll(authenticatedRequestData.queryMap)
     return urlBuilder.buildString()
 }
 
