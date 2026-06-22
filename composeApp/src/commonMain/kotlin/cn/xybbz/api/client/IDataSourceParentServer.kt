@@ -407,7 +407,7 @@ abstract class IDataSourceParentServer(
                 ClientLoginInfoState.SelectServer
             )
 
-        connectionState.updateConnection(connectionConfig)
+//        connectionState.updateConnection(connectionConfig)
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
 
         val address = connectionConfig.address
