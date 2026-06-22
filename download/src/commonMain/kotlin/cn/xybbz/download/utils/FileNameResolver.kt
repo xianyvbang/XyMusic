@@ -16,6 +16,8 @@ internal object FileNameResolver {
 
     private const val MAX_FILENAME_LENGTH = 128
     private val ILLEGAL_CHARACTERS_REGEX = "[\\\\/:*?\"<>|]".toRegex()
+    // 连续点号不允许保留，避免服务端文件名携带路径穿越语义。
+    private val DOT_SEQUENCE_REGEX = "\\.{2,}".toRegex()
 
     private val mutex = Mutex()
 
@@ -41,7 +43,10 @@ internal object FileNameResolver {
             val availableName = FileUtil.reserveAvailableFileName(parentDir, sanitizedName)
             val finalPath = buildPath(parentDir, availableName)
 
-            return@withLock ResolvedPath(finalPath = finalPath, fileName = availableName)
+            return@withLock ResolvedPath(
+                finalPath = requirePathInsideDirectory(parentDir, finalPath),
+                fileName = availableName
+            )
         }
 
     // ... (isFileNameReasonable, parseUrlPath, etc. 保持不变) ...
@@ -51,12 +56,49 @@ internal object FileNameResolver {
         return if (trimmed.isBlank()) fileName else "$trimmed/$fileName"
     }
 
+    // 对最终路径做词法规范化校验，防止异常文件名逃逸下载目录。
+    private fun requirePathInsideDirectory(directory: String, finalPath: String): String {
+        val normalizedDirectory = normalizePathForCheck(directory)
+        val normalizedFinalPath = normalizePathForCheck(finalPath)
+
+        if (
+            normalizedDirectory.isNotBlank() &&
+            normalizedFinalPath != normalizedDirectory &&
+            !normalizedFinalPath.startsWith("$normalizedDirectory/")
+        ) {
+            throw IllegalArgumentException("Resolved download path escapes final directory.")
+        }
+
+        return finalPath
+    }
+
+    // 统一路径分隔符并折叠 . 与 ..，供目录包含关系校验使用。
+    private fun normalizePathForCheck(path: String): String {
+        val segments = mutableListOf<String>()
+        path.replace('\\', '/')
+            .trimEnd('/')
+            .split('/')
+            .forEach { segment ->
+                when {
+                    segment.isBlank() || segment == "." -> Unit
+                    segment == ".." && segments.isNotEmpty() && segments.last() != ".." -> {
+                        segments.removeAt(segments.lastIndex)
+                    }
+                    segment == ".." -> segments.add(segment)
+                    else -> segments.add(segment)
+                }
+            }
+        return segments.joinToString("/")
+    }
+
     private fun sanitize(rawName: String): String {
         // 1. 剥离查询参数 (作为双重保险)
-        val nameWithoutQuery = rawName.substringBefore('?')
+        val nameWithoutQuery = rawName.substringBefore('?').trim()
 
         // 2. 替换非法字符
-        var sanitizedName = nameWithoutQuery.replace(ILLEGAL_CHARACTERS_REGEX, "_")
+        var sanitizedName = normalizeDangerousFileName(
+            nameWithoutQuery.replace(ILLEGAL_CHARACTERS_REGEX, "_")
+        )
 
         // 3. 截断过长的文件名 (逻辑保持不变)
         if (sanitizedName.length > MAX_FILENAME_LENGTH) {
@@ -74,6 +116,27 @@ internal object FileNameResolver {
                 truncatedName
             }
         }
-        return sanitizedName.ifBlank { "${Clock.System.now().toEpochMilliseconds()}_sanitized.bin" }
+        return normalizeDangerousFileName(sanitizedName)
+            .ifBlank { "${Clock.System.now().toEpochMilliseconds()}_sanitized.bin" }
+    }
+
+    // 清理 .、.. 和隐藏文件名前缀，避免文件名保留路径穿越或隐藏文件语义。
+    private fun normalizeDangerousFileName(fileName: String): String {
+        val trimmedName = fileName.trim()
+        if (trimmedName.isBlank()) {
+            return ""
+        }
+        if (trimmedName.all { it == '.' }) {
+            return "download"
+        }
+
+        val withoutLeadingDots = trimmedName.dropWhile { it == '.' }
+        val safeName = if (withoutLeadingDots.length != trimmedName.length) {
+            "download_$withoutLeadingDots"
+        } else {
+            trimmedName
+        }
+
+        return safeName.replace(DOT_SEQUENCE_REGEX, "_")
     }
 }

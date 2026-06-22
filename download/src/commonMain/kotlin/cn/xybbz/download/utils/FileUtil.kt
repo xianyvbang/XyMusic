@@ -34,7 +34,7 @@ object FileUtil {
             val targetDirectory = PlatformFile(directory)
             targetDirectory.createDirectories()
 
-            val sanitizedName = fileName.removePrefix(".").ifBlank { "download" }
+            val sanitizedName = normalizeReservedFileName(fileName)
             val baseName = sanitizedName.substringBeforeLast('.', sanitizedName)
             val extension = sanitizedName.substringAfterLast('.', "")
 
@@ -77,6 +77,21 @@ object FileUtil {
         finalPath = finalPath,
         fileName = fileName,
     )
+}
+
+// 文件名预留前的最后兜底，避免 .、.. 或隐藏文件名前缀进入平台文件 API。
+private fun normalizeReservedFileName(fileName: String): String {
+    val trimmedName = fileName.trim()
+    if (trimmedName.isBlank() || trimmedName.all { it == '.' }) {
+        return "download"
+    }
+
+    val withoutLeadingDots = trimmedName.dropWhile { it == '.' }
+    return if (withoutLeadingDots.length != trimmedName.length) {
+        "download_${withoutLeadingDots.ifBlank { "file" }}"
+    } else {
+        trimmedName
+    }
 }
 
 // 删除普通文件；文件不存在时按成功处理，便于清理路径重复调用。

@@ -6,6 +6,7 @@ import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -49,7 +50,79 @@ class FileNameResolverTest {
                 globalFinalDir = root.absolutePath,
             )
 
-            assertEquals("mp3", resolvedPath.fileName)
+            assertEquals("download_mp3", resolvedPath.fileName)
+            assertTrue(File(resolvedPath.finalPath).exists())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * 服务端返回路径穿越风格文件名时，应清理为普通文件名并限制在下载目录内。
+     */
+    @Test
+    fun resolveKeepsTraversalLikeFileNameInsideDownloadDirectory() = runBlocking {
+        val root = createTempDirectory()
+
+        try {
+            val resolvedPath = FileNameResolver.resolve(
+                request = request(fileName = "../../evil.mp3"),
+                globalFinalDir = root.absolutePath,
+            )
+
+            assertTrue(resolvedPath.fileName.startsWith("download_"))
+            assertTrue(resolvedPath.fileName.endsWith("evil.mp3"))
+            assertTrue(File(resolvedPath.finalPath).canonicalPath.startsWith(root.canonicalPath))
+            assertFalse(resolvedPath.fileName.contains(".."))
+            assertFalse(resolvedPath.fileName.contains('/'))
+            assertFalse(resolvedPath.fileName.contains('\\'))
+            assertTrue(File(resolvedPath.finalPath).exists())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * 点号保留名不能作为最终文件名，避免平台把它解释成当前或上级目录。
+     */
+    @Test
+    fun resolveReplacesDotOnlyReservedNames() = runBlocking {
+        val root = createTempDirectory()
+
+        try {
+            val dotPath = FileNameResolver.resolve(
+                request = request(fileName = "."),
+                globalFinalDir = root.absolutePath,
+            )
+            val dotDotPath = FileNameResolver.resolve(
+                request = request(fileName = ".."),
+                globalFinalDir = root.absolutePath,
+            )
+
+            assertEquals("download", dotPath.fileName)
+            assertEquals("download(1)", dotDotPath.fileName)
+            assertTrue(File(dotPath.finalPath).exists())
+            assertTrue(File(dotDotPath.finalPath).exists())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * 隐藏文件名应加安全前缀，避免下载结果在桌面系统中默认不可见。
+     */
+    @Test
+    fun resolveAddsSafePrefixForHiddenFileName() = runBlocking {
+        val root = createTempDirectory()
+
+        try {
+            val resolvedPath = FileNameResolver.resolve(
+                request = request(fileName = ".hidden.mp3"),
+                globalFinalDir = root.absolutePath,
+            )
+
+            assertEquals("download_hidden.mp3", resolvedPath.fileName)
+            assertFalse(resolvedPath.fileName.startsWith("."))
             assertTrue(File(resolvedPath.finalPath).exists())
         } finally {
             root.deleteRecursively()
