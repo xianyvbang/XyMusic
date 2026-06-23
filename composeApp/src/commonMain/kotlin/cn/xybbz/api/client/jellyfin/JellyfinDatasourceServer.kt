@@ -359,7 +359,7 @@ class JellyfinDatasourceServer(
         return if (music?.ifLyric == true) {
             val lyrics = jellyfinApiClient.lyricsApi().getLyrics(itemId)
             lyrics.lyrics.map {
-                LrcEntryData(startTime = it.start!! / LYRICS_AMPLIFICATION, text = it.text)
+                LrcEntryData(startTime = (it.start ?: 0L) / LYRICS_AMPLIFICATION, text = it.text)
             }
         } else {
             null
