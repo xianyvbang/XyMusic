@@ -147,6 +147,11 @@ interface IDataSourceServer : AutoCloseable, KoinComponent {
     fun selectArtistFlowList(): Flow<PagingData<XyArtistExt>>
 
     /**
+     * 按需刷新本地艺术家缓存
+     */
+    suspend fun refreshArtistCacheIfNeeded(force: Boolean = false)
+
+    /**
      * 搜索音乐,艺术家,专辑
      */
     suspend fun searchAll(search: String): SearchData

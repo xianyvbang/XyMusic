@@ -26,6 +26,7 @@ import androidx.room.Transaction
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.sync.ArtistCacheSynchronizer
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
@@ -70,13 +71,12 @@ import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.enums.CredentialStoreType
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.page.bigPager
 import cn.xybbz.page.defaultPager
+import cn.xybbz.page.defaultLocalPager
 import cn.xybbz.page.parent.AlbumOrPlaylistMusicListRemoteMediator
 import cn.xybbz.page.parent.AlbumRemoteMediator
 import cn.xybbz.page.parent.ArtistAlbumListRemoteMediator
 import cn.xybbz.page.parent.ArtistMusicListRemoteMediator
-import cn.xybbz.page.parent.ArtistRemoteMediator
 import cn.xybbz.page.parent.FavoriteMusicRemoteMediator
 import cn.xybbz.page.parent.GenreAlbumListRemoteMediator
 import cn.xybbz.page.parent.GenresRemoteMediator
@@ -160,6 +160,11 @@ abstract class IDataSourceParentServer(
      * 歌单刷新锁，避免首页刷新和添加歌单弹窗同时请求歌单接口。
      */
     private val playlistRefreshMutex = Mutex()
+
+    /**
+     * 艺术家缓存同步器，负责远端分批同步和本地缓存标记维护。
+     */
+    private val artistCacheSynchronizer = ArtistCacheSynchronizer(db, this)
 
     init {
         createScope()
@@ -611,18 +616,18 @@ abstract class IDataSourceParentServer(
     /**
      * 获得艺术家
      */
-    @OptIn(ExperimentalPagingApi::class)
     override fun selectArtistFlowList(): Flow<PagingData<XyArtistExt>> {
-        return bigPager(
-            remoteMediator = ArtistRemoteMediator(
-                db = db,
-                datasourceServer = this,
-                dataSource = getDataSourceType(),
-                connectionId = getConnectionId()
-            )
-        ) {
+        return defaultLocalPager {
             db.artistDao.selectListPagingSource()
         }.flow
+    }
+
+    /**
+     * 按需刷新本地艺术家缓存。
+     * 具体同步逻辑由艺术家缓存同步器维护，避免数据源父类承担分页外的缓存细节。
+     */
+    override suspend fun refreshArtistCacheIfNeeded(force: Boolean) {
+        artistCacheSynchronizer.refreshIfNeeded(force)
     }
 
     /**

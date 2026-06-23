@@ -772,6 +772,19 @@ open class DataSourceManager(
     }
 
     /**
+     * 按需刷新本地艺术家缓存
+     */
+    override suspend fun refreshArtistCacheIfNeeded(force: Boolean) {
+        val server = currentDataSourceServerOrNull() ?: return
+        try {
+            server.refreshArtistCacheIfNeeded(force)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "按需刷新艺术家缓存失败", e)
+            throw e
+        }
+    }
+
+    /**
      * 搜索音乐,艺术家,专辑
      */
     override suspend fun searchAll(search: String): SearchData {

@@ -48,6 +48,7 @@ import xymusic_kmp.composeapp.generated.resources.reached_bottom
  * @param [modifier] 修饰语
  * @param [paddingValues] 填充值
  * @param [collectAsLazyPagingItems] 分页数据
+ * @param [onRefresh] 下拉刷新时额外执行的刷新动作
  * @param [content] 内容
  */
 
@@ -58,6 +59,7 @@ fun <T : Any> SwipeRefreshVerticalGridListComponent(
     lazyGridState: LazyGridState = rememberLazyGridState(),
     collectAsLazyPagingItems: LazyPagingItems<T>,
     bottomItem: (LazyGridScope.() -> Unit)? = null,
+    onRefresh: (() -> Unit)? = null,
     content: LazyGridScope.(Boolean) -> Unit
 ) {
     val pagingUiState = collectAsLazyPagingItems.toPagingUiState()
@@ -67,6 +69,7 @@ fun <T : Any> SwipeRefreshVerticalGridListComponent(
         state = state,
         isRefreshing = pagingUiState.shouldShowPullRefreshIndicator,
         onRefresh = {
+            onRefresh?.invoke()
             collectAsLazyPagingItems.refresh()
         }
     ) {

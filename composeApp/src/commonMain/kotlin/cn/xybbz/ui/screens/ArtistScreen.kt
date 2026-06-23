@@ -111,6 +111,9 @@ fun ArtistScreen(
                 modifier = Modifier,
                 lazyGridState = lazyGridState,
                 collectAsLazyPagingItems = artistListPaging,
+                onRefresh = {
+                    artistViewModel.refreshArtistCacheIfNeeded(force = true)
+                },
             ) {
                 items(
                     count = artistListPaging.itemCount,
