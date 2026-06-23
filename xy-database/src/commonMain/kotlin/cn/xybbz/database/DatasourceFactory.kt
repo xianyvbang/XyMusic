@@ -36,6 +36,7 @@ inline fun <reified T : DatabaseClient> getRoomDatabase(
     vararg migrations: Migration
 ): T {
     return createDatabaseClientBuilder<T>(dbFileName, contextWrapper).addMigrations(*migrations)
+        .fallbackToDestructiveMigration(true)
         .build()
 }
 

@@ -1,6 +1,6 @@
 package cn.xybbz.localdata.config
 
-import cn.xybbz.database.createDatabaseClientBuilder
+import cn.xybbz.database.getRoomDatabase
 import cn.xybbz.platform.ContextWrapper
 
 internal const val DB_FILE_NAME = "appData.db"
@@ -9,8 +9,13 @@ internal const val DB_FILE_NAME = "appData.db"
  * 创建LocalDatabaseClient对象
  */
 fun getLocalRoomDatabase(contextWrapper: ContextWrapper): LocalDatabaseClient {
-    return createDatabaseClientBuilder<LocalDatabaseClient>(DB_FILE_NAME, contextWrapper)
-        .addMigrations(Migration_4_5, Migration_5_6, Migration_6_7, Migration_7_8, Migration_8_9)
-        .fallbackToDestructiveMigration(true)
-        .build()
+    return getRoomDatabase(
+        DB_FILE_NAME,
+        contextWrapper,
+        Migration_4_5,
+        Migration_5_6,
+        Migration_6_7,
+        Migration_7_8,
+        Migration_8_9
+    )
 }
