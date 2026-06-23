@@ -799,7 +799,7 @@ open class DataSourceManager(
             requireDataSourceServer().playRecordMusicOrAlbumList(pageSize)
         } catch (e: SocketTimeoutException) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新超时", e)
-        } catch (e: Exception) {
+        } catch (e: ServiceException) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新失败", e)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐未知错误失败", e)
