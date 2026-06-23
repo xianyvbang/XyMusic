@@ -79,6 +79,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.koin.core.component.get
+import org.koin.core.parameter.parametersOf
 import kotlin.time.Clock
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_music_to_playlist_failed
@@ -624,9 +625,9 @@ open class DataSourceManager(
         dataSourceType: DataSourceType,
         ifTmp: Boolean
     ): IDataSourceParentServer {
-        val iDataSourceParentServer: IDataSourceParentServer = get(dataSourceType.koinQualifier())
-        iDataSourceParentServer.updateIfTmpObject(ifTmp)
-        return iDataSourceParentServer
+        return get(dataSourceType.koinQualifier()) {
+            parametersOf(ifTmp)
+        }
     }
 
     /**

@@ -117,6 +117,10 @@ import kotlin.uuid.Uuid
 
 abstract class IDataSourceParentServer(
     private val defaultParentApiClient: DefaultParentApiClient,
+    /**
+     * 是否为临时数据源对象，临时对象只用于连接探测和资源读取，不触发正式登录副作用。
+     */
+    private val isTemporaryObject: Boolean = false,
 ) : IDataSourceServer, IoScoped() {
 
     protected val db: LocalDatabaseClient = get()
@@ -147,8 +151,6 @@ abstract class IDataSourceParentServer(
     val loginSuccessEvent = _loginSuccessEvent.asSharedFlow()
 
 
-    private var ifTmpObject = false
-
     /**
      * 统计数量刷新锁，避免登录同步和首页下拉同时请求统计接口。
      */
@@ -167,11 +169,7 @@ abstract class IDataSourceParentServer(
     private val loginRetryGate = AtomicBoolean(false)
 
     fun ifTmpObject(): Boolean {
-        return ifTmpObject
-    }
-
-    fun updateIfTmpObject(ifTmp: Boolean) {
-        ifTmpObject = ifTmp
+        return isTemporaryObject
     }
 
     fun getApiClient(): DefaultParentApiClient {

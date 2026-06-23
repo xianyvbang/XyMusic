@@ -35,6 +35,7 @@ import cn.xybbz.common.enums.DataSourceQualifiers
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Factory
+import org.koin.core.annotation.InjectedParam
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
@@ -47,9 +48,14 @@ class DataSourceModule {
     @Named(DataSourceQualifiers.JELLYFIN)
     fun jellyfinApiServer(
         jellyfinApiClient: JellyfinApiClient,
+        /**
+         * 是否创建临时数据源对象，临时对象用于登录前探测和资源读取。
+         */
+        @InjectedParam isTemporaryObject: Boolean,
     ): IDataSourceParentServer {
         return JellyfinDatasourceServer(
             jellyfinApiClient,
+            isTemporaryObject,
         )
     }
 
@@ -57,9 +63,14 @@ class DataSourceModule {
     @Named(DataSourceQualifiers.SUBSONIC)
     fun subsonicDataSourceServer(
         subsonicApiClient: SubsonicApiClient,
+        /**
+         * 是否创建临时数据源对象，临时对象用于登录前探测和资源读取。
+         */
+        @InjectedParam isTemporaryObject: Boolean,
     ): IDataSourceParentServer {
         return SubsonicDatasourceServer(
             subsonicApiClient,
+            isTemporaryObject,
         )
     }
 
@@ -67,9 +78,14 @@ class DataSourceModule {
     @Named(DataSourceQualifiers.NAVIDROME)
     fun navidromeDatasourceServer(
         navidromeApiClient: NavidromeApiClient,
+        /**
+         * 是否创建临时数据源对象，临时对象用于登录前探测和资源读取。
+         */
+        @InjectedParam isTemporaryObject: Boolean,
     ): IDataSourceParentServer {
         return NavidromeDatasourceServer(
             navidromeApiClient,
+            isTemporaryObject,
         )
     }
 
@@ -77,9 +93,14 @@ class DataSourceModule {
     @Named(DataSourceQualifiers.EMBY)
     fun embyDatasourceServer(
         embyApiClient: EmbyApiClient,
+        /**
+         * 是否创建临时数据源对象，临时对象用于登录前探测和资源读取。
+         */
+        @InjectedParam isTemporaryObject: Boolean,
     ): IDataSourceParentServer {
         return EmbyDatasourceServer(
             embyApiClient,
+            isTemporaryObject,
         )
     }
 
@@ -88,9 +109,14 @@ class DataSourceModule {
     @Named(DataSourceQualifiers.PLEX)
     fun plexDatasourceServer(
         plexApiClient: PlexApiClient,
+        /**
+         * 是否创建临时数据源对象，临时对象用于登录前探测和资源读取。
+         */
+        @InjectedParam isTemporaryObject: Boolean,
     ): IDataSourceParentServer {
         return PlexDatasourceServer(
             plexApiClient,
+            isTemporaryObject,
         )
     }
 

@@ -63,8 +63,13 @@ import io.ktor.client.HttpClient
 
 class SubsonicDatasourceServer(
     private val subsonicApiClient: SubsonicApiClient,
+    /**
+     * 是否为临时数据源对象，临时对象不写入正式连接上下文。
+     */
+    isTemporaryObject: Boolean = false,
 ) : IDataSourceParentServer(
     subsonicApiClient,
+    isTemporaryObject,
 ) {
     /**
      * 获得当前数据源类型

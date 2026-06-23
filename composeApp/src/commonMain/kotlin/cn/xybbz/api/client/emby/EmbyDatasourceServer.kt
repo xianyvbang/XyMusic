@@ -69,8 +69,13 @@ import org.jetbrains.compose.resources.getString
 
 class EmbyDatasourceServer(
     private val embyApiClient: EmbyApiClient,
+    /**
+     * 是否为临时数据源对象，临时对象不写入正式连接上下文。
+     */
+    isTemporaryObject: Boolean = false,
 ) : IDataSourceParentServer(
     embyApiClient,
+    isTemporaryObject,
 ) {
     /**
      * 获得当前数据源类型

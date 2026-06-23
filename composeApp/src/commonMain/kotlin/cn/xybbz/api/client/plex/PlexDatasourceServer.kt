@@ -75,8 +75,13 @@ import kotlin.uuid.Uuid
 
 class PlexDatasourceServer(
     private val plexApiClient: PlexApiClient,
+    /**
+     * 是否为临时数据源对象，临时对象不写入正式连接上下文。
+     */
+    isTemporaryObject: Boolean = false,
 ) : IDataSourceParentServer(
     plexApiClient,
+    isTemporaryObject,
 ) {
 
     /**

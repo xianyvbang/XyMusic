@@ -78,8 +78,13 @@ import xymusic_kmp.composeapp.generated.resources.unknown_artist
  */
 class JellyfinDatasourceServer(
     private val jellyfinApiClient: JellyfinApiClient,
+    /**
+     * 是否为临时数据源对象，临时对象不写入正式连接上下文。
+     */
+    isTemporaryObject: Boolean = false,
 ) : IDataSourceParentServer(
     jellyfinApiClient,
+    isTemporaryObject,
 ) {
 
     /**
