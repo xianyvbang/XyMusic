@@ -111,7 +111,8 @@ class ConnectionManagementViewModel (
         val downloadIds = downloadTasks.map { it.id }.toLongArray()
 
         if (downloadIds.isNotEmpty()) {
-            downloaderManager.delete(*downloadIds)
+            // 删除连接前等待该连接的下载任务和本地文件清理完成，避免后续清库时丢失路径。
+            downloaderManager.deleteAndAwait(*downloadIds)
         }
     }
 

@@ -222,6 +222,13 @@ class DownloadImpl(
         if (ids.isNotEmpty()) downloadDispatcher.delete(ids.toList(), deleteFile)
     }
 
+    /**
+     * 等待删除调度器完成记录和文件清理。
+     */
+    override suspend fun deleteAndAwait(vararg ids: Long, deleteFile: Boolean) {
+        if (ids.isNotEmpty()) downloadDispatcher.deleteAndAwait(ids.toList(), deleteFile)
+    }
+
     override fun updateConfig(config: DownloaderConfig) {
         downloadDispatcher.updateConfig(config)
     }

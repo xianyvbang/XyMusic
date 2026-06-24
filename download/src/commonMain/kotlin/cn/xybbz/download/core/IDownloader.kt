@@ -28,6 +28,10 @@ interface IDownloader: AutoCloseable {
     fun cancel(vararg ids: Long)
     fun cancelAll()
     fun delete(vararg ids: Long, deleteFile: Boolean = true)
+    /**
+     * 等待下载任务记录和关联文件删除完成，供清库、删歌等顺序敏感流程使用。
+     */
+    suspend fun deleteAndAwait(vararg ids: Long, deleteFile: Boolean = true)
     fun updateConfig(config: DownloaderConfig)
     fun addListener(listener: DownloadListener)
     fun removerListener(listener: DownloadListener)

@@ -177,31 +177,55 @@ class DownloadDispatcherImpl(
 
     fun delete(ids: List<Long>, deleteFile: Boolean) {
         scope.launch {
-            val tasksToDelete = mutableListOf<XyDownload>()
-            ids.forEach { id ->
-                readyTasks.firstOrNull { it.id == id }
-                    ?.also { readyTasks.remove(it); tasksToDelete.add(it) }
-                runningTasks.remove(id)?.also { tasksToDelete.add(it) }
-                pausedTasks.remove(id)?.also { tasksToDelete.add(it) }
-                failedTasks.remove(id)?.also { tasksToDelete.add(it) }
-            }
-
-            if (tasksToDelete.isNotEmpty()) {
-                tasksToDelete.forEach { task ->
-                    taskScheduler.cancel(task.id)
-                    try {
-                        cleanupTaskFiles(task)
-                        if (deleteFile) {
-                            DownloadPlatformFiles.deleteFile(task.filePath)
-                        }
-                    } catch (e: Exception) {
-                        DownloadLogger.d(DownloadConstants.LOG_TAG, e.toString())
-                    }
-                }
-            }
-            db.downloadDao.deleteById(*ids.toLongArray())
-            promoteAndExecute()
+            deleteAndAwait(ids, deleteFile)
         }
+    }
+
+    /**
+     * 基于数据库记录和内存队列同步删除任务，确保已完成任务也能清理磁盘文件。
+     */
+    suspend fun deleteAndAwait(ids: List<Long>, deleteFile: Boolean) {
+        if (ids.isEmpty()) {
+            return
+        }
+        // 去重后统一处理，避免重复取消任务或重复删除同一路径。
+        val idsToDelete = ids.distinct()
+        val tasksToDelete = linkedMapOf<Long, XyDownload>()
+        // 先从数据库加载任务，覆盖已完成任务不在内存队列中但仍需要删除文件的场景。
+        db.downloadDao.getByIds(idsToDelete).forEach { task ->
+            tasksToDelete[task.id] = task
+        }
+
+        globalMutex.withLock {
+            // 再合并内存态任务，并从队列中移除，防止删除后继续被调度或恢复。
+            idsToDelete.forEach { id ->
+                readyTasks.firstOrNull { it.id == id }
+                    ?.also {
+                        readyTasks.remove(it)
+                        tasksToDelete[it.id] = it
+                    }
+                runningTasks.remove(id)?.also { tasksToDelete[it.id] = it }
+                pausedTasks.remove(id)?.also { tasksToDelete[it.id] = it }
+                failedTasks.remove(id)?.also { tasksToDelete[it.id] = it }
+            }
+        }
+
+        tasksToDelete.values.forEach { task ->
+            // 先取消平台调度任务，再清理临时文件和最终文件，避免后台任务继续写入。
+            taskScheduler.cancel(task.id)
+            try {
+                cleanupTaskFiles(task)
+                if (deleteFile) {
+                    // deleteFile=true 表示用户确认删除本地下载结果，非空最终文件也要移除。
+                    DownloadPlatformFiles.deleteFile(task.filePath)
+                }
+            } catch (e: Exception) {
+                DownloadLogger.d(DownloadConstants.LOG_TAG, e.toString())
+            }
+        }
+        // 文件清理完成后再删除数据库记录，确保异常时仍可通过记录追踪残留路径。
+        db.downloadDao.deleteById(*idsToDelete.toLongArray())
+        promoteAndExecute()
     }
 
     private fun promoteAndExecute() = scope.launch {

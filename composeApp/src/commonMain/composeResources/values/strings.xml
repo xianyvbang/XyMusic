@@ -442,7 +442,7 @@
     <string name="unknown">未知</string>
 
     <string name="remove_download_title">批量删除下载</string>
-    <string name="confirm_delete_download">注意! 已完成下载的任务,此处只会删除下载任务,不会删除音乐文件,  确定要删除这%1$d个下载吗?</string>
+    <string name="confirm_delete_download">注意! 删除下载任务会同时删除已下载的本地音乐文件, 确定要删除这%1$d个下载吗?</string>
     <string name="download_list">下载列表</string>
     <string name="local_music">本地音乐</string>
     <string name="local_and_download">本地和下载</string>

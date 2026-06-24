@@ -1,6 +1,10 @@
 package cn.xybbz.download.core
 
 import cn.xybbz.config.download.state.DownloadState
+import cn.xybbz.database.getJvmDatabaseFiles
+import cn.xybbz.database.getRoomDatabase
+import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.download.internal.DownloadIoScoped
 import cn.xybbz.download.utils.deleteFileIfEmptyWithFileKit
@@ -225,10 +229,205 @@ class DownloadCoreUtilitiesTest {
     }
 
     /**
+     * 同步删除入口应删除只存在于数据库中的已完成任务和对应磁盘文件。
+     */
+    @Test
+    fun deleteAndAwaitDeletesCompletedTaskFilesFromDatabaseRecord() = runBlocking {
+        val root = createTempDirectory()
+        val dbName = createTestDatabaseName()
+        cleanupTestDatabase(dbName)
+        val db = createTestDownloadDatabase(dbName)
+        val downloader = createTestDownloader(db, root)
+        val finalFile = File(root, "song.mp3").apply { writeText("music") }
+        val tempFile = File(root, "song.tmp").apply { writeText("partial") }
+
+        try {
+            val downloadId = insertDownloadTask(
+                db = db,
+                finalFile = finalFile,
+                tempFile = tempFile,
+                status = DownloadStatus.COMPLETED,
+            )
+
+            downloader.deleteAndAwait(downloadId)
+
+            assertFalse(finalFile.exists())
+            assertFalse(tempFile.exists())
+            assertEquals(null, db.downloadDao.selectById(downloadId))
+        } finally {
+            downloader.close()
+            db.close()
+            root.deleteRecursively()
+            cleanupTestDatabase(dbName)
+        }
+    }
+
+    /**
+     * 保留文件删除模式应只清理临时文件和数据库记录，不删除非空最终文件。
+     */
+    @Test
+    fun deleteAndAwaitKeepsFinalFileWhenDeleteFileFalse() = runBlocking {
+        val root = createTempDirectory()
+        val dbName = createTestDatabaseName()
+        cleanupTestDatabase(dbName)
+        val db = createTestDownloadDatabase(dbName)
+        val downloader = createTestDownloader(db, root)
+        val finalFile = File(root, "kept.mp3").apply { writeText("music") }
+        val tempFile = File(root, "kept.tmp").apply { writeText("partial") }
+
+        try {
+            val downloadId = insertDownloadTask(
+                db = db,
+                finalFile = finalFile,
+                tempFile = tempFile,
+                status = DownloadStatus.COMPLETED,
+            )
+
+            downloader.deleteAndAwait(downloadId, deleteFile = false)
+
+            assertTrue(finalFile.exists())
+            assertFalse(tempFile.exists())
+            assertEquals("music", finalFile.readText())
+            assertEquals(null, db.downloadDao.selectById(downloadId))
+        } finally {
+            downloader.close()
+            db.close()
+            root.deleteRecursively()
+            cleanupTestDatabase(dbName)
+        }
+    }
+
+    /**
+     * 按歌曲 ID 查询下载任务时应限定当前媒体库并排除 APK 类型。
+     */
+    @Test
+    fun getMusicTasksByUidsFiltersMediaLibraryAndApkTasks() = runBlocking {
+        val root = createTempDirectory()
+        val dbName = createTestDatabaseName()
+        cleanupTestDatabase(dbName)
+        val db = createTestDownloadDatabase(dbName)
+
+        try {
+            val expectedOne = insertDownloadTask(
+                db = db,
+                finalFile = File(root, "song-one.mp3"),
+                tempFile = File(root, "song-one.tmp"),
+                uid = "song-one",
+                typeData = "SUBSONIC",
+                mediaLibraryId = "1",
+                status = DownloadStatus.FAILED,
+            )
+            val expectedTwo = insertDownloadTask(
+                db = db,
+                finalFile = File(root, "song-two.mp3"),
+                tempFile = File(root, "song-two.tmp"),
+                uid = "song-two",
+                typeData = "EMBY",
+                mediaLibraryId = "1",
+            )
+            insertDownloadTask(
+                db = db,
+                finalFile = File(root, "apk.bin"),
+                tempFile = File(root, "apk.tmp"),
+                uid = "song-one",
+                typeData = "APK",
+                mediaLibraryId = "1",
+            )
+            insertDownloadTask(
+                db = db,
+                finalFile = File(root, "other-library.mp3"),
+                tempFile = File(root, "other-library.tmp"),
+                uid = "song-one",
+                typeData = "SUBSONIC",
+                mediaLibraryId = "2",
+            )
+
+            val taskIds = db.downloadDao.getMusicTasksByUids(
+                musicIds = listOf("song-one", "song-two"),
+                notTypeData = "APK",
+                mediaLibraryId = "1",
+            ).map { it.id }.toSet()
+
+            assertEquals(setOf(expectedOne, expectedTwo), taskIds)
+        } finally {
+            db.close()
+            root.deleteRecursively()
+            cleanupTestDatabase(dbName)
+        }
+    }
+
+    /**
      * 创建隔离的测试临时目录。
      */
     private fun createTempDirectory(): File {
         return Files.createTempDirectory("xy-download-core-test").toFile()
+    }
+
+    /**
+     * 创建隔离的下载数据库文件名，避免测试之间共享下载任务。
+     */
+    private fun createTestDatabaseName(): String {
+        return "xy-download-test-${System.nanoTime()}.db"
+    }
+
+    /**
+     * 创建 JVM 下载数据库实例。
+     */
+    private fun createTestDownloadDatabase(dbName: String): DownloadDatabaseClient {
+        return getRoomDatabase(dbName, ContextWrapper())
+    }
+
+    /**
+     * 删除测试数据库及其伴生 WAL 文件。
+     */
+    private fun cleanupTestDatabase(dbName: String) {
+        getJvmDatabaseFiles(dbName).forEach { file ->
+            if (file.exists()) {
+                file.delete()
+            }
+        }
+    }
+
+    /**
+     * 创建只用于删除路径测试的下载器实例。
+     */
+    private fun createTestDownloader(db: DownloadDatabaseClient, root: File): DownloadImpl {
+        val contextWrapper = ContextWrapper()
+        val dispatcher = DownloadDispatcherImpl(
+            contextWrapper = contextWrapper,
+            db = db,
+            config = DownloaderConfig.Builder(contextWrapper)
+                .setFinalDirectory(root.absolutePath)
+                .build(),
+        )
+        return DownloadImpl(dispatcher, db)
+    }
+
+    /**
+     * 插入一条下载任务并返回数据库生成的任务 ID。
+     */
+    private suspend fun insertDownloadTask(
+        db: DownloadDatabaseClient,
+        finalFile: File,
+        tempFile: File,
+        uid: String = "song-id",
+        typeData: String = "SUBSONIC",
+        mediaLibraryId: String = "1",
+        status: DownloadStatus = DownloadStatus.COMPLETED,
+    ): Long {
+        return db.downloadDao.insert(
+            XyDownload(
+                url = "https://example.test/${finalFile.name}",
+                fileName = finalFile.name,
+                filePath = finalFile.absolutePath,
+                fileSize = finalFile.length(),
+                tempFilePath = tempFile.absolutePath,
+                typeData = typeData,
+                status = status,
+                uid = uid,
+                mediaLibraryId = mediaLibraryId,
+            )
+        ).single()
     }
 
     /**

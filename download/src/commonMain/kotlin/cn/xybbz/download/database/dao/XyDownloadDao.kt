@@ -80,6 +80,16 @@ interface XyDownloadDao {
     @Query("SELECT * FROM xy_download WHERE id IN (:ids)")
     suspend fun getByIds(ids: List<Long>): List<XyDownload>
 
+    /**
+     * 按歌曲 ID 查询指定媒体库下的音乐下载任务，不限制任务状态。
+     */
+    @Query("SELECT * FROM xy_download WHERE uid IN (:musicIds) and typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId)")
+    suspend fun getMusicTasksByUids(
+        musicIds: List<String>,
+        notTypeData: String,
+        mediaLibraryId: String?
+    ): List<XyDownload>
+
     @Query("SELECT * FROM xy_download WHERE uid IN (:musicIds) and status = :status and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId)")
     suspend fun getDataByUids(
         musicIds: List<String>,

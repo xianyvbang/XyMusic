@@ -44,6 +44,8 @@ import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.info.shouldShowLoginMessageTips
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.download.DownloaderManager
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
@@ -1602,6 +1604,8 @@ open class DataSourceManager(
         OperationTipUtils.operationTipNotToBlock {
             val bool = requireDataSourceServer().removeById(musicId)
             db.musicDao.removeByItemId(musicId)
+            // 删除歌曲索引后同步清理对应下载任务，避免本地音乐文件残留。
+            deleteDownloadedMusicByIds(listOf(musicId))
             bool
         }
     }
@@ -1620,7 +1624,31 @@ open class DataSourceManager(
                 false
             }
             db.musicDao.removeByItemIds(musicIds)
+            // 批量删除歌曲后统一清理下载任务，减少逐条查库和文件删除的开销。
+            deleteDownloadedMusicByIds(musicIds)
             bool
+        }
+    }
+
+    /**
+     * 删除歌曲资源时同步清理当前连接下对应的本地下载任务和磁盘文件。
+     */
+    private suspend fun deleteDownloadedMusicByIds(musicIds: List<String>) {
+        if (musicIds.isEmpty()) {
+            return
+        }
+        // 按需获取下载库，避免 DataSourceManager 构造阶段和 DownloaderManager 形成依赖环。
+        val downloadDb: DownloadDatabaseClient = get()
+        // 只查询当前连接下的音乐下载任务，避免误删 APK 或其它连接的下载文件。
+        val downloadIds = downloadDb.downloadDao.getMusicTasksByUids(
+            musicIds = musicIds,
+            notTypeData = DownloadTypes.APK.toString(),
+            mediaLibraryId = getConnectionId().toString(),
+        ).map { it.id }.toLongArray()
+        if (downloadIds.isNotEmpty()) {
+            // 存在待删下载任务时再获取下载管理器，并等待磁盘文件和下载记录清理完成。
+            val downloaderManager: DownloaderManager = get()
+            downloaderManager.deleteAndAwait(*downloadIds)
         }
     }
 

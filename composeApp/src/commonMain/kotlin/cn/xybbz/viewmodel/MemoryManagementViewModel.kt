@@ -34,6 +34,7 @@ import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.storage.MemoryStorageInfo
 import cn.xybbz.config.storage.clearPlatformCache
 import cn.xybbz.config.storage.getMemoryStorageInfo
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.platform.ContextWrapper
@@ -52,6 +53,10 @@ class MemoryManagementViewModel(
     private val settingsManager: SettingsManager,
     private val dataSourceManager: DataSourceManager,
     private val musicController: MusicCommonController,
+    /**
+     * 下载管理器用于清库前同步删除下载任务对应的磁盘文件。
+     */
+    private val downloaderManager: DownloaderManager,
 ) : ViewModel() {
 
     var cacheSize by mutableStateOf("0B")
@@ -155,7 +160,7 @@ class MemoryManagementViewModel(
             musicController.clearPlayerList()
             withContext(Dispatchers.IO) {
                 dataSourceManager.release()
-                DatabaseUtils.clearAllDatabaseData(db, downloadDb)
+                DatabaseUtils.clearAllDatabaseData(db, downloadDb, downloaderManager)
                 settingsManager.initSet()
             }
             databaseSize = "0B"
