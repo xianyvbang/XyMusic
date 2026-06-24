@@ -29,6 +29,7 @@ import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.download.enums.DownloadStatus
+import cn.xybbz.download.utils.playableDownloadFilePath
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
@@ -80,7 +81,9 @@ class LocalViewModel(
         playerModeEnum: PlayerModeEnum? = null
     ) {
         viewModelScope.launch {
-            val downloadPathMap = downloadMusicTasks.value.associate { it.uid to it.filePath }
+            val downloadPathMap = downloadMusicTasks.value.mapNotNull { download ->
+                playableDownloadFilePath(download.filePath)?.let { filePath -> download.uid to filePath }
+            }.toMap()
 
             musicPlayContext.musicList(
                 onMusicPlayParameter,

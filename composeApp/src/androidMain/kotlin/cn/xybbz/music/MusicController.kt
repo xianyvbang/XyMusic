@@ -47,6 +47,7 @@ import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.image.CoverImageResolver
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlayerEvent
+import cn.xybbz.download.utils.playableDownloadFilePath
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
@@ -506,8 +507,9 @@ class MusicController(
         val customCacheKey = downloadCacheController.getCacheKey(itemId)
         mediaItemBuilder.setCustomCacheKey(customCacheKey)
         val pic = coverImageResolver.resolveMusic(playMusic).primaryUrl
+        val playableFilePath = playableDownloadFilePath(playMusic.filePath)
 
-        if (playMusic.filePath.isNullOrBlank()) {
+        if (playableFilePath.isNullOrBlank()) {
             mediaItemBuilder.setUri(playMusic.musicUrl)
             val normalizeMimeType =
                 MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${playMusic.container}")
@@ -548,7 +550,7 @@ class MusicController(
                 .setArtworkUri(pic?.toUri())
                 .setArtist(playMusic.artists?.joinToString()) // 可以设置其他元数据信息，例如专辑、时长等
                 .build()
-            mediaItemBuilder.setUri(playMusic.filePath?.toUri())
+            mediaItemBuilder.setUri(playableFilePath.toUri())
                 .setMediaMetadata(mediaMetadata)
         }
         return mediaItemBuilder.setMediaId(itemId)

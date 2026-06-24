@@ -5,6 +5,7 @@ import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlayerEvent
+import cn.xybbz.download.utils.playableDownloadFilePath
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
@@ -798,7 +799,7 @@ class JvmMusicController : MusicCommonController() {
      * 获取歌曲真正交给 VLC 播放的地址。
      */
     private fun playbackSourceOf(music: XyPlayMusic): String {
-        val localPath = music.filePath
+        val localPath = playableDownloadFilePath(music.filePath)
         val playerUrl = if (!localPath.isNullOrBlank()) {
             Paths.get(localPath).toUri().toASCIIString()
         } else {

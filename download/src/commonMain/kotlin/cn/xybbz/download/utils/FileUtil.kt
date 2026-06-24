@@ -130,6 +130,12 @@ fun fileLengthWithFileKit(path: String): Long {
     return if (file.exists()) file.size().coerceAtLeast(0L) else 0L
 }
 
+// 校验已完成下载的本地文件是否仍可用于播放，缺失或空文件都回退为 null。
+fun playableDownloadFilePath(path: String?): String? {
+    val safePath = path?.takeIf { it.isNotBlank() } ?: return null
+    return safePath.takeIf { fileLengthWithFileKit(it) > 0L }
+}
+
 // 创建目录并返回原路径字符串，方便现有配置继续存储 String。
 fun ensureDirectoryWithFileKit(path: String): String {
     val directory = PlatformFile(path)

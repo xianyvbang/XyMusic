@@ -11,6 +11,7 @@ import cn.xybbz.download.utils.deleteFileIfEmptyWithFileKit
 import cn.xybbz.download.utils.deleteFileWithFileKit
 import cn.xybbz.download.utils.fileLengthWithFileKit
 import cn.xybbz.download.utils.moveFileWithFileKit
+import cn.xybbz.download.utils.playableDownloadFilePath
 import cn.xybbz.platform.ContextWrapper
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.Job
@@ -85,6 +86,27 @@ class DownloadCoreUtilitiesTest {
             assertTrue(deleteFileWithFileKit(file.absolutePath))
             assertFalse(file.exists())
             assertFalse(deleteFileWithFileKit(file.absolutePath))
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * 本地播放路径只接受仍存在且非空的下载文件。
+     */
+    @Test
+    fun playableDownloadFilePathRequiresExistingNonEmptyFile() {
+        val root = createTempDirectory()
+        val emptyFile = File(root, "empty.mp3").apply { writeBytes(ByteArray(0)) }
+        val musicFile = File(root, "song.mp3").apply { writeText("music") }
+        val missingFile = File(root, "missing.mp3")
+
+        try {
+            assertEquals(null, playableDownloadFilePath(null))
+            assertEquals(null, playableDownloadFilePath(""))
+            assertEquals(null, playableDownloadFilePath(missingFile.absolutePath))
+            assertEquals(null, playableDownloadFilePath(emptyFile.absolutePath))
+            assertEquals(musicFile.absolutePath, playableDownloadFilePath(musicFile.absolutePath))
         } finally {
             root.deleteRecursively()
         }

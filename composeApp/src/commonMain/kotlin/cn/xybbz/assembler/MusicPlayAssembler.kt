@@ -1,6 +1,7 @@
 package cn.xybbz.assembler
 
 import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.download.utils.playableDownloadFilePath
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 
@@ -109,7 +110,8 @@ object MusicPlayAssembler {
                 mediaLibraryId = mediaLibraryId
             )
             .mapNotNull { download ->
-                download.uid?.let { uid -> uid to download.filePath }
+                val filePath = playableDownloadFilePath(download.filePath) ?: return@mapNotNull null
+                download.uid?.let { uid -> uid to filePath }
             }
             .toMap()
     }

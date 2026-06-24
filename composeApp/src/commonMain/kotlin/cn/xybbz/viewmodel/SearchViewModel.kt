@@ -37,6 +37,7 @@ import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.download.utils.playableDownloadFilePath
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -200,7 +201,7 @@ class SearchViewModel(
             val playMusic = MusicPlayAssembler.toPlayMusic(
                 music = music,
                 ifFavoriteStatus = db.musicDao.selectIfFavoriteByMusic(music.itemId),
-                filePath = download?.filePath
+                filePath = playableDownloadFilePath(download?.filePath)
             )
             musicController.addMusic(
                 playMusic,
