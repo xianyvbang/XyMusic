@@ -69,6 +69,22 @@ class HttpClientDownloadCore : IDownloadCore {
                 var currentBytes = writeStartOffset
                 var lastUpdateTime = Clock.System.now().toEpochMilliseconds()
                 var lastDownloadBytes = writeStartOffset
+                // 任务记录里的总大小用于写入前和写入中的磁盘空间预估。
+                val expectedTotalBytes = xyDownload.fileSize
+                contextWrapper?.let {
+                    // 服务端忽略 Range 时会从头覆盖写入，因此按完整文件大小重新校验。
+                    val remainingBytes = if (response.status == HttpStatusCode.OK) {
+                        expectedTotalBytes
+                    } else {
+                        (expectedTotalBytes - writeStartOffset).coerceAtLeast(0L)
+                    }
+                    // 真正打开文件流前先校验剩余下载量所需空间。
+                    DownloadStorageGuard.ensureEnoughSpace(
+                        path = xyDownload.tempFilePath,
+                        needBytes = remainingBytes,
+                        contextWrapper = it,
+                    )
+                }
 
                 emit(
                     DownloadState.InProgress(
@@ -83,6 +99,8 @@ class HttpClientDownloadCore : IDownloadCore {
                 val writeResult = DownloadPlatformFiles.writeResponseToFile(
                     path = xyDownload.tempFilePath,
                     startOffset = writeStartOffset,
+                    contextWrapper = contextWrapper,
+                    expectedTotalBytes = expectedTotalBytes,
                     source = response.bodyAsChannel(),
                 ) { writtenBytes ->
                     // 每个分片写入后在这里统一计算进度，并感知暂停/取消指令。

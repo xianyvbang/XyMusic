@@ -77,15 +77,30 @@ class DownloadImpl(
 
         for (request in requests) {
             var tempFilePath: String? = null
+            // 记录已预留的最终文件路径，准备失败时用于清理 0 字节占位文件。
+            var finalFilePath: String? = null
             try {
                 // 最终文件路径在 commonMain 里只做解析，真正的临时文件创建交给平台 actual。
                 val resolved = FileNameResolver.resolve(
                     request = request,
                     globalFinalDir = downloadDispatcher.config.finalDirectory,
                 )
+                finalFilePath = resolved.finalPath
                 tempFilePath = withContext(Dispatchers.IO) {
                     DownloadPlatformFiles.createTempDownloadFilePath(downloadDispatcher.contextWrapper)
                 }
+                // 入队前先校验临时目录空间，避免明知容量不足仍创建下载任务。
+                DownloadStorageGuard.ensureEnoughSpace(
+                    path = tempFilePath,
+                    needBytes = request.fileSize,
+                    contextWrapper = downloadDispatcher.contextWrapper,
+                )
+                // 最终目录可能和临时目录不在同一磁盘，也需要提前校验一次。
+                DownloadStorageGuard.ensureEnoughSpace(
+                    path = resolved.finalPath,
+                    needBytes = request.fileSize,
+                    contextWrapper = downloadDispatcher.contextWrapper,
+                )
 
                 if (!request.uid.isNullOrBlank()) {
                     val downloadTask = db.downloadDao.getMusicTaskByUid(
@@ -133,6 +148,10 @@ class DownloadImpl(
                 if (tempFilePath != null) {
                     DownloadPlatformFiles.deleteFile(tempFilePath)
                 }
+                // FileNameResolver 会创建最终文件占位，准备失败时只清理空占位，避免残留脏文件名。
+                if (finalFilePath != null) {
+                    DownloadPlatformFiles.deleteFileIfEmpty(finalFilePath)
+                }
                 val time = Clock.System.now().toEpochMilliseconds()
 
                 failTasks.add(
@@ -147,6 +166,8 @@ class DownloadImpl(
                         uid = request.uid,
                         cover = request.cover,
                         duration = request.duration,
+                        // 保存准备失败原因，便于下载列表直接展示磁盘空间不足等错误。
+                        error = e.message ?: "下载准备失败",
                         fileSize = request.fileSize,
                         title = request.title,
                         mediaLibraryId = request.mediaLibraryId,

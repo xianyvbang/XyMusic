@@ -209,6 +209,31 @@ class DownloadDispatcherImpl(
             // 只要并发槽位有空闲，就持续从 ready 队列提升任务。
             while (runningTasks.size < config.maxConcurrentDownloads) {
                 val task = readyTasks.removeFirstOrNull() ?: break
+                // 任务真正启动前再校验一次空间，覆盖排队期间磁盘空间被占用的情况。
+                val failureReason = runCatching {
+                    DownloadStorageGuard.ensureEnoughSpace(
+                        path = task.tempFilePath,
+                        needBytes = (task.fileSize - task.downloadedBytes).coerceAtLeast(0L),
+                        contextWrapper = contextWrapper,
+                    )
+                    DownloadStorageGuard.ensureEnoughSpace(
+                        path = task.filePath,
+                        needBytes = (task.fileSize - task.downloadedBytes).coerceAtLeast(0L),
+                        contextWrapper = contextWrapper,
+                    )
+                }.exceptionOrNull()?.message
+
+                if (failureReason != null) {
+                    val time = Clock.System.now().toEpochMilliseconds()
+                    // 空间不足不启动平台 worker，直接落库失败并广播给 UI。
+                    task.status = DownloadStatus.FAILED
+                    task.error = failureReason
+                    failedTasks[task.id] = task
+                    db.downloadDao.updateOnError(task.id, DownloadStatus.FAILED, failureReason, time)
+                    _taskUpdateEventFlow.emit(task.copy(updateTime = time))
+                    continue
+                }
+
                 task.status = DownloadStatus.DOWNLOADING
                 runningTasks[task.id] = task
                 startDownloadWorker(task)

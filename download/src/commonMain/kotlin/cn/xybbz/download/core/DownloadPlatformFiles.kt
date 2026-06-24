@@ -24,20 +24,28 @@ internal object DownloadPlatformFiles {
 
     fun fileLength(path: String): Long = fileLengthWithFileKit(path)
 
+    // 查询指定路径所在磁盘当前可用空间。
+    fun usableSpace(path: String, contextWrapper: ContextWrapper): Long =
+        platformUsableSpace(path, contextWrapper)
+
     suspend fun deleteFile(path: String): Boolean = deleteFileWithFileKit(path)
 
     suspend fun deleteFileIfEmpty(path: String): Boolean = deleteFileIfEmptyWithFileKit(path)
 
-    // 将网络响应持续写入文件，并在每个分片后回调上层决定是否继续。
+    // 将网络响应持续写入文件，并在每个分片后回调上层决定是否继续；上下文和预期总大小用于写入中兜底校验磁盘空间。
     suspend fun writeResponseToFile(
         path: String,
         startOffset: Long,
+        contextWrapper: ContextWrapper?,
+        expectedTotalBytes: Long,
         source: ByteReadChannel,
         onChunkWritten: suspend (currentBytes: Long) -> DownloadStatus,
     ): DownloadWriteResult =
         writeResponseToPlatformFile(
             path = path,
             startOffset = startOffset,
+            contextWrapper = contextWrapper,
+            expectedTotalBytes = expectedTotalBytes,
             source = source,
             onChunkWritten = onChunkWritten,
         )
@@ -49,10 +57,15 @@ internal expect fun platformDefaultDownloadDirectoryPath(contextWrapper: Context
 // 临时文件创建需要平台生成唯一文件名，但父目录创建统一通过 FileKit 处理。
 internal expect fun createPlatformTempDownloadFilePath(contextWrapper: ContextWrapper): String
 
+// 查询路径所在磁盘可用空间；平台层负责处理路径不存在时的父目录回退。
+internal expect fun platformUsableSpace(path: String, contextWrapper: ContextWrapper): Long
+
 // 断点续传需要 seek/setLength，FileKit sink 不能安全替代，仍由平台层实现随机写入。
 internal expect suspend fun writeResponseToPlatformFile(
     path: String,
     startOffset: Long,
+    contextWrapper: ContextWrapper?,
+    expectedTotalBytes: Long,
     source: ByteReadChannel,
     onChunkWritten: suspend (currentBytes: Long) -> DownloadStatus,
 ): DownloadWriteResult

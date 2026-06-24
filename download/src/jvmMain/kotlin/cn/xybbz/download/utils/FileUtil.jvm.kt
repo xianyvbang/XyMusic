@@ -11,4 +11,5 @@ internal actual suspend fun moveToPublicDirectoryWithFileKit(
 ): String = moveFileWithFileKit(
     sourcePath = sourcePath,
     finalPath = finalPath,
+    contextWrapper = contextWrapper,
 )

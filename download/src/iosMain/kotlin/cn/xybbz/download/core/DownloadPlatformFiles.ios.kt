@@ -24,9 +24,16 @@ internal actual fun createPlatformTempDownloadFilePath(contextWrapper: ContextWr
         .absolutePath()
 }
 
+// iOS 下载随机写入尚未启用，当前先返回最大值，避免误拦截；后续接入 NSFileSystemFreeSize 时替换这里。
+internal actual fun platformUsableSpace(path: String, contextWrapper: ContextWrapper): Long {
+    return Long.MAX_VALUE
+}
+
 internal actual suspend fun writeResponseToPlatformFile(
     path: String,
     startOffset: Long,
+    contextWrapper: ContextWrapper?,
+    expectedTotalBytes: Long,
     source: ByteReadChannel,
     onChunkWritten: suspend (currentBytes: Long) -> DownloadStatus,
 ): DownloadWriteResult {

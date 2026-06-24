@@ -8,6 +8,7 @@ import cn.xybbz.download.utils.deleteFileWithFileKit
 import cn.xybbz.download.utils.fileLengthWithFileKit
 import cn.xybbz.download.utils.moveFileWithFileKit
 import cn.xybbz.platform.ContextWrapper
+import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -15,6 +16,7 @@ import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
@@ -123,6 +125,85 @@ class DownloadCoreUtilitiesTest {
 
             assertFalse(source.exists())
             assertEquals("music", File(movedPath).readText())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * 下载空间保护应对非正数需求跳过强校验，并按 50MB 下限计算安全余量。
+     */
+    @Test
+    fun downloadStorageGuardCalculatesReserveAndSkipsUnknownSize() {
+        val contextWrapper = ContextWrapper()
+        val root = createTempDirectory()
+
+        try {
+            DownloadStorageGuard.ensureEnoughSpace(
+                path = root.absolutePath,
+                needBytes = 0L,
+                contextWrapper = contextWrapper,
+            )
+            assertEquals(
+                60L * 1024L * 1024L,
+                DownloadStorageGuard.requiredBytesWithReserve(10L * 1024L * 1024L),
+            )
+            assertEquals(
+                21L * 1024L * 1024L * 1024L,
+                DownloadStorageGuard.requiredBytesWithReserve(20L * 1024L * 1024L * 1024L),
+            )
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * JVM 可用空间查询应支持尚未创建的目标文件路径。
+     */
+    @Test
+    fun usableSpaceFallsBackToExistingParentDirectory() {
+        val contextWrapper = ContextWrapper()
+        val root = createTempDirectory()
+        val missingTarget = File(root, "nested/song.tmp")
+
+        try {
+            val usableSpace = DownloadPlatformFiles.usableSpace(
+                path = missingTarget.absolutePath,
+                contextWrapper = contextWrapper,
+            )
+
+            assertTrue(usableSpace > 0L)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * 写入入口在预期文件远超磁盘容量时应提前失败，避免真正开始写满磁盘。
+     */
+    @Test
+    fun writeResponseToFileFailsBeforeWritingWhenExpectedSizeExceedsUsableSpace() = runBlocking {
+        val contextWrapper = ContextWrapper()
+        val root = createTempDirectory()
+        val target = File(root, "huge.tmp")
+        val expectedTotalBytes = DownloadPlatformFiles.usableSpace(
+            path = target.absolutePath,
+            contextWrapper = contextWrapper,
+        ) + DownloadStorageGuard.MIN_RESERVED_SPACE_BYTES + 1L
+
+        try {
+            assertFailsWith<InsufficientStorageException> {
+                DownloadPlatformFiles.writeResponseToFile(
+                    path = target.absolutePath,
+                    startOffset = 0L,
+                    contextWrapper = contextWrapper,
+                    expectedTotalBytes = expectedTotalBytes,
+                    source = ByteReadChannel(ByteArray(1)),
+                ) {
+                    DownloadStatus.DOWNLOADING
+                }
+            }
+            assertFalse(target.exists())
         } finally {
             root.deleteRecursively()
         }

@@ -1,6 +1,7 @@
 package cn.xybbz.download.utils
 
 import cn.xybbz.platform.ContextWrapper
+import cn.xybbz.download.core.DownloadStorageGuard
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.absolutePath
 import io.github.vinceglb.filekit.atomicMove
@@ -140,6 +141,7 @@ fun ensureDirectoryWithFileKit(path: String): String {
 suspend fun moveFileWithFileKit(
     sourcePath: String,
     finalPath: String,
+    contextWrapper: ContextWrapper? = null,
 ): String = withContext(Dispatchers.IO) {
     val sourceFile = PlatformFile(sourcePath)
     if (!sourceFile.exists()) {
@@ -157,6 +159,14 @@ suspend fun moveFileWithFileKit(
     runCatching {
         sourceFile.atomicMove(finalFile)
     }.getOrElse {
+        // 原子移动失败通常意味着跨文件系统复制，复制前要确认目标盘仍有足够空间。
+        contextWrapper?.let { wrapper ->
+            DownloadStorageGuard.ensureEnoughSpace(
+                path = finalPath,
+                needBytes = sourceFile.size(),
+                contextWrapper = wrapper,
+            )
+        }
         sourceFile.copyTo(finalFile)
         sourceFile.delete(mustExist = false)
     }

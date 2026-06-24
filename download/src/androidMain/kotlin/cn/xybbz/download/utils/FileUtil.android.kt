@@ -5,10 +5,12 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.annotation.RequiresApi
+import cn.xybbz.download.core.DownloadStorageGuard
 import cn.xybbz.platform.ContextWrapper
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.copyTo
 import io.github.vinceglb.filekit.delete
+import io.github.vinceglb.filekit.size
 import java.io.IOException
 
 // Android 公开 Downloads 需要 MediaStore，普通文件移动仍复用 commonMain 的 FileKit 工具。
@@ -38,6 +40,7 @@ internal actual suspend fun moveToPublicDirectoryWithFileKit(
         moveFileWithFileKit(
             sourcePath = sourcePath,
             finalPath = finalPath,
+            contextWrapper = context,
         )
     }
 }
@@ -65,6 +68,12 @@ private suspend fun copyToPublicDownloads(
         ?: throw IOException("Failed to create new MediaStore entry.")
 
     try {
+        // MediaStore 写入本质是复制到公开下载目录，复制前先校验公开目录可用空间。
+        DownloadStorageGuard.ensureEnoughSpace(
+            path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath,
+            needBytes = PlatformFile(sourcePath).size(),
+            contextWrapper = contextWrapper,
+        )
         PlatformFile(sourcePath).copyTo(PlatformFile(uri))
         PlatformFile(sourcePath).delete(mustExist = false)
         return displayName
