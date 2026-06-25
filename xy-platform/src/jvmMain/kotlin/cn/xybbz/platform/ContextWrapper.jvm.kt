@@ -34,6 +34,7 @@ actual class ContextWrapper {
     constructor() : this(
         environment = System.getenv(),
         osName = System.getProperty("os.name").orEmpty(),
+        //用户的home
         userHomeDirectory = File(System.getProperty("user.home").orEmpty().ifBlank { "." }).absoluteFile,
     )
 
