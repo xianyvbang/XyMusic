@@ -12,7 +12,7 @@ permissions:
 
 # 同一分支的新提交会取消旧测试，减少排队和无效构建时间。
 concurrency:
-  group: xymusic-kmp-ci-${{ github.ref }}
+  group: xymusic-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

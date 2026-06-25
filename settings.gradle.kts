@@ -1,4 +1,4 @@
-rootProject.name = "XyMusic-KMP"
+rootProject.name = "XyMusic"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

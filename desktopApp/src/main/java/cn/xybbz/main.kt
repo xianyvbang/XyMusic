@@ -51,7 +51,7 @@ fun main() {
             onCloseRequest = handleCloseRequest,
             undecorated = true,
             resizable = true,
-            title = "XyMusic-KMP",
+            title = "XyMusic",
             state = windowState,
 //            alwaysOnTop = true,
         ) {
