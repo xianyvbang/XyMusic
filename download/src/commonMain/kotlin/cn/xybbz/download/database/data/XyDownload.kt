@@ -32,6 +32,8 @@ data class XyDownload(
     val filePath: String,
     val fileSize: Long,
     val tempFilePath: String,
+    // 可选的文件 MD5，保证任务恢复后仍能执行完整性校验。
+    val expectedMd5: String? = null,
 
     val typeData: String,
     var progress: Float = 0f,

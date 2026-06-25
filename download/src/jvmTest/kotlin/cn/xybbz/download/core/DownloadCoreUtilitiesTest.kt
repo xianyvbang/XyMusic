@@ -4,6 +4,7 @@ import cn.xybbz.config.download.state.DownloadState
 import cn.xybbz.database.getJvmDatabaseFiles
 import cn.xybbz.database.getRoomDatabase
 import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.download.database.Migration_1_2
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.download.internal.DownloadIoScoped
@@ -13,6 +14,8 @@ import cn.xybbz.download.utils.fileLengthWithFileKit
 import cn.xybbz.download.utils.moveFileWithFileKit
 import cn.xybbz.download.utils.playableDownloadFilePath
 import cn.xybbz.platform.ContextWrapper
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.sqlite.execSQL
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
@@ -236,6 +239,115 @@ class DownloadCoreUtilitiesTest {
     }
 
     /**
+     * JVM 写入入口应完整写入响应体，并返回实际写入字节数。
+     */
+    @Test
+    fun writeResponseToFileCompletesAndKeepsFileLength() = runBlocking {
+        val root = createTempDirectory()
+        val target = File(root, "song.tmp")
+        val content = "music-data".encodeToByteArray()
+
+        try {
+            val result = DownloadPlatformFiles.writeResponseToFile(
+                path = target.absolutePath,
+                startOffset = 0L,
+                contextWrapper = null,
+                expectedTotalBytes = content.size.toLong(),
+                source = ByteReadChannel(content),
+            ) {
+                DownloadStatus.DOWNLOADING
+            }
+
+            assertEquals(DownloadStatus.COMPLETED, result.status)
+            assertEquals(content.size.toLong(), result.totalBytesWritten)
+            assertEquals(content.size.toLong(), target.length())
+            assertEquals("music-data", target.readText())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * 临时文件完整性校验应在 MD5 为空时只校验 size，并接受正确 MD5。
+     */
+    @Test
+    fun completedTempFileValidationAcceptsMissingAndMatchingMd5() {
+        val root = createTempDirectory()
+        val target = File(root, "song.tmp").apply { writeText("music") }
+
+        try {
+            DownloadIntegrityValidator.verifyCompletedTempFile(
+                path = target.absolutePath,
+                expectedBytes = target.length(),
+                expectedMd5 = null,
+                writtenBytes = target.length(),
+            )
+            DownloadIntegrityValidator.verifyCompletedTempFile(
+                path = target.absolutePath,
+                expectedBytes = target.length(),
+                expectedMd5 = DownloadPlatformFiles.fileMd5(target.absolutePath).uppercase(),
+                writtenBytes = target.length(),
+            )
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * 临时文件完整性校验应拒绝 size 或 MD5 不匹配的下载结果。
+     */
+    @Test
+    fun completedTempFileValidationRejectsSizeAndMd5Mismatch() {
+        val root = createTempDirectory()
+        val target = File(root, "song.tmp").apply { writeText("music") }
+
+        try {
+            assertFailsWith<Exception> {
+                DownloadIntegrityValidator.verifyCompletedTempFile(
+                    path = target.absolutePath,
+                    expectedBytes = target.length() + 1L,
+                    expectedMd5 = null,
+                    writtenBytes = target.length(),
+                )
+            }
+            assertFailsWith<Exception> {
+                DownloadIntegrityValidator.verifyCompletedTempFile(
+                    path = target.absolutePath,
+                    expectedBytes = target.length(),
+                    expectedMd5 = "00000000000000000000000000000000",
+                    writtenBytes = target.length(),
+                )
+            }
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * 文件迁移在期望大小不匹配时应失败，并保留源临时文件。
+     */
+    @Test
+    fun moveFileWithFileKitRejectsExpectedSizeMismatchAndKeepsSource() = runBlocking {
+        val root = createTempDirectory()
+        val source = File(root, "source.tmp").apply { writeText("music") }
+        val target = File(root, "nested/song.tmp")
+
+        try {
+            assertFailsWith<Exception> {
+                moveFileWithFileKit(
+                    sourcePath = source.absolutePath,
+                    finalPath = target.absolutePath,
+                    expectedBytes = source.length() + 1L,
+                )
+            }
+            assertTrue(source.exists())
+            assertFalse(target.exists())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
      * 下载 IO 作用域关闭后应取消内部协程作用域。
      */
     @Test
@@ -379,6 +491,107 @@ class DownloadCoreUtilitiesTest {
     }
 
     /**
+     * 下载任务应持久化可选 MD5，便于恢复后继续完整性校验。
+     */
+    @Test
+    fun downloadTaskPersistsExpectedMd5() = runBlocking {
+        val root = createTempDirectory()
+        val dbName = createTestDatabaseName()
+        cleanupTestDatabase(dbName)
+        val db = createTestDownloadDatabase(dbName)
+        val expectedMd5 = "0123456789abcdef0123456789abcdef"
+
+        try {
+            val downloadId = insertDownloadTask(
+                db = db,
+                finalFile = File(root, "song.mp3"),
+                tempFile = File(root, "song.tmp"),
+                expectedMd5 = expectedMd5,
+            )
+
+            assertEquals(expectedMd5, db.downloadDao.selectById(downloadId)?.expectedMd5)
+        } finally {
+            db.close()
+            root.deleteRecursively()
+            cleanupTestDatabase(dbName)
+        }
+    }
+
+    /**
+     * 1→2 迁移应给旧下载表补齐 expectedMd5 列，并让旧数据默认保持 null。
+     */
+    @Test
+    fun migrationOneToTwoAddsExpectedMd5ColumnWithNullDefault() {
+        val dbFile = Files.createTempFile("xy-download-migration-test", ".db").toFile()
+
+        try {
+            BundledSQLiteDriver().open(dbFile.absolutePath).use { connection ->
+                connection.execSQL(
+                    """
+                    CREATE TABLE xy_download (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        url TEXT NOT NULL,
+                        fileName TEXT NOT NULL,
+                        filePath TEXT NOT NULL,
+                        fileSize INTEGER NOT NULL,
+                        tempFilePath TEXT NOT NULL,
+                        typeData TEXT NOT NULL,
+                        progress REAL NOT NULL,
+                        totalBytes INTEGER NOT NULL,
+                        downloadedBytes INTEGER NOT NULL,
+                        status TEXT NOT NULL,
+                        error TEXT,
+                        uid TEXT,
+                        title TEXT,
+                        cover TEXT,
+                        duration INTEGER,
+                        mediaLibraryId TEXT,
+                        libraryId TEXT,
+                        extend TEXT,
+                        data TEXT,
+                        updateTime INTEGER NOT NULL,
+                        createTime INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                connection.execSQL(
+                    """
+                    INSERT INTO xy_download (
+                        url, fileName, filePath, fileSize, tempFilePath,
+                        typeData, progress, totalBytes, downloadedBytes,
+                        status, updateTime, createTime
+                    ) VALUES (
+                        'https://example.test/song.mp3', 'song.mp3', '/music/song.mp3', 5, '/tmp/song.tmp',
+                        'SUBSONIC', 0.0, 0, 0,
+                        'QUEUED', 1, 1
+                    )
+                    """.trimIndent()
+                )
+
+                Migration_1_2.migrate(connection)
+
+                val columns = mutableSetOf<String>()
+                connection.prepare("PRAGMA table_info(xy_download)").use { statement ->
+                    while (statement.step()) {
+                        columns.add(statement.getText(1))
+                    }
+                }
+                var oldRowExpectedMd5IsNull = false
+                connection.prepare("SELECT expectedMd5 FROM xy_download WHERE id = 1").use { statement ->
+                    if (statement.step()) {
+                        oldRowExpectedMd5IsNull = statement.isNull(0)
+                    }
+                }
+
+                assertTrue(columns.contains("expectedMd5"))
+                assertTrue(oldRowExpectedMd5IsNull)
+            }
+        } finally {
+            dbFile.delete()
+        }
+    }
+
+    /**
      * 创建隔离的测试临时目录。
      */
     private fun createTempDirectory(): File {
@@ -436,6 +649,7 @@ class DownloadCoreUtilitiesTest {
         typeData: String = "SUBSONIC",
         mediaLibraryId: String = "1",
         status: DownloadStatus = DownloadStatus.COMPLETED,
+        expectedMd5: String? = null,
     ): Long {
         return db.downloadDao.insert(
             XyDownload(
@@ -446,6 +660,7 @@ class DownloadCoreUtilitiesTest {
                 tempFilePath = tempFile.absolutePath,
                 typeData = typeData,
                 status = status,
+                expectedMd5 = expectedMd5,
                 uid = uid,
                 mediaLibraryId = mediaLibraryId,
             )

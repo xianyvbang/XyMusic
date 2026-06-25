@@ -26,7 +26,7 @@ import cn.xybbz.download.database.data.XyDownload
 
 
 @Database(
-    version = 1,
+    version = 2,
     entities = [XyDownload::class],
     exportSchema = true,
 )

@@ -23,7 +23,9 @@ import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 
 
-val Migration_1_2 =  object : Migration(1, 2) {
+// 下载库 1→2 增加可选 MD5 校验列，旧任务默认不启用 MD5 校验。
+val Migration_1_2 = object : Migration(1, 2) {
     override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE xy_download ADD COLUMN expectedMd5 TEXT")
     }
 }

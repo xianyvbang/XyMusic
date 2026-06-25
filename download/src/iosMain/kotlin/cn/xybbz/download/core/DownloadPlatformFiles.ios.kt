@@ -29,6 +29,11 @@ internal actual fun platformUsableSpace(path: String, contextWrapper: ContextWra
     return Long.MAX_VALUE
 }
 
+// iOS 下载写入尚未启用，MD5 校验等到随机写入实现时一并接入。
+internal actual fun platformFileMd5(path: String): String {
+    throw NotImplementedError("Download MD5 APIs are not implemented on iOS yet.")
+}
+
 internal actual suspend fun writeResponseToPlatformFile(
     path: String,
     startOffset: Long,

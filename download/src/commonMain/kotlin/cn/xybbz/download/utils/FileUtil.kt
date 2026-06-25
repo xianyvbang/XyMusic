@@ -1,5 +1,6 @@
 package cn.xybbz.download.utils
 
+import cn.xybbz.download.core.DownloadIntegrityValidator
 import cn.xybbz.platform.ContextWrapper
 import cn.xybbz.download.core.DownloadStorageGuard
 import io.github.vinceglb.filekit.PlatformFile
@@ -66,17 +67,21 @@ object FileUtil {
         }
     }
 
-    // 下载完成后将临时文件移动到最终目录；Android 会走公开下载目录逻辑。
+    // 下载完成后将临时文件移动到最终目录；expectedBytes/expectedMd5 用于迁移前后完整性校验。
     suspend fun moveToPublicDirectory(
         contextWrapper: ContextWrapper? = null,
         sourcePath: String,
         finalPath: String,
         fileName: String,
+        expectedBytes: Long = 0L,
+        expectedMd5: String? = null,
     ): String = moveToPublicDirectoryWithFileKit(
         contextWrapper = contextWrapper,
         sourcePath = sourcePath,
         finalPath = finalPath,
         fileName = fileName,
+        expectedBytes = expectedBytes,
+        expectedMd5 = expectedMd5,
     )
 }
 
@@ -143,16 +148,25 @@ fun ensureDirectoryWithFileKit(path: String): String {
     return path
 }
 
-// 用 FileKit 完成普通文件系统内的移动，原子移动失败时退回复制再删除。
+// 用 FileKit 完成普通文件系统内的移动，并在迁移前后执行 size/MD5 校验。
 suspend fun moveFileWithFileKit(
     sourcePath: String,
     finalPath: String,
     contextWrapper: ContextWrapper? = null,
+    expectedBytes: Long = 0L,
+    expectedMd5: String? = null,
 ): String = withContext(Dispatchers.IO) {
     val sourceFile = PlatformFile(sourcePath)
     if (!sourceFile.exists()) {
         throw IOException("Source file does not exist: $sourcePath")
     }
+    val sourceBytes = sourceFile.size()
+    val targetExpectedBytes = expectedBytes.takeIf { it > 0L } ?: sourceBytes
+    DownloadIntegrityValidator.verifyFile(
+        path = sourcePath,
+        expectedBytes = targetExpectedBytes,
+        expectedMd5 = expectedMd5,
+    )
 
     val finalFile = PlatformFile(finalPath)
     finalFile.parent()?.createDirectories()
@@ -174,8 +188,18 @@ suspend fun moveFileWithFileKit(
             )
         }
         sourceFile.copyTo(finalFile)
+        DownloadIntegrityValidator.verifyFile(
+            path = finalPath,
+            expectedBytes = targetExpectedBytes,
+            expectedMd5 = expectedMd5,
+        )
         sourceFile.delete(mustExist = false)
     }
+    DownloadIntegrityValidator.verifyFile(
+        path = finalPath,
+        expectedBytes = targetExpectedBytes,
+        expectedMd5 = expectedMd5,
+    )
 
     finalFile.absolutePathOrPath()
 }
@@ -197,4 +221,6 @@ internal expect suspend fun moveToPublicDirectoryWithFileKit(
     sourcePath: String,
     finalPath: String,
     fileName: String,
+    expectedBytes: Long,
+    expectedMd5: String?,
 ): String

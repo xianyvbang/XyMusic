@@ -139,12 +139,21 @@ class HttpClientDownloadCore : IDownloadCore {
                 }
 
                 try {
+                    // 临时文件通过 size 和可选 MD5 校验后，才能迁移到正式目录。
+                    DownloadIntegrityValidator.verifyCompletedTempFile(
+                        path = xyDownload.tempFilePath,
+                        expectedBytes = xyDownload.fileSize,
+                        expectedMd5 = xyDownload.expectedMd5,
+                        writtenBytes = writeResult.totalBytesWritten,
+                    )
                     // 下载完成后通过跨平台 FileUtil 迁移到最终目录。
                     val finalAbsolutePath = FileUtil.moveToPublicDirectory(
                         contextWrapper = contextWrapper,
                         sourcePath = xyDownload.tempFilePath,
                         finalPath = xyDownload.filePath,
                         fileName = xyDownload.fileName,
+                        expectedBytes = xyDownload.fileSize,
+                        expectedMd5 = xyDownload.expectedMd5,
                     )
                     emit(DownloadState.Success)
                     DownloadLogger.d(DownloadConstants.LOG_TAG, "finalAbsolutePath:$finalAbsolutePath")

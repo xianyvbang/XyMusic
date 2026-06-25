@@ -7,6 +7,12 @@ import cn.xybbz.download.utils.fileLengthWithFileKit
 import cn.xybbz.platform.ContextWrapper
 import io.ktor.utils.io.ByteReadChannel
 
+// 下载临时文件累计写入达到该阈值时做一次磁盘同步，避免每个分片都 fsync。
+internal const val DOWNLOAD_SYNC_INTERVAL_BYTES = 8L * 1024L * 1024L
+
+// 下载临时文件距离上次同步超过该时间时做一次磁盘同步，覆盖低速下载场景。
+internal const val DOWNLOAD_SYNC_INTERVAL_MILLIS = 10_000L
+
 // 下载过程中和文件系统相关的能力统一从这里走 expect/actual，避免 commonMain 直接碰平台 API。
 internal data class DownloadWriteResult(
     val status: DownloadStatus,
@@ -23,6 +29,9 @@ internal object DownloadPlatformFiles {
         createPlatformTempDownloadFilePath(contextWrapper)
 
     fun fileLength(path: String): Long = fileLengthWithFileKit(path)
+
+    // 计算普通文件的 MD5，供下载完成和迁移后的完整性校验使用。
+    fun fileMd5(path: String): String = platformFileMd5(path)
 
     // 查询指定路径所在磁盘当前可用空间。
     fun usableSpace(path: String, contextWrapper: ContextWrapper): Long =
@@ -59,6 +68,9 @@ internal expect fun createPlatformTempDownloadFilePath(contextWrapper: ContextWr
 
 // 查询路径所在磁盘可用空间；平台层负责处理路径不存在时的父目录回退。
 internal expect fun platformUsableSpace(path: String, contextWrapper: ContextWrapper): Long
+
+// 计算普通路径文件的 MD5；content Uri 等平台特殊目标由平台层自行处理。
+internal expect fun platformFileMd5(path: String): String
 
 // 断点续传需要 seek/setLength，FileKit sink 不能安全替代，仍由平台层实现随机写入。
 internal expect suspend fun writeResponseToPlatformFile(

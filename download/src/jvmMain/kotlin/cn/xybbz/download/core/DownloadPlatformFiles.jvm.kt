@@ -7,7 +7,9 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.exhausted
 import io.ktor.utils.io.readAvailable
 import java.io.File
+import java.io.FileInputStream
 import java.io.RandomAccessFile
+import java.security.MessageDigest
 import kotlin.time.Clock
 
 internal actual fun platformDefaultDownloadDirectoryPath(contextWrapper: ContextWrapper): String {
@@ -27,6 +29,24 @@ internal actual fun platformUsableSpace(path: String, contextWrapper: ContextWra
     return target.usableSpace.coerceAtLeast(0L)
 }
 
+// JVM 端使用标准 MessageDigest 计算普通文件 MD5。
+internal actual fun platformFileMd5(path: String): String {
+    val digest = MessageDigest.getInstance("MD5")
+    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+    FileInputStream(File(path)).use { input ->
+        while (true) {
+            val bytesRead = input.read(buffer)
+            if (bytesRead == -1) {
+                break
+            }
+            digest.update(buffer, 0, bytesRead)
+        }
+    }
+    return digest.digest().joinToString("") { byte ->
+        (byte.toInt() and 0xFF).toString(16).padStart(2, '0')
+    }
+}
+
 @Suppress("BlockingMethodInNonBlockingContext")
 internal actual suspend fun writeResponseToPlatformFile(
     path: String,
@@ -44,6 +64,10 @@ internal actual suspend fun writeResponseToPlatformFile(
     var lastSpaceCheckBytes = startOffset
     // 记录上次空间校验时间，防止低速下载长时间不触发字节阈值。
     var lastSpaceCheckTime = Clock.System.now().toEpochMilliseconds()
+    // 记录上次磁盘同步时的写入位置，避免每个小分片都 force。
+    var lastSyncBytes = startOffset
+    // 记录上次磁盘同步时间，覆盖低速下载长时间不触发字节阈值的场景。
+    var lastSyncTime = lastSpaceCheckTime
 
     // 写入开始前先做一次空间兜底校验，避免打开文件后才发现磁盘不足。
     contextWrapper?.let {
@@ -90,9 +114,21 @@ internal actual suspend fun writeResponseToPlatformFile(
             output.write(buffer, 0, bytesRead)
             currentBytes += bytesRead
 
+            val syncCheckTime = Clock.System.now().toEpochMilliseconds()
+            val shouldSync =
+                currentBytes - lastSyncBytes >= DOWNLOAD_SYNC_INTERVAL_BYTES ||
+                        syncCheckTime - lastSyncTime >= DOWNLOAD_SYNC_INTERVAL_MILLIS
+            if (shouldSync) {
+                output.channel.force(true)
+                lastSyncBytes = currentBytes
+                lastSyncTime = syncCheckTime
+            }
+
             when (onChunkWritten(currentBytes)) {
-                DownloadStatus.PAUSED ->
+                DownloadStatus.PAUSED -> {
+                    output.channel.force(true)
                     return DownloadWriteResult(DownloadStatus.PAUSED, currentBytes)
+                }
 
                 DownloadStatus.CANCEL ->
                     return DownloadWriteResult(DownloadStatus.CANCEL, currentBytes)
@@ -100,6 +136,7 @@ internal actual suspend fun writeResponseToPlatformFile(
                 else -> Unit
             }
         }
+        output.channel.force(true)
     }
 
     return DownloadWriteResult(DownloadStatus.COMPLETED, currentBytes)

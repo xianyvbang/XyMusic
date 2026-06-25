@@ -8,8 +8,12 @@ internal actual suspend fun moveToPublicDirectoryWithFileKit(
     sourcePath: String,
     finalPath: String,
     fileName: String,
+    expectedBytes: Long,
+    expectedMd5: String?,
 ): String = moveFileWithFileKit(
     sourcePath = sourcePath,
     finalPath = finalPath,
     contextWrapper = contextWrapper,
+    expectedBytes = expectedBytes,
+    expectedMd5 = expectedMd5,
 )

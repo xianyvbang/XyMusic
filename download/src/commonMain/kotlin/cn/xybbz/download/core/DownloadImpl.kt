@@ -128,6 +128,7 @@ class DownloadImpl(
                     filePath = resolved.finalPath,
                     fileSize = request.fileSize,
                     tempFilePath = tempFilePath,
+                    expectedMd5 = request.expectedMd5,
                     typeData = request.type,
                     uid = request.uid,
                     title = request.title,
@@ -169,6 +170,7 @@ class DownloadImpl(
                         // 保存准备失败原因，便于下载列表直接展示磁盘空间不足等错误。
                         error = e.message ?: "下载准备失败",
                         fileSize = request.fileSize,
+                        expectedMd5 = request.expectedMd5,
                         title = request.title,
                         mediaLibraryId = request.mediaLibraryId,
                         extend = request.extend,
