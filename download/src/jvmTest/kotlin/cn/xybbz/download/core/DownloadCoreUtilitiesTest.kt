@@ -21,6 +21,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Files
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -33,23 +34,39 @@ import kotlin.test.assertTrue
  * 覆盖下载配置、状态对象和 JVM 普通文件操作路径。
  */
 class DownloadCoreUtilitiesTest {
+    /**
+     * 测试数据库名到隔离 JVM 上下文的映射，确保创建和清理使用同一套路径。
+     */
+    private val testDatabaseContexts = ConcurrentHashMap<String, ContextWrapper>()
+
+    /**
+     * 测试数据库名到临时根目录的映射，便于清理数据库文件后删除整棵临时目录。
+     */
+    private val testDatabaseRoots = ConcurrentHashMap<String, File>()
+
 
     /**
      * 下载配置构造器应使用默认并发数，并允许调用方覆盖目录和并发数。
      */
     @Test
     fun downloaderConfigBuilderUsesDefaultsAndOverrides() {
-        val contextWrapper = ContextWrapper()
-        val defaultConfig = DownloaderConfig.Builder(contextWrapper = contextWrapper).build()
-        val customConfig = DownloaderConfig.Builder(contextWrapper = contextWrapper)
-            .setMaxConcurrentDownloads(5)
-            .setFinalDirectory("/tmp/music")
-            .build()
+        val root = createTempDirectory()
+        val contextWrapper = createTestContextWrapper(root)
 
-        assertEquals(3, defaultConfig.maxConcurrentDownloads)
-        assertTrue(defaultConfig.finalDirectory.isNotBlank())
-        assertEquals(5, customConfig.maxConcurrentDownloads)
-        assertEquals("/tmp/music", customConfig.finalDirectory)
+        try {
+            val defaultConfig = DownloaderConfig.Builder(contextWrapper = contextWrapper).build()
+            val customConfig = DownloaderConfig.Builder(contextWrapper = contextWrapper)
+                .setMaxConcurrentDownloads(5)
+                .setFinalDirectory("/tmp/music")
+                .build()
+
+            assertEquals(3, defaultConfig.maxConcurrentDownloads)
+            assertEquals(contextWrapper.downloadDirectory.absolutePath, defaultConfig.finalDirectory)
+            assertEquals(5, customConfig.maxConcurrentDownloads)
+            assertEquals("/tmp/music", customConfig.finalDirectory)
+        } finally {
+            root.deleteRecursively()
+        }
     }
 
     /**
@@ -164,8 +181,8 @@ class DownloadCoreUtilitiesTest {
      */
     @Test
     fun downloadStorageGuardCalculatesReserveAndSkipsUnknownSize() {
-        val contextWrapper = ContextWrapper()
         val root = createTempDirectory()
+        val contextWrapper = createTestContextWrapper(root)
 
         try {
             DownloadStorageGuard.ensureEnoughSpace(
@@ -191,8 +208,8 @@ class DownloadCoreUtilitiesTest {
      */
     @Test
     fun usableSpaceFallsBackToExistingParentDirectory() {
-        val contextWrapper = ContextWrapper()
         val root = createTempDirectory()
+        val contextWrapper = createTestContextWrapper(root)
         val missingTarget = File(root, "nested/song.tmp")
 
         try {
@@ -212,8 +229,8 @@ class DownloadCoreUtilitiesTest {
      */
     @Test
     fun writeResponseToFileFailsBeforeWritingWhenExpectedSizeExceedsUsableSpace() = runBlocking {
-        val contextWrapper = ContextWrapper()
         val root = createTempDirectory()
+        val contextWrapper = createTestContextWrapper(root)
         val target = File(root, "huge.tmp")
         val expectedTotalBytes = DownloadPlatformFiles.usableSpace(
             path = target.absolutePath,
@@ -263,6 +280,27 @@ class DownloadCoreUtilitiesTest {
             assertEquals(content.size.toLong(), target.length())
             assertEquals("music-data", target.readText())
         } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * JVM 下载临时文件应创建在上下文指定的持久临时下载目录中。
+     */
+    @Test
+    fun tempDownloadFileUsesContextDownloadTempDirectory() {
+        val root = createTempDirectory()
+        val contextWrapper = createTestContextWrapper(root)
+        val tempFile = File(DownloadPlatformFiles.createTempDownloadFilePath(contextWrapper))
+
+        try {
+            assertTrue(tempFile.exists())
+            assertEquals(
+                contextWrapper.downloadTempDirectory.canonicalFile,
+                tempFile.parentFile.canonicalFile,
+            )
+        } finally {
+            tempFile.delete()
             root.deleteRecursively()
         }
     }
@@ -592,10 +630,76 @@ class DownloadCoreUtilitiesTest {
     }
 
     /**
+     * JVM 数据库文件列表应指向上下文指定的持久数据库目录，而不是系统临时目录。
+     */
+    @Test
+    fun jvmDatabaseFilesUseContextDatabaseDirectory() {
+        val root = createTempDirectory()
+        val contextWrapper = createTestContextWrapper(root)
+        val dbName = createTestDatabaseName()
+        val databaseFiles = getJvmDatabaseFiles(dbName, contextWrapper)
+        val legacyTempDatabaseFile = File(System.getProperty("java.io.tmpdir"), dbName).canonicalFile
+
+        try {
+            assertEquals(4, databaseFiles.size)
+            assertEquals(
+                File(contextWrapper.databaseDirectory, dbName).canonicalFile,
+                databaseFiles.first().canonicalFile,
+            )
+            assertFalse(databaseFiles.first().canonicalFile == legacyTempDatabaseFile)
+            assertEquals(
+                setOf(dbName, "$dbName-wal", "$dbName-shm", "$dbName-journal"),
+                databaseFiles.map { it.name }.toSet(),
+            )
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * JVM Room 建库应在上下文指定的数据库目录中创建文件。
+     */
+    @Test
+    fun roomDatabaseIsCreatedInContextDatabaseDirectory() = runBlocking {
+        val root = createTempDirectory()
+        val contextWrapper = createTestContextWrapper(root)
+        val dbName = createTestDatabaseName()
+        cleanupTestDatabase(dbName, contextWrapper)
+        val db = getRoomDatabase<DownloadDatabaseClient>(dbName, contextWrapper, Migration_1_2)
+
+        try {
+            db.downloadDao.selectById(-1L)
+            val databaseFile = File(contextWrapper.databaseDirectory, dbName)
+            assertTrue(databaseFile.exists())
+            assertEquals(contextWrapper.databaseDirectory.canonicalFile, databaseFile.parentFile.canonicalFile)
+        } finally {
+            db.close()
+            cleanupTestDatabase(dbName, contextWrapper)
+            root.deleteRecursively()
+        }
+    }
+
+    /**
      * 创建隔离的测试临时目录。
      */
     private fun createTempDirectory(): File {
         return Files.createTempDirectory("xy-download-core-test").toFile()
+    }
+
+    /**
+     * 创建隔离的 JVM 平台上下文，避免测试把数据库或临时文件写入真实用户目录。
+     */
+    private fun createTestContextWrapper(root: File = createTempDirectory()): ContextWrapper {
+        return ContextWrapper.createForTest(
+            environment = mapOf(
+                "LOCALAPPDATA" to File(root, "local-app-data").absolutePath,
+                "USERPROFILE" to File(root, "user-profile").absolutePath,
+                "XDG_DATA_HOME" to File(root, "xdg-data").absolutePath,
+                "XDG_CACHE_HOME" to File(root, "xdg-cache").absolutePath,
+            ),
+            osName = "Linux",
+            userHomeDirectory = File(root, "home"),
+        )
     }
 
     /**
@@ -609,14 +713,34 @@ class DownloadCoreUtilitiesTest {
      * 创建 JVM 下载数据库实例。
      */
     private fun createTestDownloadDatabase(dbName: String): DownloadDatabaseClient {
-        return getRoomDatabase(dbName, ContextWrapper())
+        val contextWrapper = testDatabaseContexts.computeIfAbsent(dbName) {
+            val root = createTempDirectory()
+            testDatabaseRoots[dbName] = root
+            createTestContextWrapper(root)
+        }
+        return getRoomDatabase(dbName, contextWrapper)
     }
 
     /**
      * 删除测试数据库及其伴生 WAL 文件。
      */
     private fun cleanupTestDatabase(dbName: String) {
-        getJvmDatabaseFiles(dbName).forEach { file ->
+        testDatabaseContexts[dbName]?.let { contextWrapper ->
+            getJvmDatabaseFiles(dbName, contextWrapper).forEach { file ->
+                if (file.exists()) {
+                    file.delete()
+                }
+            }
+        }
+        testDatabaseContexts.remove(dbName)
+        testDatabaseRoots.remove(dbName)?.deleteRecursively()
+    }
+
+    /**
+     * 删除指定 JVM 上下文中的测试数据库文件。
+     */
+    private fun cleanupTestDatabase(dbName: String, contextWrapper: ContextWrapper) {
+        getJvmDatabaseFiles(dbName, contextWrapper).forEach { file ->
             if (file.exists()) {
                 file.delete()
             }
@@ -627,7 +751,7 @@ class DownloadCoreUtilitiesTest {
      * 创建只用于删除路径测试的下载器实例。
      */
     private fun createTestDownloader(db: DownloadDatabaseClient, root: File): DownloadImpl {
-        val contextWrapper = ContextWrapper()
+        val contextWrapper = createTestContextWrapper(root)
         val dispatcher = DownloadDispatcherImpl(
             contextWrapper = contextWrapper,
             db = db,

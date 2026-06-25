@@ -13,11 +13,11 @@ import java.security.MessageDigest
 import kotlin.time.Clock
 
 internal actual fun platformDefaultDownloadDirectoryPath(contextWrapper: ContextWrapper): String {
-    return File(File(contextWrapper.applicationDirectory, "Downloads"), "XyMusic").absolutePath
+    return contextWrapper.downloadDirectory.absolutePath
 }
 
 internal actual fun createPlatformTempDownloadFilePath(contextWrapper: ContextWrapper): String {
-    val directory = File(File(contextWrapper.applicationDirectory, "temp"), "xy-downloads")
+    val directory = contextWrapper.downloadTempDirectory
     // 父目录创建统一走 FileKit，平台层只负责调用 JVM 临时文件命名能力。
     ensureDirectoryWithFileKit(directory.absolutePath)
     return File.createTempFile("download_", ".tmp", directory).absolutePath
@@ -25,7 +25,7 @@ internal actual fun createPlatformTempDownloadFilePath(contextWrapper: ContextWr
 
 // JVM 端通过 java.io.File 查询路径所在磁盘的可用空间。
 internal actual fun platformUsableSpace(path: String, contextWrapper: ContextWrapper): Long {
-    val target = resolveSpaceTarget(path, contextWrapper.applicationDirectory)
+    val target = resolveSpaceTarget(path, contextWrapper.dataDirectory)
     return target.usableSpace.coerceAtLeast(0L)
 }
 
@@ -157,5 +157,5 @@ fun getJvmDownloadDirectory(contextWrapper: ContextWrapper): File {
 }
 
 fun getJvmDownloadTempDirectory(contextWrapper: ContextWrapper): File {
-    return File(File(contextWrapper.applicationDirectory, "temp"), "xy-downloads")
+    return contextWrapper.downloadTempDirectory
 }

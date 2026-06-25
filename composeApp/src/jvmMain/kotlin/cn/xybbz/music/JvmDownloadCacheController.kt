@@ -101,8 +101,7 @@ class JvmDownloadCacheController(
      *
      * 当用户配置的自定义目录不可用时会回退到这个目录。
      */
-    private val defaultCacheDirectory = File(contextWrapper.applicationDirectory, CACHE_DIRECTORY_NAME)
-        .normalizedDirectory()
+    private val defaultCacheDirectory = JvmPlaybackCacheDirectories.defaultCacheDirectory(contextWrapper)
 
     /**
      * 当前实际使用的缓存目录。
@@ -1751,11 +1750,6 @@ class JvmDownloadCacheController(
     }
 
     companion object {
-        /**
-         * JVM 播放缓存默认目录名。
-         */
-        private const val CACHE_DIRECTORY_NAME = "jvm-playback-cache"
-
         /**
          * HLS 缓存 key 前缀，避免和单文件 span 缓存共用目录。
          */

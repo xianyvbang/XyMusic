@@ -28,17 +28,18 @@ actual fun getMemoryStorageInfo(
     db: LocalDatabaseClient,
     downloadDb: DownloadDatabaseClient,
 ): MemoryStorageInfo {
-    // JVM 端数据库文件位于 java.io.tmpdir，包含主文件和 Room/SQLite 可能生成的附属文件。
-    val databaseFiles = getLocalDatabaseFiles() + getDownloadDatabaseFiles()
-    // 应用数据统计需要排除数据库文件，避免 databaseSize 和 appDataSize 重复计算。
-    val excludedPaths = databaseFiles.map { it.absoluteFile }
+    // JVM 端数据库文件位于持久数据库目录，包含主文件和 Room/SQLite 可能生成的附属文件。
+    val databaseFiles = getLocalDatabaseFiles(contextWrapper) + getDownloadDatabaseFiles(contextWrapper)
+    // 应用数据统计需要排除数据库和可重建缓存，下载临时文件属于持久应用数据。
+    val excludedPaths = databaseFiles.map { it.absoluteFile } +
+            contextWrapper.cacheDirectory.absoluteFile
 
     return MemoryStorageInfo(
-        // 桌面端目前没有单独暴露给内存管理页的可清理缓存目录。
-        cacheSize = 0L,
-        // 应用数据以 applicationDirectory 为根目录，排除数据库相关文件。
+        // 桌面端可重建缓存单独统计，后续清理入口可以复用该目录。
+        cacheSize = folderSize(contextWrapper.cacheDirectory),
+        // 应用数据以 dataDirectory 为根目录，排除数据库和可重建缓存相关文件。
         appDataSize = folderSizeExcluding(
-            folder = contextWrapper.applicationDirectory,
+            folder = contextWrapper.dataDirectory,
             excludedPaths = excludedPaths,
         ),
         // 数据库大小单独统计，便于页面分项展示。
@@ -47,7 +48,8 @@ actual fun getMemoryStorageInfo(
 }
 
 actual fun clearPlatformCache(contextWrapper: ContextWrapper) {
-    // JVM currently has no storage-management-visible temporary cache item.
+    // JVM 平台缓存目录只保存可重建数据，允许内存管理页直接清理。
+    contextWrapper.cacheDirectory.deleteRecursively()
 }
 
 private fun folderSize(file: File?): Long {

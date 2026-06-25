@@ -11,7 +11,9 @@ actual inline fun <reified T : DatabaseClient> createDatabaseClientBuilder(
     dbFileName: String,
     contextWrapper: ContextWrapper
 ): RoomDatabase.Builder<T> {
-    val dbFile = getJvmDatabaseFile(dbFileName)
+    val dbFile = getJvmDatabaseFile(dbFileName, contextWrapper)
+    // 数据库目录必须在 Room 打开前创建，避免 bundled SQLite 因父目录缺失而建库失败。
+    dbFile.parentFile?.mkdirs()
     return Room.databaseBuilder<T>(
         name = dbFile.absolutePath,
     )
@@ -19,12 +21,14 @@ actual inline fun <reified T : DatabaseClient> createDatabaseClientBuilder(
         .setQueryCoroutineContext(Dispatchers.IO)
 }
 
-fun getJvmDatabaseFile(dbFileName: String): File {
-    return File(System.getProperty("java.io.tmpdir"), dbFileName)
+fun getJvmDatabaseFile(dbFileName: String, contextWrapper: ContextWrapper): File {
+    // JVM 数据库落在持久数据库目录，不再使用会被系统清理的 java.io.tmpdir。
+    return File(contextWrapper.databaseDirectory, dbFileName)
 }
 
-fun getJvmDatabaseFiles(dbFileName: String): List<File> {
-    val databaseFile = getJvmDatabaseFile(dbFileName)
+fun getJvmDatabaseFiles(dbFileName: String, contextWrapper: ContextWrapper): List<File> {
+    val databaseFile = getJvmDatabaseFile(dbFileName, contextWrapper)
+    // Room/SQLite 可能在主库旁生成 WAL、SHM 或 journal 文件，统计和清理都要覆盖。
     return listOf(
         databaseFile,
         File(databaseFile.absolutePath + "-wal"),
