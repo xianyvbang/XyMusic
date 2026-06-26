@@ -1320,11 +1320,11 @@ class JellyfinDatasourceServer(
             name = item.name
                 ?: if (ifPlaylist) getString(Constants.UNKNOWN_PLAYLIST) else getString(
                     Constants.UNKNOWN_ALBUM
-                ),
+            ),
             connectionId = getConnectionId(),
-            artistIds = item.albumArtists?.joinToString { it.id },
-            artists = item.albumArtists?.mapNotNull { it.name }?.joinToString()
-                ?: getString(Constants.UNKNOWN_ARTIST),
+            artistIds = item.albumArtists?.mapNotNull { it.id.takeIf { id -> id.isNotBlank() } },
+            artists = item.albumArtists?.mapNotNull { it.name?.takeIf { name -> name.isNotBlank() } }
+                ?: listOf(getString(Constants.UNKNOWN_ARTIST)),
             year = item.productionYear,
             premiereDate = item.productionYear?.toLong(),
             genreIds = item.genreItems?.joinToString { it.id },

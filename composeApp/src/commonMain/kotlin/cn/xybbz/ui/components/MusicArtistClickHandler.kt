@@ -9,11 +9,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.common.constants.Constants.ARTIST_DELIMITER_SEMICOLON
-import cn.xybbz.common.constants.Constants.SLASH_DELIMITER
 import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -77,12 +74,12 @@ class MusicArtistClickHandler internal constructor(
     /**
      * 打开专辑数据中的艺术家。
      *
-     * 专辑里的艺术家 id 和名称是字符串字段，这里会先拆成列表再走统一逻辑。
+     * 专辑里的艺术家 id 和名称都已经是结构化列表，直接按索引对齐后打开。
      */
     fun openAlbumArtists(album: XyAlbum?) {
         onOpenArtists(
-            album?.artistIds.toArtistValueList(),
-            album?.artists.toArtistValueList(),
+            album?.artistIds?.map { it.trim() }?.filter { it.isNotBlank() },
+            album?.artists?.map { it.trim() }?.filter { it.isNotBlank() },
         )
     }
 }
@@ -232,16 +229,4 @@ private fun List<String>?.toArtistRoutes(artists: List<String>?): List<ArtistRou
             artistName = artists?.getOrNull(index).orEmpty(),
         )
     }
-}
-
-/**
- * 将专辑表中保存的艺术家字符串拆成列表。
- *
- * 兼容本地逗号、斜杠和旧的分号分隔格式，避免不同数据源写入格式不一致导致无法点击。
- */
-private fun String?.toArtistValueList(): List<String> {
-    return orEmpty()
-        .split(LocalConstants.ARTIST_DELIMITER, SLASH_DELIMITER, ARTIST_DELIMITER_SEMICOLON)
-        .map { it.trim() }
-        .filter { it.isNotBlank() }
 }

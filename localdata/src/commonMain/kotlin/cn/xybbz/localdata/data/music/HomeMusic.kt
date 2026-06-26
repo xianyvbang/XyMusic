@@ -22,7 +22,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.TypeConverters
-import cn.xybbz.database.converter.StringListTypeConverter
+import cn.xybbz.database.converter.JsonStringListTypeConverter
 import kotlin.time.Clock
 
 /**
@@ -38,7 +38,7 @@ import kotlin.time.Clock
     primaryKeys = ["musicId","connectionId"],
     indices = [Index("connectionId"), Index("musicId")]
 )
-@TypeConverters(StringListTypeConverter::class)
+@TypeConverters(JsonStringListTypeConverter::class)
 data class HomeMusic(
     val musicId: String,
     /**

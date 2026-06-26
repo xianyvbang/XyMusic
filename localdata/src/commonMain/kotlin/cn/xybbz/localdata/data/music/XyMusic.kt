@@ -22,6 +22,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
+import cn.xybbz.database.converter.JsonStringListTypeConverter
 import cn.xybbz.database.converter.StringListTypeConverter
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
@@ -69,7 +70,7 @@ data class XyMusic(
     /**
      * 音乐艺术家名称
      */
-    @field:TypeConverters(StringListTypeConverter::class)
+    @field:TypeConverters(JsonStringListTypeConverter::class)
     val artists: List<String>? = emptyList(),
 
     /**
@@ -80,7 +81,7 @@ data class XyMusic(
     /**
      * 专辑艺术家
      */
-    @field:TypeConverters(StringListTypeConverter::class)
+    @field:TypeConverters(JsonStringListTypeConverter::class)
     val albumArtist: List<String>? = null,
     /**
      * 专辑音乐艺术家id

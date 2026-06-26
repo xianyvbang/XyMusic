@@ -63,7 +63,7 @@ class CoverImageResolver(
             serviceUrl = album?.pic,
             customUrl = buildCustomCoverUrl(
                 album = album?.name,
-                artist = album?.artists
+                artist = album?.artists?.firstOrNull { it.isNotBlank() }
             )
         )
     }

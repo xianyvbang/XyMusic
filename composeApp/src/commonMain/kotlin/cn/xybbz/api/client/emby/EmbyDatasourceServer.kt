@@ -1455,11 +1455,11 @@ class EmbyDatasourceServer(
             name = album.name
                 ?: if (ifPlaylist) getString(Constants.UNKNOWN_PLAYLIST) else getString(
                     Constants.UNKNOWN_ALBUM
-                ),
+            ),
             connectionId = getConnectionId(),
-            artistIds = album.albumArtists?.joinToString { it.id },
-            artists = album.albumArtists?.mapNotNull { it.name }?.joinToString()
-                ?: getString(Constants.UNKNOWN_ARTIST),
+            artistIds = album.albumArtists?.mapNotNull { it.id.takeIf { id -> id.isNotBlank() } },
+            artists = album.albumArtists?.mapNotNull { it.name?.takeIf { name -> name.isNotBlank() } }
+                ?: listOf(getString(Constants.UNKNOWN_ARTIST)),
             year = album.productionYear,
             premiereDate = album.productionYear?.toLong(),
             genreIds = album.genreItems?.joinToString { it.id },

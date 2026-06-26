@@ -68,6 +68,8 @@ kotlin {
                 // Add KMP dependencies here
                 implementation(libs.androidx.room.runtime)
                 implementation(libs.androidx.sqlite.bundled)
+                // JSON 列表转换器用于安全保存包含分隔符的名称列表。
+                implementation(libs.kotlinx.serialization.json)
                 api(project(path = ":xy-platform"))
 
             }

@@ -4,6 +4,8 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import cn.xybbz.database.converter.JsonStringListTypeConverter
 import kotlin.time.Clock
 
 @Entity(
@@ -26,13 +28,15 @@ data class XyAlbum(
     val name: String = "",
 
     /**
-     * 艺术家
+     * 艺术家名称列表
      */
-    val artists: String? = "",
+    @field:TypeConverters(JsonStringListTypeConverter::class)
+    val artists: List<String>? = emptyList(),
     /**
-     * 音乐艺术家id->使用 LocalConstants.ARTIST_DELIMITER 分割
+     * 音乐艺术家 id 列表
      */
-    val artistIds: String? = "",
+    @field:TypeConverters(JsonStringListTypeConverter::class)
+    val artistIds: List<String>? = emptyList(),
     /**
      * 类型id
      */
@@ -70,8 +74,8 @@ data class XyAlbum(
         itemId: String = "",
         pic: String? = "",
         name: String = "",
-        artists: String? = "",
-        artistIds: String? = "",
+        artists: List<String>? = emptyList(),
+        artistIds: List<String>? = emptyList(),
         genreIds: String? = "",
         connectionId: Long,
         year: Int? = null,

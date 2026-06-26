@@ -18,7 +18,6 @@ fun MusicAlbumCardComponent(
     modifier: Modifier = Modifier,
     album: XyAlbum?,
     imageSize: Dp? = null,
-    imageUrl: String? = album?.pic,
     enabled: Boolean = true,
     shape: Shape = CardDefaults.shape,
     onRouter: (String) -> Unit,
@@ -29,7 +28,9 @@ fun MusicAlbumCardComponent(
         modifier = modifier,
         id = album?.itemId ?: "",
         name = album?.name ?: "",
-        artistName = album?.artists ?: stringResource(Constants.UNKNOWN_ARTIST),
+        artistName = album?.artists?.takeIf { it.isNotEmpty() }
+            ?.joinToString(separator = Constants.SLASH_DELIMITER)
+            ?: stringResource(Constants.UNKNOWN_ARTIST),
         imageSize = imageSize,
         model = coverUrls.primaryUrl,
         backModel = coverUrls.fallbackUrl,

@@ -72,6 +72,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.api.client.FavoriteCoordinator
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.SortTypeEnum
@@ -732,7 +733,7 @@ private fun MusicAlbumInfoComponent(
                 )
                 Spacer(modifier = Modifier.height(XyTheme.dimens.contentPadding))
                 XyTextSub(
-                    text = onData()?.artists ?: "",
+                    text = onData()?.artists?.joinToString(separator = Constants.SLASH_DELIMITER) ?: "",
                     maxLines = 3,
                 )
             }

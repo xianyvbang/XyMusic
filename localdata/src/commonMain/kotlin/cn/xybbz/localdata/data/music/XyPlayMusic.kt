@@ -20,12 +20,12 @@ package cn.xybbz.localdata.data.music
 
 import androidx.room.Ignore
 import androidx.room.TypeConverters
+import cn.xybbz.database.converter.JsonStringListTypeConverter
 import cn.xybbz.database.converter.StringListTypeConverter
 
 /**
  * 音乐播放类
  */
-@TypeConverters(StringListTypeConverter::class)
 data class XyPlayMusic(
     val itemId: String,
     /**
@@ -52,10 +52,12 @@ data class XyPlayMusic(
     /**
      * 音乐艺术家名称
      */
+    @field:TypeConverters(JsonStringListTypeConverter::class)
     val artists: List<String>?,
     /**
      * 艺术家id todo 研究一下这个有没有用到
      */
+    @field:TypeConverters(StringListTypeConverter::class)
     val artistIds: List<String>?,
 
     /**

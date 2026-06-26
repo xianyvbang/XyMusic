@@ -67,6 +67,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import cn.xybbz.api.client.FavoriteCoordinator
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.SortTypeEnum
@@ -708,8 +709,12 @@ private fun JvmMusicAlbumInfoComponent(
         stringResource(Res.string.album)
     }
     val songsCountSuffix = stringResource(Res.string.songs_count_suffix)
+    // 专辑艺术家展示文本由结构化列表按需拼接，避免名称中的逗号参与数据拆分。
+    val albumArtistsText = album?.artists?.takeIf { it.isNotEmpty() }
+        ?.joinToString(separator = Constants.SLASH_DELIMITER)
+        .orEmpty()
     val subText = buildList {
-        album?.artists?.takeIf { it.isNotBlank() }?.let { add(it) }
+        albumArtistsText.takeIf { it.isNotBlank() }?.let { add(it) }
         album?.year?.let { add(it.toString()) }
         album?.musicCount?.takeIf { it > 0 }?.let { add("$it$songsCountSuffix") }
     }.joinToString(" • ")
@@ -774,7 +779,7 @@ private fun JvmMusicAlbumInfoComponent(
                     XyTextSub(
                         text = subText,
                         maxLines = 2,
-                        onClick = if (album?.artists.isNullOrBlank()) null else onOpenArtists,
+                        onClick = if (albumArtistsText.isBlank()) null else onOpenArtists,
                     )
                 }
             }

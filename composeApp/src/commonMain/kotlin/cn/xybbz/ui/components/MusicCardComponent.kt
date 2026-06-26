@@ -165,7 +165,9 @@ fun MusicAlbumCardComponent(
         modifier = modifier,
         id = album?.itemId ?: "",
         name = album?.name ?: "",
-        artistName = album?.artists ?: stringResource(Constants.UNKNOWN_ARTIST),
+        artistName = album?.artists?.takeIf { it.isNotEmpty() }
+            ?.joinToString(separator = Constants.SLASH_DELIMITER)
+            ?: stringResource(Constants.UNKNOWN_ARTIST),
         imageSize = imageSize,
         model = coverUrls.primaryUrl,
         backModel = coverUrls.fallbackUrl,
