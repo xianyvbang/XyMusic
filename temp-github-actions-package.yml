@@ -1,4 +1,4 @@
-name: Package XyMusic KMP
+name: Package XyMusic
 
 on:
   workflow_dispatch:

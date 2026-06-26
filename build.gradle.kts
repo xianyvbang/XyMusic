@@ -52,7 +52,7 @@ subprojects {
                     )
                     // UI 绘制、平台入口、路由装配和 DI 装配由 UI/集成测试覆盖，不作为普通单测覆盖率目标。
                     packages(
-                        "xymusic_kmp.composeapp.generated.resources",
+                        "xymusic.composeapp.generated.resources",
                         "cn.xybbz.ui",
                         "cn.xybbz.router",
                         "cn.xybbz.di",
