@@ -17,7 +17,7 @@ internal actual fun platformDefaultDownloadDirectoryPath(contextWrapper: Context
 }
 
 internal actual fun createPlatformTempDownloadFilePath(contextWrapper: ContextWrapper): String {
-    val directory = contextWrapper.downloadTempDirectory
+    val directory = getJvmDownloadTempDirectory(contextWrapper)
     // 父目录创建统一走 FileKit，平台层只负责调用 JVM 临时文件命名能力。
     ensureDirectoryWithFileKit(directory.absolutePath)
     return File.createTempFile("download_", ".tmp", directory).absolutePath
@@ -152,10 +152,7 @@ private fun resolveSpaceTarget(path: String, fallbackDirectory: File): File {
         ?: fallbackDirectory
 }
 
-fun getJvmDownloadDirectory(contextWrapper: ContextWrapper): File {
-    return File(platformDefaultDownloadDirectoryPath(contextWrapper))
-}
-
 fun getJvmDownloadTempDirectory(contextWrapper: ContextWrapper): File {
-    return contextWrapper.downloadTempDirectory
+    // JVM 下载临时目录由平台数据根和下载模块目录常量共同决定。
+    return File(contextWrapper.downloadTempParentDirectory, DownloadConstants.TEMP_DOWNLOAD_DIRECTORY_NAME)
 }

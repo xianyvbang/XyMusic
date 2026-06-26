@@ -24,7 +24,7 @@ internal actual fun platformDefaultDownloadDirectoryPath(contextWrapper: Context
 }
 
 internal actual fun createPlatformTempDownloadFilePath(contextWrapper: ContextWrapper): String {
-    val directory = File(contextWrapper.context.cacheDir, "xy-downloads")
+    val directory = File(contextWrapper.context.cacheDir, DownloadConstants.TEMP_DOWNLOAD_DIRECTORY_NAME)
     // 父目录创建统一走 FileKit，平台层只负责 Android 临时文件命名。
     ensureDirectoryWithFileKit(directory.absolutePath)
     return File.createTempFile("download_", ".tmp", directory).absolutePath

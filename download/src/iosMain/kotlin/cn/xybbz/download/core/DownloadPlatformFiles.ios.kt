@@ -17,7 +17,7 @@ internal actual fun platformDefaultDownloadDirectoryPath(contextWrapper: Context
 }
 
 internal actual fun createPlatformTempDownloadFilePath(contextWrapper: ContextWrapper): String {
-    val directory = PlatformFile(FileKit.cacheDir, "xy-downloads")
+    val directory = PlatformFile(FileKit.cacheDir, DownloadConstants.TEMP_DOWNLOAD_DIRECTORY_NAME)
     directory.createDirectories()
     // iOS 下载调度当前未启用；这里先给出 FileKit 目录下的稳定临时路径入口。
     return PlatformFile(directory, "download_${kotlin.time.Clock.System.now().toEpochMilliseconds()}.tmp")

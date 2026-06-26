@@ -4,16 +4,19 @@ import java.io.File
 import java.util.Locale
 
 actual class ContextWrapper {
-    // JVM 路径解析使用的环境变量映射，测试可通过工厂注入隔离值。
-    private val environment: Map<String, String>
+    // JVM 路径解析使用的系统属性映射，测试可通过工厂注入隔离值。
+    private val properties: Map<String, String>
 
-    // JVM 路径解析使用的系统名称，测试可通过工厂注入不同平台名称。
-    private val osName: String
+    // JVM 路径解析使用的安装目录，测试可通过工厂注入临时目录。
+    private val installationDirectory: File
 
-    // JVM 路径解析使用的用户目录，测试可通过工厂注入临时目录。
-    private val userHomeDirectory: File
+    // JVM 运行时解析到的应用名称，默认沿用桌面安装包名称。
+    val appName: String
 
-    // JVM 持久应用数据根目录，用于保存数据库和下载中的临时状态。
+    // JVM 运行时解析到的小写包名，用于需要稳定应用标识的目录或日志场景。
+    val packageName: String
+
+    // JVM 持久应用数据根目录，用于保存数据库、缓存和下载中的临时状态。
     val dataDirectory: File
 
     // JVM 数据库目录，Room 主文件和 SQLite 伴生文件统一落在这里。
@@ -22,163 +25,115 @@ actual class ContextWrapper {
     // JVM 可重建缓存目录，用于播放缓存等可清理数据。
     val cacheDirectory: File
 
-    // JVM 下载中的临时文件目录，放在持久数据目录避免系统临时目录清理断点文件。
-    val downloadTempDirectory: File
+    // JVM 下载中的临时文件父目录，具体下载临时子目录由下载模块常量决定。
+    val downloadTempParentDirectory: File
 
-    // JVM 默认下载完成目录，面向用户文件管理器展示。
+    // JVM 默认下载完成目录，避免下载文件落到系统盘用户下载目录。
     val downloadDirectory: File
 
     // 兼容旧调用点的应用数据目录，后续新代码应优先使用上面的用途化目录。
     val applicationDirectory: File
 
     constructor() : this(
-        environment = System.getenv(),
-        osName = System.getProperty("os.name").orEmpty(),
-        //用户的home
-        userHomeDirectory = File(System.getProperty("user.home").orEmpty().ifBlank { "." }).absoluteFile,
+        properties = System.getProperties().stringPropertyNames().associateWith { propertyName ->
+            System.getProperty(propertyName).orEmpty()
+        },
+        installationDirectory = resolveDefaultInstallationDirectory(),
     )
 
     private constructor(
-        environment: Map<String, String>,
-        osName: String,
-        userHomeDirectory: File,
+        properties: Map<String, String>,
+        installationDirectory: File,
     ) {
-        this.environment = environment
-        this.osName = osName
-        this.userHomeDirectory = userHomeDirectory.absoluteFile
+        this.properties = properties
+        this.installationDirectory = installationDirectory.absoluteFile
 
+        appName = resolveAppName()
+        packageName = resolvePackageName()
         dataDirectory = resolveDataDirectory().absoluteFile
         databaseDirectory = File(dataDirectory, DATABASE_DIRECTORY_NAME).absoluteFile
-        cacheDirectory = resolveCacheDirectory().absoluteFile
-        downloadTempDirectory = File(dataDirectory, DOWNLOAD_TEMP_DIRECTORY_NAME).absoluteFile
-        downloadDirectory = File(resolveUserDownloadsDirectory(), DOWNLOAD_DIRECTORY_NAME).absoluteFile
+        cacheDirectory = File(dataDirectory, CACHE_DIRECTORY_NAME).absoluteFile
+        downloadTempParentDirectory = File(dataDirectory, TEMP_DIRECTORY_NAME).absoluteFile
+        downloadDirectory = File(File(dataDirectory, DOWNLOADS_DIRECTORY_NAME), appName).absoluteFile
         applicationDirectory = dataDirectory
     }
 
-    // 解析 JVM 持久应用数据目录，按系统遵循桌面应用常用位置。
+    // 解析 JVM 应用数据根目录，优先使用覆盖属性，否则放到当前运行目录所在盘符根目录。
     private fun resolveDataDirectory(): File {
-        return when (currentOperatingSystem()) {
-            OperatingSystem.WINDOWS -> File(
-                environment["LOCALAPPDATA"].orBlankToNull()?.let(::File) ?: userHomeDirectory,
-                WINDOWS_APP_DIRECTORY_NAME,
-            )
-
-            OperatingSystem.MACOS -> File(
-                File(userHomeDirectory, MACOS_APPLICATION_SUPPORT_DIRECTORY),
-                APP_DIRECTORY_NAME,
-            )
-
-            OperatingSystem.LINUX -> File(
-                environment["XDG_DATA_HOME"].orBlankToNull()?.let(::File)
-                    ?: File(userHomeDirectory, LINUX_DEFAULT_DATA_DIRECTORY),
-                LINUX_APP_DIRECTORY_NAME,
-            )
+        properties[DATA_ROOT_PROPERTY].orBlankToNull()?.let { configuredRoot ->
+            return File(configuredRoot)
         }
+
+        val installRoot = installationDirectory.toPath().root?.toFile() ?: installationDirectory
+        return File(installRoot, "${appName}Data")
     }
 
-    // 解析 JVM 可重建缓存目录，缓存和持久数据分离便于后续清理。
-    private fun resolveCacheDirectory(): File {
-        return when (currentOperatingSystem()) {
-            OperatingSystem.WINDOWS -> File(
-                File(environment["LOCALAPPDATA"].orBlankToNull() ?: userHomeDirectory.absolutePath),
-                "$WINDOWS_APP_DIRECTORY_NAME/$CACHE_DIRECTORY_NAME",
-            )
-
-            OperatingSystem.MACOS -> File(
-                File(userHomeDirectory, MACOS_CACHES_DIRECTORY),
-                APP_DIRECTORY_NAME,
-            )
-
-            OperatingSystem.LINUX -> File(
-                environment["XDG_CACHE_HOME"].orBlankToNull()?.let(::File)
-                    ?: File(userHomeDirectory, LINUX_DEFAULT_CACHE_DIRECTORY),
-                LINUX_APP_DIRECTORY_NAME,
-            )
-        }
+    // 解析桌面应用名称，空白配置回退到默认名称。
+    private fun resolveAppName(): String {
+        return properties[PACKAGE_NAME_PROPERTY].orBlankToNull() ?: DEFAULT_APP_NAME
     }
 
-    // 解析用户下载目录，当前不读取系统本地化目录配置，缺省统一使用 ~/Downloads。
-    private fun resolveUserDownloadsDirectory(): File {
-        val homeDirectory = when (currentOperatingSystem()) {
-            OperatingSystem.WINDOWS -> environment["USERPROFILE"].orBlankToNull()?.let(::File) ?: userHomeDirectory
-            OperatingSystem.MACOS,
-            OperatingSystem.LINUX -> userHomeDirectory
-        }
-        return File(homeDirectory, USER_DOWNLOADS_DIRECTORY_NAME)
-    }
-
-    // 解析当前 JVM 所在操作系统，未知桌面系统按 Linux/XDG 规则兜底。
-    private fun currentOperatingSystem(): OperatingSystem {
-        val normalizedOsName = osName.lowercase(Locale.ROOT)
-        return when {
-            normalizedOsName.contains("win") -> OperatingSystem.WINDOWS
-            normalizedOsName.contains("mac") || normalizedOsName.contains("darwin") -> OperatingSystem.MACOS
-            else -> OperatingSystem.LINUX
-        }
-    }
-
-    // JVM 桌面端路径分流时使用的操作系统分类。
-    private enum class OperatingSystem {
-        WINDOWS,
-        MACOS,
-        LINUX,
+    // 解析小写包名，使用 Locale.ROOT 避免系统语言影响大小写转换。
+    private fun resolvePackageName(): String {
+        return resolveAppName().lowercase(Locale.ROOT)
     }
 
     companion object {
-        /**
-         * 创建 JVM 测试专用上下文，避免测试读写真实用户目录。
-         */
-        fun createForTest(
-            environment: Map<String, String>,
-            osName: String,
-            userHomeDirectory: File,
-        ): ContextWrapper {
-            return ContextWrapper(
-                environment = environment,
-                osName = osName,
-                userHomeDirectory = userHomeDirectory,
-            )
-        }
+        // 桌面端注入包名使用的系统属性名。
+        const val PACKAGE_NAME_PROPERTY: String = "cn.xybbz.packageName"
 
-        // 桌面应用对外展示的应用目录名称。
-        private const val APP_DIRECTORY_NAME = "XyMusic"
+        // 测试或开发环境覆盖 JVM 数据根目录使用的系统属性名。
+        const val DATA_ROOT_PROPERTY: String = "cn.xybbz.dataRoot"
 
-        // Linux 遵循 XDG 目录命名习惯，使用小写应用目录。
-        private const val LINUX_APP_DIRECTORY_NAME = "xymusic"
-
-        // Windows 本地应用数据目录下的应用目录名称。
-        private const val WINDOWS_APP_DIRECTORY_NAME = APP_DIRECTORY_NAME
+        // 桌面应用默认名称，未注入包名时使用。
+        const val DEFAULT_APP_NAME: String = "XyMusic"
 
         // 数据库子目录名称。
-        private const val DATABASE_DIRECTORY_NAME = "databases"
+        private const val DATABASE_DIRECTORY_NAME = "database"
 
         // 可清理缓存子目录名称。
         private const val CACHE_DIRECTORY_NAME = "cache"
 
-        // 下载中临时文件子目录名称。
-        private const val DOWNLOAD_TEMP_DIRECTORY_NAME = "temp/xy-downloads"
+        // 下载中临时文件父目录名称。
+        private const val TEMP_DIRECTORY_NAME = "temp"
 
-        // 默认下载完成目录名称。
-        private const val DOWNLOAD_DIRECTORY_NAME = APP_DIRECTORY_NAME
+        // 默认下载完成目录父目录名称。
+        private const val DOWNLOADS_DIRECTORY_NAME = "Downloads"
 
-        // 用户下载目录名称。
-        private const val USER_DOWNLOADS_DIRECTORY_NAME = "Downloads"
+        /**
+         * 创建 JVM 测试专用上下文，避免测试读写真实用户目录。
+         */
+        fun createForTest(
+            properties: Map<String, String>,
+            installationDirectory: File,
+        ): ContextWrapper {
+            return ContextWrapper(
+                properties = properties,
+                installationDirectory = installationDirectory,
+            )
+        }
 
-        // macOS 持久应用数据父目录。
-        private const val MACOS_APPLICATION_SUPPORT_DIRECTORY = "Library/Application Support"
+        // 解析 JVM 默认安装目录，优先使用代码所在目录，失败时退回当前工作目录。
+        private fun resolveDefaultInstallationDirectory(): File {
+            val codeSourceFile = runCatching {
+                ContextWrapper::class.java.protectionDomain
+                    ?.codeSource
+                    ?.location
+                    ?.toURI()
+                    ?.let(::File)
+                    ?.absoluteFile
+            }.getOrNull()
 
-        // macOS 可重建缓存父目录。
-        private const val MACOS_CACHES_DIRECTORY = "Library/Caches"
-
-        // Linux 默认持久应用数据父目录。
-        private const val LINUX_DEFAULT_DATA_DIRECTORY = ".local/share"
-
-        // Linux 默认可重建缓存父目录。
-        private const val LINUX_DEFAULT_CACHE_DIRECTORY = ".cache"
+            return when {
+                codeSourceFile == null -> File(System.getProperty("user.dir").orEmpty().ifBlank { "." }).absoluteFile
+                codeSourceFile.isFile -> codeSourceFile.parentFile ?: codeSourceFile
+                else -> codeSourceFile
+            }
+        }
     }
 }
 
-// 将空白环境变量视为未配置，避免拼出无意义根路径。
+// 将空白配置视为未配置，避免拼出无意义路径。
 private fun String?.orBlankToNull(): String? {
     return this?.takeIf { it.isNotBlank() }
 }

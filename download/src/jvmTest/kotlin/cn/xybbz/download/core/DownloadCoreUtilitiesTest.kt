@@ -296,7 +296,7 @@ class DownloadCoreUtilitiesTest {
         try {
             assertTrue(tempFile.exists())
             assertEquals(
-                contextWrapper.downloadTempDirectory.canonicalFile,
+                getJvmDownloadTempDirectory(contextWrapper).canonicalFile,
                 tempFile.parentFile.canonicalFile,
             )
         } finally {
@@ -691,14 +691,11 @@ class DownloadCoreUtilitiesTest {
      */
     private fun createTestContextWrapper(root: File = createTempDirectory()): ContextWrapper {
         return ContextWrapper.createForTest(
-            environment = mapOf(
-                "LOCALAPPDATA" to File(root, "local-app-data").absolutePath,
-                "USERPROFILE" to File(root, "user-profile").absolutePath,
-                "XDG_DATA_HOME" to File(root, "xdg-data").absolutePath,
-                "XDG_CACHE_HOME" to File(root, "xdg-cache").absolutePath,
+            properties = mapOf(
+                ContextWrapper.PACKAGE_NAME_PROPERTY to ContextWrapper.DEFAULT_APP_NAME,
+                ContextWrapper.DATA_ROOT_PROPERTY to File(root, "XyMusicData").absolutePath,
             ),
-            osName = "Linux",
-            userHomeDirectory = File(root, "home"),
+            installationDirectory = File(root, "install"),
         )
     }
 

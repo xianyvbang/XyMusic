@@ -10,28 +10,26 @@ import kotlin.test.assertEquals
  */
 class ContextWrapperJvmTest {
     /**
-     * Windows 路径应使用 LOCALAPPDATA 保存应用数据，并使用 USERPROFILE 下的 Downloads 保存完成下载。
+     * 未配置覆盖目录时，JVM 数据根目录应位于运行目录所在盘符根目录。
      */
     @Test
-    fun windowsPathsUseLocalAppDataAndUserDownloads() {
+    fun defaultDataDirectoryUsesRuntimeDriveRoot() {
         val root = createTempDirectory()
-        val localAppData = File(root, "LocalAppData")
-        val userProfile = File(root, "UserProfile")
         val contextWrapper = ContextWrapper.createForTest(
-            environment = mapOf(
-                "LOCALAPPDATA" to localAppData.absolutePath,
-                "USERPROFILE" to userProfile.absolutePath,
-            ),
-            osName = "Windows 11",
-            userHomeDirectory = File(root, "Home"),
+            properties = mapOf(ContextWrapper.PACKAGE_NAME_PROPERTY to "XyMusic"),
+            installationDirectory = File(root, "install/bin"),
         )
 
         try {
-            assertEquals(File(localAppData, "XyMusic").absoluteFile, contextWrapper.dataDirectory)
-            assertEquals(File(localAppData, "XyMusic/databases").absoluteFile, contextWrapper.databaseDirectory)
-            assertEquals(File(localAppData, "XyMusic/cache").absoluteFile, contextWrapper.cacheDirectory)
-            assertEquals(File(localAppData, "XyMusic/temp/xy-downloads").absoluteFile, contextWrapper.downloadTempDirectory)
-            assertEquals(File(userProfile, "Downloads/XyMusic").absoluteFile, contextWrapper.downloadDirectory)
+            val expectedRoot = File(root.toPath().root.toFile(), "XyMusicData").absoluteFile
+
+            assertEquals("XyMusic", contextWrapper.appName)
+            assertEquals("xymusic", contextWrapper.packageName)
+            assertEquals(expectedRoot, contextWrapper.dataDirectory)
+            assertEquals(File(expectedRoot, "database").absoluteFile, contextWrapper.databaseDirectory)
+            assertEquals(File(expectedRoot, "cache").absoluteFile, contextWrapper.cacheDirectory)
+            assertEquals(File(expectedRoot, "temp").absoluteFile, contextWrapper.downloadTempParentDirectory)
+            assertEquals(File(expectedRoot, "Downloads/XyMusic").absoluteFile, contextWrapper.downloadDirectory)
             assertEquals(contextWrapper.dataDirectory, contextWrapper.applicationDirectory)
         } finally {
             root.deleteRecursively()
@@ -39,74 +37,45 @@ class ContextWrapperJvmTest {
     }
 
     /**
-     * macOS 路径应遵循 Application Support、Caches 和用户 Downloads 目录。
+     * 配置数据根覆盖属性时，JVM 所有目录都应从覆盖目录派生。
      */
     @Test
-    fun macOsPathsUseLibraryDirectories() {
+    fun dataRootPropertyOverridesRuntimeDriveRoot() {
         val root = createTempDirectory()
-        val home = File(root, "Home")
+        val dataRoot = File(root, "CustomDataRoot")
         val contextWrapper = ContextWrapper.createForTest(
-            environment = emptyMap(),
-            osName = "Mac OS X",
-            userHomeDirectory = home,
-        )
-
-        try {
-            assertEquals(File(home, "Library/Application Support/XyMusic").absoluteFile, contextWrapper.dataDirectory)
-            assertEquals(File(home, "Library/Application Support/XyMusic/databases").absoluteFile, contextWrapper.databaseDirectory)
-            assertEquals(File(home, "Library/Caches/XyMusic").absoluteFile, contextWrapper.cacheDirectory)
-            assertEquals(File(home, "Library/Application Support/XyMusic/temp/xy-downloads").absoluteFile, contextWrapper.downloadTempDirectory)
-            assertEquals(File(home, "Downloads/XyMusic").absoluteFile, contextWrapper.downloadDirectory)
-        } finally {
-            root.deleteRecursively()
-        }
-    }
-
-    /**
-     * Linux 路径应优先使用 XDG_DATA_HOME 和 XDG_CACHE_HOME。
-     */
-    @Test
-    fun linuxPathsUseXdgDirectories() {
-        val root = createTempDirectory()
-        val dataHome = File(root, "data-home")
-        val cacheHome = File(root, "cache-home")
-        val home = File(root, "Home")
-        val contextWrapper = ContextWrapper.createForTest(
-            environment = mapOf(
-                "XDG_DATA_HOME" to dataHome.absolutePath,
-                "XDG_CACHE_HOME" to cacheHome.absolutePath,
+            properties = mapOf(
+                ContextWrapper.PACKAGE_NAME_PROPERTY to "XyMusic",
+                ContextWrapper.DATA_ROOT_PROPERTY to dataRoot.absolutePath,
             ),
-            osName = "Linux",
-            userHomeDirectory = home,
+            installationDirectory = File(root, "install/bin"),
         )
 
         try {
-            assertEquals(File(dataHome, "xymusic").absoluteFile, contextWrapper.dataDirectory)
-            assertEquals(File(dataHome, "xymusic/databases").absoluteFile, contextWrapper.databaseDirectory)
-            assertEquals(File(cacheHome, "xymusic").absoluteFile, contextWrapper.cacheDirectory)
-            assertEquals(File(dataHome, "xymusic/temp/xy-downloads").absoluteFile, contextWrapper.downloadTempDirectory)
-            assertEquals(File(home, "Downloads/XyMusic").absoluteFile, contextWrapper.downloadDirectory)
+            assertEquals(dataRoot.absoluteFile, contextWrapper.applicationDirectory)
+            assertEquals(File(dataRoot, "database").absoluteFile, contextWrapper.databaseDirectory)
+            assertEquals(File(dataRoot, "cache").absoluteFile, contextWrapper.cacheDirectory)
+            assertEquals(File(dataRoot, "temp").absoluteFile, contextWrapper.downloadTempParentDirectory)
+            assertEquals(File(dataRoot, "Downloads/XyMusic").absoluteFile, contextWrapper.downloadDirectory)
         } finally {
             root.deleteRecursively()
         }
     }
 
     /**
-     * Linux 未配置 XDG 变量时应回退到用户目录下的标准隐藏目录。
+     * 空白包名配置应回退默认应用名称，并生成小写 packageName。
      */
     @Test
-    fun linuxPathsFallbackToUserHomeWhenXdgMissing() {
+    fun blankPackageNameFallsBackToDefaultAppName() {
         val root = createTempDirectory()
-        val home = File(root, "Home")
         val contextWrapper = ContextWrapper.createForTest(
-            environment = emptyMap(),
-            osName = "Linux",
-            userHomeDirectory = home,
+            properties = mapOf(ContextWrapper.PACKAGE_NAME_PROPERTY to " "),
+            installationDirectory = root,
         )
 
         try {
-            assertEquals(File(home, ".local/share/xymusic").absoluteFile, contextWrapper.dataDirectory)
-            assertEquals(File(home, ".cache/xymusic").absoluteFile, contextWrapper.cacheDirectory)
+            assertEquals(ContextWrapper.DEFAULT_APP_NAME, contextWrapper.appName)
+            assertEquals("xymusic", contextWrapper.packageName)
         } finally {
             root.deleteRecursively()
         }

@@ -8,6 +8,8 @@ plugins {
 
 // 桌面端包版本与 Android versionName 统一由版本目录维护。
 val appVersionName = libs.versions.app.versionName.get()
+// 桌面端包名同时用于安装包展示名和 JVM 运行期目录解析。
+val desktopPackageName = "XyMusic"
 // macOS 的 DMG/PKG 版本号不接受 0 开头，因此单独映射成可通过校验的版本。
 // val macOSPackageVersion = appVersionName.replaceFirst(Regex("^0\\."), "1.")
 
@@ -33,12 +35,16 @@ kotlin {
 tasks.withType<JavaExec>().configureEach {
     systemProperty("compose.application.resources.dir", project.layout.projectDirectory.dir("resources/windows-x64"))
     systemProperty("cn.xybbz.packageVersion", appVersionName)
+    systemProperty("cn.xybbz.packageName", desktopPackageName)
 }
 
 compose.desktop {
     application {
         mainClass = "cn.xybbz.MainKt"
-        jvmArgs += listOf("-Dcn.xybbz.packageVersion=$appVersionName")
+        jvmArgs += listOf(
+            "-Dcn.xybbz.packageVersion=$appVersionName",
+            "-Dcn.xybbz.packageName=$desktopPackageName",
+        )
 
         buildTypes.release.proguard {
             obfuscate.set(true)
@@ -51,7 +57,7 @@ compose.desktop {
             // targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             targetFormats(TargetFormat.Msi)
             // Windows 安装器显示名，避免把内部包名暴露成用户可见应用名称。
-            packageName = "XyMusic"
+            packageName = desktopPackageName
             packageVersion = appVersionName
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
             windows {

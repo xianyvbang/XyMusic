@@ -17,12 +17,11 @@ class JvmPlaybackCacheDirectoriesTest {
     fun defaultCacheDirectoryUsesContextCacheDirectory() {
         val root = Files.createTempDirectory("xy-playback-cache-directory-test").toFile()
         val contextWrapper = ContextWrapper.createForTest(
-            environment = mapOf(
-                "XDG_DATA_HOME" to File(root, "data").absolutePath,
-                "XDG_CACHE_HOME" to File(root, "cache").absolutePath,
+            properties = mapOf(
+                ContextWrapper.PACKAGE_NAME_PROPERTY to ContextWrapper.DEFAULT_APP_NAME,
+                ContextWrapper.DATA_ROOT_PROPERTY to File(root, "XyMusicData").absolutePath,
             ),
-            osName = "Linux",
-            userHomeDirectory = File(root, "home"),
+            installationDirectory = File(root, "install"),
         )
 
         try {
