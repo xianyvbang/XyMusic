@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -98,33 +98,33 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_connection
-import xymusic_kmp.composeapp.generated.resources.check_24px
-import xymusic_kmp.composeapp.generated.resources.chinese_list_separator
-import xymusic_kmp.composeapp.generated.resources.confirm_delete_connection
-import xymusic_kmp.composeapp.generated.resources.connection_media_library_all_label
-import xymusic_kmp.composeapp.generated.resources.connection_media_library_label
-import xymusic_kmp.composeapp.generated.resources.connection_permission_read_only
-import xymusic_kmp.composeapp.generated.resources.connection_permissions_label
-import xymusic_kmp.composeapp.generated.resources.connection_server_version_label
-import xymusic_kmp.composeapp.generated.resources.connection_server_version_unknown_label
-import xymusic_kmp.composeapp.generated.resources.connection_settings_list
-import xymusic_kmp.composeapp.generated.resources.current_connection
-import xymusic_kmp.composeapp.generated.resources.delete_24px
-import xymusic_kmp.composeapp.generated.resources.delete_connection
-import xymusic_kmp.composeapp.generated.resources.delete_prefix
-import xymusic_kmp.composeapp.generated.resources.download
-import xymusic_kmp.composeapp.generated.resources.download_24px
-import xymusic_kmp.composeapp.generated.resources.edit_24px
-import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
-import xymusic_kmp.composeapp.generated.resources.http_24px
-import xymusic_kmp.composeapp.generated.resources.info_24px
-import xymusic_kmp.composeapp.generated.resources.library_add_24px
-import xymusic_kmp.composeapp.generated.resources.modify_connection
-import xymusic_kmp.composeapp.generated.resources.music_library
-import xymusic_kmp.composeapp.generated.resources.warning
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.add_connection
+import xymusic.composeapp.generated.resources.check_24px
+import xymusic.composeapp.generated.resources.chinese_list_separator
+import xymusic.composeapp.generated.resources.confirm_delete_connection
+import xymusic.composeapp.generated.resources.connection_media_library_all_label
+import xymusic.composeapp.generated.resources.connection_media_library_label
+import xymusic.composeapp.generated.resources.connection_permission_read_only
+import xymusic.composeapp.generated.resources.connection_permissions_label
+import xymusic.composeapp.generated.resources.connection_server_version_label
+import xymusic.composeapp.generated.resources.connection_server_version_unknown_label
+import xymusic.composeapp.generated.resources.connection_settings_list
+import xymusic.composeapp.generated.resources.current_connection
+import xymusic.composeapp.generated.resources.delete_24px
+import xymusic.composeapp.generated.resources.delete_connection
+import xymusic.composeapp.generated.resources.delete_prefix
+import xymusic.composeapp.generated.resources.download
+import xymusic.composeapp.generated.resources.download_24px
+import xymusic.composeapp.generated.resources.edit_24px
+import xymusic.composeapp.generated.resources.folder_managed_24px
+import xymusic.composeapp.generated.resources.http_24px
+import xymusic.composeapp.generated.resources.info_24px
+import xymusic.composeapp.generated.resources.library_add_24px
+import xymusic.composeapp.generated.resources.modify_connection
+import xymusic.composeapp.generated.resources.music_library
+import xymusic.composeapp.generated.resources.warning
 
 /**
  * 连接设置列表。

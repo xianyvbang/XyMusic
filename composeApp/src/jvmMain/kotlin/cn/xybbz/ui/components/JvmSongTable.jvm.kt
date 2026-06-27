@@ -1,4 +1,4 @@
-﻿package cn.xybbz.ui.components
+package cn.xybbz.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,7 +18,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.*
 
 
 /**

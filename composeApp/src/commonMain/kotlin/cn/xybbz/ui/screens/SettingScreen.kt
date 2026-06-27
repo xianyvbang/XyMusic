@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -66,30 +66,30 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.about
-import xymusic_kmp.composeapp.generated.resources.album_playback_history
-import xymusic_kmp.composeapp.generated.resources.allow_simultaneous_playback
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.broadcast_while_down
-import xymusic_kmp.composeapp.generated.resources.cache_limit
-import xymusic_kmp.composeapp.generated.resources.cache_location
-import xymusic_kmp.composeapp.generated.resources.check_24px
-import xymusic_kmp.composeapp.generated.resources.connection_management
-import xymusic_kmp.composeapp.generated.resources.copy_success
-import xymusic_kmp.composeapp.generated.resources.customize_lyric_settings
-import xymusic_kmp.composeapp.generated.resources.download_max_list
-import xymusic_kmp.composeapp.generated.resources.enabled_sync_play_progress
-import xymusic_kmp.composeapp.generated.resources.icloud_keychain_password_sync
-import xymusic_kmp.composeapp.generated.resources.interface_settings
-import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
-import xymusic_kmp.composeapp.generated.resources.language
-import xymusic_kmp.composeapp.generated.resources.online_music_quality
-import xymusic_kmp.composeapp.generated.resources.poxy_config
-import xymusic_kmp.composeapp.generated.resources.return_home
-import xymusic_kmp.composeapp.generated.resources.settings
-import xymusic_kmp.composeapp.generated.resources.song_cache_location
-import xymusic_kmp.composeapp.generated.resources.storage_management
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.about
+import xymusic.composeapp.generated.resources.album_playback_history
+import xymusic.composeapp.generated.resources.allow_simultaneous_playback
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.broadcast_while_down
+import xymusic.composeapp.generated.resources.cache_limit
+import xymusic.composeapp.generated.resources.cache_location
+import xymusic.composeapp.generated.resources.check_24px
+import xymusic.composeapp.generated.resources.connection_management
+import xymusic.composeapp.generated.resources.copy_success
+import xymusic.composeapp.generated.resources.customize_lyric_settings
+import xymusic.composeapp.generated.resources.download_max_list
+import xymusic.composeapp.generated.resources.enabled_sync_play_progress
+import xymusic.composeapp.generated.resources.icloud_keychain_password_sync
+import xymusic.composeapp.generated.resources.interface_settings
+import xymusic.composeapp.generated.resources.keyboard_arrow_down_24px
+import xymusic.composeapp.generated.resources.language
+import xymusic.composeapp.generated.resources.online_music_quality
+import xymusic.composeapp.generated.resources.poxy_config
+import xymusic.composeapp.generated.resources.return_home
+import xymusic.composeapp.generated.resources.settings
+import xymusic.composeapp.generated.resources.song_cache_location
+import xymusic.composeapp.generated.resources.storage_management
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**

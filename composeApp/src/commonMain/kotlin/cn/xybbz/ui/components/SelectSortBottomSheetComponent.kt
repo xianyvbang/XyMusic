@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -52,25 +52,25 @@ import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.calendar_today_24px
-import xymusic_kmp.composeapp.generated.resources.can_cancel_favorite_filter
-import xymusic_kmp.composeapp.generated.resources.can_get_favorite_music
-import xymusic_kmp.composeapp.generated.resources.cancel
-import xymusic_kmp.composeapp.generated.resources.cancel_favorite_filter
-import xymusic_kmp.composeapp.generated.resources.clear_filters
-import xymusic_kmp.composeapp.generated.resources.close_24px
-import xymusic_kmp.composeapp.generated.resources.confirm
-import xymusic_kmp.composeapp.generated.resources.favorite_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
-import xymusic_kmp.composeapp.generated.resources.get_favorite_music
-import xymusic_kmp.composeapp.generated.resources.menu_open_24px
-import xymusic_kmp.composeapp.generated.resources.open_sort_and_filter_menu
-import xymusic_kmp.composeapp.generated.resources.select_sort_method
-import xymusic_kmp.composeapp.generated.resources.sort_24px
-import xymusic_kmp.composeapp.generated.resources.sort_method
-import xymusic_kmp.composeapp.generated.resources.year_filter
-import xymusic_kmp.composeapp.generated.resources.year_selection
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.calendar_today_24px
+import xymusic.composeapp.generated.resources.can_cancel_favorite_filter
+import xymusic.composeapp.generated.resources.can_get_favorite_music
+import xymusic.composeapp.generated.resources.cancel
+import xymusic.composeapp.generated.resources.cancel_favorite_filter
+import xymusic.composeapp.generated.resources.clear_filters
+import xymusic.composeapp.generated.resources.close_24px
+import xymusic.composeapp.generated.resources.confirm
+import xymusic.composeapp.generated.resources.favorite_24px
+import xymusic.composeapp.generated.resources.favorite_border_24px
+import xymusic.composeapp.generated.resources.get_favorite_music
+import xymusic.composeapp.generated.resources.menu_open_24px
+import xymusic.composeapp.generated.resources.open_sort_and_filter_menu
+import xymusic.composeapp.generated.resources.select_sort_method
+import xymusic.composeapp.generated.resources.sort_24px
+import xymusic.composeapp.generated.resources.sort_method
+import xymusic.composeapp.generated.resources.year_filter
+import xymusic.composeapp.generated.resources.year_selection
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 

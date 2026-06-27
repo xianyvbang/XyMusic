@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -47,10 +47,10 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyTextSubSmall
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.delete_24px
-import xymusic_kmp.composeapp.generated.resources.delete_prefix
-import xymusic_kmp.composeapp.generated.resources.no_search_history
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.delete_24px
+import xymusic.composeapp.generated.resources.delete_prefix
+import xymusic.composeapp.generated.resources.no_search_history
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalLayoutApi::class)

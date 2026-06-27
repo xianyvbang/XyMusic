@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -58,11 +58,11 @@ import cn.xybbz.ui.xy.XyTextSubSmall
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.icon_error
-import xymusic_kmp.composeapp.generated.resources.request_failed_check_network
-import xymusic_kmp.composeapp.generated.resources.retry
-import xymusic_kmp.composeapp.generated.resources.retry_button
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.icon_error
+import xymusic.composeapp.generated.resources.request_failed_check_network
+import xymusic.composeapp.generated.resources.retry
+import xymusic.composeapp.generated.resources.retry_button
 
 /**
  * 下拉加载封装

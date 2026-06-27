@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -27,7 +27,7 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.Res
 import cn.xybbz.ui.screens.AboutScreen
 import cn.xybbz.ui.screens.AlbumInfoScreen
 import cn.xybbz.ui.screens.AlbumScreen
@@ -57,7 +57,7 @@ import cn.xybbz.ui.screens.SettingScreen
 import cn.xybbz.ui.screens.StreamingQualityScreen
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
-import xymusic_kmp.composeapp.generated.resources.background_image
+import xymusic.composeapp.generated.resources.background_image
 
 /**
  * 节点页面

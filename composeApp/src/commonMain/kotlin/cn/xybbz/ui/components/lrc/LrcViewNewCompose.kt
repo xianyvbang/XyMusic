@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -100,18 +100,18 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_24px
-import xymusic_kmp.composeapp.generated.resources.backward_offset
-import xymusic_kmp.composeapp.generated.resources.check_24px
-import xymusic_kmp.composeapp.generated.resources.confirm
-import xymusic_kmp.composeapp.generated.resources.forward_offset
-import xymusic_kmp.composeapp.generated.resources.lrc_config
-import xymusic_kmp.composeapp.generated.resources.no_lyrics
-import xymusic_kmp.composeapp.generated.resources.offset
-import xymusic_kmp.composeapp.generated.resources.remove_24px
-import xymusic_kmp.composeapp.generated.resources.reset
-import xymusic_kmp.composeapp.generated.resources.restart_alt_24px
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.add_24px
+import xymusic.composeapp.generated.resources.backward_offset
+import xymusic.composeapp.generated.resources.check_24px
+import xymusic.composeapp.generated.resources.confirm
+import xymusic.composeapp.generated.resources.forward_offset
+import xymusic.composeapp.generated.resources.lrc_config
+import xymusic.composeapp.generated.resources.no_lyrics
+import xymusic.composeapp.generated.resources.offset
+import xymusic.composeapp.generated.resources.remove_24px
+import xymusic.composeapp.generated.resources.reset
+import xymusic.composeapp.generated.resources.restart_alt_24px
 
 private val LrcLineVerticalSpacing = 12.dp
 private val LrcDragGuideVerticalPadding = 8.dp

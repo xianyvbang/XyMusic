@@ -19,15 +19,15 @@
 package cn.xybbz.common.constants
 
 import org.jetbrains.compose.resources.StringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.plex_album_collection_title
-import xymusic_kmp.composeapp.generated.resources.plex_artist_collection_title
-import xymusic_kmp.composeapp.generated.resources.plex_music_collection_title
-import xymusic_kmp.composeapp.generated.resources.unknown
-import xymusic_kmp.composeapp.generated.resources.unknown_album
-import xymusic_kmp.composeapp.generated.resources.unknown_artist
-import xymusic_kmp.composeapp.generated.resources.unknown_music
-import xymusic_kmp.composeapp.generated.resources.unknown_playlist
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.plex_album_collection_title
+import xymusic.composeapp.generated.resources.plex_artist_collection_title
+import xymusic.composeapp.generated.resources.plex_music_collection_title
+import xymusic.composeapp.generated.resources.unknown
+import xymusic.composeapp.generated.resources.unknown_album
+import xymusic.composeapp.generated.resources.unknown_artist
+import xymusic.composeapp.generated.resources.unknown_music
+import xymusic.composeapp.generated.resources.unknown_playlist
 
 object Constants {
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -76,14 +76,14 @@ import cn.xybbz.viewmodel.InterfaceSettingViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.album_24px
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.background_image_setting
-import xymusic_kmp.composeapp.generated.resources.interface_settings
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
-import xymusic_kmp.composeapp.generated.resources.settings_24px
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.album_24px
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.background_image_setting
+import xymusic.composeapp.generated.resources.interface_settings
+import xymusic.composeapp.generated.resources.return_setting_screen
+import xymusic.composeapp.generated.resources.settings_24px
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 

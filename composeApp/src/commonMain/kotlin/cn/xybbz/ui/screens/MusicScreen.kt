@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -52,16 +52,16 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.close_24px
-import xymusic_kmp.composeapp.generated.resources.close_selection
-import xymusic_kmp.composeapp.generated.resources.music
-import xymusic_kmp.composeapp.generated.resources.open_selection_function
-import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
-import xymusic_kmp.composeapp.generated.resources.random_play
-import xymusic_kmp.composeapp.generated.resources.return_home
-import xymusic_kmp.composeapp.generated.resources.shuffle_24px
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.close_24px
+import xymusic.composeapp.generated.resources.close_selection
+import xymusic.composeapp.generated.resources.music
+import xymusic.composeapp.generated.resources.open_selection_function
+import xymusic.composeapp.generated.resources.playlist_add_check_24px
+import xymusic.composeapp.generated.resources.random_play
+import xymusic.composeapp.generated.resources.return_home
+import xymusic.composeapp.generated.resources.shuffle_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @Composable

@@ -72,18 +72,18 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.getKoin
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_24px
-import xymusic_kmp.composeapp.generated.resources.background_image
-import xymusic_kmp.composeapp.generated.resources.create_playlist
-import xymusic_kmp.composeapp.generated.resources.logging_in
-import xymusic_kmp.composeapp.generated.resources.login_exception_info
-import xymusic_kmp.composeapp.generated.resources.login_failed
-import xymusic_kmp.composeapp.generated.resources.new_playlist
-import xymusic_kmp.composeapp.generated.resources.no_playlists
-import xymusic_kmp.composeapp.generated.resources.playlist
-import xymusic_kmp.composeapp.generated.resources.songs_count_suffix
-import xymusic_kmp.composeapp.generated.resources.warning_24px
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.add_24px
+import xymusic.composeapp.generated.resources.background_image
+import xymusic.composeapp.generated.resources.create_playlist
+import xymusic.composeapp.generated.resources.logging_in
+import xymusic.composeapp.generated.resources.login_exception_info
+import xymusic.composeapp.generated.resources.login_failed
+import xymusic.composeapp.generated.resources.new_playlist
+import xymusic.composeapp.generated.resources.no_playlists
+import xymusic.composeapp.generated.resources.playlist
+import xymusic.composeapp.generated.resources.songs_count_suffix
+import xymusic.composeapp.generated.resources.warning_24px
 
 val jvmRouterMenuWidth = 220.dp
 

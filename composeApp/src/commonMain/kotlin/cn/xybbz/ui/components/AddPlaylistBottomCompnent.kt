@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -45,12 +45,12 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_24px
-import xymusic_kmp.composeapp.generated.resources.add_to_playlist
-import xymusic_kmp.composeapp.generated.resources.create_playlist
-import xymusic_kmp.composeapp.generated.resources.new_playlist
-import xymusic_kmp.composeapp.generated.resources.songs_count_suffix
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.add_24px
+import xymusic.composeapp.generated.resources.add_to_playlist
+import xymusic.composeapp.generated.resources.create_playlist
+import xymusic.composeapp.generated.resources.new_playlist
+import xymusic.composeapp.generated.resources.songs_count_suffix
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 val playlistObject by mutableStateOf(

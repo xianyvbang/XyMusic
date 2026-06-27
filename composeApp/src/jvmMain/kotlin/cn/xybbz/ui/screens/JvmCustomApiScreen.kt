@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -81,24 +81,24 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.album_24px
-import xymusic_kmp.composeapp.generated.resources.check_24px
-import xymusic_kmp.composeapp.generated.resources.custom_cover_api
-import xymusic_kmp.composeapp.generated.resources.custom_cover_api_hint
-import xymusic_kmp.composeapp.generated.resources.customize_lyric_settings
-import xymusic_kmp.composeapp.generated.resources.http_24px
-import xymusic_kmp.composeapp.generated.resources.info_24px
-import xymusic_kmp.composeapp.generated.resources.lyrics_api_auth_key
-import xymusic_kmp.composeapp.generated.resources.lyrics_api_auth_key_hint
-import xymusic_kmp.composeapp.generated.resources.lyrics_single_api
-import xymusic_kmp.composeapp.generated.resources.lyrics_single_api_hint
-import xymusic_kmp.composeapp.generated.resources.music_note_24px
-import xymusic_kmp.composeapp.generated.resources.password_24px
-import xymusic_kmp.composeapp.generated.resources.prioritize_music_service_api
-import xymusic_kmp.composeapp.generated.resources.save
-import xymusic_kmp.composeapp.generated.resources.settings_24px
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.album_24px
+import xymusic.composeapp.generated.resources.check_24px
+import xymusic.composeapp.generated.resources.custom_cover_api
+import xymusic.composeapp.generated.resources.custom_cover_api_hint
+import xymusic.composeapp.generated.resources.customize_lyric_settings
+import xymusic.composeapp.generated.resources.http_24px
+import xymusic.composeapp.generated.resources.info_24px
+import xymusic.composeapp.generated.resources.lyrics_api_auth_key
+import xymusic.composeapp.generated.resources.lyrics_api_auth_key_hint
+import xymusic.composeapp.generated.resources.lyrics_single_api
+import xymusic.composeapp.generated.resources.lyrics_single_api_hint
+import xymusic.composeapp.generated.resources.music_note_24px
+import xymusic.composeapp.generated.resources.password_24px
+import xymusic.composeapp.generated.resources.prioritize_music_service_api
+import xymusic.composeapp.generated.resources.save
+import xymusic.composeapp.generated.resources.settings_24px
 
 @Composable
 fun JvmCustomApiScreen(

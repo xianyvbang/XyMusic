@@ -1,10 +1,10 @@
 package cn.xybbz.common.enums
 
 import org.jetbrains.compose.resources.StringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.album
-import xymusic_kmp.composeapp.generated.resources.music
-import xymusic_kmp.composeapp.generated.resources.resemblance_artist
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.album
+import xymusic.composeapp.generated.resources.music
+import xymusic.composeapp.generated.resources.resemblance_artist
 
 /**
  * 收藏Tab

@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -61,18 +61,18 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.confirm_delete_connection
-import xymusic_kmp.composeapp.generated.resources.connection_settings_list
-import xymusic_kmp.composeapp.generated.resources.delete_connection
-import xymusic_kmp.composeapp.generated.resources.library_add_24px
-import xymusic_kmp.composeapp.generated.resources.modify_connection
-import xymusic_kmp.composeapp.generated.resources.more_vert_24px
-import xymusic_kmp.composeapp.generated.resources.music_library
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
-import xymusic_kmp.composeapp.generated.resources.view_connection_info
-import xymusic_kmp.composeapp.generated.resources.warning
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.confirm_delete_connection
+import xymusic.composeapp.generated.resources.connection_settings_list
+import xymusic.composeapp.generated.resources.delete_connection
+import xymusic.composeapp.generated.resources.library_add_24px
+import xymusic.composeapp.generated.resources.modify_connection
+import xymusic.composeapp.generated.resources.more_vert_24px
+import xymusic.composeapp.generated.resources.music_library
+import xymusic.composeapp.generated.resources.return_setting_screen
+import xymusic.composeapp.generated.resources.view_connection_info
+import xymusic.composeapp.generated.resources.warning
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**

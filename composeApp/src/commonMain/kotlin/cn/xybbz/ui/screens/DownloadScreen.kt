@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -77,31 +77,31 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.cancel_24px
-import xymusic_kmp.composeapp.generated.resources.cancel_download
-import xymusic_kmp.composeapp.generated.resources.close
-import xymusic_kmp.composeapp.generated.resources.close_24px
-import xymusic_kmp.composeapp.generated.resources.confirm_delete_download
-import xymusic_kmp.composeapp.generated.resources.delete_24px
-import xymusic_kmp.composeapp.generated.resources.download_completed
-import xymusic_kmp.composeapp.generated.resources.download_failed
-import xymusic_kmp.composeapp.generated.resources.download_failed_with_reason
-import xymusic_kmp.composeapp.generated.resources.download_list
-import xymusic_kmp.composeapp.generated.resources.download_status_queued
-import xymusic_kmp.composeapp.generated.resources.more_vert_24px
-import xymusic_kmp.composeapp.generated.resources.open_selection_function
-import xymusic_kmp.composeapp.generated.resources.open_settings_page_button
-import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
-import xymusic_kmp.composeapp.generated.resources.pause_24px
-import xymusic_kmp.composeapp.generated.resources.play_circle_24px
-import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
-import xymusic_kmp.composeapp.generated.resources.remove_download_title
-import xymusic_kmp.composeapp.generated.resources.return_home
-import xymusic_kmp.composeapp.generated.resources.settings_24px
-import xymusic_kmp.composeapp.generated.resources.tap_to_resume_download
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.cancel_24px
+import xymusic.composeapp.generated.resources.cancel_download
+import xymusic.composeapp.generated.resources.close
+import xymusic.composeapp.generated.resources.close_24px
+import xymusic.composeapp.generated.resources.confirm_delete_download
+import xymusic.composeapp.generated.resources.delete_24px
+import xymusic.composeapp.generated.resources.download_completed
+import xymusic.composeapp.generated.resources.download_failed
+import xymusic.composeapp.generated.resources.download_failed_with_reason
+import xymusic.composeapp.generated.resources.download_list
+import xymusic.composeapp.generated.resources.download_status_queued
+import xymusic.composeapp.generated.resources.more_vert_24px
+import xymusic.composeapp.generated.resources.open_selection_function
+import xymusic.composeapp.generated.resources.open_settings_page_button
+import xymusic.composeapp.generated.resources.other_operations_button_suffix
+import xymusic.composeapp.generated.resources.pause_24px
+import xymusic.composeapp.generated.resources.play_circle_24px
+import xymusic.composeapp.generated.resources.playlist_add_check_24px
+import xymusic.composeapp.generated.resources.remove_download_title
+import xymusic.composeapp.generated.resources.return_home
+import xymusic.composeapp.generated.resources.settings_24px
+import xymusic.composeapp.generated.resources.tap_to_resume_download
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 private val DownloadCardMinHeight = 112.dp

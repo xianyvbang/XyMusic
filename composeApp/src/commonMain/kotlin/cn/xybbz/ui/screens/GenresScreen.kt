@@ -1,4 +1,4 @@
-﻿package cn.xybbz.ui.screens
+package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,10 +20,10 @@ import cn.xybbz.viewmodel.GenresViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.genres
-import xymusic_kmp.composeapp.generated.resources.return_home
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.genres
+import xymusic.composeapp.generated.resources.return_home
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**

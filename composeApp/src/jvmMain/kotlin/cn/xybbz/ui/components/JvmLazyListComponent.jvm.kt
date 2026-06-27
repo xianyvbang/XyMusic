@@ -34,9 +34,9 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.request_failed_check_network
-import xymusic_kmp.composeapp.generated.resources.retry_button
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.request_failed_check_network
+import xymusic.composeapp.generated.resources.retry_button
 
 /**
  * JVM 详情页使用的分页列表封装。

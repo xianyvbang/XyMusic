@@ -44,20 +44,20 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyEdit
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.cancel_24px
-import xymusic_kmp.composeapp.generated.resources.clear
-import xymusic_kmp.composeapp.generated.resources.connection_address_hint
-import xymusic_kmp.composeapp.generated.resources.httpInput
-import xymusic_kmp.composeapp.generated.resources.http_24px
-import xymusic_kmp.composeapp.generated.resources.label_24px
-import xymusic_kmp.composeapp.generated.resources.password
-import xymusic_kmp.composeapp.generated.resources.password_24px
-import xymusic_kmp.composeapp.generated.resources.person_24px
-import xymusic_kmp.composeapp.generated.resources.set_alias
-import xymusic_kmp.composeapp.generated.resources.username
-import xymusic_kmp.composeapp.generated.resources.visibility_24px
-import xymusic_kmp.composeapp.generated.resources.visibility_off_24px
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.cancel_24px
+import xymusic.composeapp.generated.resources.clear
+import xymusic.composeapp.generated.resources.connection_address_hint
+import xymusic.composeapp.generated.resources.httpInput
+import xymusic.composeapp.generated.resources.http_24px
+import xymusic.composeapp.generated.resources.label_24px
+import xymusic.composeapp.generated.resources.password
+import xymusic.composeapp.generated.resources.password_24px
+import xymusic.composeapp.generated.resources.person_24px
+import xymusic.composeapp.generated.resources.set_alias
+import xymusic.composeapp.generated.resources.username
+import xymusic.composeapp.generated.resources.visibility_24px
+import xymusic.composeapp.generated.resources.visibility_off_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**

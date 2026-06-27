@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -91,23 +91,23 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.album_cover
-import xymusic_kmp.composeapp.generated.resources.close_player_screen
-import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
-import xymusic_kmp.composeapp.generated.resources.more_vert_24px
-import xymusic_kmp.composeapp.generated.resources.music_list
-import xymusic_kmp.composeapp.generated.resources.next_track
-import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
-import xymusic_kmp.composeapp.generated.resources.pause
-import xymusic_kmp.composeapp.generated.resources.pause_24px
-import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
-import xymusic_kmp.composeapp.generated.resources.playing
-import xymusic_kmp.composeapp.generated.resources.previous_track
-import xymusic_kmp.composeapp.generated.resources.queue_music_24px
-import xymusic_kmp.composeapp.generated.resources.skip_next_24px
-import xymusic_kmp.composeapp.generated.resources.skip_previous_24px
-import xymusic_kmp.composeapp.generated.resources.unknown_artist
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.album_cover
+import xymusic.composeapp.generated.resources.close_player_screen
+import xymusic.composeapp.generated.resources.keyboard_arrow_down_24px
+import xymusic.composeapp.generated.resources.more_vert_24px
+import xymusic.composeapp.generated.resources.music_list
+import xymusic.composeapp.generated.resources.next_track
+import xymusic.composeapp.generated.resources.other_operations_button_suffix
+import xymusic.composeapp.generated.resources.pause
+import xymusic.composeapp.generated.resources.pause_24px
+import xymusic.composeapp.generated.resources.play_arrow_24px
+import xymusic.composeapp.generated.resources.playing
+import xymusic.composeapp.generated.resources.previous_track
+import xymusic.composeapp.generated.resources.queue_music_24px
+import xymusic.composeapp.generated.resources.skip_next_24px
+import xymusic.composeapp.generated.resources.skip_previous_24px
+import xymusic.composeapp.generated.resources.unknown_artist
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 

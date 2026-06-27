@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -56,10 +56,10 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.LanguageConfigViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.label_24px
-import xymusic_kmp.composeapp.generated.resources.settings_24px
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.label_24px
+import xymusic.composeapp.generated.resources.settings_24px
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 
 /**

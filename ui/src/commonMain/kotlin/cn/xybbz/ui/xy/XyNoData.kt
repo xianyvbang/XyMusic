@@ -28,8 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.ui.generated.resources.Res
-import xymusic_kmp.ui.generated.resources.no_data
+import xymusic.ui.generated.resources.Res
+import xymusic.ui.generated.resources.no_data
 
 @Composable
 fun XyNoData(modifier: Modifier = Modifier) {

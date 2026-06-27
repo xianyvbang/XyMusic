@@ -7,8 +7,8 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.core.DownloadRequest
 import cn.xybbz.localdata.data.music.XyMusic
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_download_list
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.add_download_list
 
 suspend fun DownloaderManager.enqueueMusicDownload(
     musicData: XyMusic,

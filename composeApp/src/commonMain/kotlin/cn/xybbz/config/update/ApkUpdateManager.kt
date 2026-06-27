@@ -1,4 +1,4 @@
-﻿///*
+///*
 // *   XyMusic
 // *   Copyright (C) 2023 xianyvbang
 // *
@@ -23,7 +23,7 @@
 //import androidx.compose.runtime.getValue
 //import androidx.compose.runtime.mutableStateOf
 //import androidx.compose.runtime.setValue
-//import xymusic_kmp.composeapp.generated.resources.Res
+//import xymusic.composeapp.generated.resources.Res
 //import cn.xybbz.api.client.version.VersionApiClient
 //import cn.xybbz.api.client.version.data.ReleasesData
 //import cn.xybbz.common.constants.Constants

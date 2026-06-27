@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -78,18 +78,18 @@ import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.album
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.artist
-import xymusic_kmp.composeapp.generated.resources.cancel_24px
-import xymusic_kmp.composeapp.generated.resources.clear
-import xymusic_kmp.composeapp.generated.resources.music
-import xymusic_kmp.composeapp.generated.resources.return_home
-import xymusic_kmp.composeapp.generated.resources.search_24px
-import xymusic_kmp.composeapp.generated.resources.search_box_icon
-import xymusic_kmp.composeapp.generated.resources.search_history
-import xymusic_kmp.composeapp.generated.resources.search_music_album_artist
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.album
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.artist
+import xymusic.composeapp.generated.resources.cancel_24px
+import xymusic.composeapp.generated.resources.clear
+import xymusic.composeapp.generated.resources.music
+import xymusic.composeapp.generated.resources.return_home
+import xymusic.composeapp.generated.resources.search_24px
+import xymusic.composeapp.generated.resources.search_box_icon
+import xymusic.composeapp.generated.resources.search_history
+import xymusic.composeapp.generated.resources.search_music_album_artist
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 

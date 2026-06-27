@@ -41,9 +41,9 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.cover_suffix
-import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.cover_suffix
+import xymusic.composeapp.generated.resources.music_xy_placeholder_foreground
 
 /**
  * JVM 桌面端音乐卡片，底部文字支持 hover 小手和变色。

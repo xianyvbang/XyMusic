@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -75,14 +75,14 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.av_timer_24px
-import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
-import xymusic_kmp.composeapp.generated.resources.info_24px
-import xymusic_kmp.composeapp.generated.resources.music_cache_limit_title
-import xymusic_kmp.composeapp.generated.resources.music_note_24px
-import xymusic_kmp.composeapp.generated.resources.speed_24px
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.av_timer_24px
+import xymusic.composeapp.generated.resources.folder_managed_24px
+import xymusic.composeapp.generated.resources.info_24px
+import xymusic.composeapp.generated.resources.music_cache_limit_title
+import xymusic.composeapp.generated.resources.music_note_24px
+import xymusic.composeapp.generated.resources.speed_24px
 
 /**
  * JVM 桌面端音乐缓存上限设置页面。

@@ -1,23 +1,23 @@
-﻿package cn.xybbz.common.enums
+package cn.xybbz.common.enums
 
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.album_24px
-import xymusic_kmp.composeapp.generated.resources.date_range_24px
-import xymusic_kmp.composeapp.generated.resources.more_time_24px
-import xymusic_kmp.composeapp.generated.resources.music_note_24px
-import xymusic_kmp.composeapp.generated.resources.person_24px
-import xymusic_kmp.composeapp.generated.resources.sort_by_album_name_asc
-import xymusic_kmp.composeapp.generated.resources.sort_by_album_name_desc
-import xymusic_kmp.composeapp.generated.resources.sort_by_artist_name_asc
-import xymusic_kmp.composeapp.generated.resources.sort_by_artist_name_desc
-import xymusic_kmp.composeapp.generated.resources.sort_by_create_time_asc
-import xymusic_kmp.composeapp.generated.resources.sort_by_create_time_desc
-import xymusic_kmp.composeapp.generated.resources.sort_by_music_name_asc
-import xymusic_kmp.composeapp.generated.resources.sort_by_music_name_desc
-import xymusic_kmp.composeapp.generated.resources.sort_by_premiere_date_asc
-import xymusic_kmp.composeapp.generated.resources.sort_by_premiere_date_desc
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.album_24px
+import xymusic.composeapp.generated.resources.date_range_24px
+import xymusic.composeapp.generated.resources.more_time_24px
+import xymusic.composeapp.generated.resources.music_note_24px
+import xymusic.composeapp.generated.resources.person_24px
+import xymusic.composeapp.generated.resources.sort_by_album_name_asc
+import xymusic.composeapp.generated.resources.sort_by_album_name_desc
+import xymusic.composeapp.generated.resources.sort_by_artist_name_asc
+import xymusic.composeapp.generated.resources.sort_by_artist_name_desc
+import xymusic.composeapp.generated.resources.sort_by_create_time_asc
+import xymusic.composeapp.generated.resources.sort_by_create_time_desc
+import xymusic.composeapp.generated.resources.sort_by_music_name_asc
+import xymusic.composeapp.generated.resources.sort_by_music_name_desc
+import xymusic.composeapp.generated.resources.sort_by_premiere_date_asc
+import xymusic.composeapp.generated.resources.sort_by_premiere_date_desc
 
 enum class SortTypeEnum(val title: StringResource, val painter: DrawableResource?) {
     /**

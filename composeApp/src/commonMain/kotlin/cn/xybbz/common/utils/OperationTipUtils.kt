@@ -10,10 +10,10 @@ import cn.xybbz.ui.components.dismiss
 import cn.xybbz.ui.components.show
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.StringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.delete_failed
-import xymusic_kmp.composeapp.generated.resources.delete_success
-import xymusic_kmp.composeapp.generated.resources.deleting
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.delete_failed
+import xymusic.composeapp.generated.resources.delete_success
+import xymusic.composeapp.generated.resources.deleting
 
 /**
  * 统一操作提示

@@ -2,20 +2,20 @@ package cn.xybbz.router
 
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.album_24px
-import xymusic_kmp.composeapp.generated.resources.album
-import xymusic_kmp.composeapp.generated.resources.all_music
-import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
-import xymusic_kmp.composeapp.generated.resources.favorite
-import xymusic_kmp.composeapp.generated.resources.genres
-import xymusic_kmp.composeapp.generated.resources.home
-import xymusic_kmp.composeapp.generated.resources.label_24px
-import xymusic_kmp.composeapp.generated.resources.local_and_download
-import xymusic_kmp.composeapp.generated.resources.person_24px
-import xymusic_kmp.composeapp.generated.resources.artist
-import xymusic_kmp.composeapp.generated.resources.music_note_24px
-import xymusic_kmp.composeapp.generated.resources.queue_music_24px
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.album_24px
+import xymusic.composeapp.generated.resources.album
+import xymusic.composeapp.generated.resources.all_music
+import xymusic.composeapp.generated.resources.favorite_border_24px
+import xymusic.composeapp.generated.resources.favorite
+import xymusic.composeapp.generated.resources.genres
+import xymusic.composeapp.generated.resources.home
+import xymusic.composeapp.generated.resources.label_24px
+import xymusic.composeapp.generated.resources.local_and_download
+import xymusic.composeapp.generated.resources.person_24px
+import xymusic.composeapp.generated.resources.artist
+import xymusic.composeapp.generated.resources.music_note_24px
+import xymusic.composeapp.generated.resources.queue_music_24px
 
 data class JvmTopRouterData(
     val title: StringResource,

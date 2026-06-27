@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -40,8 +40,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.get_music_failed_cannot_play
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.get_music_failed_cannot_play
 
 /**
  * 一次播放请求所需的上下文数据。

@@ -1,4 +1,4 @@
-﻿package cn.xybbz.ui.components
+package cn.xybbz.ui.components
 
 
 import androidx.compose.foundation.layout.Arrangement
@@ -16,11 +16,11 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.ItemTrailingContent
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.delete_24px
-import xymusic_kmp.composeapp.generated.resources.delete_playlist
-import xymusic_kmp.composeapp.generated.resources.edit_24px
-import xymusic_kmp.composeapp.generated.resources.modify_playlist_name
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.delete_24px
+import xymusic.composeapp.generated.resources.delete_playlist
+import xymusic.composeapp.generated.resources.edit_24px
+import xymusic.composeapp.generated.resources.modify_playlist_name
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @Composable

@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -36,8 +36,8 @@ import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_download_list
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.add_download_list
 
 @KoinViewModel
 class SnackBarPlayerViewModel(

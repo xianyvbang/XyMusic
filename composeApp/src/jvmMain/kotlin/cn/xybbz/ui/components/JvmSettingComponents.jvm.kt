@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -76,11 +76,11 @@ import cn.xybbz.ui.xy.XyTextSub
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
-import xymusic_kmp.composeapp.generated.resources.download_24px
-import xymusic_kmp.composeapp.generated.resources.download_max_list
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.chevron_right_24px
+import xymusic.composeapp.generated.resources.download_24px
+import xymusic.composeapp.generated.resources.download_max_list
 
 /** JVM 设置页头部摘要卡统一宽度，按连接、代理和媒体库等信息密度更高的页面取值。 */
 internal val JvmSettingSummaryCardWidth = 284.dp

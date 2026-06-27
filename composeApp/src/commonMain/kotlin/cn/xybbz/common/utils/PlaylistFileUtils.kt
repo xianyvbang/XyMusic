@@ -23,8 +23,8 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.CancellationException
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.playlist_export_failed
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.playlist_export_failed
 
 /**
  * 歌单备份文件工具类

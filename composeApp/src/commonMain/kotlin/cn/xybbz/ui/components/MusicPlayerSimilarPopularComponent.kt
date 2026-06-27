@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -36,10 +36,10 @@ import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyNoData
 import cn.xybbz.ui.xy.XyText
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.playlist_add_24px
-import xymusic_kmp.composeapp.generated.resources.similar_music
-import xymusic_kmp.composeapp.generated.resources.top_music
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.playlist_add_24px
+import xymusic.composeapp.generated.resources.similar_music
+import xymusic.composeapp.generated.resources.top_music
 
 @Composable
 fun MusicPlayerSimilarPopularComponent(

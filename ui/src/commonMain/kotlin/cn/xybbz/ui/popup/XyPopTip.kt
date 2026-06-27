@@ -37,10 +37,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.ui.generated.resources.Res
-import xymusic_kmp.ui.generated.resources.check_24px
-import xymusic_kmp.ui.generated.resources.info_24px
-import xymusic_kmp.ui.generated.resources.warning_24px
+import xymusic.ui.generated.resources.Res
+import xymusic.ui.generated.resources.check_24px
+import xymusic.ui.generated.resources.info_24px
+import xymusic.ui.generated.resources.warning_24px
 
 enum class XyPopTipStyle {
     Default,

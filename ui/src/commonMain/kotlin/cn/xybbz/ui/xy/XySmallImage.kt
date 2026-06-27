@@ -47,8 +47,8 @@ import com.github.panpf.sketch.request.placeholder
 import com.github.panpf.sketch.request.repeatCount
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-import xymusic_kmp.ui.generated.resources.Res
-import xymusic_kmp.ui.generated.resources.default_placeholder
+import xymusic.ui.generated.resources.Res
+import xymusic.ui.generated.resources.default_placeholder
 
 @Composable
 fun XySmallImage(

@@ -31,8 +31,8 @@ import cn.xybbz.config.image.CoverImageUrls
 import cn.xybbz.ui.xy.XyImage
 import com.github.panpf.sketch.request.LoadState
 import org.jetbrains.compose.resources.painterResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.disc_placeholder
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.disc_placeholder
 
 internal data class PlayerCoverModels(
     val model: Any?,

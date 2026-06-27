@@ -4,12 +4,12 @@ import cn.xybbz.localdata.enums.DataSourceType
 import org.jetbrains.compose.resources.DrawableResource
 import org.koin.core.qualifier.Qualifier
 import org.koin.core.qualifier.named
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.emby_logo_24
-import xymusic_kmp.composeapp.generated.resources.icon_jellyfin
-import xymusic_kmp.composeapp.generated.resources.navidrome_icon
-import xymusic_kmp.composeapp.generated.resources.plex_logos
-import xymusic_kmp.composeapp.generated.resources.subsonic_logo
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.emby_logo_24
+import xymusic.composeapp.generated.resources.icon_jellyfin
+import xymusic.composeapp.generated.resources.navidrome_icon
+import xymusic.composeapp.generated.resources.plex_logos
+import xymusic.composeapp.generated.resources.subsonic_logo
 
 val DataSourceType.img: DrawableResource
     get() = when (this) {

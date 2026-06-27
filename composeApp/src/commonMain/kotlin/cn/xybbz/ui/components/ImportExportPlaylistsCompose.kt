@@ -39,10 +39,10 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.export_playlist
-import xymusic_kmp.composeapp.generated.resources.please_select_export_format
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.export_playlist
+import xymusic.composeapp.generated.resources.please_select_export_format
 
 /**
  * 文件名中各平台都不适合作为真实文件名的字符。

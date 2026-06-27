@@ -13,9 +13,9 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.KoinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.save_failed
-import xymusic_kmp.composeapp.generated.resources.save_success
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.save_failed
+import xymusic.composeapp.generated.resources.save_success
 
 @KoinViewModel
 class CustomLyricsViewModel (

@@ -1,4 +1,4 @@
-﻿package cn.xybbz.ui.screens
+package cn.xybbz.ui.screens
 
 
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,10 +27,10 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.artist
-import xymusic_kmp.composeapp.generated.resources.get_all_artists
-import xymusic_kmp.composeapp.generated.resources.get_favorite_artists
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.artist
+import xymusic.composeapp.generated.resources.get_all_artists
+import xymusic.composeapp.generated.resources.get_favorite_artists
 
 /**
  * 艺术家页面

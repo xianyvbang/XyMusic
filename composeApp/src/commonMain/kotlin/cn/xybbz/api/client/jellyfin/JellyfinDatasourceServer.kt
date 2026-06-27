@@ -68,8 +68,8 @@ import io.ktor.client.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import org.jetbrains.compose.resources.getString
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.unknown_artist
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.unknown_artist
 
 /**
  * Jellyfin api客户端管理

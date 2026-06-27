@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -43,11 +43,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.connection_address_or_username_cannot_be_empty
-import xymusic_kmp.composeapp.generated.resources.empty_info
-import xymusic_kmp.composeapp.generated.resources.plex_resource_error
-import xymusic_kmp.composeapp.generated.resources.username_cannot_be_empty
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.connection_address_or_username_cannot_be_empty
+import xymusic.composeapp.generated.resources.empty_info
+import xymusic.composeapp.generated.resources.plex_resource_error
+import xymusic.composeapp.generated.resources.username_cannot_be_empty
 
 /**
  * 连接model

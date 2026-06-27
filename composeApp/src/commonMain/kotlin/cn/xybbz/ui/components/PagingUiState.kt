@@ -4,10 +4,10 @@ import androidx.compose.runtime.Immutable
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import org.jetbrains.compose.resources.StringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.empty_info
-import xymusic_kmp.composeapp.generated.resources.loading
-import xymusic_kmp.composeapp.generated.resources.reached_bottom
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.empty_info
+import xymusic.composeapp.generated.resources.loading
+import xymusic.composeapp.generated.resources.reached_bottom
 
 /**
  * Paging 在界面层使用的统一状态模型。

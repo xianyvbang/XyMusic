@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -49,11 +49,11 @@ import androidx.compose.ui.zIndex
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.Res
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyTextSubSmall
-import xymusic_kmp.composeapp.generated.resources.loading
+import xymusic.composeapp.generated.resources.loading
 
 
 var loadingObjectList = mutableStateListOf<LoadingObject>()

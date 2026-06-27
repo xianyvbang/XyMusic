@@ -18,7 +18,7 @@
 
 package cn.xybbz.music
 
-import xymusic_kmp.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.*
 
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 

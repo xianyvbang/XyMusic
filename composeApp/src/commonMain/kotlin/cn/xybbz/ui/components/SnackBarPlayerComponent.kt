@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -90,28 +90,28 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_to_playlist
-import xymusic_kmp.composeapp.generated.resources.delete_24px
-import xymusic_kmp.composeapp.generated.resources.delete_local_permanently
-import xymusic_kmp.composeapp.generated.resources.delete_permanently
-import xymusic_kmp.composeapp.generated.resources.download_24px
-import xymusic_kmp.composeapp.generated.resources.download_list
-import xymusic_kmp.composeapp.generated.resources.heart_broken_24px
-import xymusic_kmp.composeapp.generated.resources.music_cover
-import xymusic_kmp.composeapp.generated.resources.music_list
-import xymusic_kmp.composeapp.generated.resources.music_remove_from_playlist
-import xymusic_kmp.composeapp.generated.resources.pause
-import xymusic_kmp.composeapp.generated.resources.pause_24px
-import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
-import xymusic_kmp.composeapp.generated.resources.play_selected
-import xymusic_kmp.composeapp.generated.resources.playing
-import xymusic_kmp.composeapp.generated.resources.playlist_add_24px
-import xymusic_kmp.composeapp.generated.resources.playlist_play_24px
-import xymusic_kmp.composeapp.generated.resources.playlist_remove_24px
-import xymusic_kmp.composeapp.generated.resources.please_select
-import xymusic_kmp.composeapp.generated.resources.queue_music_24px
-import xymusic_kmp.composeapp.generated.resources.unfavorite
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.add_to_playlist
+import xymusic.composeapp.generated.resources.delete_24px
+import xymusic.composeapp.generated.resources.delete_local_permanently
+import xymusic.composeapp.generated.resources.delete_permanently
+import xymusic.composeapp.generated.resources.download_24px
+import xymusic.composeapp.generated.resources.download_list
+import xymusic.composeapp.generated.resources.heart_broken_24px
+import xymusic.composeapp.generated.resources.music_cover
+import xymusic.composeapp.generated.resources.music_list
+import xymusic.composeapp.generated.resources.music_remove_from_playlist
+import xymusic.composeapp.generated.resources.pause
+import xymusic.composeapp.generated.resources.pause_24px
+import xymusic.composeapp.generated.resources.play_arrow_24px
+import xymusic.composeapp.generated.resources.play_selected
+import xymusic.composeapp.generated.resources.playing
+import xymusic.composeapp.generated.resources.playlist_add_24px
+import xymusic.composeapp.generated.resources.playlist_play_24px
+import xymusic.composeapp.generated.resources.playlist_remove_24px
+import xymusic.composeapp.generated.resources.please_select
+import xymusic.composeapp.generated.resources.queue_music_24px
+import xymusic.composeapp.generated.resources.unfavorite
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)

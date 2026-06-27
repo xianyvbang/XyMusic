@@ -12,11 +12,11 @@ import androidx.compose.ui.graphics.Color
 import cn.xybbz.ui.xy.XyIconButton
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.ui.generated.resources.Res
-import xymusic_kmp.ui.generated.resources.favorite_24px
-import xymusic_kmp.ui.generated.resources.favorite_added
-import xymusic_kmp.ui.generated.resources.favorite_border_24px
-import xymusic_kmp.ui.generated.resources.favorite_removed
+import xymusic.ui.generated.resources.Res
+import xymusic.ui.generated.resources.favorite_24px
+import xymusic.ui.generated.resources.favorite_added
+import xymusic.ui.generated.resources.favorite_border_24px
+import xymusic.ui.generated.resources.favorite_removed
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

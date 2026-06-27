@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -62,10 +62,10 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyItem
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.cover_suffix
-import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
-import xymusic_kmp.composeapp.generated.resources.unknown_artist
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.cover_suffix
+import xymusic.composeapp.generated.resources.music_xy_placeholder_foreground
+import xymusic.composeapp.generated.resources.unknown_artist
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**

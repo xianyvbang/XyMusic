@@ -1,4 +1,4 @@
-﻿package cn.xybbz.ui.screens
+package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -59,17 +59,17 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.check_24px
-import xymusic_kmp.composeapp.generated.resources.close_24px
-import xymusic_kmp.composeapp.generated.resources.http_24px
-import xymusic_kmp.composeapp.generated.resources.info_24px
-import xymusic_kmp.composeapp.generated.resources.poxy_config
-import xymusic_kmp.composeapp.generated.resources.proxy_address
-import xymusic_kmp.composeapp.generated.resources.save
-import xymusic_kmp.composeapp.generated.resources.signal_cellular_alt_24px
-import xymusic_kmp.composeapp.generated.resources.test_connection
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.check_24px
+import xymusic.composeapp.generated.resources.close_24px
+import xymusic.composeapp.generated.resources.http_24px
+import xymusic.composeapp.generated.resources.info_24px
+import xymusic.composeapp.generated.resources.poxy_config
+import xymusic.composeapp.generated.resources.proxy_address
+import xymusic.composeapp.generated.resources.save
+import xymusic.composeapp.generated.resources.signal_cellular_alt_24px
+import xymusic.composeapp.generated.resources.test_connection
 import java.net.URI
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 

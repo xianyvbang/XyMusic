@@ -1,4 +1,4 @@
-﻿package cn.xybbz.ui.screens
+package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,14 +33,14 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.open_proxy
-import xymusic_kmp.composeapp.generated.resources.poxy_config
-import xymusic_kmp.composeapp.generated.resources.proxy_address
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
-import xymusic_kmp.composeapp.generated.resources.save
-import xymusic_kmp.composeapp.generated.resources.test_connection
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.open_proxy
+import xymusic.composeapp.generated.resources.poxy_config
+import xymusic.composeapp.generated.resources.proxy_address
+import xymusic.composeapp.generated.resources.return_setting_screen
+import xymusic.composeapp.generated.resources.save
+import xymusic.composeapp.generated.resources.test_connection
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**

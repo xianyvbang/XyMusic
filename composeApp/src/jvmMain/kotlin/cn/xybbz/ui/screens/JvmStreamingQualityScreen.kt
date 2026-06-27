@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -44,12 +44,12 @@ import cn.xybbz.viewmodel.StreamingQualityViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.online_music_quality
-import xymusic_kmp.composeapp.generated.resources.settings_voice_24px
-import xymusic_kmp.composeapp.generated.resources.transcoding_format
-import xymusic_kmp.composeapp.generated.resources.volume_up_24px
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.online_music_quality
+import xymusic.composeapp.generated.resources.settings_voice_24px
+import xymusic.composeapp.generated.resources.transcoding_format
+import xymusic.composeapp.generated.resources.volume_up_24px
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 
 @Composable

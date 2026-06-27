@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -50,9 +50,9 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.enter_settings
-import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_right_24px
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.enter_settings
+import xymusic.composeapp.generated.resources.keyboard_arrow_right_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @Composable

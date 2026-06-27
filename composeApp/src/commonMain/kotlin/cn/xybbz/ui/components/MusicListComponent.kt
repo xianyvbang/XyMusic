@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -82,13 +82,13 @@ import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyTextSubSmall
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.clear
-import xymusic_kmp.composeapp.generated.resources.close_24px
-import xymusic_kmp.composeapp.generated.resources.current_playlist
-import xymusic_kmp.composeapp.generated.resources.playing
-import xymusic_kmp.composeapp.generated.resources.reached_bottom
-import xymusic_kmp.composeapp.generated.resources.remove_from_playlist
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.clear
+import xymusic.composeapp.generated.resources.close_24px
+import xymusic.composeapp.generated.resources.current_playlist
+import xymusic.composeapp.generated.resources.playing
+import xymusic.composeapp.generated.resources.reached_bottom
+import xymusic.composeapp.generated.resources.remove_from_playlist
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

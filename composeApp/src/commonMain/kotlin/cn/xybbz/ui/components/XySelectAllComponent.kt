@@ -1,4 +1,4 @@
-﻿package cn.xybbz.ui.components
+package cn.xybbz.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -15,9 +15,9 @@ import androidx.compose.ui.text.font.FontWeight
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.deselect_all
-import xymusic_kmp.composeapp.generated.resources.select_all
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.deselect_all
+import xymusic.composeapp.generated.resources.select_all
 
 @Composable
 fun XySelectAllComponent(

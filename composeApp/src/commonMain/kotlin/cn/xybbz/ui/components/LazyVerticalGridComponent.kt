@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -39,8 +39,8 @@ import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.theme.XyTheme
 import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.reached_bottom
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.reached_bottom
 
 /**
  * LazyVerticalGrid组件抽取-可以拖拽

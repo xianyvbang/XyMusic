@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -53,8 +53,8 @@ import kotlinx.datetime.format.FormatStringsInDatetimeFormats
 import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
 import org.koin.core.annotation.KoinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.cancel_timer_close_message
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.cancel_timer_close_message
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 

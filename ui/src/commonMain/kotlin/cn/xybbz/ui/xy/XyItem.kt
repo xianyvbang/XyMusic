@@ -83,15 +83,15 @@ import cn.xybbz.ui.theme.XyTheme
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.ui.generated.resources.Res
-import xymusic_kmp.ui.generated.resources.check_24px
-import xymusic_kmp.ui.generated.resources.default_placeholder
-import xymusic_kmp.ui.generated.resources.download_done_24px
-import xymusic_kmp.ui.generated.resources.downloaded
-import xymusic_kmp.ui.generated.resources.favorite_border_24px
-import xymusic_kmp.ui.generated.resources.favorited
-import xymusic_kmp.ui.generated.resources.image_suffix
-import xymusic_kmp.ui.generated.resources.selected
+import xymusic.ui.generated.resources.Res
+import xymusic.ui.generated.resources.check_24px
+import xymusic.ui.generated.resources.default_placeholder
+import xymusic.ui.generated.resources.download_done_24px
+import xymusic.ui.generated.resources.downloaded
+import xymusic.ui.generated.resources.favorite_border_24px
+import xymusic.ui.generated.resources.favorited
+import xymusic.ui.generated.resources.image_suffix
+import xymusic.ui.generated.resources.selected
 
 /**
  * 列表单项

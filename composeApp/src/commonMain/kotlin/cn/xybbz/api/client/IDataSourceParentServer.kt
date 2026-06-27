@@ -103,10 +103,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.jetbrains.compose.resources.getString
 import org.koin.core.component.get
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.logging_in
-import xymusic_kmp.composeapp.generated.resources.server_version_cannot_be_obtained
-import xymusic_kmp.composeapp.generated.resources.server_version_too_low
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.logging_in
+import xymusic.composeapp.generated.resources.server_version_cannot_be_obtained
+import xymusic.composeapp.generated.resources.server_version_too_low
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Clock

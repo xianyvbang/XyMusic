@@ -12,11 +12,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import cn.xybbz.ui.theme.XyTheme
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.ui.generated.resources.Res
-import xymusic_kmp.ui.generated.resources.close_window
-import xymusic_kmp.ui.generated.resources.maximize_window
-import xymusic_kmp.ui.generated.resources.minimize_window
-import xymusic_kmp.ui.generated.resources.restore_window
+import xymusic.ui.generated.resources.Res
+import xymusic.ui.generated.resources.close_window
+import xymusic.ui.generated.resources.maximize_window
+import xymusic.ui.generated.resources.minimize_window
+import xymusic.ui.generated.resources.restore_window
 
 @Composable
 internal fun RowScope.DefaultDesktopWindowTitleBarBack(

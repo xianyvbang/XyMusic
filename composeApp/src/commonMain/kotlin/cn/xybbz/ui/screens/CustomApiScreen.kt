@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -66,19 +66,19 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.custom_cover_api
-import xymusic_kmp.composeapp.generated.resources.custom_cover_api_hint
-import xymusic_kmp.composeapp.generated.resources.customize_lyric_settings
-import xymusic_kmp.composeapp.generated.resources.lyrics_api_auth_key
-import xymusic_kmp.composeapp.generated.resources.lyrics_api_auth_key_hint
-import xymusic_kmp.composeapp.generated.resources.lyrics_single_api
-import xymusic_kmp.composeapp.generated.resources.lyrics_single_api_hint
-import xymusic_kmp.composeapp.generated.resources.prioritize_music_service_api
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
-import xymusic_kmp.composeapp.generated.resources.save
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.custom_cover_api
+import xymusic.composeapp.generated.resources.custom_cover_api_hint
+import xymusic.composeapp.generated.resources.customize_lyric_settings
+import xymusic.composeapp.generated.resources.lyrics_api_auth_key
+import xymusic.composeapp.generated.resources.lyrics_api_auth_key_hint
+import xymusic.composeapp.generated.resources.lyrics_single_api
+import xymusic.composeapp.generated.resources.lyrics_single_api_hint
+import xymusic.composeapp.generated.resources.prioritize_music_service_api
+import xymusic.composeapp.generated.resources.return_setting_screen
+import xymusic.composeapp.generated.resources.save
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)

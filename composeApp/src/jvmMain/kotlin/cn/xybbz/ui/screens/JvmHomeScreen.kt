@@ -54,13 +54,13 @@ import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.daily_recommendations
-import xymusic_kmp.composeapp.generated.resources.latest_albums
-import xymusic_kmp.composeapp.generated.resources.most_played
-import xymusic_kmp.composeapp.generated.resources.recently_played_albums
-import xymusic_kmp.composeapp.generated.resources.recently_played_music
-import xymusic_kmp.composeapp.generated.resources.view_more
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.daily_recommendations
+import xymusic.composeapp.generated.resources.latest_albums
+import xymusic.composeapp.generated.resources.most_played
+import xymusic.composeapp.generated.resources.recently_played_albums
+import xymusic.composeapp.generated.resources.recently_played_music
+import xymusic.composeapp.generated.resources.view_more
 
 private val HomeMusicTableColumns = SongTableColumns(
     showFavoriteColumn = true,

@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -47,21 +47,21 @@ import cn.xybbz.viewmodel.MemoryManagementViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.audio_cache
-import xymusic_kmp.composeapp.generated.resources.audio_cache_description
-import xymusic_kmp.composeapp.generated.resources.clear
-import xymusic_kmp.composeapp.generated.resources.confirm_delete_database
-import xymusic_kmp.composeapp.generated.resources.database_data
-import xymusic_kmp.composeapp.generated.resources.database_data_description
-import xymusic_kmp.composeapp.generated.resources.essential_data
-import xymusic_kmp.composeapp.generated.resources.essential_data_description
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
-import xymusic_kmp.composeapp.generated.resources.storage_management
-import xymusic_kmp.composeapp.generated.resources.temporary_cache
-import xymusic_kmp.composeapp.generated.resources.temporary_cache_description
-import xymusic_kmp.composeapp.generated.resources.warning
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.audio_cache
+import xymusic.composeapp.generated.resources.audio_cache_description
+import xymusic.composeapp.generated.resources.clear
+import xymusic.composeapp.generated.resources.confirm_delete_database
+import xymusic.composeapp.generated.resources.database_data
+import xymusic.composeapp.generated.resources.database_data_description
+import xymusic.composeapp.generated.resources.essential_data
+import xymusic.composeapp.generated.resources.essential_data_description
+import xymusic.composeapp.generated.resources.return_setting_screen
+import xymusic.composeapp.generated.resources.storage_management
+import xymusic.composeapp.generated.resources.temporary_cache
+import xymusic.composeapp.generated.resources.temporary_cache_description
+import xymusic.composeapp.generated.resources.warning
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)

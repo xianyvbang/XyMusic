@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -34,11 +34,11 @@ import cn.xybbz.config.security.CredentialStoreException
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.InjectedParam
 import org.koin.core.annotation.KoinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.alias_cannot_be_empty
-import xymusic_kmp.composeapp.generated.resources.connection_address_cannot_be_empty
-import xymusic_kmp.composeapp.generated.resources.connection_credential_store_unavailable
-import xymusic_kmp.composeapp.generated.resources.modify_success
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.alias_cannot_be_empty
+import xymusic.composeapp.generated.resources.connection_address_cannot_be_empty
+import xymusic.composeapp.generated.resources.connection_credential_store_unavailable
+import xymusic.composeapp.generated.resources.modify_success
 
 @KoinViewModel
 class ConnectionConfigInfoViewModel(

@@ -68,8 +68,8 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.jetbrains.compose.resources.getString
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.unknown_playlist
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.unknown_playlist
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 

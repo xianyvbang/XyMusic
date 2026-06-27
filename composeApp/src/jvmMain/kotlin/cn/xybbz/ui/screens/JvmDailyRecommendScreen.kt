@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -42,8 +42,8 @@ import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.daily_recommendations
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.daily_recommendations
 
 private val JvmDailyRecommendMusicTableColumns = SongTableColumns(
     showFavoriteColumn = true,

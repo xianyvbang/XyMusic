@@ -19,8 +19,8 @@
 package cn.xybbz.common.enums
 
 import org.jetbrains.compose.resources.StringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.transcode_audio_bit_rate_type_text_01
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.transcode_audio_bit_rate_type_text_01
 
 enum class TranscodeAudioBitRateType(
     /** 码率的固定展示文案，数字码率直接使用该字段。 */

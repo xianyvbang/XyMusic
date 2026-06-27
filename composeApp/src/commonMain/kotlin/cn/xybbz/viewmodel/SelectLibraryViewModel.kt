@@ -33,8 +33,8 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.koin.core.annotation.InjectedParam
 import org.koin.core.annotation.KoinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.all_media_libraries
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.all_media_libraries
 
 @KoinViewModel
 class SelectLibraryViewModel(

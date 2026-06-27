@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -42,14 +42,14 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.any_network
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.mobile_network_playback_sound_quality
-import xymusic_kmp.composeapp.generated.resources.online_music_quality
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
-import xymusic_kmp.composeapp.generated.resources.transcoding_format
-import xymusic_kmp.composeapp.generated.resources.wifi_network
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.any_network
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.mobile_network_playback_sound_quality
+import xymusic.composeapp.generated.resources.online_music_quality
+import xymusic.composeapp.generated.resources.return_setting_screen
+import xymusic.composeapp.generated.resources.transcoding_format
+import xymusic.composeapp.generated.resources.wifi_network
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)

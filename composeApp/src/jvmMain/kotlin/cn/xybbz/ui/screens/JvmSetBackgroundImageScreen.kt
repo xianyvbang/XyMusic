@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -84,17 +84,17 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.album_24px
-import xymusic_kmp.composeapp.generated.resources.background_image
-import xymusic_kmp.composeapp.generated.resources.background_image_setting
-import xymusic_kmp.composeapp.generated.resources.clear_image
-import xymusic_kmp.composeapp.generated.resources.close_24px
-import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
-import xymusic_kmp.composeapp.generated.resources.select_image
-import xymusic_kmp.composeapp.generated.resources.settings_24px
-import xymusic_kmp.composeapp.generated.resources.visibility_24px
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.album_24px
+import xymusic.composeapp.generated.resources.background_image
+import xymusic.composeapp.generated.resources.background_image_setting
+import xymusic.composeapp.generated.resources.clear_image
+import xymusic.composeapp.generated.resources.close_24px
+import xymusic.composeapp.generated.resources.folder_managed_24px
+import xymusic.composeapp.generated.resources.select_image
+import xymusic.composeapp.generated.resources.settings_24px
+import xymusic.composeapp.generated.resources.visibility_24px
 
 /** JVM 背景信息行展示数据。 */
 private data class JvmBackgroundInfoRow(

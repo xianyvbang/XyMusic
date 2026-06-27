@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -95,20 +95,20 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.cancel_download
-import xymusic_kmp.composeapp.generated.resources.confirm_delete_download
-import xymusic_kmp.composeapp.generated.resources.delete_24px
-import xymusic_kmp.composeapp.generated.resources.download_24px
-import xymusic_kmp.composeapp.generated.resources.download_completed
-import xymusic_kmp.composeapp.generated.resources.download_failed_with_reason
-import xymusic_kmp.composeapp.generated.resources.download_status_queued
-import xymusic_kmp.composeapp.generated.resources.local_and_download
-import xymusic_kmp.composeapp.generated.resources.music_note_24px
-import xymusic_kmp.composeapp.generated.resources.pause_24px
-import xymusic_kmp.composeapp.generated.resources.remove_download_title
-import xymusic_kmp.composeapp.generated.resources.tap_to_resume_download
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.cancel_download
+import xymusic.composeapp.generated.resources.confirm_delete_download
+import xymusic.composeapp.generated.resources.delete_24px
+import xymusic.composeapp.generated.resources.download_24px
+import xymusic.composeapp.generated.resources.download_completed
+import xymusic.composeapp.generated.resources.download_failed_with_reason
+import xymusic.composeapp.generated.resources.download_status_queued
+import xymusic.composeapp.generated.resources.local_and_download
+import xymusic.composeapp.generated.resources.music_note_24px
+import xymusic.composeapp.generated.resources.pause_24px
+import xymusic.composeapp.generated.resources.remove_download_title
+import xymusic.composeapp.generated.resources.tap_to_resume_download
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 private val JvmDownloadSongColumnWidth = 420.dp

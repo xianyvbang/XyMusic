@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -45,9 +45,9 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.cancel
-import xymusic_kmp.composeapp.generated.resources.confirm
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.cancel
+import xymusic.composeapp.generated.resources.confirm
 
 val mainMoeScope = MainScope()
 

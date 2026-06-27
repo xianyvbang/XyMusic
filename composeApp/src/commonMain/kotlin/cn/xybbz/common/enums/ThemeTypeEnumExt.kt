@@ -20,10 +20,10 @@ package cn.xybbz.common.enums
 
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import org.jetbrains.compose.resources.StringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.dark
-import xymusic_kmp.composeapp.generated.resources.light
-import xymusic_kmp.composeapp.generated.resources.system
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.dark
+import xymusic.composeapp.generated.resources.light
+import xymusic.composeapp.generated.resources.system
 
 fun ThemeTypeEnum.toResStringInt(): StringResource{
     return when(this){

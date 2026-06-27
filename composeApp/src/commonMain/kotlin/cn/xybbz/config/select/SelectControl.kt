@@ -38,9 +38,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.delete_permanently
-import xymusic_kmp.composeapp.generated.resources.delete_warning
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.delete_permanently
+import xymusic.composeapp.generated.resources.delete_warning
 
 /**
  * 选择模式下的界面状态。

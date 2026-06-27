@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -57,13 +57,13 @@ import cn.xybbz.viewmodel.SetBackgroundImageViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.background_image
-import xymusic_kmp.composeapp.generated.resources.background_image_setting
-import xymusic_kmp.composeapp.generated.resources.clear_image
-import xymusic_kmp.composeapp.generated.resources.return_interface_settings
-import xymusic_kmp.composeapp.generated.resources.select_image
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.background_image
+import xymusic.composeapp.generated.resources.background_image_setting
+import xymusic.composeapp.generated.resources.clear_image
+import xymusic.composeapp.generated.resources.return_interface_settings
+import xymusic.composeapp.generated.resources.select_image
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**

@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -74,27 +74,27 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.connection_address
-import xymusic_kmp.composeapp.generated.resources.connection_info
-import xymusic_kmp.composeapp.generated.resources.connection_media_library_all_label
-import xymusic_kmp.composeapp.generated.resources.connection_permissions_label
-import xymusic_kmp.composeapp.generated.resources.connection_server_version_label
-import xymusic_kmp.composeapp.generated.resources.connection_server_version_unknown_label
-import xymusic_kmp.composeapp.generated.resources.current_connection
-import xymusic_kmp.composeapp.generated.resources.delete_prefix
-import xymusic_kmp.composeapp.generated.resources.download
-import xymusic_kmp.composeapp.generated.resources.http_24px
-import xymusic_kmp.composeapp.generated.resources.info_24px
-import xymusic_kmp.composeapp.generated.resources.label_24px
-import xymusic_kmp.composeapp.generated.resources.password
-import xymusic_kmp.composeapp.generated.resources.person_24px
-import xymusic_kmp.composeapp.generated.resources.refresh_24px
-import xymusic_kmp.composeapp.generated.resources.save
-import xymusic_kmp.composeapp.generated.resources.set_alias
-import xymusic_kmp.composeapp.generated.resources.warning_24px
-import xymusic_kmp.composeapp.generated.resources.username
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.connection_address
+import xymusic.composeapp.generated.resources.connection_info
+import xymusic.composeapp.generated.resources.connection_media_library_all_label
+import xymusic.composeapp.generated.resources.connection_permissions_label
+import xymusic.composeapp.generated.resources.connection_server_version_label
+import xymusic.composeapp.generated.resources.connection_server_version_unknown_label
+import xymusic.composeapp.generated.resources.current_connection
+import xymusic.composeapp.generated.resources.delete_prefix
+import xymusic.composeapp.generated.resources.download
+import xymusic.composeapp.generated.resources.http_24px
+import xymusic.composeapp.generated.resources.info_24px
+import xymusic.composeapp.generated.resources.label_24px
+import xymusic.composeapp.generated.resources.password
+import xymusic.composeapp.generated.resources.person_24px
+import xymusic.composeapp.generated.resources.refresh_24px
+import xymusic.composeapp.generated.resources.save
+import xymusic.composeapp.generated.resources.set_alias
+import xymusic.composeapp.generated.resources.warning_24px
+import xymusic.composeapp.generated.resources.username
 import java.net.URI
 
 /**

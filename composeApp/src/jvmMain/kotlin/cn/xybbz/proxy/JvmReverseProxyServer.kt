@@ -1,6 +1,6 @@
 package cn.xybbz.proxy
 
-import xymusic_kmp.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.*
 
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.constants.ApiConstants

@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -39,14 +39,14 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.koin.core.annotation.KoinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.era_title_decade
-import xymusic_kmp.composeapp.generated.resources.list_loop
-import xymusic_kmp.composeapp.generated.resources.repeat_24px
-import xymusic_kmp.composeapp.generated.resources.repeat_one_24px
-import xymusic_kmp.composeapp.generated.resources.shuffle_24px
-import xymusic_kmp.composeapp.generated.resources.shuffle_play
-import xymusic_kmp.composeapp.generated.resources.single_loop
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.era_title_decade
+import xymusic.composeapp.generated.resources.list_loop
+import xymusic.composeapp.generated.resources.repeat_24px
+import xymusic.composeapp.generated.resources.repeat_one_24px
+import xymusic.composeapp.generated.resources.shuffle_24px
+import xymusic.composeapp.generated.resources.shuffle_play
+import xymusic.composeapp.generated.resources.single_loop
 
 
 @KoinViewModel

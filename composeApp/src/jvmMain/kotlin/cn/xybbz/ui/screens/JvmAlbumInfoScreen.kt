@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -119,39 +119,39 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.album
-import xymusic_kmp.composeapp.generated.resources.album_cover
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.close_24px
-import xymusic_kmp.composeapp.generated.resources.close_selection
-import xymusic_kmp.composeapp.generated.resources.confirm_delete_playlist
-import xymusic_kmp.composeapp.generated.resources.delete_24px
-import xymusic_kmp.composeapp.generated.resources.delete_playback_history
-import xymusic_kmp.composeapp.generated.resources.delete_playlist
-import xymusic_kmp.composeapp.generated.resources.edit_24px
-import xymusic_kmp.composeapp.generated.resources.enable_playback_history
-import xymusic_kmp.composeapp.generated.resources.export_playlist
-import xymusic_kmp.composeapp.generated.resources.import_info
-import xymusic_kmp.composeapp.generated.resources.import_playlist
-import xymusic_kmp.composeapp.generated.resources.import_playlist_hint
-import xymusic_kmp.composeapp.generated.resources.login_24px
-import xymusic_kmp.composeapp.generated.resources.modify_playlist_name
-import xymusic_kmp.composeapp.generated.resources.more_vert_24px
-import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
-import xymusic_kmp.composeapp.generated.resources.open_operation_menu
-import xymusic_kmp.composeapp.generated.resources.open_sort_and_filter_menu
-import xymusic_kmp.composeapp.generated.resources.pause_circle_24px
-import xymusic_kmp.composeapp.generated.resources.pause_playback
-import xymusic_kmp.composeapp.generated.resources.play_circle_24px
-import xymusic_kmp.composeapp.generated.resources.playlist
-import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
-import xymusic_kmp.composeapp.generated.resources.rename_playlist
-import xymusic_kmp.composeapp.generated.resources.resume_playback
-import xymusic_kmp.composeapp.generated.resources.return_album_page
-import xymusic_kmp.composeapp.generated.resources.select
-import xymusic_kmp.composeapp.generated.resources.songs_count_suffix
-import xymusic_kmp.composeapp.generated.resources.start_playback
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.album
+import xymusic.composeapp.generated.resources.album_cover
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.close_24px
+import xymusic.composeapp.generated.resources.close_selection
+import xymusic.composeapp.generated.resources.confirm_delete_playlist
+import xymusic.composeapp.generated.resources.delete_24px
+import xymusic.composeapp.generated.resources.delete_playback_history
+import xymusic.composeapp.generated.resources.delete_playlist
+import xymusic.composeapp.generated.resources.edit_24px
+import xymusic.composeapp.generated.resources.enable_playback_history
+import xymusic.composeapp.generated.resources.export_playlist
+import xymusic.composeapp.generated.resources.import_info
+import xymusic.composeapp.generated.resources.import_playlist
+import xymusic.composeapp.generated.resources.import_playlist_hint
+import xymusic.composeapp.generated.resources.login_24px
+import xymusic.composeapp.generated.resources.modify_playlist_name
+import xymusic.composeapp.generated.resources.more_vert_24px
+import xymusic.composeapp.generated.resources.music_xy_placeholder_foreground
+import xymusic.composeapp.generated.resources.open_operation_menu
+import xymusic.composeapp.generated.resources.open_sort_and_filter_menu
+import xymusic.composeapp.generated.resources.pause_circle_24px
+import xymusic.composeapp.generated.resources.pause_playback
+import xymusic.composeapp.generated.resources.play_circle_24px
+import xymusic.composeapp.generated.resources.playlist
+import xymusic.composeapp.generated.resources.playlist_add_check_24px
+import xymusic.composeapp.generated.resources.rename_playlist
+import xymusic.composeapp.generated.resources.resume_playback
+import xymusic.composeapp.generated.resources.return_album_page
+import xymusic.composeapp.generated.resources.select
+import xymusic.composeapp.generated.resources.songs_count_suffix
+import xymusic.composeapp.generated.resources.start_playback
 import kotlin.io.encoding.ExperimentalEncodingApi
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 

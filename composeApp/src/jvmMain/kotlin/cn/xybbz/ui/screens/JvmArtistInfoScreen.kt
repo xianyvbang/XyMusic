@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -116,25 +116,25 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.album
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.artist
-import xymusic_kmp.composeapp.generated.resources.artist_cover
-import xymusic_kmp.composeapp.generated.resources.artrist_info
-import xymusic_kmp.composeapp.generated.resources.close_24px
-import xymusic_kmp.composeapp.generated.resources.close_selection
-import xymusic_kmp.composeapp.generated.resources.no_description
-import xymusic_kmp.composeapp.generated.resources.pause_circle_24px
-import xymusic_kmp.composeapp.generated.resources.pause_playback
-import xymusic_kmp.composeapp.generated.resources.play_circle_24px
-import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
-import xymusic_kmp.composeapp.generated.resources.reached_bottom
-import xymusic_kmp.composeapp.generated.resources.resume_playback
-import xymusic_kmp.composeapp.generated.resources.return_home
-import xymusic_kmp.composeapp.generated.resources.select
-import xymusic_kmp.composeapp.generated.resources.songs_count_suffix
-import xymusic_kmp.composeapp.generated.resources.start_playback
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.album
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.artist
+import xymusic.composeapp.generated.resources.artist_cover
+import xymusic.composeapp.generated.resources.artrist_info
+import xymusic.composeapp.generated.resources.close_24px
+import xymusic.composeapp.generated.resources.close_selection
+import xymusic.composeapp.generated.resources.no_description
+import xymusic.composeapp.generated.resources.pause_circle_24px
+import xymusic.composeapp.generated.resources.pause_playback
+import xymusic.composeapp.generated.resources.play_circle_24px
+import xymusic.composeapp.generated.resources.playlist_add_check_24px
+import xymusic.composeapp.generated.resources.reached_bottom
+import xymusic.composeapp.generated.resources.resume_playback
+import xymusic.composeapp.generated.resources.return_home
+import xymusic.composeapp.generated.resources.select
+import xymusic.composeapp.generated.resources.songs_count_suffix
+import xymusic.composeapp.generated.resources.start_playback
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 private val JvmArtistInfoDesktopCoverSize = 232.dp

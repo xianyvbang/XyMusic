@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -100,41 +100,41 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.*
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
-import xymusic_kmp.composeapp.generated.resources.back_to_input_credentials
-import xymusic_kmp.composeapp.generated.resources.cancel_24px
-import xymusic_kmp.composeapp.generated.resources.celebrate
-import xymusic_kmp.composeapp.generated.resources.check_24px
-import xymusic_kmp.composeapp.generated.resources.clear
-import xymusic_kmp.composeapp.generated.resources.connect
-import xymusic_kmp.composeapp.generated.resources.connect_to_service
-import xymusic_kmp.composeapp.generated.resources.connection_address_hint
-import xymusic_kmp.composeapp.generated.resources.connection_address_or_username_cannot_be_empty
-import xymusic_kmp.composeapp.generated.resources.connection_success_image
-import xymusic_kmp.composeapp.generated.resources.connection_successful
-import xymusic_kmp.composeapp.generated.resources.enter_page
-import xymusic_kmp.composeapp.generated.resources.fetching_resources
-import xymusic_kmp.composeapp.generated.resources.httpInput
-import xymusic_kmp.composeapp.generated.resources.http_24px
-import xymusic_kmp.composeapp.generated.resources.label_24px
-import xymusic_kmp.composeapp.generated.resources.logging_in
-import xymusic_kmp.composeapp.generated.resources.login_failed
-import xymusic_kmp.composeapp.generated.resources.password
-import xymusic_kmp.composeapp.generated.resources.password_24px
-import xymusic_kmp.composeapp.generated.resources.person_24px
-import xymusic_kmp.composeapp.generated.resources.reconnect
-import xymusic_kmp.composeapp.generated.resources.reselect
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
-import xymusic_kmp.composeapp.generated.resources.select_protocol
-import xymusic_kmp.composeapp.generated.resources.selected_item
-import xymusic_kmp.composeapp.generated.resources.server_connection
-import xymusic_kmp.composeapp.generated.resources.set_alias
-import xymusic_kmp.composeapp.generated.resources.username
-import xymusic_kmp.composeapp.generated.resources.username_cannot_be_empty
-import xymusic_kmp.composeapp.generated.resources.visibility_24px
-import xymusic_kmp.composeapp.generated.resources.visibility_off_24px
+import xymusic.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.back_to_input_credentials
+import xymusic.composeapp.generated.resources.cancel_24px
+import xymusic.composeapp.generated.resources.celebrate
+import xymusic.composeapp.generated.resources.check_24px
+import xymusic.composeapp.generated.resources.clear
+import xymusic.composeapp.generated.resources.connect
+import xymusic.composeapp.generated.resources.connect_to_service
+import xymusic.composeapp.generated.resources.connection_address_hint
+import xymusic.composeapp.generated.resources.connection_address_or_username_cannot_be_empty
+import xymusic.composeapp.generated.resources.connection_success_image
+import xymusic.composeapp.generated.resources.connection_successful
+import xymusic.composeapp.generated.resources.enter_page
+import xymusic.composeapp.generated.resources.fetching_resources
+import xymusic.composeapp.generated.resources.httpInput
+import xymusic.composeapp.generated.resources.http_24px
+import xymusic.composeapp.generated.resources.label_24px
+import xymusic.composeapp.generated.resources.logging_in
+import xymusic.composeapp.generated.resources.login_failed
+import xymusic.composeapp.generated.resources.password
+import xymusic.composeapp.generated.resources.password_24px
+import xymusic.composeapp.generated.resources.person_24px
+import xymusic.composeapp.generated.resources.reconnect
+import xymusic.composeapp.generated.resources.reselect
+import xymusic.composeapp.generated.resources.return_setting_screen
+import xymusic.composeapp.generated.resources.select_protocol
+import xymusic.composeapp.generated.resources.selected_item
+import xymusic.composeapp.generated.resources.server_connection
+import xymusic.composeapp.generated.resources.set_alias
+import xymusic.composeapp.generated.resources.username
+import xymusic.composeapp.generated.resources.username_cannot_be_empty
+import xymusic.composeapp.generated.resources.visibility_24px
+import xymusic.composeapp.generated.resources.visibility_off_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @Composable

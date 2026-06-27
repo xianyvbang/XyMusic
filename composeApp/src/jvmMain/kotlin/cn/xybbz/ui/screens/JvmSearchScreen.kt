@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -68,11 +68,11 @@ import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.album
-import xymusic_kmp.composeapp.generated.resources.artist
-import xymusic_kmp.composeapp.generated.resources.music
-import xymusic_kmp.composeapp.generated.resources.search
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.album
+import xymusic.composeapp.generated.resources.artist
+import xymusic.composeapp.generated.resources.music
+import xymusic.composeapp.generated.resources.search
 
 private val SearchMusicTableColumns = SongTableColumns(
     showFavoriteColumn = true,

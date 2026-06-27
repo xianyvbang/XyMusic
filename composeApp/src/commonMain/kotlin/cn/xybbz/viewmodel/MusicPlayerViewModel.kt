@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -39,10 +39,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.lyrics_tab
-import xymusic_kmp.composeapp.generated.resources.recommend
-import xymusic_kmp.composeapp.generated.resources.song_tab
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.lyrics_tab
+import xymusic.composeapp.generated.resources.recommend
+import xymusic.composeapp.generated.resources.song_tab
 
 @KoinViewModel
 class MusicPlayerViewModel (

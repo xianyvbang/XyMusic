@@ -1,4 +1,4 @@
-﻿package cn.xybbz.ui.components
+package cn.xybbz.ui.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -9,7 +9,7 @@ import io.github.vinceglb.filekit.absolutePath
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.*
+import xymusic.composeapp.generated.resources.*
 
 internal interface BackgroundImagePicker {
     fun pickImage()
