@@ -19,14 +19,32 @@
 package cn.xybbz.localdata.data.recommend
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
+import cn.xybbz.localdata.data.connection.ConnectionConfig
+import cn.xybbz.localdata.data.music.XyMusic
 import kotlin.time.Clock
 
 @Entity(
     tableName = "xy_daily_recommend_history",
     primaryKeys = ["songId", "connectionId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = ConnectionConfig::class,
+            parentColumns = ["id"],
+            childColumns = ["connectionId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = XyMusic::class,
+            parentColumns = ["itemId", "connectionId"],
+            childColumns = ["songId", "connectionId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
     indices = [
         Index("connectionId"),
+        Index(value = ["songId", "connectionId"]),
         Index(value = ["connectionId", "timestamp"]),
         Index(value = ["connectionId", "mediaLibraryId", "timestamp"])
     ]

@@ -31,7 +31,7 @@ interface XyGenreDao {
     @Query("select * from xy_genre")
     suspend fun selectAll():List<XyGenre>
 
-    @Query("select * from xy_genre where itemId = :genreId")
+    @Query("select * from xy_genre where itemId = :genreId and connectionId = (select xs.connectionId from xy_settings xs)")
     suspend fun selectById(genreId: String): XyGenre?
 
     @Query("select count(itemId) from xy_genre where connectionId = (select xs.connectionId from xy_settings xs)")

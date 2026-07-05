@@ -20,9 +20,11 @@ package cn.xybbz.localdata.data.music
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.TypeConverters
 import cn.xybbz.database.converter.JsonStringListTypeConverter
+import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlin.time.Clock
 
 /**
@@ -36,7 +38,21 @@ import kotlin.time.Clock
  */
 @Entity(
     primaryKeys = ["musicId","connectionId"],
-    indices = [Index("connectionId"), Index("musicId")]
+    foreignKeys = [
+        ForeignKey(
+            entity = ConnectionConfig::class,
+            parentColumns = ["id"],
+            childColumns = ["connectionId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = XyMusic::class,
+            parentColumns = ["itemId", "connectionId"],
+            childColumns = ["musicId", "connectionId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("connectionId"), Index("musicId"), Index(value = ["musicId", "connectionId"])]
 )
 @TypeConverters(JsonStringListTypeConverter::class)
 data class HomeMusic(

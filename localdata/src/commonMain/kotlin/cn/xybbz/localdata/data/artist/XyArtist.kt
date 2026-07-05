@@ -19,9 +19,10 @@
 package cn.xybbz.localdata.data.artist
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Ignore
 import androidx.room.Index
-import androidx.room.PrimaryKey
+import cn.xybbz.localdata.data.connection.ConnectionConfig
 
 /**
  * 艺术家项目
@@ -36,10 +37,18 @@ import androidx.room.PrimaryKey
  */
 @Entity(
     tableName = "xy_artist",
+    primaryKeys = ["artistId", "connectionId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = ConnectionConfig::class,
+            parentColumns = ["id"],
+            childColumns = ["connectionId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
     indices = [Index("connectionId")]
 )
 data class XyArtist(
-    @PrimaryKey
     val artistId: String = "",
     val pic: String? = "",
     val backdrop:String? = null,

@@ -19,8 +19,11 @@
 package cn.xybbz.localdata.data.setting
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.common.LocalConstants
+import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.LanguageType
@@ -28,7 +31,18 @@ import cn.xybbz.localdata.enums.ThemeTypeEnum
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@Entity(tableName = "xy_settings")
+@Entity(
+    tableName = "xy_settings",
+    foreignKeys = [
+        ForeignKey(
+            entity = ConnectionConfig::class,
+            parentColumns = ["id"],
+            childColumns = ["connectionId"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ],
+    indices = [Index("connectionId")]
+)
 data class XySettings @OptIn(ExperimentalUuidApi::class) constructor(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

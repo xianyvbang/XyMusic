@@ -615,18 +615,22 @@ interface XyMusicDao {
     @Query(
         """
         DELETE FROM xy_music 
-        WHERE itemId NOT IN (SELECT musicId FROM HomeMusic)
-          AND itemId NOT IN (SELECT musicId FROM AlbumMusic)
-          AND itemId NOT IN (SELECT musicId FROM ArtistMusic)
-          AND itemId NOT IN (SELECT musicId FROM PlaylistMusic)
-          AND itemId NOT IN (SELECT musicId FROM favoritemusic)
-          AND itemId NOT IN (SELECT musicId FROM maximumplaymusic)
-          AND itemId NOT IN (SELECT musicId FROM newestmusic)
-          AND itemId NOT IN (SELECT musicId FROM playhistorymusic)
-          AND itemId NOT IN (SELECT musicId FROM playqueuemusic)
-          AND itemId NOT IN (SELECT songId FROM xy_daily_recommend_history)
-          AND itemId NOT IN (SELECT musicId FROM artistpopularmusic)
-          AND itemId NOT IN (SELECT musicId FROM similarmusic)
+        WHERE connectionId = (select connectionId from xy_settings)
+          AND NOT EXISTS (SELECT 1 FROM HomeMusic hm WHERE hm.musicId = xy_music.itemId AND hm.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM AlbumMusic am WHERE am.musicId = xy_music.itemId AND am.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM ArtistMusic am WHERE am.musicId = xy_music.itemId AND am.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM PlaylistMusic pm WHERE pm.musicId = xy_music.itemId AND pm.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM favoritemusic fm WHERE fm.musicId = xy_music.itemId AND fm.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM maximumplaymusic mpm WHERE mpm.musicId = xy_music.itemId AND mpm.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM newestmusic nm WHERE nm.musicId = xy_music.itemId AND nm.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM playhistorymusic phm WHERE phm.musicId = xy_music.itemId AND phm.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM playqueuemusic pqm WHERE pqm.musicId = xy_music.itemId AND pqm.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM xy_daily_recommend_history drh WHERE drh.songId = xy_music.itemId AND drh.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM artistpopularmusic apm WHERE apm.musicId = xy_music.itemId AND apm.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM similarmusic sm WHERE sm.musicId = xy_music.itemId AND sm.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM similarmusic sm WHERE sm.sourceMusicId = xy_music.itemId AND sm.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM progress pr WHERE pr.musicId = xy_music.itemId AND pr.connectionId = xy_music.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM xy_lrc_config lc WHERE lc.itemId = xy_music.itemId AND lc.connectionId = xy_music.connectionId)
     """
     )
     suspend fun removeByNotQuote()
@@ -653,9 +657,14 @@ interface XyMusicDao {
     @Query(
         """
         select hm.* from HomeMusic hm
-        inner join xy_music mi on hm.musicId = mi.itemId
+        inner join xy_music mi on hm.musicId = mi.itemId and hm.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and hm.connectionId = xs.connectionId
-        WHERE (:ifFavorite IS NULL OR mi.itemId in(select musicId from favoritemusic))
+        WHERE (:ifFavorite IS NULL OR EXISTS (
+            select 1 from favoritemusic fm
+            where fm.musicId = mi.itemId
+            and fm.connectionId = mi.connectionId
+            and fm.ifFavorite = 1
+        ))
         AND (:startYear IS NULL OR mi.year between :startYear and :endYear)
         order by hm.`index`
     """
@@ -674,7 +683,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from favoritemusic fm
-        inner join xy_music mi on fm.musicId = mi.itemId
+        inner join xy_music mi on fm.musicId = mi.itemId and fm.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and fm.connectionId = xs.connectionId
         order by `index`
     """
@@ -697,7 +706,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from artistmusic am
-        inner join xy_music mi on am.musicId = mi.itemId
+        inner join xy_music mi on am.musicId = mi.itemId and am.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and am.connectionId = xs.connectionId
         where  am.artistId = :artistId
         order by `index`
@@ -714,7 +723,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from albummusic am
-        inner join xy_music mi on am.musicId = mi.itemId
+        inner join xy_music mi on am.musicId = mi.itemId and am.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and am.connectionId = xs.connectionId
         where  am.albumId = :albumId
         order by `index`
@@ -731,7 +740,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from playlistmusic pm
-        inner join xy_music mi on pm.musicId = mi.itemId
+        inner join xy_music mi on pm.musicId = mi.itemId and pm.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and pm.connectionId = xs.connectionId
         where  pm.playlistId = :playlistId
         order by `index`
@@ -808,8 +817,8 @@ interface XyMusicDao {
          select itemId,mi.pic,mi.name,mi.album,mi.albumName as albumName,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,
                 mi.size,null as filePath,mi.runTimeTicks,mi.plexPlayKey as plexPlayKey,'' as musicUrl, 0 as ifHls, 1 as static,0 as audioBitRate
         from HomeMusic hm
-        inner join xy_music mi on hm.musicId = mi.itemId
-        left join favoritemusic fm on hm.musicId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
+        inner join xy_music mi on hm.musicId = mi.itemId and hm.connectionId = mi.connectionId
+        left join favoritemusic fm on hm.musicId = fm.musicId and fm.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and hm.connectionId = xs.connectionId
         order by hm.`index`
         limit :limit offset :startIndex 
@@ -826,7 +835,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from PlayHistoryMusic phm
-        inner join xy_music mi on phm.musicId = mi.itemId
+        inner join xy_music mi on phm.musicId = mi.itemId and phm.connectionId = mi.connectionId
          where phm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         order by phm.`index`
@@ -840,7 +849,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from PlayHistoryMusic phm
-        inner join xy_music mi on phm.musicId = mi.itemId
+        inner join xy_music mi on phm.musicId = mi.itemId and phm.connectionId = mi.connectionId
          where phm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         order by phm.`index`
@@ -857,7 +866,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from PlayHistoryMusic phm
-        inner join xy_music mi on phm.musicId = mi.itemId
+        inner join xy_music mi on phm.musicId = mi.itemId and phm.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and phm.connectionId = xs.connectionId
         order by `index`
         limit :limit
@@ -875,8 +884,8 @@ interface XyMusicDao {
         select itemId,mi.pic,mi.name,mi.album,mi.albumName as albumName,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,null as filePath,
                 mi.runTimeTicks,mi.plexPlayKey as plexPlayKey,'' as musicUrl, 0 as ifHls, 1 as static,0 as audioBitRate
         from playqueuemusic pqm
-        inner join xy_music mi on pqm.musicId = mi.itemId
-        left join favoritemusic fm on pqm.musicId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
+        inner join xy_music mi on pqm.musicId = mi.itemId and pqm.connectionId = mi.connectionId
+        left join favoritemusic fm on pqm.musicId = fm.musicId and fm.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and pqm.connectionId = xs.connectionId
         order by pqm.`index`
     """
@@ -897,7 +906,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from playlistmusic pqm
-        inner join xy_music mi on pqm.musicId = mi.itemId
+        inner join xy_music mi on pqm.musicId = mi.itemId and pqm.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and pqm.connectionId = xs.connectionId
         order by `index`
     """
@@ -910,7 +919,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from maximumplaymusic mpm
-        inner join xy_music mi on mpm.musicId = mi.itemId
+        inner join xy_music mi on mpm.musicId = mi.itemId and mpm.connectionId = mi.connectionId
          where mpm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         order by mpm.`index`
@@ -925,7 +934,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from maximumplaymusic mpm
-        inner join xy_music mi on mpm.musicId = mi.itemId
+        inner join xy_music mi on mpm.musicId = mi.itemId and mpm.connectionId = mi.connectionId
          where mpm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         order by mpm.`index`
@@ -940,7 +949,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from xy_daily_recommend_history mpm
-        inner join xy_music mi on mpm.songId = mi.itemId
+        inner join xy_music mi on mpm.songId = mi.itemId and mpm.connectionId = mi.connectionId
         inner join xy_settings xs on mpm.connectionId = xs.connectionId
         inner join xy_connection_config xcc on xcc.id = xs.connectionId
         where mi.connectionId = xs.connectionId
@@ -959,7 +968,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from xy_daily_recommend_history mpm
-        inner join xy_music mi on mpm.songId = mi.itemId
+        inner join xy_music mi on mpm.songId = mi.itemId and mpm.connectionId = mi.connectionId
         where mpm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         and (
@@ -977,7 +986,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from artistpopularmusic apm
-        inner join xy_music mi on apm.musicId = mi.itemId
+        inner join xy_music mi on apm.musicId = mi.itemId and apm.connectionId = mi.connectionId
         where apm.artistKey = :artistKey
         and apm.connectionId = :connectionId
         and mi.connectionId = :connectionId
@@ -1004,7 +1013,7 @@ interface XyMusicDao {
     @Query(
         """
         select mi.* from similarmusic sm
-        inner join xy_music mi on sm.musicId = mi.itemId
+        inner join xy_music mi on sm.musicId = mi.itemId and sm.connectionId = mi.connectionId
         where sm.sourceMusicId = :sourceMusicId
         and sm.connectionId = :connectionId
         and mi.connectionId = :connectionId
@@ -1044,7 +1053,7 @@ interface XyMusicDao {
         select itemId,mi.pic,mi.name,mi.album,mi.albumName as albumName,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,null as filePath,
                 mi.runTimeTicks,mi.plexPlayKey as plexPlayKey,'' as musicUrl, 0 as ifHls, 1 as static,0 as audioBitRate
         from xy_music mi 
-        left join favoritemusic fm on mi.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
+        left join favoritemusic fm on mi.itemId = fm.musicId and fm.connectionId = mi.connectionId
         where mi.itemId = :itemId
         and mi.connectionId = (select connectionId from xy_settings)
         limit 1
@@ -1064,7 +1073,7 @@ interface XyMusicDao {
         select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,null as filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey,'' as musicUrl, 0 as ifHls, 1 as static,0 as audioBitRate
         from xy_music xm 
-        left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
+        left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = xm.connectionId
         where xm.itemId in (:itemIds) 
         and xm.connectionId = (select connectionId from xy_settings)
     """
@@ -1118,7 +1127,7 @@ interface XyMusicDao {
     @Query(
         """
        select mi.* from artistmusic am
-        inner join xy_music mi on am.musicId = mi.itemId
+        inner join xy_music mi on am.musicId = mi.itemId and am.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and am.connectionId = xs.connectionId
         order by `index`
         limit :limit
@@ -1178,6 +1187,7 @@ interface XyMusicDao {
         ORDER BY `index` ASC
         LIMIT (SELECT COUNT(*) FROM playhistorymusic where connectionId = (select connectionId from xy_settings)) - 20
     )
+    AND connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun deletePlayHistoryMusic()
@@ -1266,7 +1276,7 @@ interface XyMusicDao {
         """
         select xm.*
         from playlistmusic pm 
-        inner join xy_music xm on xm.itemId = pm.musicId
+        inner join xy_music xm on xm.itemId = pm.musicId and xm.connectionId = pm.connectionId
         inner join xy_settings xs on pm.connectionId = xs.connectionId
         where pm.playlistId = :playlistId
         order by `index` limit 1
@@ -1285,8 +1295,8 @@ interface XyMusicDao {
         select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,null as filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey,'' as musicUrl, 0 as ifHls, 1 as static,0 as audioBitRate
         from albummusic am
-        inner join xy_music xm on am.musicId = xm.itemId
-        left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
+        inner join xy_music xm on am.musicId = xm.itemId and am.connectionId = xm.connectionId
+        left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = xm.connectionId
          inner join xy_settings xs on xm.connectionId = xs.connectionId and am.connectionId = xs.connectionId
         where am.albumId = :albumId
         order by am.`index`
@@ -1305,8 +1315,8 @@ interface XyMusicDao {
         select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,null as filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey,'' as musicUrl, 0 as ifHls, 1 as static,0 as audioBitRate
         from artistmusic am
-        inner join xy_music xm on am.musicId = xm.itemId
-        left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
+        inner join xy_music xm on am.musicId = xm.itemId and am.connectionId = xm.connectionId
+        left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = xm.connectionId
          inner join xy_settings xs on xm.connectionId = xs.connectionId and am.connectionId = xs.connectionId
         where am.artistId = :artistId
         order by am.`index`
@@ -1324,7 +1334,7 @@ interface XyMusicDao {
         select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,null as filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey,'' as musicUrl, 0 as ifHls, 1 as static,0 as audioBitRate
         from favoritemusic fm
-        inner join xy_music xm on fm.musicId = xm.itemId
+        inner join xy_music xm on fm.musicId = xm.itemId and fm.connectionId = xm.connectionId
         inner join xy_settings xs on xm.connectionId = xs.connectionId and fm.connectionId = xs.connectionId
         order by fm.`index`
         limit :limit offset :startIndex

@@ -1,7 +1,10 @@
 package cn.xybbz.localdata.data.music
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
+import cn.xybbz.localdata.data.album.XyAlbum
+import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlin.time.Clock
 
 /**
@@ -15,7 +18,33 @@ import kotlin.time.Clock
  */
 @Entity(
     primaryKeys = ["albumId", "musicId", "connectionId"],
-    indices = [Index("albumId"), Index("connectionId"), Index("musicId")]
+    foreignKeys = [
+        ForeignKey(
+            entity = ConnectionConfig::class,
+            parentColumns = ["id"],
+            childColumns = ["connectionId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = XyAlbum::class,
+            parentColumns = ["itemId", "connectionId"],
+            childColumns = ["albumId", "connectionId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = XyMusic::class,
+            parentColumns = ["itemId", "connectionId"],
+            childColumns = ["musicId", "connectionId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index("albumId"),
+        Index("connectionId"),
+        Index("musicId"),
+        Index(value = ["albumId", "connectionId"]),
+        Index(value = ["musicId", "connectionId"])
+    ]
 )
 data class AlbumMusic(
     val albumId: String,

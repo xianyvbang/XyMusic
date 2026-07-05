@@ -19,9 +19,30 @@
 package cn.xybbz.localdata.data.lrc
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
+import cn.xybbz.localdata.data.connection.ConnectionConfig
+import cn.xybbz.localdata.data.music.XyMusic
 
-@Entity(tableName = "xy_lrc_config")
+@Entity(
+    tableName = "xy_lrc_config",
+    foreignKeys = [
+        ForeignKey(
+            entity = ConnectionConfig::class,
+            parentColumns = ["id"],
+            childColumns = ["connectionId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = XyMusic::class,
+            parentColumns = ["itemId", "connectionId"],
+            childColumns = ["itemId", "connectionId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("connectionId"), Index(value = ["itemId", "connectionId"])]
+)
 data class XyLrcConfig(
     @PrimaryKey
     val id: Long = 0,

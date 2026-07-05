@@ -1,8 +1,11 @@
 package cn.xybbz.localdata.data.progress
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import cn.xybbz.localdata.data.connection.ConnectionConfig
+import cn.xybbz.localdata.data.music.XyMusic
 import kotlin.time.Clock
 
 /**
@@ -10,7 +13,21 @@ import kotlin.time.Clock
  */
 @Entity(
     "progress",
-    indices = [Index("connectionId")]
+    foreignKeys = [
+        ForeignKey(
+            entity = ConnectionConfig::class,
+            parentColumns = ["id"],
+            childColumns = ["connectionId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = XyMusic::class,
+            parentColumns = ["itemId", "connectionId"],
+            childColumns = ["musicId", "connectionId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("connectionId"), Index(value = ["musicId", "connectionId"])]
 )
 data class Progress(
     @PrimaryKey

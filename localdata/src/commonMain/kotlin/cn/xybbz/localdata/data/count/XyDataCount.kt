@@ -1,8 +1,10 @@
 package cn.xybbz.localdata.data.count
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlin.time.Clock
 
 /**
@@ -10,6 +12,14 @@ import kotlin.time.Clock
  */
 @Entity(
     tableName = "xy_data_count",
+    foreignKeys = [
+        ForeignKey(
+            entity = ConnectionConfig::class,
+            parentColumns = ["id"],
+            childColumns = ["connectionId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
     indices = [Index("connectionId")]
 )
 data class XyDataCount(

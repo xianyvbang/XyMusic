@@ -202,10 +202,10 @@ interface AlbumDao {
     @Query("update xy_album set name = :name where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
     suspend fun updateName(itemId: String, name: String)
 
-    @Query("update xy_album set pic = (select pic from xy_music where itemId = (select musicId from playlistmusic where playlistId = :itemId) and connectionId = (select connectionId from xy_settings)) where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
+    @Query("update xy_album set pic = (select pic from xy_music where itemId = (select musicId from playlistmusic where playlistId = :itemId and connectionId = (select connectionId from xy_settings) limit 1) and connectionId = (select connectionId from xy_settings)) where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
     suspend fun updatePic(itemId: String)
 
-    @Query("update xy_album set pic = :pic,musicCount = (select count(musicId) from playlistmusic where playlistId = :itemId) where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
+    @Query("update xy_album set pic = :pic,musicCount = (select count(musicId) from playlistmusic where playlistId = :itemId and connectionId = (select connectionId from xy_settings)) where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
     suspend fun updatePicAndCount(itemId: String, pic: String)
 
     /**
@@ -217,7 +217,7 @@ interface AlbumDao {
     @Query(
         """
         select xa.* from artistalbum aa
-        inner join xy_album xa on aa.albumId = xa.itemId
+        inner join xy_album xa on aa.albumId = xa.itemId and aa.connectionId = xa.connectionId
         inner join xy_settings xs on xa.connectionId = xs.connectionId and aa.connectionId = xs.connectionId
         where  aa.artistId = :artistId
     """
@@ -231,7 +231,7 @@ interface AlbumDao {
     @Query(
         """
         select mi.* from genrealbum ga
-        inner join xy_album mi on ga.albumId = mi.itemId
+        inner join xy_album mi on ga.albumId = mi.itemId and ga.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and ga.connectionId = xs.connectionId
         where ga.genreId = :genreId
         order by `index`
@@ -246,7 +246,7 @@ interface AlbumDao {
     @Query(
         """
         select mi.* from homealbum ha
-        inner join xy_album mi on ha.albumId = mi.itemId
+        inner join xy_album mi on ha.albumId = mi.itemId and ha.connectionId = mi.connectionId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and ha.connectionId = xs.connectionId
         order by `index`
     """
@@ -350,12 +350,18 @@ interface AlbumDao {
     @Query(
         """
         DELETE FROM xy_album 
-        WHERE itemId NOT IN (SELECT albumId FROM homealbum)
-          AND itemId NOT IN (SELECT albumId FROM genrealbum)
-          AND itemId NOT IN (SELECT albumId FROM newestalbum)
-          and itemId not in (select albumId from playhistoryalbum)
-          and itemId not in (select albumId from maximumplayalbum)
-          and itemId not in (select albumId from artistalbum)
+        WHERE connectionId = (select connectionId from xy_settings)
+          AND NOT EXISTS (SELECT 1 FROM homealbum ha WHERE ha.albumId = xy_album.itemId AND ha.connectionId = xy_album.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM genrealbum ga WHERE ga.albumId = xy_album.itemId AND ga.connectionId = xy_album.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM newestalbum na WHERE na.albumId = xy_album.itemId AND na.connectionId = xy_album.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM playhistoryalbum pha WHERE pha.albumId = xy_album.itemId AND pha.connectionId = xy_album.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM maximumplayalbum mpa WHERE mpa.albumId = xy_album.itemId AND mpa.connectionId = xy_album.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM artistalbum aa WHERE aa.albumId = xy_album.itemId AND aa.connectionId = xy_album.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM favoritealbum fa WHERE fa.albumId = xy_album.itemId AND fa.connectionId = xy_album.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM albummusic am WHERE am.albumId = xy_album.itemId AND am.connectionId = xy_album.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM playlistmusic pm WHERE pm.playlistId = xy_album.itemId AND pm.connectionId = xy_album.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM xy_enable_progress ep WHERE ep.albumId = xy_album.itemId AND ep.connectionId = xy_album.connectionId)
+          AND NOT EXISTS (SELECT 1 FROM skip_time st WHERE st.albumId = xy_album.itemId AND st.connectionId = xy_album.connectionId)
           and ifPlaylist = 0
     """
     )
@@ -443,7 +449,7 @@ interface AlbumDao {
     /**
      * 删除全部歌单
      */
-    @Query("delete from xy_album where ifPlaylist = 1")
+    @Query("delete from xy_album where ifPlaylist = 1 and connectionId = (select connectionId from xy_settings)")
     suspend fun removePlaylist()
 
     /**
@@ -476,7 +482,7 @@ interface AlbumDao {
         """
         select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
         xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime from newestalbum na
-        inner join xy_album xa on na.albumId = xa.itemId
+        inner join xy_album xa on na.albumId = xa.itemId and na.connectionId = xa.connectionId
         inner join xy_settings xs on xa.connectionId = xs.connectionId and na.connectionId = xs.connectionId
         order by `index`
         limit :limit
@@ -488,7 +494,7 @@ interface AlbumDao {
         """
         select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
         xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime from newestalbum na
-        inner join xy_album xa on na.albumId = xa.itemId
+        inner join xy_album xa on na.albumId = xa.itemId and na.connectionId = xa.connectionId
         inner join xy_settings xs on xa.connectionId = xs.connectionId and na.connectionId = xs.connectionId
         order by `index`
         limit :limit
@@ -503,8 +509,8 @@ interface AlbumDao {
         """
         select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
         xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime,
-        (select count(musicId) from playlistmusic where connectionId = (select connectionId from xy_settings) and playlistId = xa.itemId) as musicCount 
-        from xy_album xa 
+        (select count(musicId) from playlistmusic where connectionId = xa.connectionId and playlistId = xa.itemId) as musicCount
+        from xy_album xa
         inner join xy_settings xs on xa.connectionId = xs.connectionId
         where ifPlaylist = 1
         order by xa.createTime
@@ -519,8 +525,8 @@ interface AlbumDao {
         """
          select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
         xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime,
-        (select count(musicId) from playlistmusic where connectionId = (select connectionId from xy_settings) and playlistId = xa.itemId) as musicCount 
-        from xy_album xa 
+        (select count(musicId) from playlistmusic where connectionId = xa.connectionId and playlistId = xa.itemId) as musicCount
+        from xy_album xa
         inner join xy_settings xs on xa.connectionId = xs.connectionId
         where ifPlaylist = 1
         order by xa.createTime
@@ -543,7 +549,9 @@ interface AlbumDao {
      */
     @Query(
         """
-        select albumId from ArtistAlbum where artistId = :artistId
+        select albumId from ArtistAlbum
+        where artistId = :artistId
+        and connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun selectListByArtistId(artistId: String): List<String>
@@ -556,7 +564,7 @@ interface AlbumDao {
         """
         select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
         xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime from maximumplayalbum mpm
-        inner join xy_album xa on mpm.albumId = xa.itemId
+        inner join xy_album xa on mpm.albumId = xa.itemId and mpm.connectionId = xa.connectionId
         inner join xy_settings xs on xa.connectionId = xs.connectionId and mpm.connectionId = xs.connectionId
         order by `index`
         limit :limit
@@ -570,7 +578,7 @@ interface AlbumDao {
         """
         select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
         xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime from maximumplayalbum mpm
-        inner join xy_album xa on mpm.albumId = xa.itemId
+        inner join xy_album xa on mpm.albumId = xa.itemId and mpm.connectionId = xa.connectionId
         inner join xy_settings xs on xa.connectionId = xs.connectionId and mpm.connectionId = xs.connectionId
         order by `index`
         limit :limit
@@ -587,7 +595,7 @@ interface AlbumDao {
         """
         select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
         xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime from playhistoryalbum phm
-        inner join xy_album xa on phm.albumId = xa.itemId
+        inner join xy_album xa on phm.albumId = xa.itemId and phm.connectionId = xa.connectionId
         inner join xy_settings xs on xa.connectionId = xs.connectionId and phm.connectionId = xs.connectionId
         order by `index`
         limit :limit
@@ -601,7 +609,7 @@ interface AlbumDao {
         """
         select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
         xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime from playhistoryalbum phm
-        inner join xy_album xa on phm.albumId = xa.itemId
+        inner join xy_album xa on phm.albumId = xa.itemId and phm.connectionId = xa.connectionId
         inner join xy_settings xs on xa.connectionId = xs.connectionId and phm.connectionId = xs.connectionId
         order by `index`
         limit :limit

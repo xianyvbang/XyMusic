@@ -1,12 +1,29 @@
 package cn.xybbz.localdata.data.setting
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import cn.xybbz.localdata.data.album.XyAlbum
+import cn.xybbz.localdata.data.connection.ConnectionConfig
 
 @Entity(
     tableName = "skip_time",
-    indices = [Index("connectionId")]
+    foreignKeys = [
+        ForeignKey(
+            entity = ConnectionConfig::class,
+            parentColumns = ["id"],
+            childColumns = ["connectionId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = XyAlbum::class,
+            parentColumns = ["itemId", "connectionId"],
+            childColumns = ["albumId", "connectionId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("connectionId"), Index(value = ["albumId", "connectionId"])]
 )
 data class SkipTime(
     @PrimaryKey(autoGenerate = true)

@@ -1,22 +1,31 @@
 package cn.xybbz.localdata.data.album
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Ignore
 import androidx.room.Index
-import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import cn.xybbz.database.converter.JsonStringListTypeConverter
+import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlin.time.Clock
 
 @Entity(
     tableName = "xy_album",
+    primaryKeys = ["itemId", "connectionId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = ConnectionConfig::class,
+            parentColumns = ["id"],
+            childColumns = ["connectionId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
     indices = [Index("connectionId")]
 )
 data class XyAlbum(
     /**
      * 数据id
      */
-    @PrimaryKey(autoGenerate = false)
     val itemId: String = "",
     /**
      * 音乐图片

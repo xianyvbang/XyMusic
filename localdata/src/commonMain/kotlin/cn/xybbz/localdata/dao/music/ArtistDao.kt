@@ -97,17 +97,17 @@ interface ArtistDao {
     @Query(
         """
         select xa.*,row_number() over (order by xa.selectChat) as indexNumber,fa.ifFavorite as favorite from xy_artist xa
-        left join favoriteartist fa on fa.artistId = xa.artistId
+        left join favoriteartist fa on fa.artistId = xa.artistId and fa.connectionId = xa.connectionId
         where xa.connectionId = (select connectionId from xy_settings)
         order by xa.selectChat
     """
     )
     fun selectListPagingSource(): PagingSource<Int, XyArtistExt>
 
-    @Query("select * from xy_artist where artistId = :id")
+    @Query("select * from xy_artist where artistId = :id and connectionId = (select connectionId from xy_settings)")
     suspend fun selectExtendById(id: String): XyArtist?
 
-    @Query("select name from xy_artist where name like '%' || :search || '%' limit 3")
+    @Query("select name from xy_artist where name like '%' || :search || '%' and connectionId = (select connectionId from xy_settings) limit 3")
     suspend fun searchHitList(search: String): List<String>
 
     /**
@@ -148,7 +148,7 @@ interface ArtistDao {
     @Query("""
         select t.indexNumber from (
         select xa.selectChat,row_number() over (order by xa.selectChat) as indexNumber,fa.ifFavorite as favorite from xy_artist xa
-        left join favoriteartist fa on fa.artistId = xa.artistId
+        left join favoriteartist fa on fa.artistId = xa.artistId and fa.connectionId = xa.connectionId
         where xa.connectionId = (select connectionId from xy_settings)
         order by xa.selectChat
         )t where t.selectChat = :selectChat
