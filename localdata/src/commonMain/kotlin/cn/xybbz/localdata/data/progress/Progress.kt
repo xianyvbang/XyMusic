@@ -27,7 +27,12 @@ import kotlin.time.Clock
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("connectionId"), Index(value = ["musicId", "connectionId"])]
+    indices = [
+        Index("connectionId"),
+        Index(value = ["musicId", "connectionId"]),
+        Index(value = ["albumId", "createTime"]),
+        Index(value = ["albumId", "index"])
+    ]
 )
 data class Progress(
     @PrimaryKey

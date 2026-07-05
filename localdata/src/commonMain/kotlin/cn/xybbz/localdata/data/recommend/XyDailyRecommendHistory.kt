@@ -46,7 +46,8 @@ import kotlin.time.Clock
         Index("connectionId"),
         Index(value = ["songId", "connectionId"]),
         Index(value = ["connectionId", "timestamp"]),
-        Index(value = ["connectionId", "mediaLibraryId", "timestamp"])
+        Index(value = ["connectionId", "mediaLibraryId", "timestamp"]),
+        Index(value = ["connectionId", "mediaLibraryId", "timestamp", "recommendIndex"])
     ]
 )
 data class XyDailyRecommendHistory(

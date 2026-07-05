@@ -52,7 +52,12 @@ import kotlin.time.Clock
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("connectionId"), Index("musicId"), Index(value = ["musicId", "connectionId"])]
+    indices = [
+        Index("connectionId"),
+        Index("musicId"),
+        Index(value = ["musicId", "connectionId"]),
+        Index(value = ["connectionId", "index", "musicId"])
+    ]
 )
 @TypeConverters(JsonStringListTypeConverter::class)
 data class HomeMusic(

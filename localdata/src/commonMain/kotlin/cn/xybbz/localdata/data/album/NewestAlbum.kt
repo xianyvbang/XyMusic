@@ -30,7 +30,12 @@ import kotlin.time.Clock
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("albumId"), Index("connectionId"), Index(value = ["albumId", "connectionId"])]
+    indices = [
+        Index("albumId"),
+        Index("connectionId"),
+        Index(value = ["albumId", "connectionId"]),
+        Index(value = ["connectionId", "index", "albumId"])
+    ]
 )
 data class NewestAlbum(
     val albumId: String,

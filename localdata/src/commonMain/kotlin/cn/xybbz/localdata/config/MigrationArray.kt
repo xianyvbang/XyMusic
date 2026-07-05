@@ -1385,3 +1385,41 @@ val Migration_9_10 = object : Migration(9, 10) {
         ).forEach { connection.execSQL(it) }
     }
 }
+
+/**
+ * v10 到 v11 的查询性能索引迁移：补齐大列表分页、年份过滤和关系表排序使用的复合索引。
+ */
+val Migration_10_11 = object : Migration(10, 11) {
+    override fun migrate(connection: SQLiteConnection) {
+        listOf(
+            "CREATE INDEX IF NOT EXISTS `index_xy_music_connectionId_year` ON `xy_music` (`connectionId`, `year`)",
+            "CREATE INDEX IF NOT EXISTS `index_xy_music_connectionId_lastPlayedDate` ON `xy_music` (`connectionId`, `lastPlayedDate`)",
+            "CREATE INDEX IF NOT EXISTS `index_xy_album_connectionId_ifPlaylist_createTime` ON `xy_album` (`connectionId`, `ifPlaylist`, `createTime`)",
+            "CREATE INDEX IF NOT EXISTS `index_HomeMusic_connectionId_index_musicId` ON `HomeMusic` (`connectionId`, `index`, `musicId`)",
+            "CREATE INDEX IF NOT EXISTS `index_FavoriteMusic_connectionId_index_musicId` ON `FavoriteMusic` (`connectionId`, `index`, `musicId`)",
+            "CREATE INDEX IF NOT EXISTS `index_FavoriteMusic_connectionId_ifFavorite_musicId` ON `FavoriteMusic` (`connectionId`, `ifFavorite`, `musicId`)",
+            "CREATE INDEX IF NOT EXISTS `index_AlbumMusic_connectionId_index_musicId` ON `AlbumMusic` (`connectionId`, `index`, `musicId`)",
+            "CREATE INDEX IF NOT EXISTS `index_AlbumMusic_albumId_connectionId_index` ON `AlbumMusic` (`albumId`, `connectionId`, `index`)",
+            "CREATE INDEX IF NOT EXISTS `index_ArtistMusic_connectionId_index_musicId` ON `ArtistMusic` (`connectionId`, `index`, `musicId`)",
+            "CREATE INDEX IF NOT EXISTS `index_ArtistMusic_artistId_connectionId_index` ON `ArtistMusic` (`artistId`, `connectionId`, `index`)",
+            "CREATE INDEX IF NOT EXISTS `index_PlaylistMusic_connectionId_index_playlistId` ON `PlaylistMusic` (`connectionId`, `index`, `playlistId`)",
+            "CREATE INDEX IF NOT EXISTS `index_PlaylistMusic_playlistId_connectionId_index` ON `PlaylistMusic` (`playlistId`, `connectionId`, `index`)",
+            "CREATE INDEX IF NOT EXISTS `index_PlayHistoryMusic_connectionId_index_musicId` ON `PlayHistoryMusic` (`connectionId`, `index`, `musicId`)",
+            "CREATE INDEX IF NOT EXISTS `index_PlayQueueMusic_connectionId_index_musicId` ON `PlayQueueMusic` (`connectionId`, `index`, `musicId`)",
+            "CREATE INDEX IF NOT EXISTS `index_MaximumPlayMusic_connectionId_index_musicId` ON `MaximumPlayMusic` (`connectionId`, `index`, `musicId`)",
+            "CREATE INDEX IF NOT EXISTS `index_NewestMusic_connectionId_index_musicId` ON `NewestMusic` (`connectionId`, `index`, `musicId`)",
+            "CREATE INDEX IF NOT EXISTS `index_ArtistPopularMusic_connectionId_artistKey_index_musicId` ON `ArtistPopularMusic` (`connectionId`, `artistKey`, `index`, `musicId`)",
+            "CREATE INDEX IF NOT EXISTS `index_SimilarMusic_connectionId_sourceMusicId_index_musicId` ON `SimilarMusic` (`connectionId`, `sourceMusicId`, `index`, `musicId`)",
+            "CREATE INDEX IF NOT EXISTS `index_HomeAlbum_connectionId_index_albumId` ON `HomeAlbum` (`connectionId`, `index`, `albumId`)",
+            "CREATE INDEX IF NOT EXISTS `index_NewestAlbum_connectionId_index_albumId` ON `NewestAlbum` (`connectionId`, `index`, `albumId`)",
+            "CREATE INDEX IF NOT EXISTS `index_PlayHistoryAlbum_connectionId_index_albumId` ON `PlayHistoryAlbum` (`connectionId`, `index`, `albumId`)",
+            "CREATE INDEX IF NOT EXISTS `index_MaximumPlayAlbum_connectionId_index_albumId` ON `MaximumPlayAlbum` (`connectionId`, `index`, `albumId`)",
+            "CREATE INDEX IF NOT EXISTS `index_ArtistAlbum_connectionId_index_albumId` ON `ArtistAlbum` (`connectionId`, `index`, `albumId`)",
+            "CREATE INDEX IF NOT EXISTS `index_ArtistAlbum_artistId_connectionId_index` ON `ArtistAlbum` (`artistId`, `connectionId`, `index`)",
+            "CREATE INDEX IF NOT EXISTS `index_GenreAlbum_genreId_connectionId_index` ON `GenreAlbum` (`genreId`, `connectionId`, `index`)",
+            "CREATE INDEX IF NOT EXISTS `index_progress_albumId_createTime` ON `progress` (`albumId`, `createTime`)",
+            "CREATE INDEX IF NOT EXISTS `index_progress_albumId_index` ON `progress` (`albumId`, `index`)",
+            "CREATE INDEX IF NOT EXISTS `index_xy_daily_recommend_history_connectionId_mediaLibraryId_timestamp_recommendIndex` ON `xy_daily_recommend_history` (`connectionId`, `mediaLibraryId`, `timestamp`, `recommendIndex`)"
+        ).forEach { connection.execSQL(it) }
+    }
+}

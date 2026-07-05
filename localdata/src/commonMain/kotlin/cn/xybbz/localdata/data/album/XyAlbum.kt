@@ -20,7 +20,10 @@ import kotlin.time.Clock
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("connectionId")]
+    indices = [
+        Index("connectionId"),
+        Index(value = ["connectionId", "ifPlaylist", "createTime"])
+    ]
 )
 data class XyAlbum(
     /**

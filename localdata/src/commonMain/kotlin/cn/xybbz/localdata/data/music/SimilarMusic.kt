@@ -37,7 +37,8 @@ import kotlin.time.Clock
         Index("connectionId"),
         Index(value = ["sourceMusicId", "connectionId"]),
         Index(value = ["musicId", "connectionId"]),
-        Index(value = ["connectionId", "sourceMusicId", "cachedAt"])
+        Index(value = ["connectionId", "sourceMusicId", "cachedAt"]),
+        Index(value = ["connectionId", "sourceMusicId", "index", "musicId"])
     ]
 )
 data class SimilarMusic(

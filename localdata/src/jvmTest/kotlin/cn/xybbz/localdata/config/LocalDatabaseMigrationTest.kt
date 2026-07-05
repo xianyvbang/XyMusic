@@ -9,14 +9,14 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * 本地主库 v9 到 v10 外键迁移测试。
+ * 本地主库 v9 到 v11 迁移测试。
  */
 class LocalDatabaseMigrationTest {
     /**
      * 迁移应保留合法引用数据，并过滤旧库中已经存在的孤儿行。
      */
     @Test
-    fun migrationNineToTenKeepsValidRowsAndDropsOrphans() {
+    fun migrationNineToElevenKeepsValidRowsAndDropsOrphans() {
         withMigratedDatabase(
             seedVersionNineData = { connection ->
                 seedValidReferenceGraph(connection)
@@ -203,7 +203,7 @@ class LocalDatabaseMigrationTest {
     }
 
     /**
-     * 打开临时 SQLite 数据库，创建 v9 schema 后运行 v9→v10 迁移。
+     * 打开临时 SQLite 数据库，创建 v9 schema 后运行 v9→v11 迁移。
      */
     private fun withMigratedDatabase(
         seedVersionNineData: (SQLiteConnection) -> Unit,
@@ -218,9 +218,11 @@ class LocalDatabaseMigrationTest {
                 connection.execSQL("PRAGMA foreign_keys = ON")
 
                 Migration_9_10.migrate(connection)
+                Migration_10_11.migrate(connection)
 
                 connection.execSQL("PRAGMA foreign_keys = ON")
                 assertForeignKeyCheckIsEmpty(connection)
+                assertPerformanceIndexesExist(connection)
                 verifyMigratedData(connection)
                 assertForeignKeyCheckIsEmpty(connection)
             }
@@ -1011,6 +1013,65 @@ class LocalDatabaseMigrationTest {
             assertTrue(statement.step(), "查询应返回一行: $sql")
             return statement.getLong(0)
         }
+    }
+
+    /**
+     * 校验 v10 到 v11 新增的查询性能索引都已经创建。
+     */
+    private fun assertPerformanceIndexesExist(connection: SQLiteConnection) {
+        performanceIndexExpectations().forEach { (tableName, indexName) ->
+            assertTrue(indexExists(connection, tableName, indexName), "$tableName 应存在索引 $indexName")
+        }
+    }
+
+    /**
+     * 返回本地库大列表和排序查询需要的新增索引名称。
+     */
+    private fun performanceIndexExpectations(): List<Pair<String, String>> {
+        return listOf(
+            "xy_music" to "index_xy_music_connectionId_year",
+            "xy_music" to "index_xy_music_connectionId_lastPlayedDate",
+            "xy_album" to "index_xy_album_connectionId_ifPlaylist_createTime",
+            "HomeMusic" to "index_HomeMusic_connectionId_index_musicId",
+            "FavoriteMusic" to "index_FavoriteMusic_connectionId_index_musicId",
+            "FavoriteMusic" to "index_FavoriteMusic_connectionId_ifFavorite_musicId",
+            "AlbumMusic" to "index_AlbumMusic_connectionId_index_musicId",
+            "AlbumMusic" to "index_AlbumMusic_albumId_connectionId_index",
+            "ArtistMusic" to "index_ArtistMusic_connectionId_index_musicId",
+            "ArtistMusic" to "index_ArtistMusic_artistId_connectionId_index",
+            "PlaylistMusic" to "index_PlaylistMusic_connectionId_index_playlistId",
+            "PlaylistMusic" to "index_PlaylistMusic_playlistId_connectionId_index",
+            "PlayHistoryMusic" to "index_PlayHistoryMusic_connectionId_index_musicId",
+            "PlayQueueMusic" to "index_PlayQueueMusic_connectionId_index_musicId",
+            "MaximumPlayMusic" to "index_MaximumPlayMusic_connectionId_index_musicId",
+            "NewestMusic" to "index_NewestMusic_connectionId_index_musicId",
+            "ArtistPopularMusic" to "index_ArtistPopularMusic_connectionId_artistKey_index_musicId",
+            "SimilarMusic" to "index_SimilarMusic_connectionId_sourceMusicId_index_musicId",
+            "HomeAlbum" to "index_HomeAlbum_connectionId_index_albumId",
+            "NewestAlbum" to "index_NewestAlbum_connectionId_index_albumId",
+            "PlayHistoryAlbum" to "index_PlayHistoryAlbum_connectionId_index_albumId",
+            "MaximumPlayAlbum" to "index_MaximumPlayAlbum_connectionId_index_albumId",
+            "ArtistAlbum" to "index_ArtistAlbum_connectionId_index_albumId",
+            "ArtistAlbum" to "index_ArtistAlbum_artistId_connectionId_index",
+            "GenreAlbum" to "index_GenreAlbum_genreId_connectionId_index",
+            "progress" to "index_progress_albumId_createTime",
+            "progress" to "index_progress_albumId_index",
+            "xy_daily_recommend_history" to "index_xy_daily_recommend_history_connectionId_mediaLibraryId_timestamp_recommendIndex",
+        )
+    }
+
+    /**
+     * 通过 SQLite 元数据判断指定索引是否存在。
+     */
+    private fun indexExists(connection: SQLiteConnection, tableName: String, indexName: String): Boolean {
+        connection.prepare("PRAGMA index_list(`$tableName`)").use { statement ->
+            while (statement.step()) {
+                if (statement.getText(1) == indexName) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     /**

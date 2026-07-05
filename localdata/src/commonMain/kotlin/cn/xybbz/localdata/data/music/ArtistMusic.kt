@@ -43,7 +43,9 @@ import kotlin.time.Clock
         Index("connectionId"),
         Index("artistId"),
         Index(value = ["artistId", "connectionId"]),
-        Index(value = ["musicId", "connectionId"])
+        Index(value = ["musicId", "connectionId"]),
+        Index(value = ["connectionId", "index", "musicId"]),
+        Index(value = ["artistId", "connectionId", "index"])
     ]
 )
 data class ArtistMusic(

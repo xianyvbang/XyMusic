@@ -48,7 +48,12 @@ import kotlin.time.Clock
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("musicId"), Index("connectionId"), Index(value = ["musicId", "connectionId"])]
+    indices = [
+        Index("musicId"),
+        Index("connectionId"),
+        Index(value = ["musicId", "connectionId"]),
+        Index(value = ["connectionId", "index", "musicId"])
+    ]
 )
 data class PlayQueueMusic(
     val musicId: String,
