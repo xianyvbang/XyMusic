@@ -65,6 +65,7 @@ import org.koin.core.annotation.KoinViewModel
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.cancel_timer_close_message
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
 @KoinViewModel
@@ -219,7 +220,7 @@ class MusicBottomMenuViewModel(
         }.format(targetTime)
 
         timerJob = viewModelScope.launch {
-            delay(timerInfo * 60_000L)
+            delay((timerInfo * 60_000L).milliseconds)
             timerJob = null
 
             val currentItemId = musicController.musicInfo?.itemId
