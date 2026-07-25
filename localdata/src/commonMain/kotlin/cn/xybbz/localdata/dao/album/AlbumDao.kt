@@ -107,7 +107,7 @@ interface AlbumDao {
             MusicDataTypeEnum.PLAY_QUEUE -> {}
             MusicDataTypeEnum.MAXIMUM_PLAY -> {
 
-                var index = selectPlayHistoryIndex() ?: -1
+                var index = selectMaximumPlayIndex() ?: -1
                 saveMaximumPlayAlbum(
                     data.map {
                         index += 1
@@ -135,7 +135,7 @@ interface AlbumDao {
 
             MusicDataTypeEnum.GENRE -> {
                 genreId?.let { genreId ->
-                    var index = selectNewestIndex() ?: -1
+                    var index = selectGenreIndex(genreId) ?: -1
                     saveGenrePlayAlbum(data.map {
                         index += 1
                         GenreAlbum(
@@ -184,7 +184,7 @@ interface AlbumDao {
     @Query("select `index` from homealbum where connectionId = (select connectionId from xy_settings) order by `index` desc limit 1")
     suspend fun selectHomeIndex(): Int?
 
-    @Query("select `index` from homealbum where connectionId = (select connectionId from xy_settings) order by `index` desc limit 1")
+    @Query("select `index` from artistalbum where connectionId = (select connectionId from xy_settings) order by `index` desc limit 1")
     suspend fun selectArtistIndex(): Int?
 
     @Query("select `index` from newestalbum where connectionId = (select connectionId from xy_settings) order by `index` desc limit 1")
@@ -192,6 +192,14 @@ interface AlbumDao {
 
     @Query("select `index` from playhistoryalbum where connectionId = (select connectionId from xy_settings) order by `index` desc limit 1")
     suspend fun selectPlayHistoryIndex(): Int?
+
+    /** 查询最多播放专辑当前使用的最大排序索引。 */
+    @Query("select `index` from maximumplayalbum where connectionId = (select connectionId from xy_settings) order by `index` desc limit 1")
+    suspend fun selectMaximumPlayIndex(): Int?
+
+    /** 查询指定流派专辑当前使用的最大排序索引。 */
+    @Query("select `index` from genrealbum where genreId = :genreId and connectionId = (select connectionId from xy_settings) order by `index` desc limit 1")
+    suspend fun selectGenreIndex(genreId: String): Int?
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun save(data: XyAlbum): Long
