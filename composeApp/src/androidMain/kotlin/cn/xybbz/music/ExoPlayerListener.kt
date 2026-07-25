@@ -56,9 +56,9 @@ class ExoPlayerListener(
             "播放状态改变$playWhenReady --- ${reason} -- ${exoPlayer?.isPlaying} -- ${musicController.state}"
         )
         if (playWhenReady) {
-            musicController.progressTicker.start()
+            musicController.startProgressTicker()
         } else {
-            musicController.progressTicker.stop()
+            musicController.stopProgressTicker()
             musicController.musicInfo?.let {
                 downloadCacheController.pauseCache()
             }

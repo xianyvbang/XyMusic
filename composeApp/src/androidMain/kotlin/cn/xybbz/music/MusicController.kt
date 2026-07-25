@@ -71,9 +71,26 @@ class MusicController(
     lateinit var progressTicker: PlayProgressTicker
         private set
 
+    /** 保护播放器异步回调与资源关闭之间的生命周期状态。 */
+    private val lifecycleLock = Any()
+
+    /** 标记控制器是否已经关闭，关闭后不再创建播放器资源。 */
+    @Volatile
+    private var isClosed = false
+
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private val mediaController: MediaController?
-        get() = if (controllerFuture.isDone) controllerFuture.get() else null
+        get() {
+            if (!::controllerFuture.isInitialized) {
+                return null
+            }
+            val future = controllerFuture
+            return if (future.isDone) {
+                runCatching { future.get() }.getOrNull()
+            } else {
+                null
+            }
+        }
 
     private fun withMediaControllerOnApplicationThread(block: MediaController.() -> Unit) {
         val controller = mediaController ?: return
@@ -232,18 +249,30 @@ class MusicController(
      * 初始化播放
      */
     override fun initController(onRestorePlaylists: (MusicCommonController.() -> Unit)?) {
-        controllerFuture = MediaController.Builder(
-            application,
-            SessionToken(
+        val future = synchronized(lifecycleLock) {
+            if (isClosed) {
+                return
+            }
+            MediaController.Builder(
                 application,
-                ComponentName(application, ExampleLibraryPlaybackService::class.java)
-            )
-        ).buildAsync()
+                SessionToken(
+                    application,
+                    ComponentName(application, ExampleLibraryPlaybackService::class.java)
+                )
+            ).buildAsync().also {
+                controllerFuture = it
+            }
+        }
 
-        controllerFuture.addListener({
-            mediaController?.let {
-                it.apply {
-                    setOnCurrentPosition()
+        future.addListener({
+            val controller = runCatching { future.get() }.getOrNull() ?: return@addListener
+            // Future 完成回调可能与 close 并发，初始化动作必须与关闭状态共用同一把锁。
+            val shouldRestorePlaylists = synchronized(lifecycleLock) {
+                if (isClosed) {
+                    return@synchronized false
+                }
+                onControllerReady(controller)
+                controller.apply {
                     // 设置播放监听
                     addListener(playerListener)
 
@@ -257,6 +286,9 @@ class MusicController(
                     // 设置当缓冲完毕后直接播放视频
                     playWhenReady = true
                 }
+                true
+            }
+            if (shouldRestorePlaylists && !isClosed) {
                 onRestorePlaylists?.invoke(this)
             }
         }, ContextCompat.getMainExecutor(application))
@@ -596,7 +628,7 @@ class MusicController(
      * 清空播放列表
      */
     override fun clearPlayerList() {
-        progressTicker.stop()
+        stopProgressTicker()
         withMediaControllerOnApplicationThread {
             clearMediaItems()
         }
@@ -604,17 +636,46 @@ class MusicController(
         super.clearPlayerList()
     }
 
-    private fun setOnCurrentPosition() {
-        this.mediaController?.let { onControllerReady(it) }
+    /**
+     * 安全启动播放进度 ticker。
+     */
+    internal fun startProgressTicker() {
+        synchronized(lifecycleLock) {
+            if (!isClosed && ::progressTicker.isInitialized) {
+                progressTicker.start()
+            }
+        }
     }
 
+    /**
+     * 安全停止播放进度 ticker。
+     */
+    internal fun stopProgressTicker() {
+        synchronized(lifecycleLock) {
+            if (::progressTicker.isInitialized) {
+                progressTicker.stop()
+            }
+        }
+    }
+
+    /**
+     * 在播放器控制器就绪后创建进度 ticker。
+     */
     fun onControllerReady(controller: MediaController) {
-        progressTicker = PlayProgressTicker(
-            controller = controller,
-            intervalMs = MUSIC_POSITION_UPDATE_INTERVAL,
-            scope.coroutineContext
-        ) { position ->
-            setCurrentPositionData(position)
+        synchronized(lifecycleLock) {
+            if (isClosed) {
+                return
+            }
+            if (::progressTicker.isInitialized) {
+                progressTicker.close()
+            }
+            progressTicker = PlayProgressTicker(
+                controller = controller,
+                intervalMs = MUSIC_POSITION_UPDATE_INTERVAL,
+                scope.coroutineContext
+            ) { position ->
+                setCurrentPositionData(position)
+            }
         }
     }
 
@@ -649,13 +710,32 @@ class MusicController(
 
 
     override fun close() {
-        withMediaControllerOnApplicationThread {
-            clearMediaItems()
-            removeListener(playerListener)
-            release()
+        // 先封闭异步回调入口，再取消连接并释放已创建的播放器资源。
+        val shouldReleaseController = synchronized(lifecycleLock) {
+            if (isClosed) {
+                return
+            }
+            isClosed = true
+            if (::progressTicker.isInitialized) {
+                progressTicker.close()
+            }
+            if (::controllerFuture.isInitialized) {
+                if (!controllerFuture.isDone) {
+                    controllerFuture.cancel(false)
+                }
+                controllerFuture.isDone
+            } else {
+                false
+            }
+        }
+        if (shouldReleaseController) {
+            withMediaControllerOnApplicationThread {
+                clearMediaItems()
+                removeListener(playerListener)
+                release()
+            }
         }
         fadeController.close()
-        progressTicker.close()
         super.close()
     }
 }
