@@ -38,12 +38,24 @@ fun main() {
 
     application {
         // Koin 只注册依赖，真正的启动初始化在 App/StartupViewModel 内异步执行。
-        initKoin {}
+        val koinApplication = initKoin {}
 
+        // 防止多个窗口关闭入口重复释放同一批应用级资源。
+        var isClosing = false
         val handleCloseRequest = {
-            // 应用退出前主动关闭代理服务，避免残留端口占用与连接资源泄漏。
-            JvmReverseProxyServer.stop()
-            exitApplication()
+            if (!isClosing) {
+                isClosing = true
+                // 应用退出前主动关闭代理服务与 Koin 单例资源。
+                try {
+                    JvmReverseProxyServer.stop()
+                } finally {
+                    try {
+                        koinApplication.close()
+                    } finally {
+                        exitApplication()
+                    }
+                }
+            }
         }
         val windowState = rememberWindowState(width = 1280.dp, height = 720.dp)
 

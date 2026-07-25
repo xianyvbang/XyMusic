@@ -65,6 +65,7 @@ import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.SocketTimeoutException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -1482,6 +1483,8 @@ open class DataSourceManager(
 
         try {
             requireDataSourceServer().reportPlaying(musicId, playSessionId, isPaused, positionTicks)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
         }
@@ -1497,6 +1500,8 @@ open class DataSourceManager(
     ) {
         try {
             requireDataSourceServer().reportProgress(musicId, playSessionId, positionTicks)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
         }
@@ -1508,6 +1513,8 @@ open class DataSourceManager(
     override suspend fun cancelReportProgress(musicId: String) {
         try {
             requireDataSourceServer().cancelReportProgress(musicId)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "取消播放上报失败", e)
         }

@@ -6,9 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
-import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlaybackProgressReporter
 import cn.xybbz.config.security.ConnectionCredentialManager
@@ -17,6 +15,7 @@ import cn.xybbz.download.DownloaderManager
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.enums.CredentialStoreType
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 
@@ -72,18 +71,29 @@ class SettingsViewModel(
         if (wasEnabled == enabled) {
             return
         }
-        if (!enabled) {
-            playbackProgressReporter.stop()
-            val currentMusicId = musicController.musicInfo?.itemId
-            if (musicController.state == PlayStateEnum.Playing && !currentMusicId.isNullOrBlank()) {
-                runCatching {
-                    dataSourceManager.cancelReportProgress(currentMusicId)
-                }.onFailure {
-                    Log.e(Constants.LOG_ERROR_PREFIX, "关闭播放进度同步时通知远端停止失败", it)
-                }
-            }
-        }
+
+        val currentMusicId = musicController.musicInfo?.itemId
+        val currentPosition = musicController.progressStateFlow.value
+        val wasPlaying = musicController.state == PlayStateEnum.Playing
         settingsManager.setIfEnableSyncPlayProgress(enabled)
+        settingsManager.settings.first { it.ifEnableSyncPlayProgress == enabled }
+
+        if (!enabled) {
+            playbackProgressReporter.stopAndJoin()
+            if (!currentMusicId.isNullOrBlank()) {
+                dataSourceManager.cancelReportProgress(currentMusicId)
+            }
+            return
+        }
+
+        if (wasPlaying && !currentMusicId.isNullOrBlank()) {
+            dataSourceManager.reportPlaying(
+                musicId = currentMusicId,
+                playSessionId = settingsManager.get().playSessionId,
+                positionTicks = currentPosition
+            )
+            playbackProgressReporter.start(currentMusicId)
+        }
     }
 
     /**

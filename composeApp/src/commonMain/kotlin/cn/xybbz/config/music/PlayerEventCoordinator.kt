@@ -83,7 +83,7 @@ class PlayerEventCoordinator(
                     is PlayerEvent.Pause -> onPause(it.musicId)
                     is PlayerEvent.Play -> onPlay(it.musicId)
                     is PlayerEvent.PlayerTypeChange -> onPlayerTypeChange(it.playerType)
-                    is PlayerEvent.PositionSeekTo -> onPositionSeekTo(it.positionMs)
+                    is PlayerEvent.PositionSeekTo -> onPositionSeekTo(it.musicId, it.positionMs)
                     is PlayerEvent.RemovePlaybackProgress -> removePlaybackProgress(it.musicId)
                 }
             }
@@ -130,44 +130,44 @@ class PlayerEventCoordinator(
                     positionTicks = musicController.progressStateFlow.value
                 )
             }
-            playbackProgressReporter.start()
+            playbackProgressReporter.start(musicId)
         }
     }
 
     /**
      * 处理暂停播放事件。
      */
-    private fun onPause(musicId: String) {
-        playbackProgressReporter.stop()
+    private suspend fun onPause(musicId: String) {
+        val currentPosition = musicController.progressStateFlow.value
+        playbackProgressReporter.stopAndJoin()
         if (settingsManager.get().ifEnableSyncPlayProgress) {
-            scope.launch {
-                dataSourceManager.reportPlaying(
-                    musicId,
-                    playSessionId = settingsManager.get().playSessionId,
-                    true,
-                    musicController.progressStateFlow.value
-                )
-            }
+            dataSourceManager.reportPlaying(
+                musicId,
+                playSessionId = settingsManager.get().playSessionId,
+                true,
+                currentPosition
+            )
         }
-        setPlayerProgress(musicController.progressStateFlow.value)
+        setPlayerProgress(currentPosition)
     }
 
     /**
      * 处理拖动播放进度事件。
      */
-    private fun onPositionSeekTo(millSeconds: Long) {
+    private fun onPositionSeekTo(musicId: String, millSeconds: Long) {
         setPlayerProgress(millSeconds)
         if (settingsManager.get().ifEnableSyncPlayProgress) {
-            playbackProgressReporter.reportNow()
+            playbackProgressReporter.reportNow(musicId, millSeconds)
         }
     }
 
     /**
      * 切歌前先落库当前播放进度。
      */
-    private fun onBeforeChangeMusic() {
-        playbackProgressReporter.stop()
-        setPlayerProgress(musicController.progressStateFlow.value)
+    private suspend fun onBeforeChangeMusic() {
+        val currentPosition = musicController.progressStateFlow.value
+        playbackProgressReporter.stopAndJoin()
+        setPlayerProgress(currentPosition)
     }
 
     /**

@@ -13,6 +13,7 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
     return startKoin<StartKoinApp> {
         includes(config)
         modules(
+            playbackProgressModule
         )
     }.startCommonKoinModule()
 }

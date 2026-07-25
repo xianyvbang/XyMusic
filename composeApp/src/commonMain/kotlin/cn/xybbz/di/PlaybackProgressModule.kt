@@ -1,23 +1,20 @@
 package cn.xybbz.di
 
-import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlaybackProgressReporter
-import cn.xybbz.config.setting.SettingsManager
-import org.koin.core.annotation.Configuration
-import org.koin.core.annotation.Module
-import org.koin.core.annotation.Single
+import org.koin.dsl.module
+import org.koin.dsl.onClose
 
-@Module
-@Configuration
-class PlaybackProgressModule {
-
-    @Single
-    fun playbackProgressReporter(
-        musicController: MusicCommonController,
-        dataSourceManager: DataSourceManager,
-        settingsManager: SettingsManager
-    ): PlaybackProgressReporter {
-        return PlaybackProgressReporter(musicController, dataSourceManager, settingsManager)
+/**
+ * 播放进度上报器的显式 Koin 模块，容器关闭时同步释放其协程资源。
+ */
+val playbackProgressModule = module {
+    single<PlaybackProgressReporter> {
+        PlaybackProgressReporter(
+            musicController = get(),
+            dataSourceManager = get(),
+            settingsManager = get()
+        )
+    }.onClose { reporter ->
+        reporter?.close()
     }
 }
