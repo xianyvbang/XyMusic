@@ -35,6 +35,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.config.music.PlayerEvent
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.volume.VolumeServer
 import cn.xybbz.download.DownloaderManager
@@ -45,7 +46,15 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.setting.SkipTime
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -98,9 +107,22 @@ class MusicBottomMenuViewModel(
     var xyArtists by mutableStateOf<List<XyArtist>>(emptyList())
         private set
 
+    /** 记录自然结束事件的递增序号，避免定时器复用旧的结束事件。 */
+    private var trackEndSequence = 0L
+
+    /** 缓冲最近的自然结束事件，避免等待任务建立时丢失边界事件。 */
+    private val trackEndSignals = MutableSharedFlow<TrackEndSignal>(
+        replay = 1,
+        extraBufferCapacity = 16
+    )
+
+    /** 持续接收播放器产生的自然结束事件。 */
+    private var trackEndObserverJob: Job? = null
+
     init {
         getDoubleSpeed()
         refreshVolume()
+        trackEndObserverJob = observeTrackEndEvents()
     }
 
     //region 定时关闭
@@ -291,6 +313,8 @@ class MusicBottomMenuViewModel(
 
     override fun onCleared() {
         cancelTimerJobs()
+        trackEndObserverJob?.cancel()
+        trackEndObserverJob = null
         super.onCleared()
     }
 
@@ -301,24 +325,74 @@ class MusicBottomMenuViewModel(
         stopAfterCurrentTrackJob = null
     }
 
+    /** 持续收集播放器自然结束事件，并为每个事件分配递增序号。 */
+    private fun observeTrackEndEvents(): Job {
+        return viewModelScope.launch {
+            musicController.events
+                .filterIsInstance<PlayerEvent.RemovePlaybackProgress>()
+                .collect { event ->
+                    trackEndSequence += 1L
+                    trackEndSignals.emit(
+                        TrackEndSignal(
+                            sequence = trackEndSequence,
+                            musicId = event.musicId
+                        )
+                    )
+                }
+        }
+    }
+
     private fun waitForCurrentTrackToFinish(currentItemId: String) {
         stopAfterCurrentTrackJob?.cancel()
+        // 仅接收定时器到期后产生的自然结束事件，避免重放旧信号。
+        val baselineTrackEndSequence = trackEndSequence
         stopAfterCurrentTrackJob = viewModelScope.launch {
-            var lastPosition = musicController.progressStateFlow.value
-
-            musicController.progressStateFlow.collect { position ->
-                val itemChanged = musicController.musicInfo?.itemId != currentItemId
-                val playbackStopped =
-                    musicController.state == PlayStateEnum.Pause || musicController.state == PlayStateEnum.None
-                val progressRestarted = position < lastPosition
-
-                if (itemChanged || playbackStopped || progressRestarted) {
-                    stopPlaybackByTimer()
-                    musicController.clearPlayerList()
-                } else {
-                    lastPosition = position
+            merge(
+                trackEndSignals
+                    .filter {
+                        isNewMatchingTrackEndSignal(
+                            signalSequence = it.sequence,
+                            baselineSequence = baselineTrackEndSequence,
+                            waitingMusicId = currentItemId,
+                            endedMusicId = it.musicId
+                        )
+                    }
+                    .map {
+                        MusicTimerStopCandidate(
+                            currentMusicId = musicController.musicInfo?.itemId,
+                            playbackState = musicController.state,
+                            playerEvent = PlayerEvent.RemovePlaybackProgress(it.musicId)
+                        )
+                    },
+                musicController.musicInfoFlow
+                    .filter { it?.itemId != currentItemId }
+                    .map {
+                        MusicTimerStopCandidate(
+                            currentMusicId = it?.itemId,
+                            playbackState = musicController.state
+                        )
+                    },
+                musicController.stateFlow
+                    .filter { it == PlayStateEnum.Pause || it == PlayStateEnum.None }
+                    .map {
+                        MusicTimerStopCandidate(
+                            currentMusicId = musicController.musicInfo?.itemId,
+                            playbackState = it
+                        )
+                    }
+            )
+                .mapNotNull { candidate ->
+                    resolveMusicTimerStopReason(
+                        waitingMusicId = currentItemId,
+                        currentMusicId = candidate.currentMusicId,
+                        playbackState = candidate.playbackState,
+                        playerEvent = candidate.playerEvent
+                    )
                 }
-            }
+                .first()
+
+            stopPlaybackByTimer()
+            musicController.clearPlayerList()
         }
     }
 
