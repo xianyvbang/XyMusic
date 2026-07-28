@@ -45,7 +45,11 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.search.SearchHistory
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 
@@ -58,11 +62,20 @@ class SearchViewModel(
     private val downloaderManager: DownloaderManager,
 ) : ViewModel() {
 
-    val downloadMusicIdsFlow =
-        downloadDb.downloadDao.getAllMusicTaskUidsFlow(
-            notTypeData = DownloadTypes.APK.toString(),
-            mediaLibraryId = dataSourceManager.getConnectionId().toString()
-        )
+    /** 当前连接下已完成下载的音乐 ID 流。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val downloadMusicIdsFlow: Flow<List<String>> =
+        dataSourceManager.connectionIdFlow
+            .flatMapLatest { connectionId ->
+                if (connectionId == 0L) {
+                    flowOf(emptyList())
+                } else {
+                    downloadDb.downloadDao.getAllMusicTaskUidsFlow(
+                        notTypeData = DownloadTypes.APK.toString(),
+                        mediaLibraryId = connectionId.toString()
+                    )
+                }
+            }
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**
