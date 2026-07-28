@@ -290,7 +290,7 @@ class JvmMusicController : MusicCommonController() {
      */
     override fun seekTo(millSeconds: Long) {
         val player = currentMediaPlayer() ?: return
-        if (millSeconds > 0) {
+        if (millSeconds >= 0) {
             player.controls().setTime(millSeconds)
             setCurrentPositionData(millSeconds)
             musicInfo?.let {

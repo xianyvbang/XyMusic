@@ -16,10 +16,13 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.ui.state.PlayerChromeState
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 
 /**
  * 播放页推荐歌曲状态。
@@ -56,6 +59,8 @@ class PlayerEventCoordinator(
     private var loginObserveJob: Job? = null
     // 专辑历史开关监听任务
     private var enableProgressJob: Job? = null
+    // 当前推荐数据加载任务
+    private var recommendationJob: Job? = null
     // 当前数据源下允许记录进度的专辑配置
     private val enableProgressMap = mutableMapOf<String, Boolean>()
 
@@ -106,6 +111,8 @@ class PlayerEventCoordinator(
         loginObserveJob = null
         enableProgressJob?.cancel()
         enableProgressJob = null
+        recommendationJob?.cancel()
+        recommendationJob = null
         playbackProgressReporter.stop()
     }
 
@@ -191,29 +198,39 @@ class PlayerEventCoordinator(
     private fun onChangeMusic(musicId: String, artistId: String?, artistName: String?) {
         // 切歌事件源处直接重置迷你播放条标题跑马灯，避免 UI 层额外监听播放业务事件。
         playerChromeState.putMarqueeIterations(0)
-
         // 自动登录状态统一从 autoLoginState 读取，避免继续依赖已删除的 loginStatus 副本。
         if (dataSourceManager.autoLoginState.value !is ClientLoginInfoState.UserLoginSuccess) {
             _recommendationStateFlow.value = PlayerRecommendationState()
             return
         }
+        recommendationJob?.cancel()
 
         // 切歌后补充加载相似歌曲和热门歌曲，供播放页展示。
-        scope.launch {
-            val similar = dataSourceManager.getSimilarMusicList(musicId)
-            _recommendationStateFlow.value = recommendationStateFlow.value.copy(
-                similarMusicList = similar
-            )
-        }
-        scope.launch {
-            musicController.musicInfo?.let {
-                val popular = dataSourceManager.getArtistPopularMusicList(
-                    artistId ?: "",
-                    artistName ?: ""
-                )
-                _recommendationStateFlow.value = recommendationStateFlow.value.copy(
-                    popularMusicList = popular
-                )
+
+        recommendationJob = scope.launch {
+            supervisorScope {
+                launch {
+                    val similar = dataSourceManager.getSimilarMusicList(musicId)
+                    ensureActive()
+                    if (musicController.musicInfo?.itemId == musicId) {
+                        _recommendationStateFlow.update {
+                            it.copy(similarMusicList = similar)
+                        }
+                    }
+                }
+
+                launch {
+                    val popular = dataSourceManager.getArtistPopularMusicList(
+                        artistId.orEmpty(),
+                        artistName.orEmpty()
+                    )
+                    ensureActive()
+                    if (musicController.musicInfo?.itemId == musicId) {
+                        _recommendationStateFlow.update {
+                            it.copy(popularMusicList = popular)
+                        }
+                    }
+                }
             }
         }
         scope.launch {
