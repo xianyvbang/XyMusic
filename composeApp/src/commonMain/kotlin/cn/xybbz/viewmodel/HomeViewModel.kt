@@ -291,49 +291,52 @@ class HomeViewModel(
         isRefresh: Boolean = false,
         reason: HomeRefreshReason = HomeRefreshReason.EnterHome
     ) {
-        isRefreshing = true
         viewModelScope.launch {
-            if (dataSourceManager.ifLoginError) {
-                if (isRefresh) {
-                    autoLogin()
-                }
-            } else {
-                Log.i("home", "开始刷新数据")
-                // 首页基础刷新任务，JVM 端只保留这些核心数据。
-                val refreshTasks = mutableListOf(
-                    async {
-                        dataSourceManager.getMostPlayerMusicList()
-                    },
-                    async {
-                        dataSourceManager.getNewestAlbumList()
-                    },
-                    async {
-                        dataSourceManager.playRecordMusicOrAlbumList()
+            isRefreshing = true
+            try {
+                if (dataSourceManager.ifLoginError) {
+                    if (isRefresh) {
+                        autoLogin()
                     }
-                )
-
-                if (ifLoadHomeRefreshAuxiliaryData) {
-                    refreshTasks.add(
+                } else {
+                    Log.i("home", "开始刷新数据")
+                    // 首页基础刷新任务，JVM 端只保留这些核心数据。
+                    val refreshTasks = mutableListOf(
                         async {
-                            getServerPlaylists(reason == HomeRefreshReason.Manual)
+                            dataSourceManager.getMostPlayerMusicList()
+                        },
+                        async {
+                            dataSourceManager.getNewestAlbumList()
+                        },
+                        async {
+                            dataSourceManager.playRecordMusicOrAlbumList()
                         }
                     )
-                    refreshTasks.add(
-                        async {
-                            getServerDataCount(reason == HomeRefreshReason.Manual)
-                        }
-                    )
-                }
 
-                if (isRefresh)
-                    launch {
-                        generateRecommendedMusicList()
+                    if (ifLoadHomeRefreshAuxiliaryData) {
+                        refreshTasks.add(
+                            async {
+                                getServerPlaylists(reason == HomeRefreshReason.Manual)
+                            }
+                        )
+                        refreshTasks.add(
+                            async {
+                                getServerDataCount(reason == HomeRefreshReason.Manual)
+                            }
+                        )
                     }
 
-                refreshTasks.awaitAll()
+                    if (isRefresh)
+                        launch {
+                            generateRecommendedMusicList()
+                        }
+
+                    refreshTasks.awaitAll()
+                }
+            } finally {
+                isRefreshing = false
+                onEnd?.invoke(false)
             }
-            isRefreshing = false
-            onEnd?.invoke(false)
         }
     }
 
