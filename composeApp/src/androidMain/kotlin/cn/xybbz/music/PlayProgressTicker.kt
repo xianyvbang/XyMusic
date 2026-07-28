@@ -29,6 +29,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration.Companion.milliseconds
 
 class PlayProgressTicker(
     private val controller: MediaController,
@@ -61,7 +62,7 @@ class PlayProgressTicker(
                             onProgress(controller.currentPosition)
                         }
                     })
-                    delay(intervalMs)
+                    delay(intervalMs.milliseconds)
                 }
             }
         }

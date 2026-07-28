@@ -247,6 +247,46 @@ internal fun MobileHomeScreen(
             homeViewModel.dataSourceManager.dataSourceType?.ifShowCount == true
         }
     }
+
+    // 缓存连接菜单项，仅在连接列表发生变化时重新构建。
+    val connectionMenuItems = remember(homeViewModel.connectionList) {
+        homeViewModel.connectionList.map { connection ->
+            MenuItemDefaultData(
+                title = connection.name,
+                leadingIcon = {
+                    if (homeViewModel.dataSourceManager.getConnectionId() == connection.id)
+                        Icon(
+                            painterResource(Res.drawable.check_24px),
+                            contentDescription = connection.name + stringResource(
+                                Res.string.connection_link
+                            )
+                        )
+                },
+                trailingIcon = {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(connection.type.img),
+                            contentDescription = connection.name + stringResource(
+                                Res.string.icon
+                            ),
+                            modifier = Modifier.size(25.dp)
+                        )
+                    }
+                },
+                onClick = {
+                    coroutineScope.launch {
+                        ifShowConnectionMenu = false
+                        homeViewModel.changeDataSource(connection)
+                    }
+                })
+        }
+    }
+
     XyColumnScreen {
         TopAppBarComponent(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -292,44 +332,7 @@ internal fun MobileHomeScreen(
                                     ifShowConnectionMenu = false
                                     navigator.navigate(ConnectionManagement)
                                 }),
-                            *homeViewModel.connectionList.map { connection ->
-                                MenuItemDefaultData(
-                                    title = connection.name,
-                                    leadingIcon = {
-                                        if (homeViewModel.dataSourceManager.getConnectionId() == connection.id)
-                                            Icon(
-                                                painterResource(Res.drawable.check_24px),
-                                                contentDescription = connection.name + stringResource(
-                                                    Res.string.connection_link
-                                                )
-                                            )
-                                    },
-                                    trailingIcon = {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(30.dp)
-                                                .clip(CircleShape),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Image(
-                                                painter = painterResource(connection.type.img),
-                                                contentDescription = connection.name + stringResource(
-                                                    Res.string.icon
-                                                ),
-                                                modifier = Modifier.size(25.dp)
-                                            )
-                                        }
-
-                                    },
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            ifShowConnectionMenu = false
-                                            homeViewModel.changeDataSource(connection)
-                                        }.invokeOnCompletion {
-                                        }
-
-                                    })
-                            }.toTypedArray()
+                            *connectionMenuItems.toTypedArray()
                         )
                     )
                 }
