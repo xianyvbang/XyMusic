@@ -35,13 +35,13 @@ import java.awt.event.WindowFocusListener
 fun main() {
     // FileKit 需要在桌面应用启动前初始化 appId，用于解析平台目录和原生文件弹窗能力。
     FileKit.init(appId = "cn.xybbz")
+    // Koin 只注册依赖，真正的启动初始化在 App/StartupViewModel 内异步执行。
+    val koinApplication = initKoin {}
 
+    // 防止多个窗口关闭入口重复释放同一批应用级资源。
+    var isClosing = false
     application {
-        // Koin 只注册依赖，真正的启动初始化在 App/StartupViewModel 内异步执行。
-        val koinApplication = initKoin {}
-
-        // 防止多个窗口关闭入口重复释放同一批应用级资源。
-        var isClosing = false
+       
         val handleCloseRequest = {
             if (!isClosing) {
                 isClosing = true
