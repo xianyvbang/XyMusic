@@ -18,8 +18,8 @@
 
 package cn.xybbz.viewmodel
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -64,15 +64,8 @@ class ArtistViewModel (
     var selectArtistChars by mutableStateOf(emptyList<Char>())
         private set
 
-    /**
-     * 艺术家缓存刷新异常信息。
-     */
-    var artistCacheRefreshError by mutableStateOf<Throwable?>(null)
-        private set
-
     init {
         getSelectCharList()
-        refreshArtistCacheIfNeeded()
     }
 
     /**
@@ -120,21 +113,6 @@ class ArtistViewModel (
         viewModelScope.launch {
             db.artistDao.getSelectCharList().collect {
                 selectArtistChars = it.map { char -> char[0].uppercaseChar() }.distinct()
-            }
-        }
-    }
-
-    /**
-     * 按需刷新艺术家缓存。
-     * 默认不强制刷新，避免每次进入页面都重复请求远端。
-     */
-    fun refreshArtistCacheIfNeeded(force: Boolean = false) {
-        viewModelScope.launch {
-            artistCacheRefreshError = null
-            try {
-                dataSourceManager.refreshArtistCacheIfNeeded(force)
-            } catch (e: Exception) {
-                artistCacheRefreshError = e
             }
         }
     }

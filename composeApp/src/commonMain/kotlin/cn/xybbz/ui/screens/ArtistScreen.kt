@@ -110,10 +110,7 @@ fun ArtistScreen(
             SwipeRefreshVerticalGridListComponent(
                 modifier = Modifier,
                 lazyGridState = lazyGridState,
-                collectAsLazyPagingItems = artistListPaging,
-                onRefresh = {
-                    artistViewModel.refreshArtistCacheIfNeeded(force = true)
-                },
+                collectAsLazyPagingItems = artistListPaging
             ) {
                 items(
                     count = artistListPaging.itemCount,

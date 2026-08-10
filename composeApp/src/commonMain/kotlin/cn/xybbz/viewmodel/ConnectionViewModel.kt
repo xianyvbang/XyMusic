@@ -526,7 +526,7 @@ class ConnectionViewModel(
     }
 
      companion object {
-         const val CHOOSE_INDEX = 1
+         const val CHOOSE_INDEX = 0
         val INVISIBLE_CHAR_REGEX = Regex("[\\u200B-\\u200D\\uFEFF]")
     }
 }
