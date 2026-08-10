@@ -141,7 +141,7 @@ data class SongItem(
     /**
      * 位深
      */
-    val bitDepth: Int,
+    val bitDepth: Int?,
     /**
      * 通道号
      */
