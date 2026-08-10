@@ -49,6 +49,7 @@ interface XyMusicDao {
 
     @Transaction
     suspend fun saveDataBatch(data: List<XyMusic>): List<Long> {
+        val saveBatch = saveBatch(data)
         var favoriteIndex = selectFavoriteIndex() ?: -1
         saveFavoriteMusic(data.filter { it.ifFavoriteStatus }.map {
             favoriteIndex += 1
@@ -58,7 +59,7 @@ interface XyMusicDao {
                 connectionId = it.connectionId
             )
         })
-        return saveBatch(data)
+        return saveBatch
     }
 
 
