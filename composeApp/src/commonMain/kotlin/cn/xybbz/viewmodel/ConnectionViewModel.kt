@@ -90,11 +90,11 @@ class ConnectionViewModel(
     var tmpAddress by mutableStateOf("")
         private set
 
-    var selectUrlIndex by mutableIntStateOf(UNSELECTED_RESOURCE_INDEX)
+    var selectUrlIndex by mutableIntStateOf(connectionUrlIndex)
         private set
 
     val hasSelectedResource: Boolean
-        get() = selectUrlIndex != UNSELECTED_RESOURCE_INDEX && tmpAddress.isNotBlank()
+        get() = selectUrlIndex != connectionUrlIndex && tmpAddress.isNotBlank()
 
     //加载状态
     var loading by mutableStateOf(false)
@@ -276,9 +276,7 @@ class ConnectionViewModel(
         }
         loading = true
         clearLoginStatus()
-        var ifTemp = true
         if (dataSourceManager.dataSourceType == null) {
-            ifTemp = false
             dataSourceManager.switchDataSource(tmpDatasource)
             tmpDataSourceParentServer = dataSourceManager
         } else {
@@ -437,7 +435,7 @@ class ConnectionViewModel(
      * 清空资源选择。
      */
     private fun clearResourceSelection() {
-        this.selectUrlIndex = UNSELECTED_RESOURCE_INDEX
+        this.selectUrlIndex = connectionUrlIndex
         plexInfo = null
         tmpAddress = ""
         tmpPlexInfo = emptyList()
@@ -527,9 +525,14 @@ class ConnectionViewModel(
         return normalizeInputText(value).trimEnd('/')
     }
 
-    private companion object {
-        const val UNSELECTED_RESOURCE_INDEX = -1
+     companion object {
+         const val CHOOSE_INDEX = 1
         val INVISIBLE_CHAR_REGEX = Regex("[\\u200B-\\u200D\\uFEFF]")
     }
 }
+
+/**
+ * 默认连接地址选择索引 android/IOS默认选择1 桌面端不选择
+ */
+expect val connectionUrlIndex: Int
 
