@@ -20,6 +20,7 @@ package cn.xybbz
 
 import android.app.Application
 import android.util.Log
+import cn.xybbz.api.client.KtorClient
 import cn.xybbz.di.initKoin
 import org.koin.android.ext.koin.androidContext
 
@@ -35,6 +36,8 @@ class XyApplication : Application() {
 //            exitProcess(1)
         }
         super.onCreate()
+        // 根据当前 APK 的构建类型自动控制 HTTP 请求日志，Release 包始终关闭。
+        KtorClient.debug = BuildConfig.DEBUG
         initKoin {
             androidContext(applicationContext)
         }

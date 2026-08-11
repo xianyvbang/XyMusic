@@ -35,7 +35,3 @@ actual fun provideClient(proxy: ProxyConfig?): HttpClient {
         }
     }
 }
-
-actual fun isNetworkDebugLoggingEnabled(): Boolean {
-    return System.getProperty("cn.xybbz.http.debugLog") == "true"
-}

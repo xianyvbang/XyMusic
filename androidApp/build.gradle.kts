@@ -35,6 +35,8 @@ kotlin {
 
     dependencies {
         implementation(projects.composeApp)
+        // Android 应用直接配置 API 模块的网络日志开关。
+        implementation(projects.api)
         implementation(libs.compose.uiToolingPreview)
         implementation(libs.androidx.activity.compose)
         implementation(libs.kotlin.ktor.android)
@@ -99,5 +101,7 @@ android {
     }
     buildFeatures {
         compose = true
+        // 生成构建变体常量，用于根据 Debug/Release 类型控制网络日志。
+        buildConfig = true
     }
 }

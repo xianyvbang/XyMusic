@@ -17,5 +17,3 @@ actual fun provideClient(proxy: ProxyConfig?): HttpClient {
         }
     }
 }
-
-actual fun isNetworkDebugLoggingEnabled(): Boolean = false

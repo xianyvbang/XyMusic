@@ -17,8 +17,6 @@ expect fun provideClient(): HttpClient
 
 expect fun provideClient(proxy: ProxyConfig?): HttpClient
 
-expect fun isNetworkDebugLoggingEnabled(): Boolean
-
 internal fun HttpClientConfig<*>.installXyCommonClientConfig() {
     install(Logging) {
         logger = object : Logger {
@@ -27,7 +25,7 @@ internal fun HttpClientConfig<*>.installXyCommonClientConfig() {
                 logger.info { HttpLogSanitizer.sanitize(message) }
             }
         }
-        level = if (isNetworkDebugLoggingEnabled()) LogLevel.HEADERS else LogLevel.NONE
+        level = if (KtorClient.debug) LogLevel.ALL else LogLevel.NONE
     }
     install(ContentNegotiation) {
         json(jsonSerializer)
