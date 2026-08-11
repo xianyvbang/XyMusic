@@ -1522,30 +1522,34 @@ abstract class IDataSourceParentServer(
     suspend fun initOtherData(connectionId: Long) {
         try {
             downloaderManager.initData(connectionId.toString())
-            Log.i(Constants.LOG_ERROR_PREFIX, "start syncing media library/favorites/counts")
-            db.withTransaction {
-                val remoteId = RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionId
 
-                initFavoriteData(connectionId = connectionId)
-                if (ifSyncDataInfoCountAfterLogin) {
-                    try {
-                        refreshDataInfoCountIfNeeded(connectionId)
-                    } catch (e: Exception) {
-                        Log.e(
-                            Constants.LOG_ERROR_PREFIX,
-                            "failed to fetch media/album/artist/favorite/genre counts",
-                            e
-                        )
-                    }
-                }
+            // 网络请求不能放在数据库事务内
+            initFavoriteData(connectionId)
 
+            if (ifSyncDataInfoCountAfterLogin) {
                 try {
-                    getApiClient().ping()
+                    refreshDataInfoCountIfNeeded(connectionId)
                 } catch (e: Exception) {
-                    tryMarkLoginRetry()
-                    throw e
+                    Log.e(
+                        Constants.LOG_ERROR_PREFIX,
+                        "failed to fetch media/album/artist/favorite/genre counts",
+                        e
+                    )
                 }
+            }
 
+            try {
+                getApiClient().ping()
+            } catch (e: Exception) {
+                tryMarkLoginRetry()
+                throw e
+            }
+
+            val remoteId =
+                RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionId
+
+            // 事务只负责短时间的本地原子写入
+            db.withTransaction {
                 db.remoteCurrentDao.deleteById(remoteId)
                 db.remoteCurrentDao.insertOrReplace(
                     RemoteCurrent(
@@ -1558,7 +1562,11 @@ abstract class IDataSourceParentServer(
                 )
             }
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "sync media/favorite/count failed", e)
+            Log.e(
+                Constants.LOG_ERROR_PREFIX,
+                "sync media/favorite/count failed",
+                e
+            )
         }
     }
 

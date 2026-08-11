@@ -49,12 +49,16 @@ import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.PlayerModeEnum
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
@@ -95,6 +99,9 @@ class HomeViewModel(
 
     private var localMusicCountJob: Job? = null
     private var downloadCountJob: Job? = null
+
+    /** 串行执行首页刷新，避免登录和媒体库事件同时修改刷新状态。 */
+    private val refreshMutex = Mutex()
 
 
     init {
@@ -222,22 +229,6 @@ class HomeViewModel(
      */
     private fun observeLoginSuccess() {
         viewModelScope.launch {
-
-            /*dataSourceManager.combinedFlow.collect {
-                val reason =
-                    if (oldCombined?.second != it.second) {
-                        HomeRefreshReason.Manual
-                    } else {
-                        HomeRefreshReason.Login
-                    }
-                oldCombined = it
-                Log.i("home", "登录数据变化22222${it}--- ${reason}")
-                tryRefreshHome(
-                    isRefresh = true,
-                    reason = reason
-                )
-            }*/
-
             dataSourceManager.mergeFlow.collect {
                 val reason = when (it) {
                     is Source.Login ->
@@ -253,14 +244,6 @@ class HomeViewModel(
                     reason = reason
                 )
             }
-
-            /*dataSourceManager.loginStateFlow.collect {
-                Log.i("home", "登录数据变化${it}")
-                tryRefreshHome(
-                    isRefresh = true,
-                    reason = HomeRefreshReason.Manual
-                )
-            }*/
         }
     }
 
@@ -272,72 +255,83 @@ class HomeViewModel(
         reason: HomeRefreshReason,
         onEnd: ((Boolean) -> Unit)? = null,
     ) {
-        val connectionId = dataSourceManager.getConnectionId()
-        val key = RemoteIdConstants.HOME_REFRESH + connectionId
-        if (!DataRefreshEstimateUtils.shouldRefresh(reason, db, key)) {
-            onEnd?.invoke(false)
-            return
+        refreshMutex.withLock {
+            val connectionId = dataSourceManager.getConnectionId()
+            val key = RemoteIdConstants.HOME_REFRESH + connectionId
+            if (!DataRefreshEstimateUtils.shouldRefresh(reason, db, key)) {
+                onEnd?.invoke(false)
+                return@withLock
+            }
+
+            isRefreshing = true
+            try {
+                val refreshed = refreshDataAll(isRefresh, reason)
+                if (refreshed) {
+                    DataRefreshEstimateUtils.updateHomeRefreshTime(connectionId, db, key)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(Constants.LOG_ERROR_PREFIX, "首页刷新数据失败", e)
+            } finally {
+                isRefreshing = false
+                onEnd?.invoke(false)
+            }
         }
-        refreshDataAll(onEnd, isRefresh, reason)
-        DataRefreshEstimateUtils.updateHomeRefreshTime(connectionId, db, key)
     }
 
     /**
      * 刷新数据
      * @param [reason] 首页刷新原因，用于区分用户手动下拉和登录自动刷新。
      */
-    fun refreshDataAll(
-        onEnd: ((Boolean) -> Unit)? = null,
+    suspend fun refreshDataAll(
         isRefresh: Boolean = false,
         reason: HomeRefreshReason = HomeRefreshReason.EnterHome
-    ) {
-        viewModelScope.launch {
-            isRefreshing = true
-            try {
-                if (dataSourceManager.ifLoginError) {
-                    if (isRefresh) {
-                        autoLogin()
-                    }
-                } else {
-                    Log.i("home", "开始刷新数据")
-                    // 首页基础刷新任务，JVM 端只保留这些核心数据。
-                    val refreshTasks = mutableListOf(
-                        async {
-                            dataSourceManager.getMostPlayerMusicList()
-                        },
-                        async {
-                            dataSourceManager.getNewestAlbumList()
-                        },
-                        async {
-                            dataSourceManager.playRecordMusicOrAlbumList()
-                        }
-                    )
-
-                    if (ifLoadHomeRefreshAuxiliaryData) {
-                        refreshTasks.add(
-                            async {
-                                getServerPlaylists(reason == HomeRefreshReason.Manual)
-                            }
-                        )
-                        refreshTasks.add(
-                            async {
-                                getServerDataCount(reason == HomeRefreshReason.Manual)
-                            }
-                        )
-                    }
-
-                    if (isRefresh)
-                        launch {
-                            generateRecommendedMusicList()
-                        }
-
-                    refreshTasks.awaitAll()
-                }
-            } finally {
-                isRefreshing = false
-                onEnd?.invoke(false)
+    ): Boolean = coroutineScope {
+        if (dataSourceManager.ifLoginError) {
+            if (isRefresh) {
+                autoLoginAndAwait()
+            }
+            if (dataSourceManager.ifLoginError) {
+                return@coroutineScope false
             }
         }
+
+        Log.i("home", "开始刷新数据")
+        // 首页基础刷新任务，JVM 端只保留这些核心数据。
+        val refreshTasks = mutableListOf(
+            async {
+                dataSourceManager.getMostPlayerMusicList()
+            },
+            async {
+                dataSourceManager.getNewestAlbumList()
+            },
+            async {
+                dataSourceManager.playRecordMusicOrAlbumList()
+            }
+        )
+
+        if (ifLoadHomeRefreshAuxiliaryData) {
+            refreshTasks.add(
+                async {
+                    getServerPlaylists(reason == HomeRefreshReason.Manual)
+                }
+            )
+            refreshTasks.add(
+                async {
+                    getServerDataCount(reason == HomeRefreshReason.Manual)
+                }
+            )
+        }
+
+        if (isRefresh) {
+            launch {
+                generateRecommendedMusicList()
+            }
+        }
+
+        refreshTasks.awaitAll()
+        true
     }
 
     /**
@@ -415,9 +409,15 @@ class HomeViewModel(
 
     fun autoLogin() {
         viewModelScope.launch {
-            dataSourceManager.serverLogin(
-                LoginType.API,
-                db.connectionConfigDao.selectConnectionConfig())
+            autoLoginAndAwait()
         }
+    }
+
+    /** 执行并等待自动登录完成，供首页刷新流程保持结构化并发。 */
+    private suspend fun autoLoginAndAwait() {
+        dataSourceManager.serverLogin(
+            LoginType.API,
+            db.connectionConfigDao.selectConnectionConfig()
+        )
     }
 }
