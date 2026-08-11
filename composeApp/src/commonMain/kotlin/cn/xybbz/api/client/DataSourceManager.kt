@@ -127,7 +127,7 @@ open class DataSourceManager(
     companion object {
         private const val ARTIST_POPULAR_CACHE_TTL_MS = 24L * 60L * 60L * 1000L
         private const val SIMILAR_MUSIC_CACHE_TTL_MS = 6L * 60L * 60L * 1000L
-        private const val ACTIVE_RELOGIN_INTERVAL_MS = 5L * 60L * 1000L
+        private const val ACTIVE_RELOGIN_INTERVAL_MS = 1L * 60L * 1000L
     }
 
 
