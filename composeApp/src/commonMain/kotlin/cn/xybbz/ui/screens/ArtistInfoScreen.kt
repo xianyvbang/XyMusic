@@ -522,94 +522,94 @@ fun ArtistInfoScreen(
                 .background(topOverlayColor)
         )
 
-        XyColumnScreen {
+        XyColumnScreen(background = Color.Transparent) {
+            TopAppBarComponent(
+                title = {
+                    Box(
+                        modifier = Modifier
+                            .padding(
+                                top = WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding()
+                            )
+                            .height(TopAppBarDefaults.TopAppBarExpandedHeight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        BasicText(
+                            text = artistName,
+                            modifier = Modifier.basicMarquee(
+                                iterations = Int.MAX_VALUE
+                            ),
+                            color = {
+                                surface.copy(alpha = topBarAlpha)
+                            },
+                            style = LocalTextStyle.current
 
+                        )
+                    }
+
+                },
+                actions = {
+                    Box(
+                        modifier = Modifier
+                            .padding(
+                                top = WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding()
+                            )
+                            .height(TopAppBarDefaults.TopAppBarExpandedHeight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        FavoriteIconButton(
+                            isFavorite = artistInfoViewModel.ifFavorite,
+                            onClick = {
+                                coroutineScope.launch {
+                                    val ifFavorite =
+                                        artistInfoViewModel.dataSourceManager.setFavoriteData(
+                                            type = MusicTypeEnum.ARTIST,
+                                            itemId = artistId,
+                                            ifFavorite = artistInfoViewModel.ifFavorite
+                                        )
+                                    artistInfoViewModel.updateFavorite(ifFavorite)
+                                }
+                            },
+                            normalTint = Color.Red,
+                        )
+                    }
+                },
+                navigationIcon = {
+                    Box(
+                        modifier = Modifier
+                            .padding(
+                                top = WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding()
+                            )
+                            .height(TopAppBarDefaults.TopAppBarExpandedHeight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(
+                            onClick = {
+                                navigator.goBack()
+                            },
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.arrow_back_24px),
+                                contentDescription = stringResource(Res.string.return_home)
+                            )
+                        }
+                    }
+
+
+                },
+//                scrollBehavior = scrollBehavior
+            )
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .nestedScroll(parentScrollConnection),
                 state = parentState,
             ) {
-                stickyHeader {
-                    TopAppBarComponent(
-                        title = {
-                            Box(
-                                modifier = Modifier
-                                    .padding(
-                                        top = WindowInsets.statusBars.asPaddingValues()
-                                            .calculateTopPadding()
-                                    )
-                                    .height(TopAppBarDefaults.TopAppBarExpandedHeight),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                BasicText(
-                                    text = artistName,
-                                    modifier = Modifier.basicMarquee(
-                                        iterations = Int.MAX_VALUE
-                                    ),
-                                    color = {
-                                        surface.copy(alpha = topBarAlpha)
-                                    },
-                                    style = LocalTextStyle.current
+  /*              stickyHeader {
 
-                                )
-                            }
-
-                        },
-                        actions = {
-                            Box(
-                                modifier = Modifier
-                                    .padding(
-                                        top = WindowInsets.statusBars.asPaddingValues()
-                                            .calculateTopPadding()
-                                    )
-                                    .height(TopAppBarDefaults.TopAppBarExpandedHeight),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                FavoriteIconButton(
-                                    isFavorite = artistInfoViewModel.ifFavorite,
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            val ifFavorite =
-                                                artistInfoViewModel.dataSourceManager.setFavoriteData(
-                                                    type = MusicTypeEnum.ARTIST,
-                                                    itemId = artistId,
-                                                    ifFavorite = artistInfoViewModel.ifFavorite
-                                                )
-                                            artistInfoViewModel.updateFavorite(ifFavorite)
-                                        }
-                                    },
-                                    normalTint = Color.Red,
-                                )
-                            }
-                        },
-                        navigationIcon = {
-                            Box(
-                                modifier = Modifier
-                                    .padding(
-                                        top = WindowInsets.statusBars.asPaddingValues()
-                                            .calculateTopPadding()
-                                    )
-                                    .height(TopAppBarDefaults.TopAppBarExpandedHeight),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        navigator.goBack()
-                                    },
-                                ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.arrow_back_24px),
-                                        contentDescription = stringResource(Res.string.return_home)
-                                    )
-                                }
-                            }
-
-
-                        },
-//                scrollBehavior = scrollBehavior
-                    )
-                }
+                }*/
                 item {
                     Spacer(
                         modifier = Modifier.padding(
