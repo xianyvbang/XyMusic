@@ -149,7 +149,6 @@ class DownloadCacheController(
             this,
             1000L,
             {
-                Log.i("music", "缓存进度 $it")
 //                切换当前数据源?
                 updateCacheSchedule(it / 100.0f)
             }
