@@ -5,12 +5,13 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import cn.xybbz.localdata.data.genre.XyGenre
 
 @Dao
 interface XyGenreDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun saveBatch(data: List<XyGenre>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

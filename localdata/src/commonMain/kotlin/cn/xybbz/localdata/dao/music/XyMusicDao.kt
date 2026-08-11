@@ -24,6 +24,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import androidx.room.Update
 import cn.xybbz.localdata.data.music.AlbumMusic
 import cn.xybbz.localdata.data.music.ArtistPopularMusic
@@ -63,7 +64,8 @@ interface XyMusicDao {
     }
 
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    /** 批量新增或更新音乐，避免 REPLACE 先删除旧行而触发关联表级联删除。 */
+    @Upsert
     suspend fun saveBatch(data: List<XyMusic>): List<Long>
 
     @Transaction

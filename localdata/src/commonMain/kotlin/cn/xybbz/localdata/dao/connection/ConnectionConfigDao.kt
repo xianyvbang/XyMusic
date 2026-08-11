@@ -23,13 +23,14 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ConnectionConfigDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun save(data: ConnectionConfig): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

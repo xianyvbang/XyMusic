@@ -25,6 +25,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import androidx.room.Upsert
 import cn.xybbz.localdata.data.artist.FavoriteArtist
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
@@ -52,7 +53,7 @@ interface ArtistDao {
     }
 
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Upsert
     suspend fun saveBatch(value: List<XyArtist>)
 
     @Update

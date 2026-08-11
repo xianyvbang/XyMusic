@@ -25,6 +25,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import androidx.room.Upsert
 import cn.xybbz.localdata.data.album.ArtistAlbum
 import cn.xybbz.localdata.data.album.FavoriteAlbum
 import cn.xybbz.localdata.data.album.GenreAlbum
@@ -39,7 +40,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface AlbumDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun saveDataBatch(data: List<XyAlbum>)
 
     @Transaction
