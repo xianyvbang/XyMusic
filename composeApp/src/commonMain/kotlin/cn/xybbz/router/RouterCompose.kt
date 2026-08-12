@@ -24,7 +24,7 @@ fun RouterCompose(
         Log.d("=====", "RouterCompose重组一次")
     }
     NavDisplay(
-        modifier = Modifier.padding(paddingValues),
+//        modifier = Modifier.padding(paddingValues),
         entries = navigationState.toEntries(platformEntryProvider),
         onBack = { navigator.goBack() },
         sceneStrategy = remember { DialogSceneStrategy() },

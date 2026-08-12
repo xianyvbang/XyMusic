@@ -106,9 +106,9 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.ArtistInfo
+import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.LazyListComponent
 import cn.xybbz.ui.components.LazyVerticalGridComponent
-import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
@@ -527,10 +527,6 @@ fun ArtistInfoScreen(
                 title = {
                     Box(
                         modifier = Modifier
-                            .padding(
-                                top = WindowInsets.statusBars.asPaddingValues()
-                                    .calculateTopPadding()
-                            )
                             .height(TopAppBarDefaults.TopAppBarExpandedHeight),
                         contentAlignment = Alignment.Center
                     ) {
@@ -549,52 +545,32 @@ fun ArtistInfoScreen(
 
                 },
                 actions = {
-                    Box(
-                        modifier = Modifier
-                            .padding(
-                                top = WindowInsets.statusBars.asPaddingValues()
-                                    .calculateTopPadding()
-                            )
-                            .height(TopAppBarDefaults.TopAppBarExpandedHeight),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        FavoriteIconButton(
-                            isFavorite = artistInfoViewModel.ifFavorite,
-                            onClick = {
-                                coroutineScope.launch {
-                                    val ifFavorite =
-                                        artistInfoViewModel.dataSourceManager.setFavoriteData(
-                                            type = MusicTypeEnum.ARTIST,
-                                            itemId = artistId,
-                                            ifFavorite = artistInfoViewModel.ifFavorite
-                                        )
-                                    artistInfoViewModel.updateFavorite(ifFavorite)
-                                }
-                            },
-                            normalTint = Color.Red,
-                        )
-                    }
+                    FavoriteIconButton(
+                        isFavorite = artistInfoViewModel.ifFavorite,
+                        onClick = {
+                            coroutineScope.launch {
+                                val ifFavorite =
+                                    artistInfoViewModel.dataSourceManager.setFavoriteData(
+                                        type = MusicTypeEnum.ARTIST,
+                                        itemId = artistId,
+                                        ifFavorite = artistInfoViewModel.ifFavorite
+                                    )
+                                artistInfoViewModel.updateFavorite(ifFavorite)
+                            }
+                        },
+                        normalTint = Color.Red,
+                    )
                 },
                 navigationIcon = {
-                    Box(
-                        modifier = Modifier
-                            .padding(
-                                top = WindowInsets.statusBars.asPaddingValues()
-                                    .calculateTopPadding()
-                            )
-                            .height(TopAppBarDefaults.TopAppBarExpandedHeight),
-                        contentAlignment = Alignment.Center
+                    IconButton(
+                        onClick = {
+                            navigator.goBack()
+                        },
                     ) {
-                        IconButton(
-                            onClick = {
-                                navigator.goBack()
-                            },
-                        ) {
-                            Icon(
-                                painter = painterResource(Res.drawable.arrow_back_24px),
-                                contentDescription = stringResource(Res.string.return_home)
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(Res.drawable.arrow_back_24px),
+                            contentDescription = stringResource(Res.string.return_home)
+                        )
                     }
 
 
@@ -607,9 +583,9 @@ fun ArtistInfoScreen(
                     .nestedScroll(parentScrollConnection),
                 state = parentState,
             ) {
-  /*              stickyHeader {
+                /*              stickyHeader {
 
-                }*/
+                              }*/
                 item {
                     Spacer(
                         modifier = Modifier.padding(

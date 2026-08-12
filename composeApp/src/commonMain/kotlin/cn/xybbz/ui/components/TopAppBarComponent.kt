@@ -29,9 +29,9 @@ fun TopAppBarComponent(
 ) {
     TopAppBar(
         modifier = modifier,
-        windowInsets = WindowInsets.systemBars.only(
+        /*windowInsets = WindowInsets.systemBars.only(
             WindowInsetsSides.Horizontal
-        ),
+        ),*/
         title = title,
         navigationIcon = navigationIcon,
         actions = actions,
