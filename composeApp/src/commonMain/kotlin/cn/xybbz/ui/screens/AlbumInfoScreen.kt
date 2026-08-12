@@ -481,8 +481,8 @@ fun AlbumInfoScreen(
                 item {
                     LazyListComponent(
                         modifier = Modifier.height(
-                            maxHeight - DefaultAlbumInfoHeight - /*XyTheme.dimens.contentPadding -*/ TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
-                                .calculateTopPadding() + XyTheme.dimens.snackBarPlayerHeight - XyTheme.dimens.outerHorizontalPadding
+                            maxHeight - DefaultAlbumInfoHeight - /*XyTheme.dimens.contentPadding -*/ TopAppBarDefaults.TopAppBarExpandedHeight
+                                    + XyTheme.dimens.snackBarPlayerHeight - XyTheme.dimens.outerHorizontalPadding
                         ),
                         collectAsLazyPagingItems = musicListPage
                     ) {
