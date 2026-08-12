@@ -208,7 +208,6 @@ fun ArtistInfoScreen(
     }
     val headerReservedHeightPx = max(gradientVisualHeightPx, headerInfoMinHeightPx)
     val headerReservedHeightDp = with(density) { headerReservedHeightPx.toDp() }
-    val headerReservedExtraPx = (headerReservedHeightPx - gradientVisualHeightPx).coerceAtLeast(0f)
     val topBarBottomPx = with(density) {
         (
                 TopAppBarDefaults.TopAppBarExpandedHeight +
@@ -229,7 +228,8 @@ fun ArtistInfoScreen(
             val item2OffsetPx =
                 parentState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == 2 }?.offset?.toFloat()
             when {
-                item2OffsetPx != null -> item2OffsetPx - topBarBottomPx - headerReservedExtraPx
+                // 顶部栏位于父列表外部，item2 的 offset 就是列表顶部到内容顶部的真实距离。
+                item2OffsetPx != null -> item2OffsetPx
                 parentState.firstVisibleItemIndex > 2 -> 0f
                 else -> collapseRangePx + 1f
             }
@@ -274,16 +274,9 @@ fun ArtistInfoScreen(
         label = "artist_pull_down_offset"
     )
     val imageStretchPx = (pullDownOffsetAnimatedPx - listLiftUpOffsetPx).coerceAtLeast(0f)
-    val listPullDownTranslationY by animateFloatAsState(
-        targetValue = (pullDownOffsetAnimatedPx - listLiftUpOffsetPx).coerceAtLeast(0f),
-        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
-        label = "artist_list_pull_down_translation"
-    )
-    val imageScale by animateFloatAsState(
-        targetValue = 1f + (imageStretchPx / defaultImageHeightPx),
-        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
-        label = "artist_image_scale"
-    )
+    // 图片和列表共享同一个下拉位移，确保图片底部始终跟随列表移动。
+    val listPullDownTranslationY = imageStretchPx
+    val imageScale = 1f + (imageStretchPx / defaultImageHeightPx)
     val imageTranslationY by animateFloatAsState(
         targetValue = -with(density) { (DefaultImageHeight * 0.10f).toPx() } * collapseProgress,
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
