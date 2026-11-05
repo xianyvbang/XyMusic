@@ -34,37 +34,22 @@
 | 收藏功能 |    ✅     |  ✅   |    ✅     |     ✅     |  ✅   |
 | 下载功能 |    ✅     |  ✅   |    ✅     |     ✅     |  ✅ |
 
-## UI展示
-
-### 主要功能页面
-
-| <img src="./images/connection1.png" alt="" width="200"/> | <img src="./images/home.png" alt="" width="200"/>  | <img src="./images/player_screen.png" alt="" width="200"/> | <img src="./images/settings.png" alt="" width="200"/> |
-|:--------------------------------------------------------:|:--------------------------------------------------:|:----------------------------------------------------------:|:-----------------------------------------------------:|
-|   <img src="./images/search.png" alt="" width="200"/>    | <img src="./images/music.png" alt="" width="200"/> |  <img src="./images/favorite.png" alt="" width="200"/>     | <img src="./images/genres.png" alt="" width="200"/>   |
-
-
-### 专辑页面
-
-| <img src="./images/album.png" alt="" width="200"/> | <img src="./images/album_info.png" alt="" width="200"/> |
-|:--------------------------------------------------:|:-------------------------------------------------------:|
-
-### 艺术家页面
-
-| <img src="./images/artist.png" alt="" width="200"/> | <img src="./images/artist_info.png" alt="" width="200"/> |
-|:---------------------------------------------------:|:--------------------------------------------------------:|
-
 ## 技术提示
 
-- UI框架使用[Jetpack Compose](https://developer.android.com/develop/ui/compose/documentation?hl=zh-cn)
-- 音乐播放器使用[Media3](https://github.com/androidx/media)
-- 使用[Hilt](https://developer.android.com/training/dependency-injection/hilt-android)进行进行依赖注入
-- 使用[MultiLanguages](https://github.com/getActivity/MultiLanguages)进行多语言管理
-- 颜色选择使用[ColorPicker](https://github.com/skydoves/colorpicker-compose),
-- 数据存储使用[Room](https://developer.android.com/training/data-storage/room)
-- 分页列表加载使用[Paging3](https://developer.android.com/topic/libraries/architecture/paging/v3-overview)
-- 跳转页面使用[Navigation](https://developer.android.com/guide/navigation)
-- 图片显示使用[Coil](https://github.com/coil-kt/coil)
-- 汉字转拼音[TinyPinyin](https://github.com/promeG/TinyPinyin)
+- 跨平台UI使用[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform)
+- 依赖注入使用[Koin](https://github.com/InsertKoinIO/koin)
+- 网络请求使用[Ktor](https://github.com/ktorio/ktor)（客户端请求与桌面端 Netty 反向代理）
+- 数据存储使用[Room](https://developer.android.com/kotlin/multiplatform/room)（Kotlin Multiplatform）
+- 分页列表使用[Paging3](https://developer.android.com/topic/libraries/architecture/paging/v3-overview)（Multiplatform 版本）
+- 图片加载使用[Sketch](https://github.com/panpf/sketch)
+- 页面跳转使用[Navigation3](https://developer.android.com/guide/navigation/navigation-3)
+- Android 音乐播放使用[Media3](https://github.com/androidx/media)
+- 桌面端音乐播放使用[VLCJ](https://github.com/caprica/vlcj)
+- Android 后台下载使用[WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager)
+- 文件选择使用[FileKit](https://github.com/vinceglb/FileKit)
+- 日志输出使用[kotlin-logging](https://github.com/oshai/kotlin-logging)
+- 多语言管理使用[MultiLanguages](https://github.com/getActivity/MultiLanguages)
+- 汉字转拼音使用[TinyPinyin](https://github.com/promeG/TinyPinyin)
   
 
 ## 感谢开源项目
