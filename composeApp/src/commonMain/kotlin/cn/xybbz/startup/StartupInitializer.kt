@@ -16,6 +16,7 @@ class StartupInitializer(
     private val homeDataRepository: HomeDataRepository,
     private val proxyConfigServer: ProxyConfigServer,
     private val settingsManager: SettingsManager,
+    private val sessionCoordinator: SessionCoordinator,
 ) {
 
     /**
@@ -38,6 +39,8 @@ class StartupInitializer(
 
             homeDataJob.join()
             proxyConfigJob.join()
+            // 本地首页缓存准备完成后启动会话，首页可以先展示缓存再等待网络登录。
+            sessionCoordinator.start(coroutineScope)
         }
     }
 }

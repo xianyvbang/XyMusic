@@ -3,7 +3,15 @@ package cn.xybbz.di
 import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.config.proxy.ProxyConfigServer
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.startup.DataSourceBootstrapper
+import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.config.music.PlayerEventCoordinator
+import cn.xybbz.config.volume.VolumeServer
+import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
+import cn.xybbz.startup.PlayerInitializer
+import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.startup.StartupInitializer
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
@@ -22,20 +30,47 @@ class StartupModule {
         homeDataRepository: HomeDataRepository,
         proxyConfigServer: ProxyConfigServer,
         settingsManager: SettingsManager,
+        sessionCoordinator: SessionCoordinator,
     ): StartupInitializer {
         return StartupInitializer(
             homeDataRepository = homeDataRepository,
             proxyConfigServer = proxyConfigServer,
-            settingsManager = settingsManager
+            settingsManager = settingsManager,
+            sessionCoordinator = sessionCoordinator,
         )
     }
 
     /**
-     * 提供首页首帧后的数据源启动协调器。
-     * 具体依赖由协调器内部按需解析，防止 Koin 创建单例时拉起重依赖。
+     * 提供统一的应用会话协调器。
      */
     @Singleton
-    fun dataSourceBootstrapper(): DataSourceBootstrapper {
-        return DataSourceBootstrapper()
+    fun sessionCoordinator(
+        dataSourceManager: DataSourceManager,
+    ): SessionCoordinator {
+        return SessionCoordinator(dataSourceManager)
+    }
+
+    /**
+     * 提供独立的播放器初始化器，只有会话恢复后才会真正调用。
+     */
+    @Singleton
+    fun playerInitializer(
+        db: LocalDatabaseClient,
+        downloadDb: DownloadDatabaseClient,
+        musicController: MusicCommonController,
+        musicPlayContext: MusicPlayContext,
+        playerEventCoordinator: PlayerEventCoordinator,
+        settingsManager: SettingsManager,
+        volumeServer: VolumeServer,
+    ): PlayerInitializer {
+        return PlayerInitializer(
+            db = db,
+            downloadDb = downloadDb,
+            musicController = musicController,
+            musicPlayContext = musicPlayContext,
+            playerEventCoordinator = playerEventCoordinator,
+            settingsManager = settingsManager,
+            volumeServer = volumeServer,
+        )
     }
 }

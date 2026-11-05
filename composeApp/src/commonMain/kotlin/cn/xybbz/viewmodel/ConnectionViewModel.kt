@@ -38,6 +38,7 @@ import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.platform.ContextWrapper
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -56,7 +57,8 @@ import xymusic.composeapp.generated.resources.username_cannot_be_empty
 class ConnectionViewModel(
     val dataSourceManager: DataSourceManager,
     val settingsManager: SettingsManager,
-    val contextWrapper: ContextWrapper
+    val contextWrapper: ContextWrapper,
+    private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
 
 
@@ -306,6 +308,12 @@ class ConnectionViewModel(
             isLoginSuccess = loginSateInfo.isLoginSuccess
             isLoginError = loginSateInfo.isError
             isCredentialStoreError = loginSateInfo.isCredentialStoreUnavailable
+            if (loginSateInfo.isLoginSuccess) {
+                // 连接页完成登录后立即更新会话状态，首页无需等待自身创建或监听旧事件。
+                viewModelScope.launch {
+                    sessionCoordinator.markInteractiveLoginSuccess()
+                }
+            }
 
         }?.launchIn(viewModelScope)
 

@@ -50,7 +50,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -58,7 +57,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,7 +66,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.common.enums.HomeRefreshReason
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -110,13 +107,12 @@ import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyScreenTitle
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSubSmall
-import cn.xybbz.startup.DataSourceBootstrapper
+import cn.xybbz.startup.AppSessionState
 import cn.xybbz.viewmodel.HomeViewModel
 import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.add_24px
@@ -180,22 +176,9 @@ expect fun HomeScreen()
 internal fun MobileHomeScreen(
     // 首页 ViewModel 负责轻量首页数据和用户操作，数据源登录不再放在它的 init 中触发。
     homeViewModel: HomeViewModel = koinViewModel<HomeViewModel>(),
-    // 首页首帧后再调用后置启动器，避免移动端首屏阶段提前解析 DataSourceManager。
-    dataSourceBootstrapper: DataSourceBootstrapper = koinInject()
 ) {
     SideEffect {
         Log.d("=====", "HomeScreen重组一次")
-    }
-    LaunchedEffect(dataSourceBootstrapper) {
-        // 等首帧真正渲染完成后，再触发数据源后置启动，避免首页壳和重依赖抢首屏。
-        withFrameNanos { }
-        dataSourceBootstrapper.startAfterHomeVisible {
-            // 首次进入首页时等待后置登录完成，再补刷一次远程数据，避免登录时序导致首页保持空数据。
-            homeViewModel.tryRefreshHome(
-                isRefresh = true,
-                reason = HomeRefreshReason.Login
-            )
-        }
     }
     val coroutineScope = rememberCoroutineScope()
     val mostPlayerMusicList by homeViewModel.homeDataRepository.mostPlayedMusic.collectAsStateWithLifecycle()
@@ -256,7 +239,8 @@ internal fun MobileHomeScreen(
     }
 
     // 缓存连接菜单项，连接列表或当前连接 ID 变化时重新构建勾选状态。
-    val currentConnectionId by homeViewModel.dataSourceManager.connectionIdFlow.collectAsStateWithLifecycle()
+    val sessionState by homeViewModel.sessionCoordinator.state.collectAsStateWithLifecycle()
+    val currentConnectionId = sessionState.connection?.id ?: 0L
     val connectionMenuItems = remember(homeViewModel.connectionList, currentConnectionId) {
         homeViewModel.connectionList.map { connection ->
             MenuItemDefaultData(
@@ -354,10 +338,10 @@ internal fun MobileHomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End
                 ) {
-                    if (homeViewModel.dataSourceManager.loading)
+                    if (sessionState is AppSessionState.LoggingIn || homeViewModel.dataSourceManager.loading)
                         LoadingIndicator()
 
-                    if (homeViewModel.dataSourceManager.ifLoginError)
+                    if (sessionState is AppSessionState.LoginFailed)
                         IconButton(onClick = {
                             BottomSheetObject(
                                 sheetState = sheetState,

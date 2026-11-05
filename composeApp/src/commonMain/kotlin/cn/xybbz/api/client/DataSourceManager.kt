@@ -342,7 +342,7 @@ open class DataSourceManager(
 
     /**
      * 只恢复本地连接上下文，不执行网络登录。
-     * 首页可以先使用本地缓存；真正登录由首页首帧后的 DataSourceBootstrapper 触发。
+     * 首页可以先使用本地缓存；真正登录由应用会话协调器统一触发。
      *
      * @return 当前设置对应的连接配置；没有完整连接信息时返回 null。
      */
@@ -1656,7 +1656,7 @@ open class DataSourceManager(
 
     /**
      * 暴露数据源内部 IO 作用域。
-     * DataSourceBootstrapper 使用它承载后置登录、播放器恢复和重登录监听，确保和数据源生命周期一致。
+     * SessionCoordinator 使用它承载会话登录和重登录监听，确保和数据源生命周期一致。
      */
     fun dataSourceScope() = scope
 

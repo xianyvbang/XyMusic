@@ -25,12 +25,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.common.utils.DatabaseUtils
 import cn.xybbz.config.security.ConnectionCredentialManager
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
@@ -47,7 +47,8 @@ class ConnectionManagementViewModel (
     private val musicController: MusicCommonController,
     private val musicPlayContext: MusicPlayContext,
     private val settingsManager: SettingsManager,
-    private val credentialManager: ConnectionCredentialManager
+    private val credentialManager: ConnectionCredentialManager,
+    private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
 
     //获得所有链接信息
@@ -97,11 +98,11 @@ class ConnectionManagementViewModel (
      */
     fun changeDataSource(connectionConfig: ConnectionConfig) {
         viewModelScope.launch {
-            DataSourceChangeUtils.changeDataSource(
-                connectionConfig,
-                dataSourceManager,
-                musicController
-            )
+            if (connectionConfig.id != dataSourceManager.getConnectionId()) {
+                // 切换连接前清空旧播放列表，避免新连接复用旧连接的播放器状态。
+                musicController.clearPlayerList()
+                sessionCoordinator.switchConnection(connectionConfig)
+            }
         }
     }
 
@@ -134,11 +135,10 @@ class ConnectionManagementViewModel (
             //如果当前链接是最后链接,则直接删除数据里的数据
             val connectionCount = db.connectionConfigDao.selectCount()
             if (connectionCount == 0) {
-                DataSourceChangeUtils.clearDataSourceAfter(
-                    musicController,
-                    dataSourceManager,
-                    settingsManager
-                )
+                settingsManager.saveConnectionId(null, null)
+                settingsManager.updateIfConnectionConfig(false)
+                musicController.clearPlayerList()
+                sessionCoordinator.clear()
             } else {
                 val connectionConfig =
                     db.connectionConfigDao.selectConnectionConfigOrderByCreateTime()

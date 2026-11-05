@@ -25,15 +25,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.state.Source
 import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.enums.HomeRefreshReason
-import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.utils.DataRefreshEstimateUtils
-import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.config.download.enqueueMusicDownload
@@ -49,6 +46,8 @@ import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.PlayerModeEnum
+import cn.xybbz.startup.AppSessionState
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -71,6 +70,7 @@ class HomeViewModel(
     private val dailyRecommender: DailyRecommender,
     val homeDataRepository: HomeDataRepository,
     private val downloaderManager: DownloaderManager,
+    val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
@@ -105,7 +105,7 @@ class HomeViewModel(
 
 
     init {
-        observeLoginSuccess()
+        observeSessionReady()
         observeLoginSuccessRoomData()
         getConnectionListData()
         initLoginChangeMonitor()
@@ -116,7 +116,7 @@ class HomeViewModel(
      */
     private fun initLoginChangeMonitor() {
         viewModelScope.launch {
-            homeDataRepository.initLoginChangeMonitor()
+            homeDataRepository.startObservers()
         }
     }
 
@@ -227,22 +227,13 @@ class HomeViewModel(
     /**
      * 登陆成功后监听一次
      */
-    private fun observeLoginSuccess() {
+    private fun observeSessionReady() {
         viewModelScope.launch {
-            dataSourceManager.mergeFlow.collect {
-                val reason = when (it) {
-                    is Source.Login ->
-                        HomeRefreshReason.Login
-
-                    is Source.Library ->
-                        HomeRefreshReason.Manual
+            sessionCoordinator.state.collectLatest { sessionState ->
+                if (sessionState is AppSessionState.Ready) {
+                    // Ready 是可回放状态，首页晚于登录创建时也能稳定触发刷新。
+                    tryRefreshHome(isRefresh = true, reason = HomeRefreshReason.Login)
                 }
-
-                Log.i("home", "登录数据变化22222${it}--- $reason")
-                tryRefreshHome(
-                    isRefresh = true,
-                    reason = reason
-                )
             }
         }
     }
@@ -288,13 +279,11 @@ class HomeViewModel(
         isRefresh: Boolean = false,
         reason: HomeRefreshReason = HomeRefreshReason.EnterHome
     ): Boolean = coroutineScope {
-        if (dataSourceManager.ifLoginError) {
+        if (sessionCoordinator.state.value !is AppSessionState.Ready) {
             if (isRefresh) {
-                autoLoginAndAwait()
+                sessionCoordinator.retry()
             }
-            if (dataSourceManager.ifLoginError) {
-                return@coroutineScope false
-            }
+            return@coroutineScope false
         }
 
         Log.i("home", "开始刷新数据")
@@ -349,11 +338,11 @@ class HomeViewModel(
      * 切换连接服务
      */
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
-        DataSourceChangeUtils.changeDataSource(
-            connectionConfig,
-            dataSourceManager,
-            musicController
-        )
+        if (connectionConfig.id != dataSourceManager.getConnectionId()) {
+            // 切换连接前清空旧连接播放列表，避免新连接短暂读取旧数据。
+            musicController.clearPlayerList()
+            sessionCoordinator.switchConnection(connectionConfig)
+        }
     }
 
     /**
@@ -408,16 +397,8 @@ class HomeViewModel(
     }
 
     fun autoLogin() {
-        viewModelScope.launch {
-            autoLoginAndAwait()
-        }
+        sessionCoordinator.retry()
     }
 
     /** 执行并等待自动登录完成，供首页刷新流程保持结构化并发。 */
-    private suspend fun autoLoginAndAwait() {
-        dataSourceManager.serverLogin(
-            LoginType.API,
-            db.connectionConfigDao.selectConnectionConfig()
-        )
-    }
 }

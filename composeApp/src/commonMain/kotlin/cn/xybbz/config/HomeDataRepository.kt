@@ -18,9 +18,6 @@
 
 package cn.xybbz.config
 
-import cn.xybbz.api.TokenServer
-import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.utils.Log
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -70,7 +67,7 @@ class HomeDataRepository(
     /**
      * 执行登录状态数据监听
      */
-    suspend fun initLoginChangeMonitor() {
+    suspend fun startObservers() {
         observeFlows()
     }
 
