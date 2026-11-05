@@ -526,13 +526,14 @@ class ConnectionViewModel(
     }
 
      companion object {
-         const val CHOOSE_INDEX = 0
+         /** 未选择资源时使用无效索引，避免与第一个候选地址或 Plex 资源的下标 0 冲突。 */
+         const val CHOOSE_INDEX = -1
         val INVISIBLE_CHAR_REGEX = Regex("[\\u200B-\\u200D\\uFEFF]")
     }
 }
 
 /**
- * 默认连接地址选择索引 android/IOS默认选择1 桌面端不选择
+ * 默认连接地址选择索引，各平台均以 -1 表示尚未选择资源。
  */
 expect val connectionUrlIndex: Int
 
