@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.HomeRefreshReason
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -188,7 +189,13 @@ internal fun MobileHomeScreen(
     LaunchedEffect(dataSourceBootstrapper) {
         // 等首帧真正渲染完成后，再触发数据源后置启动，避免首页壳和重依赖抢首屏。
         withFrameNanos { }
-        dataSourceBootstrapper.startAfterHomeVisible()
+        dataSourceBootstrapper.startAfterHomeVisible {
+            // 首次进入首页时等待后置登录完成，再补刷一次远程数据，避免登录时序导致首页保持空数据。
+            homeViewModel.tryRefreshHome(
+                isRefresh = true,
+                reason = HomeRefreshReason.Login
+            )
+        }
     }
     val coroutineScope = rememberCoroutineScope()
     val mostPlayerMusicList by homeViewModel.homeDataRepository.mostPlayedMusic.collectAsStateWithLifecycle()
@@ -248,13 +255,14 @@ internal fun MobileHomeScreen(
         }
     }
 
-    // 缓存连接菜单项，仅在连接列表发生变化时重新构建。
-    val connectionMenuItems = remember(homeViewModel.connectionList) {
+    // 缓存连接菜单项，连接列表或当前连接 ID 变化时重新构建勾选状态。
+    val currentConnectionId by homeViewModel.dataSourceManager.connectionIdFlow.collectAsStateWithLifecycle()
+    val connectionMenuItems = remember(homeViewModel.connectionList, currentConnectionId) {
         homeViewModel.connectionList.map { connection ->
             MenuItemDefaultData(
                 title = connection.name,
                 leadingIcon = {
-                    if (homeViewModel.dataSourceManager.getConnectionId() == connection.id)
+                    if (currentConnectionId == connection.id)
                         Icon(
                             painterResource(Res.drawable.check_24px),
                             contentDescription = connection.name + stringResource(

@@ -39,10 +39,12 @@ class DataSourceBootstrapper : KoinComponent {
     private val started = AtomicBoolean(false)
 
     /**
-     * 首页首帧可见后调用的数据源启动入口。
+     * 首页首帧可见后启动数据源，并在登录成功后执行可选的首页刷新回调。
      * 方法内部才解析 DataSourceManager、播放器等重依赖，保证启动页和首页首帧阶段保持轻量。
+     *
+     * @param onLoginCompleted 登录成功后执行的首页数据刷新动作。
      */
-    fun startAfterHomeVisible() {
+    fun startAfterHomeVisible(onLoginCompleted: (suspend () -> Unit)? = null) {
         if (!started.compareAndSet(expectedValue = false, newValue = true)) {
             return
         }
@@ -61,6 +63,10 @@ class DataSourceBootstrapper : KoinComponent {
             startPlayerInitialization(dataSourceManager, db)
             startLoginEventBus(dataSourceManager)
             dataSourceManager.loginConnection(LoginType.API, connectionConfig)
+            if (!dataSourceManager.ifLoginError) {
+                // 登录完成后再刷新首页，确保远程请求使用已经建立的认证上下文。
+                onLoginCompleted?.invoke()
+            }
         }
     }
 
