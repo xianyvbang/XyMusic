@@ -208,10 +208,20 @@ open class DataSourceManager(
     suspend fun restoreLocalDataSourceContext(): ConnectionConfig? {
         // 直接读最新数据库设置，避免状态流初始值还没同步时误判连接配置。
         val latestSettings = settingsManager.getLatest()
-        return restoreLocalDataSourceContext(
-            connectionId = latestSettings.connectionId,
-            dataSourceType = latestSettings.dataSourceType
-        )
+        val savedConnection = latestSettings.connectionId
+            ?.let { connectionId ->
+                db.connectionConfigDao.selectAllData().firstOrNull { it.id == connectionId }
+            }
+            ?.takeIf { it.type == latestSettings.dataSourceType }
+        // 首次从外部链接进入时可能已有连接配置，但当前连接设置尚未写入；此时恢复最近添加的连接。
+        val connectionConfig = savedConnection
+            ?: db.connectionConfigDao.selectConnectionConfigOrderByCreateTime()
+            ?: return null
+        if (latestSettings.connectionId != connectionConfig.id || latestSettings.dataSourceType != connectionConfig.type) {
+            settingsManager.saveConnectionId(connectionConfig.id, connectionConfig.type)
+        }
+        switchDataSource(connectionConfig.type, connectionConfig)
+        return connectionConfig
     }
 
     /**
