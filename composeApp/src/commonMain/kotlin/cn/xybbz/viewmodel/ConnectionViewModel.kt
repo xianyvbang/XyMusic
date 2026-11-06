@@ -397,6 +397,10 @@ class ConnectionViewModel(
                 }
             }
         }
+        // App 端生成候选地址后默认选中第一项，JVM 端保留原有的未选择状态。
+        if (connectionDefaultUrlIndex in tmpAddressList.indices) {
+            setSelectUrlIndexData(connectionDefaultUrlIndex)
+        }
     }
 
     /**
@@ -544,4 +548,7 @@ class ConnectionViewModel(
  * 默认连接地址选择索引，各平台均以 -1 表示尚未选择资源。
  */
 expect val connectionUrlIndex: Int
+
+/** 不同平台生成候选 URL 后默认选中的索引，-1 表示保持未选择。 */
+expect val connectionDefaultUrlIndex: Int
 
