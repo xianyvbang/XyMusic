@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -57,8 +58,7 @@ class SessionCoordinator(
 
     /** 连接或媒体库发生变化时的上下文流，供分页数据重新建立查询。 */
     val dataContextChangedFlow = state
-        .map { it.connection?.id }
-        .filterNotNull()
+        .mapNotNull { it.connection?.id }
         .distinctUntilChanged()
         .flatMapLatest { connectionId ->
             merge(
