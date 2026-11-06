@@ -2,18 +2,18 @@ package cn.xybbz.ui.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.ui.windows.LocalDesktopWindowFrameState
 
 @Composable
-actual fun PlatformActiveReloginEffect(dataSourceManager: DataSourceManager) {
+actual fun PlatformActiveReloginEffect(sessionCoordinator: SessionCoordinator) {
     val isFocused = LocalDesktopWindowFrameState.current.isFocused
 
-    LaunchedEffect(dataSourceManager, isFocused) {
+    LaunchedEffect(sessionCoordinator, isFocused) {
         if (isFocused) {
-            dataSourceManager.requestReloginOnAppActive()
+            sessionCoordinator.requestReloginOnAppActive()
         } else {
-            dataSourceManager.markAppInactive()
+            sessionCoordinator.markAppInactive()
         }
     }
 }

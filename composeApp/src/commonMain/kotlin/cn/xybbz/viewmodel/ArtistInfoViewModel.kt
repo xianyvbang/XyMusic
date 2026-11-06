@@ -25,6 +25,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
@@ -56,6 +57,8 @@ class ArtistInfoViewModel(
     val downloadDb: DownloadDatabaseClient,
     val selectControl: SelectControl,
     private val downloaderManager: DownloaderManager,
+    /** 提供当前连接与媒体库变化，驱动艺人详情分页重建。 */
+    private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
@@ -92,7 +95,7 @@ class ArtistInfoViewModel(
     //艺术家的音乐列表
     @OptIn(ExperimentalCoroutinesApi::class)
     val musicList =
-        dataSourceManager.loginStateFlow
+        sessionCoordinator.dataContextChangedFlow
             .flatMapLatest {
                 dataSourceManager.selectMusicListByArtistId(artistId, artistName)
                     .distinctUntilChanged()
@@ -103,7 +106,7 @@ class ArtistInfoViewModel(
     //艺术家的专辑列表
     @OptIn(ExperimentalCoroutinesApi::class)
     val albumList =
-        dataSourceManager.loginStateFlow
+        sessionCoordinator.dataContextChangedFlow
             .flatMapLatest {
                 dataSourceManager.selectAlbumListByArtistId(artistId).distinctUntilChanged()
             }

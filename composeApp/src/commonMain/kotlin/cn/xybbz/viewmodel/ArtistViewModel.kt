@@ -30,6 +30,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.entity.data.ArtistFilter
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtistExt
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,7 +47,9 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class ArtistViewModel (
     private val dataSourceManager: DataSourceManager,
-    private val db: LocalDatabaseClient
+    private val db: LocalDatabaseClient,
+    /** 提供当前连接与媒体库变化，驱动分页数据重建。 */
+    private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
 
     // 艺术家筛选状态的唯一来源
@@ -74,7 +77,7 @@ class ArtistViewModel (
     @OptIn(ExperimentalCoroutinesApi::class)
     // 先定义 artistListPage
     val artistListPage: Flow<PagingData<XyArtistExt>> =
-        dataSourceManager.mergeFlow
+        sessionCoordinator.dataContextChangedFlow
             .flatMapLatest {
                 dataSourceManager.selectArtistFlowList()
             }

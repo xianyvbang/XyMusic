@@ -24,6 +24,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -31,13 +32,15 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class GenresViewModel(
-    private val dataSourceManager: DataSourceManager
+    private val dataSourceManager: DataSourceManager,
+    /** 提供当前连接与媒体库变化，驱动分页数据重建。 */
+    private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val genresPage: Flow<PagingData<XyGenre>> =
-        dataSourceManager.mergeFlow
+        sessionCoordinator.dataContextChangedFlow
             .flatMapLatest {
                 dataSourceManager.selectGenresPage()
             }

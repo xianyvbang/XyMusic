@@ -1,8 +1,9 @@
 package cn.xybbz.config.music
 
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.startup.AppSessionState
+import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.api.client.FavoriteCoordinator
-import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
@@ -20,6 +21,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
@@ -42,6 +44,8 @@ class PlayerEventCoordinator(
     private val db: LocalDatabaseClient,
     private val musicController: MusicCommonController,
     private val dataSourceManager: DataSourceManager,
+    /** 提供可回放的登录成功状态，避免错过播放器初始化后的登录事件。 */
+    private val sessionCoordinator: SessionCoordinator,
     private val settingsManager: SettingsManager,
     private val musicPlayContext: MusicPlayContext,
     private val playbackProgressReporter: PlaybackProgressReporter,
@@ -95,7 +99,7 @@ class PlayerEventCoordinator(
         }
 
         loginObserveJob = scope.launch {
-            dataSourceManager.loginStateFlow.collect {
+            sessionCoordinator.state.filterIsInstance<AppSessionState.Ready>().collect {
                 startEnableProgressObserver()
             }
         }
@@ -198,8 +202,8 @@ class PlayerEventCoordinator(
     private fun onChangeMusic(musicId: String, artistId: String?, artistName: String?) {
         // 切歌事件源处直接重置迷你播放条标题跑马灯，避免 UI 层额外监听播放业务事件。
         playerChromeState.putMarqueeIterations(0)
-        // 自动登录状态统一从 autoLoginState 读取，避免继续依赖已删除的 loginStatus 副本。
-        if (dataSourceManager.autoLoginState.value !is ClientLoginInfoState.UserLoginSuccess) {
+        // 远程推荐只在当前会话就绪后加载，统一使用会话协调器的状态。
+        if (sessionCoordinator.state.value !is AppSessionState.Ready) {
             _recommendationStateFlow.value = PlayerRecommendationState()
             return
         }

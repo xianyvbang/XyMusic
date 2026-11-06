@@ -45,6 +45,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.progress.EnableProgress
 import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -67,7 +68,9 @@ class AlbumInfoViewModel(
     val musicController: MusicCommonController,
     val selectControl: SelectControl,
     private val downloaderManager: DownloaderManager,
-) : PageListViewModel<XyMusic>(dataSourceManager, SortTypeEnum.MUSIC_NAME_ASC) {
+    /** 提供当前连接与媒体库变化，驱动分页数据重建。 */
+    sessionCoordinator: SessionCoordinator,
+) : PageListViewModel<XyMusic>(dataSourceManager, sessionCoordinator, SortTypeEnum.MUSIC_NAME_ASC) {
 
     /** 当前连接下已完成下载的音乐 ID 流。 */
     @OptIn(ExperimentalCoroutinesApi::class)

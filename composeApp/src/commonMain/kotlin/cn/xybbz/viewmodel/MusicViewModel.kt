@@ -34,6 +34,7 @@ import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -50,7 +51,9 @@ class MusicViewModel(
     val musicController: MusicCommonController,
     val selectControl: SelectControl,
     private val downloaderManager: DownloaderManager,
-) : PageListViewModel<XyMusic>(dataSourceManager, SortTypeEnum.MUSIC_NAME_ASC) {
+    /** 提供当前连接与媒体库变化，驱动分页数据重建。 */
+    sessionCoordinator: SessionCoordinator,
+) : PageListViewModel<XyMusic>(dataSourceManager, sessionCoordinator, SortTypeEnum.MUSIC_NAME_ASC) {
 
     val downloadMusicIdsFlow =
         downloadDb.downloadDao.getAllMusicTaskUidsFlow(

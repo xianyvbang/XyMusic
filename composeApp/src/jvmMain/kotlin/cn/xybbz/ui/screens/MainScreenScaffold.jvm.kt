@@ -42,7 +42,8 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.startup.AppSessionState
+import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.JvmTopRouterData
@@ -76,6 +77,7 @@ import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.add_24px
 import xymusic.composeapp.generated.resources.background_image
 import xymusic.composeapp.generated.resources.create_playlist
+import xymusic.composeapp.generated.resources.empty_info
 import xymusic.composeapp.generated.resources.logging_in
 import xymusic.composeapp.generated.resources.login_exception_info
 import xymusic.composeapp.generated.resources.login_failed
@@ -102,22 +104,24 @@ actual fun MainScreenScaffold(
     content: @Composable (PaddingValues) -> Unit
 ) {
     val koin = getKoin()
-    val dataSourceManager: DataSourceManager = remember { koin.get() }
+    val sessionCoordinator: SessionCoordinator = remember { koin.get() }
     val sidebarPlaylistViewModel = koinViewModel<SidebarPlaylistViewModel>()
     val coroutineScope = rememberCoroutineScope()
     val playlists by sidebarPlaylistViewModel.playlists.collectAsStateWithLifecycle()
-    val autoLoginRunning by dataSourceManager.autoLoginRunning.collectAsStateWithLifecycle()
+    val sessionState by sessionCoordinator.state.collectAsStateWithLifecycle()
     val playlistTitle = stringResource(Res.string.playlist)
     val createPlaylist = stringResource(Res.string.create_playlist)
     val newPlaylist = stringResource(Res.string.new_playlist)
     val noPlaylistsText = stringResource(Res.string.no_playlists)
     val songsCountSuffix = stringResource(Res.string.songs_count_suffix)
-    val loginErrorHint = stringResource(dataSourceManager.errorHint)
+    val loginFailedState = sessionState as? AppSessionState.LoginFailed
+    val loginErrorHint = stringResource(loginFailedState?.errorHint ?: Res.string.empty_info)
+    val loginErrorMessage = loginFailedState?.errorMessage.orEmpty()
     var playlistName by remember { mutableStateOf("") }
     var showLoginErrorSheet by remember { mutableStateOf(false) }
     val sidebarListState = rememberLazyListState()
-    val loginLoading = dataSourceManager.loading || autoLoginRunning
-    val loginFailed = dataSourceManager.ifLoginError
+    val loginLoading = sessionState is AppSessionState.Restoring || sessionState is AppSessionState.LoggingIn
+    val loginFailed = loginFailedState != null
     val sidebarColors = DesktopSidebarColors.current
     val sidebarPanelShape = RoundedCornerShape(XyTheme.dimens.corner)
 
@@ -319,7 +323,8 @@ actual fun MainScreenScaffold(
         }
         DesktopLoginErrorSideSheet(
             show = showLoginErrorSheet,
-            dataSourceManager = dataSourceManager,
+            errorHint = loginErrorHint,
+            errorMessage = loginErrorMessage,
             onClose = { showLoginErrorSheet = false }
         )
         JvmRightClickDropdownMenuComponent()
@@ -424,7 +429,8 @@ private fun DesktopLoginStatusFloatingAction(
 @Composable
 private fun DesktopLoginErrorSideSheet(
     show: Boolean,
-    dataSourceManager: DataSourceManager,
+    errorHint: String,
+    errorMessage: String,
     onClose: () -> Unit,
 ) {
     ModalSideSheetExtendComponent(
@@ -450,14 +456,14 @@ private fun DesktopLoginErrorSideSheet(
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
         ) {
             XyText(
-                text = stringResource(dataSourceManager.errorHint),
+                text = errorHint,
                 overflow = TextOverflow.Visible,
                 maxLines = Int.MAX_VALUE,
             )
 
-            if (dataSourceManager.errorMessage.isNotBlank()) {
+            if (errorMessage.isNotBlank()) {
                 XyTextSubSmall(
-                    text = dataSourceManager.errorMessage,
+                    text = errorMessage,
                     overflow = TextOverflow.Visible,
                     maxLines = Int.MAX_VALUE,
                 )

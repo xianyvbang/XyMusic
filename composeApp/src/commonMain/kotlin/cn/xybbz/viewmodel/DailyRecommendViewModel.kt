@@ -37,6 +37,7 @@ import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.flow.any
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -51,6 +52,8 @@ class DailyRecommendViewModel(
     val musicController: MusicCommonController,
     private val dailyRecommender: DailyRecommender,
     private val downloaderManager: DownloaderManager,
+    /** 登录成功后刷新本地每日推荐数据。 */
+    private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
@@ -69,15 +72,15 @@ class DailyRecommendViewModel(
 
     init {
         startRecommendedMusicObserver()
-        observeLoginSuccessForRecommendedMusic()
+        observeSessionReadyForRecommendedMusic()
     }
 
     /**
      * 获得推荐音乐列表
      */
-    private fun observeLoginSuccessForRecommendedMusic() {
+    private fun observeSessionReadyForRecommendedMusic() {
         viewModelScope.launch {
-            dataSourceManager.mergeFlow.collect {
+            sessionCoordinator.readyOrLibraryChangedFlow.collect {
                 generateRecommendedMusicList()
             }
         }

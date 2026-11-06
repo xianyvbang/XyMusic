@@ -37,12 +37,12 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.ConnectionUiType
-import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.router.Connection
 import cn.xybbz.router.Download
 import cn.xybbz.router.Navigator
@@ -264,6 +264,7 @@ private fun DesktopTitleActions(
 ) {
     val koin = getKoin()
     val dataSourceManager: DataSourceManager = remember { koin.get() }
+    val sessionCoordinator: SessionCoordinator = remember { koin.get() }
     val db: LocalDatabaseClient = remember { koin.get() }
     val musicController: MusicCommonController = remember { koin.get() }
     val coroutineScope = rememberCoroutineScope()
@@ -384,7 +385,7 @@ private fun DesktopTitleActions(
                                         ifShowConnectionMenu = false
                                         DataSourceChangeUtils.changeDataSource(
                                             connectionConfig = connection,
-                                            dataSourceManager = dataSourceManager,
+                                            sessionCoordinator = sessionCoordinator,
                                             musicController = musicController
                                         )
                                     }
@@ -421,10 +422,7 @@ private fun DesktopTitleActions(
                 tooltip = stringResource(Res.string.refresh_login),
                 onClick = {
                     coroutineScope.launch {
-                        dataSourceManager.serverLogin(
-                            LoginType.API,
-                            db.connectionConfigDao.selectConnectionConfig()
-                        )
+                        sessionCoordinator.retry()
                     }
                 },
                 modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "RefreshButton"),

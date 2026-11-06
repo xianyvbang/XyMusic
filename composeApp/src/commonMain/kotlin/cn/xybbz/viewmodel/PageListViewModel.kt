@@ -26,6 +26,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.entity.data.Sort
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,8 @@ import kotlinx.coroutines.flow.update
 
 abstract class PageListViewModel<T : Any>(
     dataSourceManager: DataSourceManager,
+    /** 提供当前连接与媒体库变化，驱动分页数据重建。 */
+    sessionCoordinator: SessionCoordinator,
     val defaultSortType: SortTypeEnum
 ) : ViewModel() {
 
@@ -48,7 +51,7 @@ abstract class PageListViewModel<T : Any>(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val listPage: Flow<PagingData<T>> =
-        combine(dataSourceManager.mergeFlow, sortBy) { _, sort ->
+        combine(sessionCoordinator.dataContextChangedFlow, sortBy) { _, sort ->
             sort
         }
             .flatMapLatest { sort ->

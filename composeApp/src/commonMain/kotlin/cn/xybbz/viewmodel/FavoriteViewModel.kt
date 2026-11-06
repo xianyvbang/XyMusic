@@ -30,6 +30,7 @@ import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
@@ -43,6 +44,8 @@ class FavoriteViewModel(
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,
     private val downloaderManager: DownloaderManager,
+    /** 提供当前连接与媒体库变化，驱动分页数据重建。 */
+    private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
@@ -54,7 +57,7 @@ class FavoriteViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val favoriteMusicList =
-        dataSourceManager.mergeFlow
+        sessionCoordinator.dataContextChangedFlow
             .flatMapLatest {
                 dataSourceManager.selectFavoriteMusicFlowList()
             }

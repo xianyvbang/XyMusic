@@ -24,13 +24,13 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.security.ConnectionCredentialManager
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.enums.CredentialStoreType
 import cn.xybbz.config.security.CredentialStoreException
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.InjectedParam
 import org.koin.core.annotation.KoinViewModel
@@ -45,7 +45,9 @@ class ConnectionConfigInfoViewModel(
     @InjectedParam private val connectionId: Long,
     private val dataSourceManager: DataSourceManager,
     private val db: LocalDatabaseClient,
-    private val credentialManager: ConnectionCredentialManager
+    private val credentialManager: ConnectionCredentialManager,
+    /** 统一驱动当前连接的重登录与会话状态。 */
+    private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
     var connectionConfig by mutableStateOf<ConnectionConfig?>(null)
         private set
@@ -156,12 +158,7 @@ class ConnectionConfigInfoViewModel(
         //如果是当前连接就重新登陆,否则就不重新登陆了,等待下次开启连接的时候登陆
         //判断是否修改了数据,如果修改了的话,点击保存的时候重新登陆
         if ((ifPasswordChange || ifUsernameChange || ifAddressChange) && getConnectionId() == connectionId)
-            viewModelScope.launch {
-                dataSourceManager.serverLogin(
-                    loginType = LoginType.API,
-                    connectionConfig = connectionConfig
-                )
-            }
+            connectionConfig?.let(sessionCoordinator::switchConnection)
 
         MessageUtils.sendPopTipSuccess(Res.string.modify_success)
     }

@@ -26,6 +26,7 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -37,7 +38,9 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class PlaylistBottomViewModel(
     private val db: LocalDatabaseClient,
-    val dataSourceManager: DataSourceManager
+    val dataSourceManager: DataSourceManager,
+    /** 登录成功后开始观察当前连接的本地歌单。 */
+    private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
 
     /**
@@ -59,7 +62,7 @@ class PlaylistBottomViewModel(
 
     private fun observeLoginSuccessForPlaylist() {
         viewModelScope.launch {
-            dataSourceManager.mergeFlow.collect {
+            sessionCoordinator.readyOrLibraryChangedFlow.collect {
                 startPlaylistObserver()
             }
         }

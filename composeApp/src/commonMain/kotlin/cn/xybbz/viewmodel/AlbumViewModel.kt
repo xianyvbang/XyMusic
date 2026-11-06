@@ -24,13 +24,16 @@ import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.data.album.XyAlbum
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.flow.Flow
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class AlbumViewModel (
-    val dataSourceManager: DataSourceManager
-) : PageListViewModel<XyAlbum>(dataSourceManager, SortTypeEnum.ALBUM_NAME_ASC) {
+    val dataSourceManager: DataSourceManager,
+    /** 提供当前连接与媒体库变化，驱动分页数据重建。 */
+    sessionCoordinator: SessionCoordinator,
+) : PageListViewModel<XyAlbum>(dataSourceManager, sessionCoordinator, SortTypeEnum.ALBUM_NAME_ASC) {
 
     /**
      * 首页专辑信息

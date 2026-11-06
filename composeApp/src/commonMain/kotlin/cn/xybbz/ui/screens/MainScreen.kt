@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
-import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalPlayerChromeState
@@ -52,6 +51,7 @@ import cn.xybbz.ui.components.LoadingCompose
 import cn.xybbz.ui.components.PlatformActiveReloginEffect
 import cn.xybbz.ui.state.PlayerChromeState
 import cn.xybbz.viewmodel.MainViewModel
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -68,7 +68,7 @@ fun MainScreen(
 ) {
 
     val coroutineScope = rememberCoroutineScope()
-    val dataSourceManager = koinInject<DataSourceManager>()
+    val sessionCoordinator = koinInject<SessionCoordinator>()
     // 播放器外壳状态由 Koin 单例持有，主壳只负责下发给播放器相关组件。
     val playerChromeState = koinInject<PlayerChromeState>()
     val selectUiState by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
@@ -119,7 +119,7 @@ fun MainScreen(
         val playerChromeState = LocalPlayerChromeState.current
 
         Box(modifier = modifier) {
-            PlatformActiveReloginEffect(dataSourceManager)
+            PlatformActiveReloginEffect(sessionCoordinator)
             //todo putDataSourceState 这个属性应该放在全局的object类里,不是放在mainViewModel里
 
             LifecycleEffect(

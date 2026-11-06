@@ -1,12 +1,12 @@
 package cn.xybbz.ui.components
 
 import androidx.compose.runtime.Composable
-import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.startup.SessionCoordinator
 
 @Composable
-actual fun PlatformActiveReloginEffect(dataSourceManager: DataSourceManager) {
+actual fun PlatformActiveReloginEffect(sessionCoordinator: SessionCoordinator) {
     LifecycleEffect(
-        onPause = dataSourceManager::markAppInactive,
-        onResume = dataSourceManager::requestReloginOnAppActive
+        onPause = sessionCoordinator::markAppInactive,
+        onResume = sessionCoordinator::requestReloginOnAppActive
     )
 }

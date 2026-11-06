@@ -23,6 +23,7 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +37,9 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class SidebarPlaylistViewModel(
     private val db: LocalDatabaseClient,
-    private val dataSourceManager: DataSourceManager
+    private val dataSourceManager: DataSourceManager,
+    /** 登录成功或切换媒体库后刷新远程歌单。 */
+    private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
 
     private val _playlists = MutableStateFlow<List<XyAlbum>>(emptyList())
@@ -52,7 +55,7 @@ class SidebarPlaylistViewModel(
 
     private fun observePlaylistChanges() {
         viewModelScope.launch {
-            dataSourceManager.mergeFlow.collect {
+            sessionCoordinator.readyOrLibraryChangedFlow.collect {
                 refreshPlaylists()
             }
         }

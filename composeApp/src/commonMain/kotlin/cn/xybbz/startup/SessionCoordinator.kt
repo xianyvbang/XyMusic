@@ -2,6 +2,7 @@ package cn.xybbz.startup
 
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.events.ReLoginEvent
+import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlinx.coroutines.CoroutineScope
@@ -10,23 +11,31 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
+import kotlin.time.Clock
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.empty_info
 
 /**
  * 应用会话协调器。
  * 所有恢复、登录、重试和连接切换都在这里串行执行，页面只消费会话状态。
  */
-@OptIn(ExperimentalAtomicApi::class)
+@OptIn(ExperimentalAtomicApi::class, ExperimentalCoroutinesApi::class)
 class SessionCoordinator(
     private val dataSourceManager: DataSourceManager,
 ) : KoinComponent {
@@ -34,12 +43,39 @@ class SessionCoordinator(
     private val _state = MutableStateFlow<AppSessionState>(AppSessionState.NoConnection)
     val state: StateFlow<AppSessionState> = _state.asStateFlow()
 
+    /** 会话就绪或媒体库切换时的统一数据刷新触发流。 */
+    val readyOrLibraryChangedFlow = state.flatMapLatest { sessionState ->
+        if (sessionState is AppSessionState.Ready) {
+            merge(
+                flowOf(Unit),
+                dataSourceManager.mediaLibraryChangedFlow.map { Unit },
+            )
+        } else {
+            emptyFlow()
+        }
+    }
+
+    /** 连接或媒体库发生变化时的上下文流，供分页数据重新建立查询。 */
+    val dataContextChangedFlow = state
+        .map { it.connection?.id }
+        .filterNotNull()
+        .distinctUntilChanged()
+        .flatMapLatest { connectionId ->
+            merge(
+                flowOf(connectionId to null),
+                dataSourceManager.mediaLibraryChangedFlow.map { connectionId to it },
+            )
+        }
+        .distinctUntilChanged()
+
     private val started = AtomicBoolean(false)
     private val sessionMutex = Mutex()
     private var appScope: CoroutineScope? = null
     private var sessionJob: Job? = null
     private var playerInitialized = false
     private var loginEventBusStarted = false
+    /** 应用上次进入后台的时间戳。 */
+    private var appInactiveAtMs: Long? = null
 
     /** 在应用启动时开始一次连接恢复流程。 */
     fun start(scope: CoroutineScope) {
@@ -65,6 +101,20 @@ class SessionCoordinator(
                 return@launch
             }
             sessionMutex.withLock { login(connection) }
+        }
+    }
+
+    /** 记录应用进入后台的时间，用于恢复前台时判断是否需要重登录。 */
+    fun markAppInactive() {
+        appInactiveAtMs = Clock.System.now().toEpochMilliseconds()
+    }
+
+    /** 应用从后台恢复较久时，通过当前会话统一重登录。 */
+    fun requestReloginOnAppActive() {
+        val inactiveAt = appInactiveAtMs ?: return
+        appInactiveAtMs = null
+        if (Clock.System.now().toEpochMilliseconds() - inactiveAt >= ACTIVE_RELOGIN_INTERVAL_MS) {
+            retry()
         }
     }
 
@@ -117,11 +167,26 @@ class SessionCoordinator(
 
     private suspend fun login(connection: ConnectionConfig) {
         _state.value = AppSessionState.LoggingIn(connection)
-        dataSourceManager.loginConnection(LoginType.API, connection)
-        if (dataSourceManager.ifLoginError) {
+        var latestLoginState: ClientLoginInfoState? = null
+        val result = dataSourceManager.loginConnection(LoginType.API, connection) { progress, loginResult ->
+            latestLoginState = progress
+            _state.value = if (loginResult.isError) {
+                AppSessionState.LoginFailed(
+                    connection = connection,
+                    loginState = progress,
+                    errorHint = loginResult.errorHint ?: Res.string.empty_info,
+                    errorMessage = loginResult.errorMessage.orEmpty(),
+                )
+            } else {
+                AppSessionState.LoggingIn(connection, progress)
+            }
+        }
+        if (result.isError || !result.isLoginSuccess) {
             _state.value = AppSessionState.LoginFailed(
                 connection = connection,
-                message = dataSourceManager.errorMessage,
+                loginState = latestLoginState,
+                errorHint = result.errorHint ?: Res.string.empty_info,
+                errorMessage = result.errorMessage.orEmpty(),
             )
         } else {
             prepareSessionServices()
@@ -162,5 +227,10 @@ class SessionCoordinator(
                 }
             }
             .launchIn(dataSourceManager.dataSourceScope())
+    }
+
+    private companion object {
+        /** 应用在后台超过该时长后，恢复时重新验证连接。 */
+        const val ACTIVE_RELOGIN_INTERVAL_MS = 5L * 60L * 1000L
     }
 }

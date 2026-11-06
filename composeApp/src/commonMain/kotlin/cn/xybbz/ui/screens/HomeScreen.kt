@@ -338,7 +338,7 @@ internal fun MobileHomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End
                 ) {
-                    if (sessionState is AppSessionState.LoggingIn || homeViewModel.dataSourceManager.loading)
+                    if (sessionState is AppSessionState.Restoring || sessionState is AppSessionState.LoggingIn)
                         LoadingIndicator()
 
                     if (sessionState is AppSessionState.LoginFailed)
@@ -361,21 +361,21 @@ internal fun MobileHomeScreen(
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 XyText(
-                                                    text = stringResource(homeViewModel.dataSourceManager.errorHint),
+                                                    text = stringResource((sessionState as AppSessionState.LoginFailed).errorHint),
                                                     overflow = TextOverflow.Visible,
                                                     maxLines = Int.MAX_VALUE
                                                 )
                                             }
 
                                         }
-                                        if (homeViewModel.dataSourceManager.errorMessage.isNotBlank())
+                                        if ((sessionState as AppSessionState.LoginFailed).errorMessage.isNotBlank())
                                             item {
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     horizontalArrangement = Arrangement.Center,
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
-                                                    XyTextSubSmall(text = homeViewModel.dataSourceManager.errorMessage)
+                                                    XyTextSubSmall(text = (sessionState as AppSessionState.LoginFailed).errorMessage)
                                                 }
                                             }
                                     }
