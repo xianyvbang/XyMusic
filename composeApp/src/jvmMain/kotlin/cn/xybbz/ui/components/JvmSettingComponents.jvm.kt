@@ -24,6 +24,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +47,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -60,6 +62,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -1388,6 +1393,475 @@ private fun JvmSettingChevron() {
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+/** 设置页固定标签栏中标签之间的最小间距。 */
+private val JvmSettingTabGap = 26.dp
+
+/** 设置页顶部固定头部左右内边距，与设置页滚动内容保持一致。 */
+private val JvmSettingHeaderHorizontalPadding = 40.dp
+
+/** 设置页顶部分区标题左侧编号区域的宽度。 */
+private val JvmSettingSectionIndexWidth = 22.dp
+
+/** 设置页分组卡片内部上下留白，给首尾行留出呼吸空间。 */
+private val JvmSettingGroupVerticalPadding = 4.dp
+
+/**
+ * 设置页顶部固定头部。
+ *
+ * 标题、读数与标签栏共用不透明背景，滚动内容从标签栏底部经过时不会透出。
+ *
+ * @param title 页面主标题。
+ * @param meta 标题右侧的只读摘要信息。
+ * @param tabs 顶部标签文案列表。
+ * @param selectedIndex 当前高亮的标签下标。
+ * @param onTabSelected 点击标签回调，参数为标签下标。
+ * @param modifier 外层修饰符。
+ */
+@Composable
+internal fun JvmSettingFixedHeader(
+    title: String,
+    meta: String,
+    tabs: List<String>,
+    selectedIndex: Int,
+    onTabSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            // 固定头部必须使用不透明背景，避免滚动内容从标签下面透出来。
+            .background(MaterialTheme.colorScheme.background)
+            .padding(
+                start = JvmSettingHeaderHorizontalPadding,
+                end = JvmSettingHeaderHorizontalPadding,
+                top = XyTheme.dimens.outerVerticalPadding * 2,
+            )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            XyTextLarge(
+                text = title,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            XyTextSub(
+                text = meta,
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        Spacer(modifier = Modifier.height(XyTheme.dimens.contentPadding))
+        JvmSettingTabBar(
+            tabs = tabs,
+            selectedIndex = selectedIndex,
+            onTabSelected = onTabSelected
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f))
+        )
+    }
+}
+
+/**
+ * 设置页顶部标签栏。
+ *
+ * 标签可横向滚动，选中项使用强调色文字和底部下划线。
+ *
+ * @param tabs 标签文案列表。
+ * @param selectedIndex 当前高亮的标签下标。
+ * @param onTabSelected 点击标签回调。
+ */
+@Composable
+private fun JvmSettingTabBar(
+    tabs: List<String>,
+    selectedIndex: Int,
+    onTabSelected: (Int) -> Unit,
+) {
+    val scrollState = rememberScrollState()
+    val accentColor = MaterialTheme.colorScheme.primary
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(scrollState),
+        horizontalArrangement = Arrangement.spacedBy(JvmSettingTabGap)
+    ) {
+        tabs.forEachIndexed { index, tab ->
+            val selected = index == selectedIndex
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable { onTabSelected(index) }
+                    .padding(top = 2.dp, bottom = 10.dp)
+                    // 下划线随文字宽度绘制，保证与设计稿的细线标签一致。
+                    .drawBehind {
+                        if (selected) {
+                            val stroke = 2.dp.toPx()
+                            drawRect(
+                                color = accentColor,
+                                topLeft = Offset(0f, size.height - stroke),
+                                size = Size(size.width, stroke)
+                            )
+                        }
+                    }
+            ) {
+                XyText(
+                    text = tab,
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                    ),
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 设置页分区标题。
+ *
+ * 由编号、标题、说明、右侧标记和一条细分隔线组成，用于区分连续滚动中的不同设置分区。
+ *
+ * @param index 两位分区编号。
+ * @param title 分区标题。
+ * @param subtitle 分区说明。
+ * @param badge 右侧等宽小标记。
+ * @param modifier 外层修饰符。
+ */
+@Composable
+internal fun JvmSettingSectionHeader(
+    index: String,
+    title: String,
+    subtitle: String,
+    badge: String,
+    modifier: Modifier = Modifier,
+) {
+    val accentColor = MaterialTheme.colorScheme.primary
+    val lineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f)
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Box(modifier = Modifier.width(JvmSettingSectionIndexWidth)) {
+                XyText(
+                    text = index,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
+                    color = accentColor
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                XyText(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                XyTextSub(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = accentColor.copy(alpha = if (XyTheme.configs.isDarkTheme) 0.16f else 0.10f),
+                border = BorderStroke(1.dp, accentColor.copy(alpha = 0.28f))
+            ) {
+                XyText(
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                    text = badge,
+                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.2.sp),
+                    color = accentColor
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(XyTheme.dimens.contentPadding))
+        Row(modifier = Modifier.fillMaxWidth()) {
+            // 分隔线左侧保留一段强调色短线，呼应页面其他分区的视觉锚点。
+            Box(
+                modifier = Modifier
+                    .width(84.dp)
+                    .height(1.dp)
+                    .background(accentColor.copy(alpha = 0.75f))
+            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(1.dp)
+                    .background(lineColor)
+            )
+        }
+        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding * 2))
+    }
+}
+
+/**
+ * 设置页两列分组容器。
+ *
+ * 每个分组平均分配一行宽度，超过两个分组时自动换行。
+ *
+ * @param modifier 外层修饰符。
+ * @param content 分组内容，分组请使用 [JvmSettingGroup] 并传入 `Modifier.weight(1f)`。
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun JvmSettingGroupFlow(
+    modifier: Modifier = Modifier,
+    content: @Composable FlowRowScope.() -> Unit,
+) {
+    FlowRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+        maxItemsInEachRow = 2,
+        content = content
+    )
+}
+
+/**
+ * 设置页分组卡片。
+ *
+ * @param title 分组小标题。
+ * @param modifier 分组修饰符，两列布局时由调用方传入权重。
+ * @param content 分组内部的设置行。
+ */
+@Composable
+internal fun JvmSettingGroup(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+    ) {
+        XyTextSub(
+            text = title,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.6.sp
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(XyTheme.dimens.corner),
+            color = MaterialTheme.colorScheme.surfaceContainerLowest,
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(vertical = JvmSettingGroupVerticalPadding),
+                content = content
+            )
+        }
+    }
+}
+
+/**
+ * 设置页单选行。
+ *
+ * 左侧为单选圆点，用于音质、缓存上限和语言等需要单选的分组。
+ *
+ * @param title 选项标题。
+ * @param description 选项说明，空字符串时不显示说明行。
+ * @param tag 行尾等宽小标签，可为空。
+ * @param selected 是否为当前选中项。
+ * @param enabled 是否允许点击。
+ * @param onClick 点击回调。
+ */
+@Composable
+internal fun JvmSettingPickRow(
+    title: String,
+    description: String,
+    tag: String? = null,
+    selected: Boolean,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    val accentColor = MaterialTheme.colorScheme.primary
+    val contentAlpha = if (enabled) 1f else 0.45f
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 54.dp)
+            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+                vertical = XyTheme.dimens.contentPadding
+            ),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 单选圆点：选中时填充强调色内圆。
+        Box(
+            modifier = Modifier
+                .size(15.dp)
+                .border(
+                    width = 1.dp,
+                    color = if (selected) {
+                        accentColor.copy(alpha = contentAlpha)
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f * contentAlpha)
+                    },
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .size(7.dp)
+                        .background(accentColor.copy(alpha = contentAlpha), CircleShape)
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            XyText(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (description.isNotBlank()) {
+                XyTextSub(
+                    text = description,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        if (!tag.isNullOrBlank()) {
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+                )
+            ) {
+                XyText(
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    text = tag,
+                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.6.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 设置页分段控件。
+ *
+ * 用于下载并发数、主题模式等少量互斥选项的快速切换。
+ *
+ * @param options 分段文案列表。
+ * @param selectedIndex 当前选中的下标。
+ * @param onSelected 点击分段回调，参数为下标。
+ * @param modifier 外层修饰符。
+ */
+@Composable
+internal fun JvmSettingSegmentedControl(
+    options: List<String>,
+    selectedIndex: Int,
+    onSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .border(
+                BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
+                RoundedCornerShape(XyTheme.dimens.corner)
+            )
+            .padding(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        options.forEachIndexed { index, option ->
+            val selected = index == selectedIndex
+            Box(
+                modifier = Modifier
+                    .height(26.dp)
+                    .clip(shape)
+                    .background(
+                        if (selected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            Color.Transparent
+                        }
+                    )
+                    .selectable(
+                        selected = selected,
+                        role = Role.RadioButton,
+                        onClick = {
+                            // 重复点击当前分段不触发写入。
+                            if (!selected) {
+                                onSelected(index)
+                            }
+                        }
+                    )
+                    .padding(horizontal = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                XyText(
+                    text = option,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    maxLines = 1
+                )
+            }
+        }
     }
 }
 

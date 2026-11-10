@@ -6,10 +6,12 @@ import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.album_24px
 import xymusic.composeapp.generated.resources.album
 import xymusic.composeapp.generated.resources.all_music
+import xymusic.composeapp.generated.resources.connection_management
 import xymusic.composeapp.generated.resources.favorite_border_24px
 import xymusic.composeapp.generated.resources.favorite
 import xymusic.composeapp.generated.resources.genres
 import xymusic.composeapp.generated.resources.home
+import xymusic.composeapp.generated.resources.http_24px
 import xymusic.composeapp.generated.resources.label_24px
 import xymusic.composeapp.generated.resources.local_and_download
 import xymusic.composeapp.generated.resources.person_24px
@@ -58,5 +60,11 @@ val jvmTopRouterDataList = listOf(
         title = Res.string.genres,
         icon = Res.drawable.label_24px,
         route = Genres
+    ),
+    // 连接管理不再从设置页进入，作为桌面端左侧导航的独立入口。
+    JvmTopRouterData(
+        title = Res.string.connection_management,
+        icon = Res.drawable.http_24px,
+        route = ConnectionManagement
     )
 )

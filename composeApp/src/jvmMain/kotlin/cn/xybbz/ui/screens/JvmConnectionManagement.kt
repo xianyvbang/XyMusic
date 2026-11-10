@@ -69,12 +69,14 @@ import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.router.Connection
 import cn.xybbz.router.ConnectionInfo
+import cn.xybbz.router.ProxyConfig
 import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingAvatarSize
 import cn.xybbz.ui.components.JvmSettingConnectionCardMinWidth
 import cn.xybbz.ui.components.JvmSettingFlowRow
+import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
 import cn.xybbz.ui.components.JvmSettingOverviewThreeColumnWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
@@ -120,6 +122,9 @@ import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.edit_24px
 import xymusic.composeapp.generated.resources.folder_managed_24px
 import xymusic.composeapp.generated.resources.http_24px
+import xymusic.composeapp.generated.resources.jvm_setting_screen_text_21
+import xymusic.composeapp.generated.resources.jvm_setting_screen_text_22
+import xymusic.composeapp.generated.resources.poxy_config
 import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.library_add_24px
 import xymusic.composeapp.generated.resources.modify_connection
@@ -259,6 +264,21 @@ fun JvmConnectionManagement(
                         },
                     )
                 }
+            )
+        }
+
+        // 代理配置从设置页并入连接管理，避免网络相关入口分散在两个页面。
+        JvmSettingSection(
+            title = stringResource(Res.string.poxy_config),
+            subtitle = stringResource(Res.string.jvm_setting_screen_text_21),
+            badge = stringResource(Res.string.jvm_setting_screen_text_22),
+        ) {
+            JvmSettingNavigationRow(
+                icon = Res.drawable.http_24px,
+                title = stringResource(Res.string.poxy_config),
+                description = stringResource(Res.string.jvm_setting_screen_text_21),
+                value = stringResource(Res.string.jvm_setting_screen_text_22),
+                onClick = { navigator.navigate(ProxyConfig) }
             )
         }
     }
