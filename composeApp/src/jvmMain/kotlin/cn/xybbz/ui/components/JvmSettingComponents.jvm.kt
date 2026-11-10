@@ -67,6 +67,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -1432,40 +1433,58 @@ internal fun JvmSettingFixedHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            // 固定头部必须使用不透明背景，避免滚动内容从标签下面透出来。
-            .background(MaterialTheme.colorScheme.background)
-            .padding(
-                start = JvmSettingHeaderHorizontalPadding,
-                end = JvmSettingHeaderHorizontalPadding,
-                top = XyTheme.dimens.outerVerticalPadding * 2,
-            )
+            // 固定头部使用与设计稿 --surface 一致的不透明底色，避免滚动内容从标签下面透出来。
+            .background(MaterialTheme.colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
-            verticalAlignment = Alignment.Bottom
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = JvmSettingHeaderHorizontalPadding,
+                    end = JvmSettingHeaderHorizontalPadding,
+                    // 顶部留白由主题纵向外间距和内容间距推导，默认合计 28dp。
+                    top = XyTheme.dimens.outerVerticalPadding * 2 + XyTheme.dimens.contentPadding,
+                )
         ) {
-            XyTextLarge(
-                text = title,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            XyTextSub(
-                text = meta,
-                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                // 设计稿标题与读数是基线对齐的同一行，读数紧跟标题左侧排列。
+                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                XyTextLarge(
+                    text = title,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontSize = 32.sp,
+                        lineHeight = 32.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = (-0.6).sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                XyTextSub(
+                    modifier = Modifier.weight(1f, fill = false),
+                    text = meta,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.5.sp,
+                        letterSpacing = 0.9.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // 标题与标签栏之间的间距使用主题纵向外间距的两倍，默认 16dp。
+            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding * 2))
+            JvmSettingTabBar(
+                tabs = tabs,
+                selectedIndex = selectedIndex,
+                onTabSelected = onTabSelected
             )
         }
-
-        Spacer(modifier = Modifier.height(XyTheme.dimens.contentPadding))
-        JvmSettingTabBar(
-            tabs = tabs,
-            selectedIndex = selectedIndex,
-            onTabSelected = onTabSelected
-        )
+        // 设计稿的底部分隔线横跨整个头部宽度，与内容的 40px 内边距无关。
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1505,7 +1524,11 @@ private fun JvmSettingTabBar(
                 modifier = Modifier
                     .clip(RoundedCornerShape(4.dp))
                     .clickable { onTabSelected(index) }
-                    .padding(top = 2.dp, bottom = 10.dp)
+                    .padding(
+                        // 标签上下留白改用主题间距控制，下划线始终贴合文字底部。
+                        top = XyTheme.dimens.outerVerticalPadding / 4,
+                        bottom = XyTheme.dimens.contentPadding
+                    )
                     // 下划线随文字宽度绘制，保证与设计稿的细线标签一致。
                     .drawBehind {
                         if (selected) {
@@ -1521,7 +1544,8 @@ private fun JvmSettingTabBar(
                 XyText(
                     text = tab,
                     style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                        fontSize = 13.sp,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold
                     ),
                     color = if (selected) {
                         MaterialTheme.colorScheme.onSurface
@@ -1852,7 +1876,12 @@ internal fun JvmSettingSegmentedControl(
             ) {
                 XyText(
                     text = option,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        // 设计稿 .seg button 使用等宽字体与 11px 字号。
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
                     color = if (selected) {
                         MaterialTheme.colorScheme.onPrimary
                     } else {
