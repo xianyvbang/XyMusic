@@ -2,12 +2,12 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,12 +26,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.WideNavigationRail
-import androidx.compose.material3.WideNavigationRailDefaults
-import androidx.compose.material3.WideNavigationRailItem
-import androidx.compose.material3.WideNavigationRailValue
-import androidx.compose.material3.rememberWideNavigationRailState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,6 +46,7 @@ import cn.xybbz.startup.AppSessionState
 import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
+import cn.xybbz.router.JvmTopRouterData
 import cn.xybbz.router.NavigationState
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.PlatformNavigationConfig
@@ -86,7 +81,6 @@ import xymusic.composeapp.generated.resources.empty_info
 import xymusic.composeapp.generated.resources.logging_in
 import xymusic.composeapp.generated.resources.login_exception_info
 import xymusic.composeapp.generated.resources.login_failed
-import xymusic.composeapp.generated.resources.menu_open_24px
 import xymusic.composeapp.generated.resources.new_playlist
 import xymusic.composeapp.generated.resources.no_playlists
 import xymusic.composeapp.generated.resources.playlist
@@ -130,17 +124,6 @@ actual fun MainScreenScaffold(
     val loginFailed = loginFailedState != null
     val sidebarColors = DesktopSidebarColors.current
     val sidebarPanelShape = RoundedCornerShape(XyTheme.dimens.corner)
-    // 一级导航栏状态：默认展开为带文字的宽导航栏，可切换为 96dp 图标栏
-    val navigationRailState = rememberWideNavigationRailState(
-        initialValue = WideNavigationRailValue.Expanded
-    )
-    // 目标展开状态驱动导航项图标位置，点击后立即切换
-    val navigationRailExpanded =
-        navigationRailState.targetValue == WideNavigationRailValue.Expanded
-    // 当前一级路由，用于导航栏与歌单面板的选中态判断
-    val currentRoute = navigator.state.backStacks[navigator.state.topLevelRoute]
-        ?.lastOrNull()
-        ?: navigator.state.topLevelRoute
 
     LaunchedEffect(loginLoading, loginFailed) {
         if (loginLoading || !loginFailed) {
@@ -170,74 +153,13 @@ actual fun MainScreenScaffold(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
-                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
                     verticalAlignment = Alignment.Top,
                 ) {
-                    // 一级导航栏：Material3 宽导航栏，仅承载顶部导航
-                    WideNavigationRail(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .padding(
-                                start = XyTheme.dimens.outerVerticalPadding,
-                                top = XyTheme.dimens.outerVerticalPadding,
-                                bottom = XyTheme.dimens.snackBarPlayerHeight +
-                                        XyTheme.dimens.outerVerticalPadding
-                            ),
-                        state = navigationRailState,
-                        shape = sidebarPanelShape,
-                        colors = WideNavigationRailDefaults.colors(
-                            containerColor = sidebarColors.panelBackground,
-                            contentColor = MaterialTheme.colorScheme.onSurface,
-                        ),
-                        windowInsets = WindowInsets(0, 0, 0, 0),
-                        header = {
-                            // 展开 / 收起一级导航栏
-                            XyIconButton(
-                                onClick = {
-                                    coroutineScope.launch { navigationRailState.toggle() }
-                                }
-                            ) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.menu_open_24px),
-                                    contentDescription = null,
-                                )
-                            }
-                        },
-                    ) {
-                        jvmTopRouterDataList.forEach { item ->
-                            WideNavigationRailItem(
-                                selected = currentRoute == item.route,
-                                onClick = {
-                                    if (item.route == navigationConfig.startRoute) {
-                                        navigator.navigateToRoot(item.route)
-                                    } else {
-                                        navigator.navigate(route = item.route)
-                                    }
-                                },
-                                icon = {
-                                    Icon(
-                                        painter = painterResource(item.icon),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(24.dp),
-                                    )
-                                },
-                                label = {
-                                    Text(
-                                        text = stringResource(item.title),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                },
-                                railExpanded = navigationRailExpanded,
-                            )
-                        }
-                    }
-
-                    // 歌单独立面板：与一级导航栏并排，保留原有滚动与登录状态浮层
                     Box(
                         modifier = Modifier
                             .width(jvmRouterMenuWidth)
-                            .fillMaxHeight()
+                            .fillMaxSize()
+//                            .background(sidebarColors.background)
                             .padding(end = XyTheme.dimens.contentPadding)
                     ) {
                         LazyColumnNotComponent(
@@ -256,6 +178,34 @@ actual fun MainScreenScaffold(
                                 XyTheme.dimens.contentPadding
                             ),
                         ) {
+                            item(key = "navigation_panel") {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(sidebarPanelShape)
+                                        .background(sidebarColors.panelBackground)
+                                        .padding(vertical = XyTheme.dimens.outerVerticalPadding),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    jvmTopRouterDataList.forEach { item ->
+                                        DesktopNavigationItem(
+                                            item = item,
+                                            selected = (navigator.state.backStacks[navigator.state.topLevelRoute]
+                                                ?.lastOrNull()
+                                                ?: navigator.state.topLevelRoute) == item.route,
+                                            colors = sidebarColors,
+                                            onClick = {
+                                                if (item.route == navigationConfig.startRoute) {
+                                                    navigator.navigateToRoot(item.route)
+                                                } else {
+                                                    navigator.navigate(route = item.route)
+                                                }
+                                            },
+                                        )
+                                    }
+                                }
+                            }
+
                             item(key = "playlist_panel") {
                                 Column(
                                     modifier = Modifier
@@ -309,6 +259,9 @@ actual fun MainScreenScaffold(
                                         }
                                     } else {
                                         playlists.forEach { playlist ->
+                                            val currentRoute = navigator.state.backStacks[navigator.state.topLevelRoute]
+                                                ?.lastOrNull()
+                                                ?: navigator.state.topLevelRoute
                                             val selectedPlaylist = currentRoute is AlbumInfo &&
                                                     currentRoute.itemId == playlist.itemId &&
                                                     currentRoute.dataType == MusicDataTypeEnum.PLAYLIST
@@ -519,6 +472,47 @@ private fun DesktopLoginErrorSideSheet(
     }
 }
 
+@Composable
+private fun DesktopNavigationItem(
+    item: JvmTopRouterData,
+    selected: Boolean,
+    colors: DesktopSidebarColors,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val backgroundColor = if (selected || hovered) {
+        colors.navigationSelectedBackground
+    } else {
+        Color.Transparent
+    }
+    val contentColor = MaterialTheme.colorScheme.onSurface
+
+    XyRow(
+        modifier = Modifier
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .background(backgroundColor)
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
+    ) {
+        Icon(
+            painter = painterResource(item.icon),
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = contentColor,
+        )
+        XyText(
+            text = stringResource(item.title),
+            color = contentColor,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
 /**
  * JVM 左侧栏使用的颜色集合。
  *
@@ -528,6 +522,7 @@ private fun DesktopLoginErrorSideSheet(
 private data class DesktopSidebarColors(
     val background: Color,
     val panelBackground: Color,
+    val navigationSelectedBackground: Color,
     val playlistSelectedBackground: Color,
 ) {
     companion object {
@@ -539,12 +534,14 @@ private data class DesktopSidebarColors(
                     DesktopSidebarColors(
                         background = Color(0xFF111111),
                         panelBackground = Color(0xFF242424),
+                        navigationSelectedBackground = Color(0xFF363636),
                         playlistSelectedBackground = Color.White.copy(alpha = 0.05f),
                     )
                 } else {
                     DesktopSidebarColors(
                         background = colorScheme.background,
                         panelBackground = colorScheme.surfaceContainerLowest,
+                        navigationSelectedBackground = colorScheme.primary.copy(alpha = 0.10f),
                         playlistSelectedBackground = colorScheme.primary.copy(alpha = 0.08f),
                     )
                 }
