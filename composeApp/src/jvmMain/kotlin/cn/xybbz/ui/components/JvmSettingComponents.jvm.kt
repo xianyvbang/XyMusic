@@ -585,7 +585,8 @@ internal fun JvmSettingGroupGrid(
         }
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(horizontalGap, Alignment.CenterHorizontally),
+            // 分组从左侧开始排列，只有一个分组时也不会被居中留出两侧空白。
+            horizontalArrangement = Arrangement.spacedBy(horizontalGap, Alignment.Start),
             verticalArrangement = Arrangement.spacedBy(verticalGap),
             itemVerticalAlignment = Alignment.Top,
         ) {

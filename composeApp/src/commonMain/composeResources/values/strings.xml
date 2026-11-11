@@ -924,6 +924,7 @@
     <string name="jvm_setting_screen_text_54">服务器</string>
     <string name="jvm_setting_screen_text_55">通用入口</string>
     <string name="jvm_setting_screen_text_56">开机自启设置失败，请检查系统权限</string>
+    <string name="jvm_setting_screen_text_57">常规</string>
     <string name="jvm_streaming_quality_screen_text_01">选择桌面端播放时使用的在线音频品质和服务端转码格式。当前桌面端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。</string>
     <string name="jvm_streaming_quality_screen_text_02">播放品质</string>
     <string name="jvm_streaming_quality_screen_text_03">应用范围</string>

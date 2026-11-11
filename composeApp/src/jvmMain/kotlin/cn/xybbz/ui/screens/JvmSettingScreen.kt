@@ -138,6 +138,8 @@ fun JvmSettingScreen(
 
     // 顶部标签：顺序必须与下方 LazyColumn 中分组 item 的顺序保持一致
     val settingTabs = listOf(
+        // 常规放在最左侧，集中启动相关的桌面端基础设置。
+        JvmSettingTabItem(key = "general", title = stringResource(Res.string.jvm_setting_screen_text_57)),
         JvmSettingTabItem(key = "playback", title = stringResource(Res.string.jvm_setting_screen_text_05)),
         JvmSettingTabItem(key = "storage", title = stringResource(Res.string.jvm_setting_screen_text_14)),
         JvmSettingTabItem(key = "connect", title = stringResource(Res.string.connect)),
@@ -198,6 +200,63 @@ fun JvmSettingScreen(
                     bottom = XyTheme.dimens.outerVerticalPadding * 6,
                 ),
             ) {
+                item(key = "general") {
+                    JvmSettingGroupGrid { groupWidth ->
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.jvm_setting_screen_text_44),
+                        ) {
+                            JvmSettingSwitchRow(
+                                icon = Res.drawable.restart_alt_24px,
+                                title = stringResource(Res.string.jvm_setting_screen_text_45),
+                                description = stringResource(Res.string.jvm_setting_screen_text_46),
+                                checked = settings.ifAutoStart,
+                                // 非 Windows 平台无法写入 Run 注册表，直接禁用开关。
+                                enabled = JvmAutoStartManager.isSupported,
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        // 注册表写入成功后再持久化设置，避免开关状态与实际启动项不一致。
+                                        val success = withContext(Dispatchers.IO) {
+                                            JvmAutoStartManager.setEnabled(checked)
+                                        }
+                                        if (success) {
+                                            settingsManager.setIfAutoStart(checked)
+                                        } else {
+                                            MessageUtils.sendPopTipError(Res.string.jvm_setting_screen_text_56)
+                                        }
+                                    }
+                                }
+                            )
+
+                            JvmSettingSwitchRow(
+                                icon = Res.drawable.queue_music_24px,
+                                title = stringResource(Res.string.jvm_setting_screen_text_47),
+                                description = stringResource(Res.string.jvm_setting_screen_text_48),
+                                checked = settings.ifRestorePlayQueue,
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        settingsManager.setIfRestorePlayQueue(checked)
+                                    }
+                                }
+                            )
+
+                            JvmSettingSwitchRow(
+                                icon = Res.drawable.close_24px,
+                                title = stringResource(Res.string.jvm_setting_screen_text_49),
+                                description = stringResource(Res.string.jvm_setting_screen_text_50),
+                                checked = settings.ifMinimizeToTray,
+                                // 系统不支持托盘时禁用，避免关闭窗口后无法恢复界面。
+                                enabled = SystemTray.isSupported(),
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        settingsManager.setIfMinimizeToTray(checked)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
                 item(key = "playback") {
                     JvmSettingGroupGrid { groupWidth ->
                         JvmSettingGroup(
@@ -389,59 +448,6 @@ fun JvmSettingScreen(
 
                 item(key = "common") {
                     JvmSettingGroupGrid { groupWidth ->
-                        JvmSettingGroup(
-                            modifier = Modifier.width(groupWidth),
-                            title = stringResource(Res.string.jvm_setting_screen_text_44),
-                        ) {
-                            JvmSettingSwitchRow(
-                                icon = Res.drawable.restart_alt_24px,
-                                title = stringResource(Res.string.jvm_setting_screen_text_45),
-                                description = stringResource(Res.string.jvm_setting_screen_text_46),
-                                checked = settings.ifAutoStart,
-                                // 非 Windows 平台无法写入 Run 注册表，直接禁用开关。
-                                enabled = JvmAutoStartManager.isSupported,
-                                onCheckedChange = { checked ->
-                                    coroutineScope.launch {
-                                        // 注册表写入成功后再持久化设置，避免开关状态与实际启动项不一致。
-                                        val success = withContext(Dispatchers.IO) {
-                                            JvmAutoStartManager.setEnabled(checked)
-                                        }
-                                        if (success) {
-                                            settingsManager.setIfAutoStart(checked)
-                                        } else {
-                                            MessageUtils.sendPopTipError(Res.string.jvm_setting_screen_text_56)
-                                        }
-                                    }
-                                }
-                            )
-
-                            JvmSettingSwitchRow(
-                                icon = Res.drawable.queue_music_24px,
-                                title = stringResource(Res.string.jvm_setting_screen_text_47),
-                                description = stringResource(Res.string.jvm_setting_screen_text_48),
-                                checked = settings.ifRestorePlayQueue,
-                                onCheckedChange = { checked ->
-                                    coroutineScope.launch {
-                                        settingsManager.setIfRestorePlayQueue(checked)
-                                    }
-                                }
-                            )
-
-                            JvmSettingSwitchRow(
-                                icon = Res.drawable.close_24px,
-                                title = stringResource(Res.string.jvm_setting_screen_text_49),
-                                description = stringResource(Res.string.jvm_setting_screen_text_50),
-                                checked = settings.ifMinimizeToTray,
-                                // 系统不支持托盘时禁用，避免关闭窗口后无法恢复界面。
-                                enabled = SystemTray.isSupported(),
-                                onCheckedChange = { checked ->
-                                    coroutineScope.launch {
-                                        settingsManager.setIfMinimizeToTray(checked)
-                                    }
-                                }
-                            )
-                        }
-
                         JvmSettingGroup(
                             modifier = Modifier.width(groupWidth),
                             title = stringResource(Res.string.jvm_setting_screen_text_55),
