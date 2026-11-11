@@ -37,11 +37,14 @@ class PlayerInitializer(
             playerEventCoordinator.start()
             musicController.initController {
                 dataSourceScope.launch {
-                    PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(
-                        db = db,
-                        downloadDb = downloadDb,
-                        musicPlayContext = musicPlayContext,
-                    )
+                    // 仅在用户开启“启动时恢复上次队列”时还原播放队列，关闭后从空队列开始。
+                    if (settingsManager.get().ifRestorePlayQueue) {
+                        PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(
+                            db = db,
+                            downloadDb = downloadDb,
+                            musicPlayContext = musicPlayContext,
+                        )
+                    }
                 }
                 dataSourceScope.launch {
                     volumeServer.updateVolume(db.settingsDao.selectOneData()?.jvmVolume ?: 60)

@@ -20,10 +20,8 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -35,16 +33,14 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.copyTextToClipboard
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.info.supportsICloudPasswordSync
-import cn.xybbz.localdata.data.setting.XySettings
+import cn.xybbz.config.setting.JvmAutoStartManager
 import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.router.About
 import cn.xybbz.router.CacheLimit
@@ -58,14 +54,12 @@ import cn.xybbz.router.StreamingQuality
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.components.JvmSettingDownloadRow
+import cn.xybbz.ui.components.JvmSettingGroup
+import cn.xybbz.ui.components.JvmSettingGroupGrid
+import cn.xybbz.ui.components.JvmSettingHeadline
 import cn.xybbz.ui.components.JvmSettingLazyColumn
 import cn.xybbz.ui.components.JvmSettingNavigationRow
-import cn.xybbz.ui.components.JvmSettingOverviewTile
-import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPathRow
-import cn.xybbz.ui.components.JvmSettingSection
-import cn.xybbz.ui.components.JvmSettingStatusCard
-import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingTabBar
 import cn.xybbz.ui.components.JvmSettingTabItem
@@ -73,11 +67,13 @@ import cn.xybbz.ui.components.displayAudioBitRateText
 import cn.xybbz.ui.components.displayMessage
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.SettingsViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import java.awt.SystemTray
 import xymusic.composeapp.generated.resources.*
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.about
@@ -88,9 +84,12 @@ import xymusic.composeapp.generated.resources.av_timer_24px
 import xymusic.composeapp.generated.resources.broadcast_while_down
 import xymusic.composeapp.generated.resources.cache_limit
 import xymusic.composeapp.generated.resources.cache_location
+import xymusic.composeapp.generated.resources.close_24px
+import xymusic.composeapp.generated.resources.connect
 import xymusic.composeapp.generated.resources.connection_management
 import xymusic.composeapp.generated.resources.copy_success
 import xymusic.composeapp.generated.resources.customize_lyric_settings
+import xymusic.composeapp.generated.resources.download
 import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.enabled_sync_play_progress
 import xymusic.composeapp.generated.resources.folder_managed_24px
@@ -100,8 +99,10 @@ import xymusic.composeapp.generated.resources.interface_settings
 import xymusic.composeapp.generated.resources.language
 import xymusic.composeapp.generated.resources.music_note_24px
 import xymusic.composeapp.generated.resources.online_music_quality
+import xymusic.composeapp.generated.resources.password_24px
 import xymusic.composeapp.generated.resources.poxy_config
 import xymusic.composeapp.generated.resources.queue_music_24px
+import xymusic.composeapp.generated.resources.restart_alt_24px
 import xymusic.composeapp.generated.resources.settings
 import xymusic.composeapp.generated.resources.settings_24px
 import xymusic.composeapp.generated.resources.signal_cellular_alt_24px
@@ -118,9 +119,10 @@ fun JvmSettingScreen(
 ) {
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
+    val settingsManager = settingsViewModel.settingsManager
     val settings = settingsViewModel.settingDataNow
-    val cacheFilePath by settingsViewModel.settingsManager.cacheFilePath.collectAsState()
-    val ifSyncPasswordsByICloud by settingsViewModel.settingsManager.ifSyncPasswordsByICloud.collectAsState()
+    val cacheFilePath by settingsManager.cacheFilePath.collectAsState()
+    val ifSyncPasswordsByICloud by settingsManager.ifSyncPasswordsByICloud.collectAsState()
     val songStoragePath = settingsViewModel.songStoragePath
     val copySuccess = stringResource(Res.string.copy_success)
     val canShowICloudPasswordSync = supportsICloudPasswordSync()
@@ -131,7 +133,8 @@ fun JvmSettingScreen(
     val selectedQuality = TranscodeAudioBitRateType
         .getTranscodeAudioBitRate(settings.wifiNetworkAudioBitRate)
         .displayAudioBitRateText()
-    val dataSourceLabel = settings.dataSourceType?.title ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
+    val dataSourceLabel = settings.dataSourceType?.title
+        ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
 
     // 顶部标签：顺序必须与下方 LazyColumn 中分组 item 的顺序保持一致
     val settingTabs = listOf(
@@ -142,16 +145,16 @@ fun JvmSettingScreen(
     )
     // 设置页使用独立滚动区：头部与标签固定，只有下方内容滚动
     val lazyState = rememberLazyListState()
-    // 概览卡片占据列表首项，因此标签高亮索引需要减去 1
+    // 标签与滚动列表一一对应，首项索引即当前分组索引
     val selectedTabIndex by remember(settingTabs.size) {
         derivedStateOf {
-            (lazyState.firstVisibleItemIndex - 1).coerceIn(0, settingTabs.lastIndex)
+            lazyState.firstVisibleItemIndex.coerceIn(0, settingTabs.lastIndex)
         }
     }
 
     XyColumnScreen {
         Column(modifier = Modifier.fillMaxSize()) {
-            // 固定头部：标题摘要与标签栏不随内容滚动
+            // 固定头部：紧凑标题、数据源读数与标签栏不随内容滚动
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -160,20 +163,16 @@ fun JvmSettingScreen(
                         end = XyTheme.dimens.outerHorizontalPadding,
                         top = XyTheme.dimens.outerVerticalPadding * 2,
                     ),
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
             ) {
-                JvmSettingPageHeader(
+                JvmSettingHeadline(
                     title = stringResource(Res.string.settings),
-                    description = stringResource(Res.string.jvm_setting_screen_text_01),
-                ) {
-                    JvmSettingStatusCard(
-                        items = listOf(
-                            JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_02), value = dataSourceLabel),
-                            JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_03), value = selectedQuality),
-                            JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_04), value = settings.maxConcurrentDownloads.toString()),
-                        )
-                    )
-                }
+                    meta = stringResource(
+                        Res.string.jvm_setting_screen_text_43,
+                        dataSourceLabel,
+                        selectedQuality
+                    ),
+                )
 
                 // 顶部标签栏：点击标签滚动到对应分组，滚动时自动高亮当前分组
                 JvmSettingTabBar(
@@ -181,222 +180,287 @@ fun JvmSettingScreen(
                     selectedIndex = selectedTabIndex,
                     onSelected = { index ->
                         coroutineScope.launch {
-                            // +1 跳过顶部概览卡片，滚动到对应分组
-                            lazyState.animateScrollToItem(index + 1)
+                            lazyState.animateScrollToItem(index)
                         }
                     },
                 )
             }
 
-            // 设置页专用 LazyColumn：分组按标签顺序排列，滚动状态与标签栏联动
+            // 设置页专用 LazyColumn：每个标签对应一个双列分组页面
             JvmSettingLazyColumn(
                 lazyState = lazyState,
                 modifier = Modifier.weight(1f),
+                // 底部留出更大滚动余量，避免最后一组设置贴住窗口底边。
+                contentPadding = PaddingValues(
+                    start = XyTheme.dimens.outerHorizontalPadding,
+                    end = XyTheme.dimens.outerHorizontalPadding,
+                    top = XyTheme.dimens.outerVerticalPadding * 2,
+                    bottom = XyTheme.dimens.outerVerticalPadding * 6,
+                ),
             ) {
-                item(key = "overview") {
-                    JvmSettingOverview(
-                        settings = settings,
-                        cacheLimitLabel = cacheLimitLabel,
-                        onStorageClick = {
-                            navigator.navigate(MemoryManagement)
-                        },
-                    )
-                }
-
                 item(key = "playback") {
-                    JvmSettingSection(
-                        title = stringResource(Res.string.jvm_setting_screen_text_05),
-                        subtitle = stringResource(Res.string.jvm_setting_screen_text_06),
-                        badge = stringResource(Res.string.jvm_setting_screen_text_07),
-                    ) {
-                        JvmSettingSwitchRow(
-                            icon = Res.drawable.download_24px,
-                            title = stringResource(Res.string.broadcast_while_down),
-                            description = stringResource(Res.string.jvm_setting_screen_text_08),
-                            checked = settings.ifEnableEdgeDownload,
-                            onCheckedChange = { checked ->
-                                coroutineScope.launch {
-                                    settingsViewModel.settingsManager.setIfEnableEdgeDownload(checked)
+                    JvmSettingGroupGrid { groupWidth ->
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.jvm_setting_screen_text_51),
+                        ) {
+                            JvmSettingSwitchRow(
+                                icon = Res.drawable.download_24px,
+                                title = stringResource(Res.string.broadcast_while_down),
+                                description = stringResource(Res.string.jvm_setting_screen_text_08),
+                                checked = settings.ifEnableEdgeDownload,
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        settingsManager.setIfEnableEdgeDownload(checked)
+                                    }
                                 }
-                            }
-                        )
+                            )
 
-                        AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
+                            JvmSettingSwitchRow(
+                                icon = Res.drawable.album_24px,
+                                title = stringResource(Res.string.album_playback_history),
+                                description = stringResource(Res.string.jvm_setting_screen_text_11),
+                                checked = settings.ifEnableAlbumHistory,
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        settingsManager.setIfEnableAlbumHistory(checked)
+                                    }
+                                }
+                            )
+
+                            JvmSettingSwitchRow(
+                                icon = Res.drawable.volume_up_24px,
+                                title = stringResource(Res.string.allow_simultaneous_playback),
+                                description = stringResource(Res.string.jvm_setting_screen_text_12),
+                                checked = settings.ifHandleAudioFocus,
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        settingsManager.setIfHandleAudioFocus(checked)
+                                    }
+                                }
+                            )
+
+                            JvmSettingSwitchRow(
+                                icon = Res.drawable.av_timer_24px,
+                                title = stringResource(Res.string.enabled_sync_play_progress),
+                                description = stringResource(Res.string.jvm_setting_screen_text_13),
+                                checked = settings.ifEnableSyncPlayProgress,
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        settingsViewModel.setSyncPlayProgressEnabled(checked)
+                                    }
+                                }
+                            )
+
+                            if (canShowICloudPasswordSync) {
+                                JvmSettingSwitchRow(
+                                    icon = Res.drawable.password_24px,
+                                    title = stringResource(Res.string.icloud_keychain_password_sync),
+                                    description = stringResource(Res.string.icloud_keychain_password_sync_desc),
+                                    checked = ifSyncPasswordsByICloud,
+                                    onCheckedChange = { checked ->
+                                        coroutineScope.launch {
+                                            settingsViewModel.setIfSyncPasswordsByICloud(checked)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.jvm_setting_screen_text_52),
+                        ) {
                             JvmSettingNavigationRow(
-                                icon = Res.drawable.folder_managed_24px,
-                                title = stringResource(Res.string.cache_limit),
-                                description = stringResource(Res.string.jvm_setting_screen_text_09),
-                                value = cacheLimitLabel,
+                                icon = Res.drawable.music_note_24px,
+                                title = stringResource(Res.string.online_music_quality),
+                                description = stringResource(Res.string.jvm_setting_screen_text_10),
+                                value = "$selectedQuality · ${settings.transcodeFormat.uppercase()}",
                                 onClick = {
-                                    navigator.navigate(CacheLimit)
+                                    navigator.navigate(StreamingQuality)
+                                }
+                            )
+
+                            AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
+                                JvmSettingNavigationRow(
+                                    icon = Res.drawable.folder_managed_24px,
+                                    title = stringResource(Res.string.cache_limit),
+                                    description = stringResource(Res.string.jvm_setting_screen_text_09),
+                                    value = cacheLimitLabel,
+                                    onClick = {
+                                        navigator.navigate(CacheLimit)
+                                    }
+                                )
+                            }
+
+                            JvmSettingPathRow(
+                                icon = Res.drawable.folder_managed_24px,
+                                title = stringResource(Res.string.cache_location),
+                                path = cacheFilePath,
+                                onClick = {
+                                    if (cacheFilePath.isNotBlank()) {
+                                        copyTextToClipboard(cacheFilePath)
+                                        MessageUtils.sendPopTip(copySuccess)
+                                    }
                                 }
                             )
                         }
+                    }
+                }
 
-                        JvmSettingNavigationRow(
-                            icon = Res.drawable.music_note_24px,
-                            title = stringResource(Res.string.online_music_quality),
-                            description = stringResource(Res.string.jvm_setting_screen_text_10),
-                            value = "$selectedQuality · ${settings.transcodeFormat.uppercase()}",
-                            onClick = {
-                                navigator.navigate(StreamingQuality)
-                            }
-                        )
-
-                        JvmSettingSwitchRow(
-                            icon = Res.drawable.album_24px,
-                            title = stringResource(Res.string.album_playback_history),
-                            description = stringResource(Res.string.jvm_setting_screen_text_11),
-                            checked = settings.ifEnableAlbumHistory,
-                            onCheckedChange = { checked ->
-                                coroutineScope.launch {
-                                    settingsViewModel.settingsManager.setIfEnableAlbumHistory(checked)
-                                }
-                            }
-                        )
-
-                        JvmSettingSwitchRow(
-                            icon = Res.drawable.volume_up_24px,
-                            title = stringResource(Res.string.allow_simultaneous_playback),
-                            description = stringResource(Res.string.jvm_setting_screen_text_12),
-                            checked = settings.ifHandleAudioFocus,
-                            onCheckedChange = { checked ->
-                                coroutineScope.launch {
-                                    settingsViewModel.settingsManager.setIfHandleAudioFocus(checked)
-                                }
-                            }
-                        )
-
-                        JvmSettingSwitchRow(
-                            icon = Res.drawable.av_timer_24px,
-                            title = stringResource(Res.string.enabled_sync_play_progress),
-                            description = stringResource(Res.string.jvm_setting_screen_text_13),
-                            checked = settings.ifEnableSyncPlayProgress,
-                            onCheckedChange = { checked ->
-                                coroutineScope.launch {
-                                    settingsViewModel.setSyncPlayProgressEnabled(checked)
-                                }
-                            }
-                        )
-
-                        if (canShowICloudPasswordSync) {
-                            JvmSettingSwitchRow(
-                                icon = Res.drawable.password_24px,
-                                title = stringResource(Res.string.icloud_keychain_password_sync),
-                                description = stringResource(Res.string.icloud_keychain_password_sync_desc),
-                                checked = ifSyncPasswordsByICloud,
-                                onCheckedChange = { checked ->
+                item(key = "storage") {
+                    JvmSettingGroupGrid { groupWidth ->
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.download),
+                        ) {
+                            JvmSettingDownloadRow(
+                                selected = settings.maxConcurrentDownloads,
+                                onSelected = { maxConcurrentDownloads ->
                                     coroutineScope.launch {
-                                        settingsViewModel.setIfSyncPasswordsByICloud(checked)
+                                        settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
                                     }
                                 }
                             )
                         }
 
-                        JvmSettingPathRow(
-                            icon = Res.drawable.folder_managed_24px,
-                            title = stringResource(Res.string.cache_location),
-                            path = cacheFilePath,
-                            onClick = {
-                                if (cacheFilePath.isNotBlank()) {
-                                    copyTextToClipboard(cacheFilePath)
-                                    MessageUtils.sendPopTip(copySuccess)
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.jvm_setting_screen_text_53),
+                        ) {
+                            JvmSettingPathRow(
+                                icon = Res.drawable.queue_music_24px,
+                                title = stringResource(Res.string.song_cache_location),
+                                path = songStoragePath,
+                                onClick = {
+                                    if (songStoragePath.isNotBlank()) {
+                                        copyTextToClipboard(songStoragePath)
+                                        MessageUtils.sendPopTip(copySuccess)
+                                    }
                                 }
-                            }
-                        )
-                    }
-                }
+                            )
 
-                item(key = "storage") {
-                    JvmSettingSection(
-                        title = stringResource(Res.string.jvm_setting_screen_text_14),
-                        subtitle = stringResource(Res.string.jvm_setting_screen_text_15),
-                        badge = stringResource(Res.string.jvm_setting_screen_text_16),
-                    ) {
-                        JvmSettingDownloadRow(
-                            selected = settings.maxConcurrentDownloads,
-                            onSelected = { maxConcurrentDownloads ->
-                                coroutineScope.launch {
-                                    settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
+                            JvmSettingNavigationRow(
+                                icon = Res.drawable.folder_managed_24px,
+                                title = stringResource(Res.string.storage_management),
+                                description = stringResource(Res.string.jvm_setting_screen_text_17),
+                                value = stringResource(Res.string.jvm_setting_screen_text_18),
+                                onClick = {
+                                    navigator.navigate(MemoryManagement)
                                 }
-                            }
-                        )
-
-                        JvmSettingPathRow(
-                            icon = Res.drawable.queue_music_24px,
-                            title = stringResource(Res.string.song_cache_location),
-                            path = songStoragePath,
-                            onClick = {
-                                if (songStoragePath.isNotBlank()) {
-                                    copyTextToClipboard(songStoragePath)
-                                    MessageUtils.sendPopTip(copySuccess)
-                                }
-                            }
-                        )
-
-                        JvmSettingNavigationRow(
-                            icon = Res.drawable.folder_managed_24px,
-                            title = stringResource(Res.string.storage_management),
-                            description = stringResource(Res.string.jvm_setting_screen_text_17),
-                            value = stringResource(Res.string.jvm_setting_screen_text_18),
-                            onClick = {
-                                navigator.navigate(MemoryManagement)
-                            }
-                        )
+                            )
+                        }
                     }
                 }
 
                 item(key = "connect") {
-                    JvmSettingSection(
-                        title = stringResource(Res.string.connect),
-                        subtitle = stringResource(Res.string.jvm_setting_screen_text_19),
-                        badge = stringResource(Res.string.jvm_connection_config_info_screen_text_10),
-                    ) {
-                        JvmSettingNavigationRow(
-                            icon = Res.drawable.http_24px,
-                            title = stringResource(Res.string.connection_management),
-                            description = stringResource(Res.string.jvm_setting_screen_text_20),
-                            value = dataSourceLabel,
-                            onClick = {
-                                navigator.navigate(ConnectionManagement)
-                            }
-                        )
+                    JvmSettingGroupGrid { groupWidth ->
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.jvm_setting_screen_text_54),
+                        ) {
+                            JvmSettingNavigationRow(
+                                icon = Res.drawable.http_24px,
+                                title = stringResource(Res.string.connection_management),
+                                description = stringResource(Res.string.jvm_setting_screen_text_20),
+                                value = dataSourceLabel,
+                                onClick = {
+                                    navigator.navigate(ConnectionManagement)
+                                }
+                            )
+                        }
 
-                        JvmSettingNavigationRow(
-                            icon = Res.drawable.signal_cellular_alt_24px,
-                            title = stringResource(Res.string.poxy_config),
-                            description = stringResource(Res.string.jvm_setting_screen_text_21),
-                            value = stringResource(Res.string.jvm_setting_screen_text_22),
-                            onClick = {
-                                navigator.navigate(ProxyConfig)
-                            }
-                        )
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.jvm_setting_screen_text_22),
+                        ) {
+                            JvmSettingNavigationRow(
+                                icon = Res.drawable.signal_cellular_alt_24px,
+                                title = stringResource(Res.string.poxy_config),
+                                description = stringResource(Res.string.jvm_setting_screen_text_21),
+                                value = stringResource(Res.string.jvm_setting_screen_text_22),
+                                onClick = {
+                                    navigator.navigate(ProxyConfig)
+                                }
+                            )
+                        }
                     }
                 }
 
                 item(key = "common") {
-                    JvmSettingSection(
-                        title = stringResource(Res.string.jvm_setting_screen_text_23),
-                        subtitle = stringResource(Res.string.jvm_setting_screen_text_24),
-                        badge = stringResource(Res.string.jvm_interface_setting_screen_text_17),
-                        contentContainerColor = Color.Transparent,
-                        contentContainerBorderColor = Color.Transparent,
-                        qualityNote = stringResource(Res.string.jvm_setting_screen_text_25),
-                    ) {
-                        JvmSettingActionGrid(
-                            onInterfaceClick = {
-                                navigator.navigate(InterfaceSetting)
-                            },
-                            onLanguageClick = {
-                                navigator.navigate(LanguageConfig)
-                            },
-                            onCustomApiClick = {
-                                navigator.navigate(CustomApi)
-                            },
-                            onAboutClick = {
-                                navigator.navigate(About)
-                            },
-                        )
+                    JvmSettingGroupGrid { groupWidth ->
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.jvm_setting_screen_text_44),
+                        ) {
+                            JvmSettingSwitchRow(
+                                icon = Res.drawable.restart_alt_24px,
+                                title = stringResource(Res.string.jvm_setting_screen_text_45),
+                                description = stringResource(Res.string.jvm_setting_screen_text_46),
+                                checked = settings.ifAutoStart,
+                                // 非 Windows 平台无法写入 Run 注册表，直接禁用开关。
+                                enabled = JvmAutoStartManager.isSupported,
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        // 注册表写入成功后再持久化设置，避免开关状态与实际启动项不一致。
+                                        val success = withContext(Dispatchers.IO) {
+                                            JvmAutoStartManager.setEnabled(checked)
+                                        }
+                                        if (success) {
+                                            settingsManager.setIfAutoStart(checked)
+                                        } else {
+                                            MessageUtils.sendPopTipError(Res.string.jvm_setting_screen_text_56)
+                                        }
+                                    }
+                                }
+                            )
+
+                            JvmSettingSwitchRow(
+                                icon = Res.drawable.queue_music_24px,
+                                title = stringResource(Res.string.jvm_setting_screen_text_47),
+                                description = stringResource(Res.string.jvm_setting_screen_text_48),
+                                checked = settings.ifRestorePlayQueue,
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        settingsManager.setIfRestorePlayQueue(checked)
+                                    }
+                                }
+                            )
+
+                            JvmSettingSwitchRow(
+                                icon = Res.drawable.close_24px,
+                                title = stringResource(Res.string.jvm_setting_screen_text_49),
+                                description = stringResource(Res.string.jvm_setting_screen_text_50),
+                                checked = settings.ifMinimizeToTray,
+                                // 系统不支持托盘时禁用，避免关闭窗口后无法恢复界面。
+                                enabled = SystemTray.isSupported(),
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        settingsManager.setIfMinimizeToTray(checked)
+                                    }
+                                }
+                            )
+                        }
+
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.jvm_setting_screen_text_55),
+                        ) {
+                            JvmSettingActionGrid(
+                                onInterfaceClick = {
+                                    navigator.navigate(InterfaceSetting)
+                                },
+                                onLanguageClick = {
+                                    navigator.navigate(LanguageConfig)
+                                },
+                                onCustomApiClick = {
+                                    navigator.navigate(CustomApi)
+                                },
+                                onAboutClick = {
+                                    navigator.navigate(About)
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -426,7 +490,9 @@ private fun JvmSettingActionGrid(
             onLanguageClick = onLanguageClick,
             onCustomApiClick = onCustomApiClick,
             onAboutClick = onAboutClick,
-        )
+        ),
+        // 通用入口放在双列分组内，卡片平分分组宽度，保持设计稿的两列卡片排布。
+        fillTwoColumnWidth = true,
     )
 }
 
@@ -470,53 +536,4 @@ private fun jvmSettingActionEntries(
             onClick = onAboutClick,
         ),
     )
-}
-
-/**
- * 设置概览卡片区。
- *
- * 宽屏时保持三张卡片一行，窄屏时每张卡片独占一行。
- */
-@Composable
-private fun JvmSettingOverview(
-    settings: XySettings,
-    cacheLimitLabel: String,
-    onStorageClick: () -> Unit,
-) {
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val gap = XyTheme.dimens.contentPadding
-
-
-        XyRow(
-            paddingValues = PaddingValues(),
-            // 卡片不再铺满整行时居中摆放，视觉上更接近预览稿。
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            JvmSettingOverviewTile(
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                icon = Res.drawable.download_24px,
-                kicker = stringResource(Res.string.jvm_setting_screen_text_33),
-                value = if (settings.ifEnableEdgeDownload) stringResource(Res.string.jvm_setting_screen_text_34) else stringResource(Res.string.jvm_setting_screen_text_35),
-                sub = stringResource(Res.string.jvm_setting_screen_text_36, cacheLimitLabel)
-            )
-            Spacer(modifier = Modifier.width(gap))
-            JvmSettingOverviewTile(
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                icon = Res.drawable.av_timer_24px,
-                kicker = stringResource(Res.string.jvm_setting_screen_text_37),
-                value = if (settings.ifEnableSyncPlayProgress) stringResource(Res.string.jvm_setting_screen_text_38) else stringResource(Res.string.jvm_setting_screen_text_39),
-                sub = if (settings.ifEnableAlbumHistory) stringResource(Res.string.jvm_setting_screen_text_40) else stringResource(Res.string.jvm_setting_screen_text_41)
-            )
-            Spacer(modifier = Modifier.width(gap))
-            JvmSettingOverviewTile(
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                icon = Res.drawable.folder_managed_24px,
-                kicker = stringResource(Res.string.storage_management),
-                value = stringResource(Res.string.jvm_setting_screen_text_18),
-                sub = stringResource(Res.string.jvm_setting_screen_text_42),
-                onClick = onStorageClick,
-            )
-        }
-    }
 }
