@@ -3,9 +3,11 @@ package cn.xybbz.router
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.add_link_24px
 import xymusic.composeapp.generated.resources.album_24px
 import xymusic.composeapp.generated.resources.album
 import xymusic.composeapp.generated.resources.all_music
+import xymusic.composeapp.generated.resources.connection_management
 import xymusic.composeapp.generated.resources.favorite_border_24px
 import xymusic.composeapp.generated.resources.favorite
 import xymusic.composeapp.generated.resources.genres
@@ -16,6 +18,8 @@ import xymusic.composeapp.generated.resources.person_24px
 import xymusic.composeapp.generated.resources.artist
 import xymusic.composeapp.generated.resources.music_note_24px
 import xymusic.composeapp.generated.resources.queue_music_24px
+import xymusic.composeapp.generated.resources.settings
+import xymusic.composeapp.generated.resources.settings_24px
 
 data class JvmTopRouterData(
     val title: StringResource,
@@ -58,5 +62,16 @@ val jvmTopRouterDataList = listOf(
         title = Res.string.genres,
         icon = Res.drawable.label_24px,
         route = Genres
+    ),
+    // 链接管理与设置属于全局入口，与上面的一级导航同列排列
+    JvmTopRouterData(
+        title = Res.string.connection_management,
+        icon = Res.drawable.add_link_24px,
+        route = ConnectionManagement
+    ),
+    JvmTopRouterData(
+        title = Res.string.settings,
+        icon = Res.drawable.settings_24px,
+        route = Setting
     )
 )

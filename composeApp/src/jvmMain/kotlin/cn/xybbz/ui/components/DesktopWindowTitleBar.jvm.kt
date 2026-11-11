@@ -44,10 +44,8 @@ import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.router.Connection
-import cn.xybbz.router.Download
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.Search
-import cn.xybbz.router.Setting
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
@@ -74,19 +72,15 @@ import xymusic.composeapp.generated.resources.check_24px
 import xymusic.composeapp.generated.resources.chevron_right_24px
 import xymusic.composeapp.generated.resources.clear
 import xymusic.composeapp.generated.resources.connection_link
-import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.icon
 import xymusic.composeapp.generated.resources.keyboard_arrow_down_24px
-import xymusic.composeapp.generated.resources.local_and_download
 import xymusic.composeapp.generated.resources.logo_new
 import xymusic.composeapp.generated.resources.no_connection_selected
 import xymusic.composeapp.generated.resources.open_add_or_switch_data_sources
-import xymusic.composeapp.generated.resources.open_settings_page_button
 import xymusic.composeapp.generated.resources.refresh_24px
 import xymusic.composeapp.generated.resources.refresh_login
 import xymusic.composeapp.generated.resources.search_24px
 import xymusic.composeapp.generated.resources.search_music_album_artist
-import xymusic.composeapp.generated.resources.settings_24px
 import cn.xybbz.ui.windows.DesktopWindowTitleBar as UiDesktopWindowTitleBar
 
 /**
@@ -409,14 +403,6 @@ private fun DesktopTitleActions(
             verticalAlignment = Alignment.CenterVertically
         ) {
             DesktopToolbarIconButton(
-                resource = Res.drawable.download_24px,
-                enabled = true,
-                tooltip = stringResource(Res.string.local_and_download),
-                onClick = { navigator.navigate(Download) },
-                modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "DownloadButton"),
-                contentDescription = stringResource(Res.string.local_and_download)
-            )
-            DesktopToolbarIconButton(
                 resource = Res.drawable.refresh_24px,
                 enabled = true,
                 tooltip = stringResource(Res.string.refresh_login),
@@ -427,14 +413,6 @@ private fun DesktopTitleActions(
                 },
                 modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "RefreshButton"),
                 contentDescription = stringResource(Res.string.refresh_login)
-            )
-            DesktopToolbarIconButton(
-                resource = Res.drawable.settings_24px,
-                enabled = true,
-                tooltip = stringResource(Res.string.open_settings_page_button),
-                onClick = { navigator.navigate(Setting) },
-                modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "SettingsButton"),
-                contentDescription = stringResource(Res.string.open_settings_page_button)
             )
         }
     }

@@ -124,6 +124,10 @@ actual fun MainScreenScaffold(
     val sidebarColors = XyTheme.extendedColors
     val sidebarPanelShape = RoundedCornerShape(XyTheme.dimens.corner)
 
+    // 侧栏当前路由，用于一级导航判断选中态
+    val currentRoute = navigator.state.backStacks[navigator.state.topLevelRoute]
+        ?.lastOrNull() ?: navigator.state.topLevelRoute
+
     LaunchedEffect(loginLoading, loginFailed) {
         if (loginLoading || !loginFailed) {
             showLoginErrorSheet = false
@@ -169,12 +173,11 @@ actual fun MainScreenScaffold(
                                 .verticalScroll(rememberScrollState()),
                         ) {
                             // 一级导航：图标与文字横排，选中项左侧带细指示条并填充背景
+                            // 链接管理与设置在 jvmTopRouterDataList 末尾，与这里同列排列
                             jvmTopRouterDataList.forEach { item ->
                                 DesktopSidebarNavigationItem(
                                     item = item,
-                                    selected = (navigator.state.backStacks[navigator.state.topLevelRoute]
-                                        ?.lastOrNull()
-                                        ?: navigator.state.topLevelRoute) == item.route,
+                                    selected = currentRoute == item.route,
                                     selectedBackground = sidebarColors.sidebarNavigationSelectedBackground,
                                     onClick = {
                                         if (item.route == navigationConfig.startRoute) {
@@ -243,9 +246,6 @@ actual fun MainScreenScaffold(
                                 }
                             } else {
                                 playlists.forEach { playlist ->
-                                    val currentRoute = navigator.state.backStacks[navigator.state.topLevelRoute]
-                                        ?.lastOrNull()
-                                        ?: navigator.state.topLevelRoute
                                     val selectedPlaylist = currentRoute is AlbumInfo &&
                                             currentRoute.itemId == playlist.itemId &&
                                             currentRoute.dataType == MusicDataTypeEnum.PLAYLIST
