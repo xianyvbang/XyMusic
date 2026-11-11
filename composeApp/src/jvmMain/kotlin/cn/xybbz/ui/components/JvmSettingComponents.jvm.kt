@@ -24,6 +24,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -46,6 +48,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -69,6 +74,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
@@ -374,8 +380,32 @@ private fun JvmSettingPaneStack(
     )
 }
 
+/** 页面头部标题前的强调短条宽度，对齐设计稿顶部装饰线。 */
+private val JvmSettingHeaderRuleWidth = 34.dp
+
+/** 页面头部标题前的强调短条高度。 */
+private val JvmSettingHeaderRuleHeight = 3.dp
+
+/** 页面头部标题与说明文案之间的间距。 */
+private val JvmSettingHeaderContentGap = 12.dp
+
+/** 页面头部标题行高，对应设计稿的紧凑大标题。 */
+private val JvmSettingHeaderTitleLineHeight = 34.sp
+
+/** 页面头部标题字距，对应设计稿的负字距大标题。 */
+private val JvmSettingHeaderTitleLetterSpacing = (-0.9).sp
+
+/** 页面头部说明文案的最大宽度，避免超宽窗口下单行文字过长。 */
+private val JvmSettingHeaderDescriptionMaxWidth = 560.dp
+
+/** 页面头部说明文案行高，对应设计稿较松的阅读行距。 */
+private val JvmSettingHeaderDescriptionLineHeight = 22.sp
+
 /**
  * JVM 设置类页面的通用头部。
+ *
+ * 排版对齐设计稿：标题上方是主色短横条，标题使用加粗紧字距大字，
+ * 说明文案加宽行距并限制最大宽度，右侧保留状态摘要卡片。
  *
  * @param modifier 头部外层修饰符。
  * @param title 页面标题。
@@ -389,27 +419,43 @@ internal fun JvmSettingPageHeader(
     description: String,
     statusContent: @Composable () -> Unit,
 ) {
-    val gap = XyTheme.dimens.contentPadding * 2
-
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(gap),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding * 2),
         verticalAlignment = Alignment.Bottom
     ) {
         Column(
             modifier = Modifier
                 // 标题说明只吃状态卡之外的剩余空间，保证头部摘要始终在同一行。
                 .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+            verticalArrangement = Arrangement.spacedBy(JvmSettingHeaderContentGap)
         ) {
+            // 标题上方的强调短条，呼应设计稿页面头部的装饰线。
+            Box(
+                modifier = Modifier
+                    .width(JvmSettingHeaderRuleWidth)
+                    .height(JvmSettingHeaderRuleHeight)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = RoundedCornerShape(JvmSettingHeaderRuleHeight)
+                    )
+            )
             XyTextLarge(
                 text = title,
-                style = MaterialTheme.typography.headlineMedium,
+                // 标题字重通过参数传入，避免被 XyTextLarge 的默认字重覆盖。
+                fontWeight = FontWeight.ExtraBold,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    letterSpacing = JvmSettingHeaderTitleLetterSpacing,
+                    lineHeight = JvmSettingHeaderTitleLineHeight,
+                ),
                 color = MaterialTheme.colorScheme.onSurface
             )
             XyTextSub(
+                modifier = Modifier.widthIn(max = JvmSettingHeaderDescriptionMaxWidth),
                 text = description,
-                style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    lineHeight = JvmSettingHeaderDescriptionLineHeight
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -1400,4 +1446,145 @@ internal enum class JvmSettingRowDescriptionStyle {
 
     /** 路径说明文本，允许两行展示以保留更多路径信息。 */
     Path,
+}
+
+/** 设置页顶部标签之间的横向间距，对齐设计稿的标签排布。 */
+private val JvmSettingTabSpacing = 26.dp
+
+/** 标签文字与底部下划线之间的间距。 */
+private val JvmSettingTabUnderlineGap = 7.dp
+
+/** 标签底部下划线高度。 */
+private val JvmSettingTabUnderlineHeight = 2.dp
+
+/** 标签底部留白，让下划线贴近标签栏分隔线。 */
+private val JvmSettingTabBottomPadding = 9.dp
+
+/**
+ * JVM 设置页顶部标签项数据。
+ *
+ * @param key 标签唯一标识，同时用作滚动列表中分组 item 的 key。
+ * @param title 标签展示文案。
+ */
+internal data class JvmSettingTabItem(
+    val key: String,
+    val title: String,
+)
+
+/**
+ * JVM 设置页顶部标签栏。
+ *
+ * 固定在页面顶部，不随内容滚动；点击标签会回调对应索引，由调用方负责滚动到指定分组。
+ *
+ * @param tabs 标签数据列表。
+ * @param selectedIndex 当前高亮的标签索引。
+ * @param modifier 外层修饰符。
+ * @param onSelected 标签点击回调，参数为被点击标签的索引。
+ */
+@Composable
+internal fun JvmSettingTabBar(
+    tabs: List<JvmSettingTabItem>,
+    selectedIndex: Int,
+    modifier: Modifier = Modifier,
+    onSelected: (Int) -> Unit,
+) {
+    // 标签数量较多时允许横向滚动，避免窄窗口下挤压变形。
+    val scrollState = rememberScrollState()
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(scrollState),
+            horizontalArrangement = Arrangement.spacedBy(JvmSettingTabSpacing),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            tabs.forEachIndexed { index, tab ->
+                val selected = index == selectedIndex
+                Column(
+                    modifier = Modifier
+                        // 用文字宽度作为列宽，让下划线与文字等宽而不是撑满整行。
+                        .width(IntrinsicSize.Max)
+                        .clickable(role = Role.Tab, onClick = { onSelected(index) })
+                        .padding(
+                            top = XyTheme.dimens.outerVerticalPadding / 2,
+                            bottom = JvmSettingTabBottomPadding,
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    XyText(
+                        text = tab.title,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                        ),
+                        color = if (selected) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        maxLines = 1,
+                    )
+                    Spacer(modifier = Modifier.height(JvmSettingTabUnderlineGap))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(JvmSettingTabUnderlineHeight)
+                            .background(
+                                color = if (selected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    Color.Transparent
+                                },
+                                shape = RoundedCornerShape(JvmSettingTabUnderlineHeight)
+                            )
+                    )
+                }
+            }
+        }
+
+        // 标签栏底部分隔线，呼应设计稿中固定头部与滚动内容之间的细线。
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+        )
+    }
+}
+
+/**
+ * JVM 设置页专用 LazyColumn。
+ *
+ * 与 [JvmSettingPageScaffold] 中的通用列表不同，设置页需要“固定头部 + 独立滚动内容”，
+ * 因此这里把 [LazyListState] 暴露给调用方，便于顶部标签栏做滚动定位与滚动联动。
+ *
+ * @param lazyState 列表滚动状态，调用方持有以便标签栏定位。
+ * @param modifier 外层修饰符。
+ * @param contentPadding 列表内容内边距。
+ * @param verticalArrangement 列表条目之间的纵向间距。
+ * @param horizontalAlignment 列表条目的横向对齐方式。
+ * @param content 列表条目内容。
+ */
+@Composable
+internal fun JvmSettingLazyColumn(
+    lazyState: LazyListState,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(
+        horizontal = XyTheme.dimens.outerHorizontalPadding,
+        vertical = XyTheme.dimens.outerVerticalPadding * 2,
+    ),
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(
+        XyTheme.dimens.outerVerticalPadding * 2
+    ),
+    horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    content: LazyListScope.() -> Unit,
+) {
+    LazyColumnNotComponent(
+        modifier = modifier.fillMaxSize(),
+        state = lazyState,
+        contentPadding = contentPadding,
+        verticalArrangement = verticalArrangement,
+        horizontalAlignment = horizontalAlignment,
+        items = content,
+    )
 }

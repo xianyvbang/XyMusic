@@ -19,17 +19,21 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,21 +58,21 @@ import cn.xybbz.router.StreamingQuality
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.components.JvmSettingDownloadRow
-import cn.xybbz.ui.components.JvmSettingFlowRow
+import cn.xybbz.ui.components.JvmSettingLazyColumn
 import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingOverviewTile
-import cn.xybbz.ui.components.JvmSettingOverviewThreeColumnWidth
 import cn.xybbz.ui.components.JvmSettingPageHeader
-import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingPathRow
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingSwitchRow
-import cn.xybbz.ui.components.JvmSettingTwoPaneContent
+import cn.xybbz.ui.components.JvmSettingTabBar
+import cn.xybbz.ui.components.JvmSettingTabItem
 import cn.xybbz.ui.components.displayAudioBitRateText
 import cn.xybbz.ui.components.displayMessage
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
@@ -129,221 +133,274 @@ fun JvmSettingScreen(
         .displayAudioBitRateText()
     val dataSourceLabel = settings.dataSourceType?.title ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
 
-    JvmSettingPageScaffold() {
-        JvmSettingPageHeader(
-            title = stringResource(Res.string.settings),
-            description = stringResource(Res.string.jvm_setting_screen_text_01),
-        ) {
-            JvmSettingStatusCard(
-                items = listOf(
-                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_02), value = dataSourceLabel),
-                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_03), value = selectedQuality),
-                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_04), value = settings.maxConcurrentDownloads.toString()),
-                )
-            )
+    // 顶部标签：顺序必须与下方 LazyColumn 中分组 item 的顺序保持一致
+    val settingTabs = listOf(
+        JvmSettingTabItem(key = "playback", title = stringResource(Res.string.jvm_setting_screen_text_05)),
+        JvmSettingTabItem(key = "storage", title = stringResource(Res.string.jvm_setting_screen_text_14)),
+        JvmSettingTabItem(key = "connect", title = stringResource(Res.string.connect)),
+        JvmSettingTabItem(key = "common", title = stringResource(Res.string.jvm_setting_screen_text_23)),
+    )
+    // 设置页使用独立滚动区：头部与标签固定，只有下方内容滚动
+    val lazyState = rememberLazyListState()
+    // 概览卡片占据列表首项，因此标签高亮索引需要减去 1
+    val selectedTabIndex by remember(settingTabs.size) {
+        derivedStateOf {
+            (lazyState.firstVisibleItemIndex - 1).coerceIn(0, settingTabs.lastIndex)
         }
+    }
 
-        JvmSettingOverview(
-            settings = settings,
-            cacheLimitLabel = cacheLimitLabel,
-            onStorageClick = {
-                navigator.navigate(MemoryManagement)
-            },
-        )
-
-        JvmSettingTwoPaneContent(
-            leftContent = {
-                JvmSettingSection(
-                    title = stringResource(Res.string.jvm_setting_screen_text_05),
-                    subtitle = stringResource(Res.string.jvm_setting_screen_text_06),
-                    badge = stringResource(Res.string.jvm_setting_screen_text_07),
+    XyColumnScreen {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // 固定头部：标题摘要与标签栏不随内容滚动
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = XyTheme.dimens.outerHorizontalPadding,
+                        end = XyTheme.dimens.outerHorizontalPadding,
+                        top = XyTheme.dimens.outerVerticalPadding * 2,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+            ) {
+                JvmSettingPageHeader(
+                    title = stringResource(Res.string.settings),
+                    description = stringResource(Res.string.jvm_setting_screen_text_01),
                 ) {
-                    JvmSettingSwitchRow(
-                        icon = Res.drawable.download_24px,
-                        title = stringResource(Res.string.broadcast_while_down),
-                        description = stringResource(Res.string.jvm_setting_screen_text_08),
-                        checked = settings.ifEnableEdgeDownload,
-                        onCheckedChange = { checked ->
-                            coroutineScope.launch {
-                                settingsViewModel.settingsManager.setIfEnableEdgeDownload(checked)
-                            }
-                        }
-                    )
-
-                    AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
-                        JvmSettingNavigationRow(
-                            icon = Res.drawable.folder_managed_24px,
-                            title = stringResource(Res.string.cache_limit),
-                            description = stringResource(Res.string.jvm_setting_screen_text_09),
-                            value = cacheLimitLabel,
-                            onClick = {
-                                navigator.navigate(CacheLimit)
-                            }
+                    JvmSettingStatusCard(
+                        items = listOf(
+                            JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_02), value = dataSourceLabel),
+                            JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_03), value = selectedQuality),
+                            JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_setting_screen_text_04), value = settings.maxConcurrentDownloads.toString()),
                         )
-                    }
-
-                    JvmSettingNavigationRow(
-                        icon = Res.drawable.music_note_24px,
-                        title = stringResource(Res.string.online_music_quality),
-                        description = stringResource(Res.string.jvm_setting_screen_text_10),
-                        value = "$selectedQuality · ${settings.transcodeFormat.uppercase()}",
-                        onClick = {
-                            navigator.navigate(StreamingQuality)
-                        }
                     )
+                }
 
-                    JvmSettingSwitchRow(
-                        icon = Res.drawable.album_24px,
-                        title = stringResource(Res.string.album_playback_history),
-                        description = stringResource(Res.string.jvm_setting_screen_text_11),
-                        checked = settings.ifEnableAlbumHistory,
-                        onCheckedChange = { checked ->
-                            coroutineScope.launch {
-                                settingsViewModel.settingsManager.setIfEnableAlbumHistory(checked)
-                            }
+                // 顶部标签栏：点击标签滚动到对应分组，滚动时自动高亮当前分组
+                JvmSettingTabBar(
+                    tabs = settingTabs,
+                    selectedIndex = selectedTabIndex,
+                    onSelected = { index ->
+                        coroutineScope.launch {
+                            // +1 跳过顶部概览卡片，滚动到对应分组
+                            lazyState.animateScrollToItem(index + 1)
                         }
-                    )
+                    },
+                )
+            }
 
-                    JvmSettingSwitchRow(
-                        icon = Res.drawable.volume_up_24px,
-                        title = stringResource(Res.string.allow_simultaneous_playback),
-                        description = stringResource(Res.string.jvm_setting_screen_text_12),
-                        checked = settings.ifHandleAudioFocus,
-                        onCheckedChange = { checked ->
-                            coroutineScope.launch {
-                                settingsViewModel.settingsManager.setIfHandleAudioFocus(checked)
-                            }
-                        }
+            // 设置页专用 LazyColumn：分组按标签顺序排列，滚动状态与标签栏联动
+            JvmSettingLazyColumn(
+                lazyState = lazyState,
+                modifier = Modifier.weight(1f),
+            ) {
+                item(key = "overview") {
+                    JvmSettingOverview(
+                        settings = settings,
+                        cacheLimitLabel = cacheLimitLabel,
+                        onStorageClick = {
+                            navigator.navigate(MemoryManagement)
+                        },
                     )
+                }
 
-                    JvmSettingSwitchRow(
-                        icon = Res.drawable.av_timer_24px,
-                        title = stringResource(Res.string.enabled_sync_play_progress),
-                        description = stringResource(Res.string.jvm_setting_screen_text_13),
-                        checked = settings.ifEnableSyncPlayProgress,
-                        onCheckedChange = { checked ->
-                            coroutineScope.launch {
-                                settingsViewModel.setSyncPlayProgressEnabled(checked)
-                            }
-                        }
-                    )
-
-                    if (canShowICloudPasswordSync) {
+                item(key = "playback") {
+                    JvmSettingSection(
+                        title = stringResource(Res.string.jvm_setting_screen_text_05),
+                        subtitle = stringResource(Res.string.jvm_setting_screen_text_06),
+                        badge = stringResource(Res.string.jvm_setting_screen_text_07),
+                    ) {
                         JvmSettingSwitchRow(
-                            icon = Res.drawable.password_24px,
-                            title = stringResource(Res.string.icloud_keychain_password_sync),
-                            description = stringResource(Res.string.icloud_keychain_password_sync_desc),
-                            checked = ifSyncPasswordsByICloud,
+                            icon = Res.drawable.download_24px,
+                            title = stringResource(Res.string.broadcast_while_down),
+                            description = stringResource(Res.string.jvm_setting_screen_text_08),
+                            checked = settings.ifEnableEdgeDownload,
                             onCheckedChange = { checked ->
                                 coroutineScope.launch {
-                                    settingsViewModel.setIfSyncPasswordsByICloud(checked)
+                                    settingsViewModel.settingsManager.setIfEnableEdgeDownload(checked)
+                                }
+                            }
+                        )
+
+                        AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
+                            JvmSettingNavigationRow(
+                                icon = Res.drawable.folder_managed_24px,
+                                title = stringResource(Res.string.cache_limit),
+                                description = stringResource(Res.string.jvm_setting_screen_text_09),
+                                value = cacheLimitLabel,
+                                onClick = {
+                                    navigator.navigate(CacheLimit)
+                                }
+                            )
+                        }
+
+                        JvmSettingNavigationRow(
+                            icon = Res.drawable.music_note_24px,
+                            title = stringResource(Res.string.online_music_quality),
+                            description = stringResource(Res.string.jvm_setting_screen_text_10),
+                            value = "$selectedQuality · ${settings.transcodeFormat.uppercase()}",
+                            onClick = {
+                                navigator.navigate(StreamingQuality)
+                            }
+                        )
+
+                        JvmSettingSwitchRow(
+                            icon = Res.drawable.album_24px,
+                            title = stringResource(Res.string.album_playback_history),
+                            description = stringResource(Res.string.jvm_setting_screen_text_11),
+                            checked = settings.ifEnableAlbumHistory,
+                            onCheckedChange = { checked ->
+                                coroutineScope.launch {
+                                    settingsViewModel.settingsManager.setIfEnableAlbumHistory(checked)
+                                }
+                            }
+                        )
+
+                        JvmSettingSwitchRow(
+                            icon = Res.drawable.volume_up_24px,
+                            title = stringResource(Res.string.allow_simultaneous_playback),
+                            description = stringResource(Res.string.jvm_setting_screen_text_12),
+                            checked = settings.ifHandleAudioFocus,
+                            onCheckedChange = { checked ->
+                                coroutineScope.launch {
+                                    settingsViewModel.settingsManager.setIfHandleAudioFocus(checked)
+                                }
+                            }
+                        )
+
+                        JvmSettingSwitchRow(
+                            icon = Res.drawable.av_timer_24px,
+                            title = stringResource(Res.string.enabled_sync_play_progress),
+                            description = stringResource(Res.string.jvm_setting_screen_text_13),
+                            checked = settings.ifEnableSyncPlayProgress,
+                            onCheckedChange = { checked ->
+                                coroutineScope.launch {
+                                    settingsViewModel.setSyncPlayProgressEnabled(checked)
+                                }
+                            }
+                        )
+
+                        if (canShowICloudPasswordSync) {
+                            JvmSettingSwitchRow(
+                                icon = Res.drawable.password_24px,
+                                title = stringResource(Res.string.icloud_keychain_password_sync),
+                                description = stringResource(Res.string.icloud_keychain_password_sync_desc),
+                                checked = ifSyncPasswordsByICloud,
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        settingsViewModel.setIfSyncPasswordsByICloud(checked)
+                                    }
+                                }
+                            )
+                        }
+
+                        JvmSettingPathRow(
+                            icon = Res.drawable.folder_managed_24px,
+                            title = stringResource(Res.string.cache_location),
+                            path = cacheFilePath,
+                            onClick = {
+                                if (cacheFilePath.isNotBlank()) {
+                                    copyTextToClipboard(cacheFilePath)
+                                    MessageUtils.sendPopTip(copySuccess)
                                 }
                             }
                         )
                     }
-
-                    JvmSettingPathRow(
-                        icon = Res.drawable.folder_managed_24px,
-                        title = stringResource(Res.string.cache_location),
-                        path = cacheFilePath,
-                        onClick = {
-                            if (cacheFilePath.isNotBlank()) {
-                                copyTextToClipboard(cacheFilePath)
-                                MessageUtils.sendPopTip(copySuccess)
-                            }
-                        }
-                    )
                 }
 
-                JvmSettingSection(
-                    title = stringResource(Res.string.jvm_setting_screen_text_14),
-                    subtitle = stringResource(Res.string.jvm_setting_screen_text_15),
-                    badge = stringResource(Res.string.jvm_setting_screen_text_16),
-                ) {
-                    JvmSettingDownloadRow(
-                        selected = settings.maxConcurrentDownloads,
-                        onSelected = { maxConcurrentDownloads ->
-                            coroutineScope.launch {
-                                settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
+                item(key = "storage") {
+                    JvmSettingSection(
+                        title = stringResource(Res.string.jvm_setting_screen_text_14),
+                        subtitle = stringResource(Res.string.jvm_setting_screen_text_15),
+                        badge = stringResource(Res.string.jvm_setting_screen_text_16),
+                    ) {
+                        JvmSettingDownloadRow(
+                            selected = settings.maxConcurrentDownloads,
+                            onSelected = { maxConcurrentDownloads ->
+                                coroutineScope.launch {
+                                    settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
+                                }
                             }
-                        }
-                    )
+                        )
 
-                    JvmSettingPathRow(
-                        icon = Res.drawable.queue_music_24px,
-                        title = stringResource(Res.string.song_cache_location),
-                        path = songStoragePath,
-                        onClick = {
-                            if (songStoragePath.isNotBlank()) {
-                                copyTextToClipboard(songStoragePath)
-                                MessageUtils.sendPopTip(copySuccess)
+                        JvmSettingPathRow(
+                            icon = Res.drawable.queue_music_24px,
+                            title = stringResource(Res.string.song_cache_location),
+                            path = songStoragePath,
+                            onClick = {
+                                if (songStoragePath.isNotBlank()) {
+                                    copyTextToClipboard(songStoragePath)
+                                    MessageUtils.sendPopTip(copySuccess)
+                                }
                             }
-                        }
-                    )
+                        )
 
-                    JvmSettingNavigationRow(
-                        icon = Res.drawable.folder_managed_24px,
-                        title = stringResource(Res.string.storage_management),
-                        description = stringResource(Res.string.jvm_setting_screen_text_17),
-                        value = stringResource(Res.string.jvm_setting_screen_text_18),
-                        onClick = {
-                            navigator.navigate(MemoryManagement)
-                        }
-                    )
-                }
-            },
-            rightContent = {
-                JvmSettingSection(
-                    title = stringResource(Res.string.connect),
-                    subtitle = stringResource(Res.string.jvm_setting_screen_text_19),
-                    badge = stringResource(Res.string.jvm_connection_config_info_screen_text_10),
-                ) {
-                    JvmSettingNavigationRow(
-                        icon = Res.drawable.http_24px,
-                        title = stringResource(Res.string.connection_management),
-                        description = stringResource(Res.string.jvm_setting_screen_text_20),
-                        value = dataSourceLabel,
-                        onClick = {
-                            navigator.navigate(ConnectionManagement)
-                        }
-                    )
-
-                    JvmSettingNavigationRow(
-                        icon = Res.drawable.signal_cellular_alt_24px,
-                        title = stringResource(Res.string.poxy_config),
-                        description = stringResource(Res.string.jvm_setting_screen_text_21),
-                        value = stringResource(Res.string.jvm_setting_screen_text_22),
-                        onClick = {
-                            navigator.navigate(ProxyConfig)
-                        }
-                    )
+                        JvmSettingNavigationRow(
+                            icon = Res.drawable.folder_managed_24px,
+                            title = stringResource(Res.string.storage_management),
+                            description = stringResource(Res.string.jvm_setting_screen_text_17),
+                            value = stringResource(Res.string.jvm_setting_screen_text_18),
+                            onClick = {
+                                navigator.navigate(MemoryManagement)
+                            }
+                        )
+                    }
                 }
 
-                JvmSettingSection(
-                    title = stringResource(Res.string.jvm_setting_screen_text_23),
-                    subtitle = stringResource(Res.string.jvm_setting_screen_text_24),
-                    badge = stringResource(Res.string.jvm_interface_setting_screen_text_17),
-                    contentContainerColor = Color.Transparent,
-                    contentContainerBorderColor = Color.Transparent,
-                    qualityNote = stringResource(Res.string.jvm_setting_screen_text_25),
-                ) {
-                    JvmSettingActionGrid(
-                        onInterfaceClick = {
-                            navigator.navigate(InterfaceSetting)
-                        },
-                        onLanguageClick = {
-                            navigator.navigate(LanguageConfig)
-                        },
-                        onCustomApiClick = {
-                            navigator.navigate(CustomApi)
-                        },
-                        onAboutClick = {
-                            navigator.navigate(About)
-                        },
-                    )
+                item(key = "connect") {
+                    JvmSettingSection(
+                        title = stringResource(Res.string.connect),
+                        subtitle = stringResource(Res.string.jvm_setting_screen_text_19),
+                        badge = stringResource(Res.string.jvm_connection_config_info_screen_text_10),
+                    ) {
+                        JvmSettingNavigationRow(
+                            icon = Res.drawable.http_24px,
+                            title = stringResource(Res.string.connection_management),
+                            description = stringResource(Res.string.jvm_setting_screen_text_20),
+                            value = dataSourceLabel,
+                            onClick = {
+                                navigator.navigate(ConnectionManagement)
+                            }
+                        )
+
+                        JvmSettingNavigationRow(
+                            icon = Res.drawable.signal_cellular_alt_24px,
+                            title = stringResource(Res.string.poxy_config),
+                            description = stringResource(Res.string.jvm_setting_screen_text_21),
+                            value = stringResource(Res.string.jvm_setting_screen_text_22),
+                            onClick = {
+                                navigator.navigate(ProxyConfig)
+                            }
+                        )
+                    }
+                }
+
+                item(key = "common") {
+                    JvmSettingSection(
+                        title = stringResource(Res.string.jvm_setting_screen_text_23),
+                        subtitle = stringResource(Res.string.jvm_setting_screen_text_24),
+                        badge = stringResource(Res.string.jvm_interface_setting_screen_text_17),
+                        contentContainerColor = Color.Transparent,
+                        contentContainerBorderColor = Color.Transparent,
+                        qualityNote = stringResource(Res.string.jvm_setting_screen_text_25),
+                    ) {
+                        JvmSettingActionGrid(
+                            onInterfaceClick = {
+                                navigator.navigate(InterfaceSetting)
+                            },
+                            onLanguageClick = {
+                                navigator.navigate(LanguageConfig)
+                            },
+                            onCustomApiClick = {
+                                navigator.navigate(CustomApi)
+                            },
+                            onAboutClick = {
+                                navigator.navigate(About)
+                            },
+                        )
+                    }
                 }
             }
-        )
+        }
     }
 }
 
