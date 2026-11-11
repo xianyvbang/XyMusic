@@ -51,6 +51,7 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.theme.jvmCoverAccentPalette
 import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
@@ -128,7 +129,12 @@ internal object SongTableDefaults {
     val actionButtonSpacing = 8.dp
 }
 
-private val songFavoriteTint = Color(0xFFE94157)
+/**
+ * 收藏爱心色，统一从主题扩展颜色读取，避免硬编码。
+ */
+private val songFavoriteTint: Color
+    @Composable
+    get() = XyTheme.extendedColors.favorite
 
 /**
  * 歌曲表格中的单行内容。
@@ -678,14 +684,8 @@ internal fun defaultSongAccentColor(
     index: Int,
     music: XyMusic,
 ): Color {
-    val palette = listOf(
-        Color(0xFF3C4CE0),
-        Color(0xFFE14C40),
-        Color(0xFFB98B29),
-        Color(0xFF267A6A),
-        Color(0xFF6B419B),
-        Color(0xFF467B52),
-    )
+    // 封面占位配色统一取桌面端常量，与明暗主题无关，避免列表滚动时颜色跳变
+    val palette = jvmCoverAccentPalette
     val paletteIndex = (music.itemId.hashCode().absoluteValue + index) % palette.size
     return palette[paletteIndex]
 }

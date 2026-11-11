@@ -7,7 +7,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
@@ -22,6 +21,7 @@ import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.ArtistViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -72,7 +72,7 @@ fun JvmArtistScreen(
                     isFavorite = isFavoriteFilter,
                     contentDescription = favoriteFilterText,
                     tooltip = favoriteFilterText,
-                    normalTint = Color.Red,
+                    normalTint = XyTheme.extendedColors.favorite,
                     onClick = {
                         coroutineScope.launch {
                             if (artistViewModel.sortBy.value.isFavorite == true) {

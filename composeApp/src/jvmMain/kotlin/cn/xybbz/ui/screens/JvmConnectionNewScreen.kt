@@ -468,7 +468,7 @@ private fun JvmConnectionNewProtocolLogo(
 private fun JvmConnectionNewStatusPill(
     text: String,
 ) {
-    val successColor = Color(0xFF16824A)
+    val successColor = XyTheme.extendedColors.success
     Row(
         modifier = Modifier
             .clip(CircleShape)
@@ -532,7 +532,7 @@ private fun JvmConnectionNewStepItem(
     done: Boolean,
     active: Boolean,
 ) {
-    val successColor = Color(0xFF16824A)
+    val successColor = XyTheme.extendedColors.success
     val circleColor = when {
         done -> successColor
         active -> MaterialTheme.colorScheme.primary
@@ -958,8 +958,8 @@ private fun JvmConnectionNewFormPanel(
                 Column {
                     JvmConnectionNewChip(
                         text = stringResource(Res.string.jvm_connection_new_screen_text_12),
-                        color = Color(0xFFA86200),
-                        backgroundColor = Color(0xFFFFF4DF),
+                        color = XyTheme.extendedColors.warning,
+                        backgroundColor = XyTheme.extendedColors.warningContainer,
                     )
                     Spacer(modifier = Modifier.height(14.dp))
                 }
@@ -1158,7 +1158,7 @@ private fun JvmConnectionNewSummaryContent(
                 brush = Brush.linearGradient(
                     colors = listOf(
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                        Color(0xFF16A06B).copy(alpha = 0.12f)
+                        XyTheme.extendedColors.success.copy(alpha = 0.12f)
                     )
                 )
             ),
@@ -1227,7 +1227,7 @@ private fun JvmConnectionNewSummaryContent(
                     Brush.linearGradient(
                         listOf(
                             MaterialTheme.colorScheme.primary,
-                            Color(0xFF16A06B)
+                            XyTheme.extendedColors.success
                         )
                     )
                 )
@@ -1478,8 +1478,8 @@ private fun JvmConnectionNewResourceItem(
         }
         JvmConnectionNewChip(
             text = tag,
-            color = Color(0xFF16824A),
-            backgroundColor = Color(0xFFE8F6EE)
+            color = XyTheme.extendedColors.success,
+            backgroundColor = XyTheme.extendedColors.successContainer
         )
     }
 }
@@ -1528,10 +1528,10 @@ private fun JvmConnectionNewErrorPanel(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(Color(0xFFB3261E).copy(alpha = 0.08f))
+            .background(XyTheme.extendedColors.danger.copy(alpha = 0.08f))
             .border(
                 width = 1.dp,
-                color = Color(0xFFB3261E).copy(alpha = 0.24f),
+                color = XyTheme.extendedColors.danger.copy(alpha = 0.24f),
                 shape = RoundedCornerShape(XyTheme.dimens.corner)
             )
             .padding(XyTheme.dimens.contentPadding),
@@ -1539,7 +1539,7 @@ private fun JvmConnectionNewErrorPanel(
     ) {
         XyText(
             text = title,
-            color = Color(0xFFB3261E),
+            color = XyTheme.extendedColors.danger,
             fontWeight = FontWeight.W900,
             style = MaterialTheme.typography.bodyMedium
         )
@@ -1576,7 +1576,7 @@ private fun JvmConnectionNewLoginStatusPanel(
     stage: JvmConnectionNewLoginStage,
     modifier: Modifier = Modifier,
 ) {
-    val successColor = Color(0xFF16824A)
+    val successColor = XyTheme.extendedColors.success
     val activeStage = if (stage == JvmConnectionNewLoginStage.Idle) {
         JvmConnectionNewLoginStage.LoggingIn
     } else {
@@ -1758,7 +1758,7 @@ private fun JvmConnectionNewSuccessBanner(
     onEnter: () -> Unit,
 ) {
     // 成功横幅只出现于 ViewModel 登录成功后，进入主页/返回上一页由 onEnter 统一收尾。
-    val successColor = Color(0xFF16824A)
+    val successColor = XyTheme.extendedColors.success
     Row(
         modifier = Modifier
             .fillMaxWidth()

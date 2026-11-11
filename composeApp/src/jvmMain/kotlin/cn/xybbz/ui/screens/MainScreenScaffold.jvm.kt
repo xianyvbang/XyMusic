@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -120,7 +121,7 @@ actual fun MainScreenScaffold(
     var showLoginErrorSheet by remember { mutableStateOf(false) }
     val loginLoading = sessionState is AppSessionState.Restoring || sessionState is AppSessionState.LoggingIn
     val loginFailed = loginFailedState != null
-    val sidebarColors = DesktopSidebarColors.current
+    val sidebarColors = XyTheme.extendedColors
     val sidebarPanelShape = RoundedCornerShape(XyTheme.dimens.corner)
 
     LaunchedEffect(loginLoading, loginFailed) {
@@ -174,7 +175,7 @@ actual fun MainScreenScaffold(
                                     selected = (navigator.state.backStacks[navigator.state.topLevelRoute]
                                         ?.lastOrNull()
                                         ?: navigator.state.topLevelRoute) == item.route,
-                                    selectedBackground = sidebarColors.navigationSelectedBackground,
+                                    selectedBackground = sidebarColors.sidebarNavigationSelectedBackground,
                                     onClick = {
                                         if (item.route == navigationConfig.startRoute) {
                                             navigator.navigateToRoot(item.route)
@@ -257,7 +258,7 @@ actual fun MainScreenScaffold(
                                         subordination = "${playlist.musicCount}${songsCountSuffix}",
                                         imgUrl = playlist.pic,
                                         backgroundColor = if (selectedPlaylist) {
-                                            sidebarColors.playlistSelectedBackground
+                                            sidebarColors.sidebarPlaylistSelectedBackground
                                         } else {
                                             Color.Transparent
                                         },
@@ -383,7 +384,7 @@ private fun DesktopLoginStatusFloatingAction(
                         painter = painterResource(Res.drawable.warning_24px),
                         contentDescription = loginFailedText,
                         modifier = Modifier.size(DesktopLoginStatusErrorButtonSize),
-                        tint = Color.Red,
+                        tint = XyTheme.extendedColors.danger,
                     )
                     Column(
                         modifier = Modifier.weight(1f),
@@ -391,7 +392,7 @@ private fun DesktopLoginStatusFloatingAction(
                     ) {
                         XyTextSubSmall(
                             text = loginFailedText,
-                            color = Color.Red,
+                            color = XyTheme.extendedColors.danger,
                             maxLines = 1,
                         )
                         if (errorHint.isNotBlank()) {
@@ -506,9 +507,15 @@ private fun DesktopSidebarNavigationItem(
                 modifier = Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
-            XyTextSub(
+            XyText(
                 text = stringResource(item.title),
-//                color = MaterialTheme.colorScheme.onSurface,
+                // 选中时加粗并加深文字颜色，未选中保持常规字重与次要颜色
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -525,38 +532,5 @@ private fun DesktopSidebarNavigationItem(
                     .background(MaterialTheme.colorScheme.primary),
             )
         }
-    }
-}
-
-/**
- * JVM 左侧栏使用的颜色集合。
- *
- * 暗色主题保持桌面 HTML 原型的侧栏层级；浅色主题从 MaterialTheme 派生，
- * 避免为了一个桌面专属区域改动全局 ColorScheme。
- */
-private data class DesktopSidebarColors(
-    val sidebarBackground: Color,
-    val navigationSelectedBackground: Color,
-    val playlistSelectedBackground: Color,
-) {
-    companion object {
-        val current: DesktopSidebarColors
-            @Composable
-            get() {
-                val colorScheme = MaterialTheme.colorScheme
-                return if (XyTheme.configs.isDarkTheme) {
-                    DesktopSidebarColors(
-                        sidebarBackground = Color(0xFF111111),
-                        navigationSelectedBackground = Color(0xFF232323),
-                        playlistSelectedBackground = Color.White.copy(alpha = 0.05f),
-                    )
-                } else {
-                    DesktopSidebarColors(
-                        sidebarBackground = colorScheme.surfaceContainerLowest,
-                        navigationSelectedBackground = colorScheme.primary.copy(alpha = 0.10f),
-                        playlistSelectedBackground = colorScheme.primary.copy(alpha = 0.08f),
-                    )
-                }
-            }
     }
 }

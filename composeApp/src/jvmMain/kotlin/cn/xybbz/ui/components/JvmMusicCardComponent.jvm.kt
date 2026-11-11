@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.ext.composeClick
+import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
@@ -59,7 +60,11 @@ internal fun JvmMusicCardComponent(
     imageSize: Dp? = null,
     enabled: Boolean = true,
     brush: Brush = Brush.linearGradient(
-        colors = listOf(Color(0xff3b82f6), Color(0xff8b5cf6)),
+        // 封面占位渐变从主题扩展颜色读取
+        colors = listOf(
+            XyTheme.extendedColors.mediaCoverGradientStart,
+            XyTheme.extendedColors.mediaCoverGradientEnd,
+        ),
         start = Offset(x = Float.POSITIVE_INFINITY, y = 0f),
         end = Offset(x = 0f, y = Float.POSITIVE_INFINITY),
     ),

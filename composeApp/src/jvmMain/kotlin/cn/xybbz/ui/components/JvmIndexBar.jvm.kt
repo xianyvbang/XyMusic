@@ -118,7 +118,13 @@ private fun JvmIndexBarCharText(
             .width(JvmIndexBarWidth)
             .height(JvmIndexBarItemHeight)
             .clip(CircleShape)
-            .background(if (onSelectChar() == text) Color(0xff3b82f6) else Color.Transparent),
+            .background(
+                if (onSelectChar() == text) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    Color.Transparent
+                }
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -136,7 +142,10 @@ private fun JvmIndexBarSelectText(
     Box(
         modifier = Modifier
             .size(70.dp)
-            .background(Color(0xff3b82f6).copy(alpha = 0.6f), RoundedCornerShape(5.dp)),
+            .background(
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                RoundedCornerShape(5.dp)
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Text(text = text)

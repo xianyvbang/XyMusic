@@ -5,12 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.config.image.rememberArtistCoverUrls
 import cn.xybbz.localdata.data.artist.XyArtist
+import cn.xybbz.ui.theme.XyTheme
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -37,7 +37,11 @@ fun MusicArtistCardComponent(
         model = coverUrls.primaryUrl ?: textBitmapModel,
         backModel = coverUrls.fallbackUrl ?: textBitmapModel,
         brush = Brush.linearGradient(
-            colors = listOf(Color(0xff10b981), Color(0xff06b6d4)),
+            // 艺术家封面占位渐变从主题扩展颜色读取
+            colors = listOf(
+                XyTheme.extendedColors.artistCoverGradientStart,
+                XyTheme.extendedColors.artistCoverGradientEnd,
+            ),
             start = Offset(x = Float.POSITIVE_INFINITY, y = 0f),
             end = Offset(x = 0f, y = Float.POSITIVE_INFINITY),
         ),

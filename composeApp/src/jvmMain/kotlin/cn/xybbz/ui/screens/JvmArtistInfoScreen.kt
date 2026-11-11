@@ -64,7 +64,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -257,7 +256,7 @@ fun JvmArtistInfoScreen(
                                 artistInfoViewModel.updateFavorite(ifFavorite)
                             }
                         },
-                        normalTint = Color.Red,
+                        normalTint = XyTheme.extendedColors.favorite,
                     )
                 }
             )
@@ -503,7 +502,11 @@ private fun JvmArtistDesktopHeader(
                 .clip(CircleShape)
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(Color(0xff10b981), Color(0xff06b6d4)),
+                        // 艺术家封面占位渐变从主题扩展颜色读取
+                        colors = listOf(
+                            XyTheme.extendedColors.artistCoverGradientStart,
+                            XyTheme.extendedColors.artistCoverGradientEnd,
+                        ),
                         start = Offset(x = Float.POSITIVE_INFINITY, y = 0f),
                         end = Offset(x = 0f, y = Float.POSITIVE_INFINITY),
                     )

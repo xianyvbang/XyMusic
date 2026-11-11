@@ -245,7 +245,7 @@ internal fun JvmSnackBarPlaybackBar(
                             enabled = currentMusic != null,
                             modifier = Modifier
                                 .size(JvmSnackBarIconButtonSize),
-                            favoriteTint = Color.Red,
+                            favoriteTint = XyTheme.extendedColors.favorite,
                             normalTint = MaterialTheme.colorScheme.onSurfaceVariant,
                             onClick = {
                                 val music = currentMusic ?: return@FavoriteIconButton

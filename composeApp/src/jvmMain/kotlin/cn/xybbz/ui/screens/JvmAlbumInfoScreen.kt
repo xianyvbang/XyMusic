@@ -58,7 +58,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
@@ -374,7 +373,7 @@ fun JvmAlbumInfoScreen(
                                             Icon(
                                                 painter = painterResource(Res.drawable.delete_24px),
                                                 contentDescription = removePlaylistAlertTitle,
-                                                tint = Color.Red
+                                                tint = XyTheme.extendedColors.danger
                                             )
                                         },
                                         onClick = {
@@ -403,7 +402,7 @@ fun JvmAlbumInfoScreen(
                                                 }
                                             ).show()
                                         },
-                                        colors = { MenuDefaults.itemColors(textColor = Color.Red) })
+                                        colors = { MenuDefaults.itemColors(textColor = XyTheme.extendedColors.danger) })
                                 )
                             )
                         }
@@ -742,7 +741,11 @@ private fun JvmMusicAlbumInfoComponent(
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xff3b82f6), Color(0xff8b5cf6)),
+                            // 音乐封面占位渐变从主题扩展颜色读取
+                            colors = listOf(
+                                XyTheme.extendedColors.mediaCoverGradientStart,
+                                XyTheme.extendedColors.mediaCoverGradientEnd,
+                            ),
                             start = Offset(x = Float.POSITIVE_INFINITY, y = 0f),
                             end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)
                         )
