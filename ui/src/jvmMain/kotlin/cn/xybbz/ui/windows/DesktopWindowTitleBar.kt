@@ -4,12 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -21,6 +23,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.theme.XyTheme
 
 @Composable
@@ -81,58 +84,71 @@ fun DesktopWindowTitleBar(
         onControlButtonBoundsChanged(type, bounds)
     }
 
+    // 顶部栏底部分隔线颜色，对齐设计稿中 --line 的深浅色取值
+    val bottomLineColor = MaterialTheme.colorScheme.onSurface.copy(
+        alpha = if (XyTheme.configs.isDarkTheme) 0.09f else 0.12f
+    )
+
     CompositionLocalProvider(LocalDesktopTitleBarHitTestOwner provides activeHitTestOwner) {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .height(DesktopWindowTitleBarDefaults.Height)
-                .onGloballyPositioned { coordinates ->
-                    chromeController.updateTitleBarBounds(coordinates.boundsInWindow())
-                }
-                .background(backgroundColor),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            front?.invoke(this, activeHitTestOwner)
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                middle?.invoke(this, activeHitTestOwner)
-            }
-
+        Column(modifier = modifier.fillMaxWidth()) {
             Row(
-                modifier = Modifier.padding(end = XyTheme.dimens.outerHorizontalPadding),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(DesktopWindowTitleBarDefaults.Height)
+                    .onGloballyPositioned { coordinates ->
+                        chromeController.updateTitleBarBounds(coordinates.boundsInWindow())
+                    }
+                    .background(backgroundColor),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start,
             ) {
-                if (back != null) {
-                    back.invoke(this, activeHitTestOwner)
-                } else {
-                    DefaultDesktopWindowTitleBarBack(
-                        isMaximized = isMaximized,
-                        onMinimize = onMinimize,
-                        onToggleMaximize = onToggleMaximize,
-                        onClose = onClose,
-                        showMinimizeButton = showMinimizeButton,
-                        showMaximizeButton = showMaximizeButton,
-                        showCloseButton = showCloseButton,
-                        minimizeIcon = minimizeIcon,
-                        maximizeIcon = maximizeIcon,
-                        restoreIcon = restoreIcon,
-                        closeIcon = closeIcon,
-                        beforeWindowControls = beforeWindowControls?.let { content ->
-                            { content(activeHitTestOwner) }
-                        },
-                        afterWindowControls = afterWindowControls?.let { content ->
-                            { content(activeHitTestOwner) }
-                        },
-                        onControlButtonBoundsChanged = controlButtonBoundsChanged
-                    )
+                front?.invoke(this, activeHitTestOwner)
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    middle?.invoke(this, activeHitTestOwner)
+                }
+
+                Row(
+                    modifier = Modifier.padding(end = XyTheme.dimens.outerHorizontalPadding),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (back != null) {
+                        back.invoke(this, activeHitTestOwner)
+                    } else {
+                        DefaultDesktopWindowTitleBarBack(
+                            isMaximized = isMaximized,
+                            onMinimize = onMinimize,
+                            onToggleMaximize = onToggleMaximize,
+                            onClose = onClose,
+                            showMinimizeButton = showMinimizeButton,
+                            showMaximizeButton = showMaximizeButton,
+                            showCloseButton = showCloseButton,
+                            minimizeIcon = minimizeIcon,
+                            maximizeIcon = maximizeIcon,
+                            restoreIcon = restoreIcon,
+                            closeIcon = closeIcon,
+                            beforeWindowControls = beforeWindowControls?.let { content ->
+                                { content(activeHitTestOwner) }
+                            },
+                            afterWindowControls = afterWindowControls?.let { content ->
+                                { content(activeHitTestOwner) }
+                            },
+                            onControlButtonBoundsChanged = controlButtonBoundsChanged
+                        )
+                    }
                 }
             }
+
+            // 底部 1dp 横线，作为顶部栏与下方内容区的分界
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = bottomLineColor,
+            )
         }
     }
 }

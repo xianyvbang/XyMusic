@@ -8,7 +8,7 @@ import cn.xybbz.ui.theme.XyTheme
 object DesktopWindowTitleBarDefaults {
     val Height: Dp
         @Composable
-        get() = XyTheme.dimens.itemHeight * 1.3f
+        get() = XyTheme.dimens.itemHeight * 0.8f
 
     val WindowControlButtonWidth: Dp = 42.dp
 
