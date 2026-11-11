@@ -1,19 +1,22 @@
 package cn.xybbz.ui.components
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -29,27 +32,51 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.enums.ConnectionUiType
-import cn.xybbz.common.enums.img
-import cn.xybbz.common.utils.DataSourceChangeUtils
-import cn.xybbz.config.music.MusicCommonController
-import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.data.connection.ConnectionConfig
+import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.startup.SessionCoordinator
+import cn.xybbz.router.About
+import cn.xybbz.router.Album
+import cn.xybbz.router.AlbumInfo
+import cn.xybbz.router.Artist
+import cn.xybbz.router.ArtistInfo
+import cn.xybbz.router.CacheLimit
 import cn.xybbz.router.Connection
+import cn.xybbz.router.ConnectionInfo
+import cn.xybbz.router.ConnectionManagement
+import cn.xybbz.router.CustomApi
+import cn.xybbz.router.DailyRecommend
+import cn.xybbz.router.Download
+import cn.xybbz.router.FavoriteList
+import cn.xybbz.router.GenreInfo
+import cn.xybbz.router.Genres
+import cn.xybbz.router.Home
+import cn.xybbz.router.InterfaceSetting
+import cn.xybbz.router.LanguageConfig
+import cn.xybbz.router.Local
+import cn.xybbz.router.MemoryManagement
+import cn.xybbz.router.Music
 import cn.xybbz.router.Navigator
+import cn.xybbz.router.ProxyConfig
 import cn.xybbz.router.Search
+import cn.xybbz.router.SelectLibrary
+import cn.xybbz.router.SetBackgroundImage
+import cn.xybbz.router.Setting
+import cn.xybbz.router.StreamingQuality
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
-import cn.xybbz.ui.popup.MenuItemDefaultData
-import cn.xybbz.ui.popup.XyDropdownMenu
-import cn.xybbz.ui.screens.jvmRouterMenuWidth
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
 import cn.xybbz.ui.windows.DesktopTooltipBox
@@ -57,42 +84,73 @@ import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.getKoin
 import xymusic.composeapp.generated.resources.Res
-import xymusic.composeapp.generated.resources.add_circle_24px
-import xymusic.composeapp.generated.resources.add_connection
+import xymusic.composeapp.generated.resources.about
+import xymusic.composeapp.generated.resources.all_music
+import xymusic.composeapp.generated.resources.album
 import xymusic.composeapp.generated.resources.app_icon_info
 import xymusic.composeapp.generated.resources.app_name
 import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.artist
 import xymusic.composeapp.generated.resources.back
+import xymusic.composeapp.generated.resources.background_image_setting
+import xymusic.composeapp.generated.resources.cache_limit
 import xymusic.composeapp.generated.resources.cancel_24px
-import xymusic.composeapp.generated.resources.check_24px
-import xymusic.composeapp.generated.resources.chevron_right_24px
 import xymusic.composeapp.generated.resources.clear
-import xymusic.composeapp.generated.resources.connection_link
-import xymusic.composeapp.generated.resources.icon
-import xymusic.composeapp.generated.resources.keyboard_arrow_down_24px
+import xymusic.composeapp.generated.resources.connection_info
+import xymusic.composeapp.generated.resources.connection_management
+import xymusic.composeapp.generated.resources.customize_lyric_settings
+import xymusic.composeapp.generated.resources.daily_recommendations
+import xymusic.composeapp.generated.resources.dark
+import xymusic.composeapp.generated.resources.download
+import xymusic.composeapp.generated.resources.favorite
+import xymusic.composeapp.generated.resources.genres
+import xymusic.composeapp.generated.resources.home
+import xymusic.composeapp.generated.resources.interface_settings
+import xymusic.composeapp.generated.resources.language
+import xymusic.composeapp.generated.resources.light
+import xymusic.composeapp.generated.resources.local_and_download
 import xymusic.composeapp.generated.resources.logo_new
-import xymusic.composeapp.generated.resources.no_connection_selected
-import xymusic.composeapp.generated.resources.open_add_or_switch_data_sources
+import xymusic.composeapp.generated.resources.media_library_selection
+import xymusic.composeapp.generated.resources.online_music_quality
+import xymusic.composeapp.generated.resources.playlist
+import xymusic.composeapp.generated.resources.poxy_config
 import xymusic.composeapp.generated.resources.refresh_24px
 import xymusic.composeapp.generated.resources.refresh_login
+import xymusic.composeapp.generated.resources.search
 import xymusic.composeapp.generated.resources.search_24px
 import xymusic.composeapp.generated.resources.search_music_album_artist
+import xymusic.composeapp.generated.resources.server_connection
+import xymusic.composeapp.generated.resources.settings
+import xymusic.composeapp.generated.resources.storage_management
+import xymusic.composeapp.generated.resources.system
+import xymusic.composeapp.generated.resources.theme_mode
 import cn.xybbz.ui.windows.DesktopWindowTitleBar as UiDesktopWindowTitleBar
 
 /**
+ * 标题栏搜索区是否可见。
+ * 需求要求暂时隐藏搜索功能但保留搜索框实现，需要恢复时把这里改回 true 即可。
+ */
+private val DesktopTitleBarShowSearch: Boolean = false
+
+/**
  * 桌面端主标题栏。
- * 负责组合品牌区、搜索区、数据源菜单以及窗口控制按钮。
+ * 左侧依次为应用图标、应用名称、当前页面面包屑与返回按钮；
+ * 右侧依次为刷新登录按钮、主题模式切换按钮与窗口控制按钮。
  */
 @Composable
 fun DesktopWindowTitleBar(navigator: Navigator) {
     UiDesktopWindowTitleBar(
         backgroundColor = DesktopTitleBarColors.current.background,
-        front = { _ ->
-            DesktopTitleBrand()
+        front = { hitTestOwner ->
+            DesktopTitleBrandAndBreadcrumb(
+                navigator = navigator,
+                hitTestOwner = hitTestOwner
+            )
         },
         middle = { hitTestOwner ->
             DesktopTitleCenter(
@@ -102,7 +160,6 @@ fun DesktopWindowTitleBar(navigator: Navigator) {
         },
         beforeWindowControls = { hitTestOwner ->
             DesktopTitleActions(
-                navigator = navigator,
                 hitTestOwner = hitTestOwner
             )
         }
@@ -110,48 +167,85 @@ fun DesktopWindowTitleBar(navigator: Navigator) {
 }
 
 /**
- * 标题栏左侧品牌区，展示应用图标与名称。
+ * 标题栏左侧品牌区。
+ * 图标与名称沿用项目现有的资源设置，后面追加「应用名 / 当前页面」面包屑和返回按钮。
  */
 @Composable
-private fun DesktopTitleBrand() {
+private fun DesktopTitleBrandAndBreadcrumb(
+    navigator: Navigator,
+    hitTestOwner: DesktopInteractiveHitTestOwner,
+) {
     val colors = DesktopTitleBarColors.current
+    // 当前展示的路由，优先取当前一级路由栈的栈顶页面
+    val currentRoute = navigator.state.backStacks[navigator.state.topLevelRoute]
+        ?.lastOrNull() ?: navigator.state.topLevelRoute
+    val routeTitle = currentRouteTitleRes(currentRoute)
+    val currentStack = navigator.state.backStacks[navigator.state.topLevelRoute]
+    // 只有存在可回退页面时才允许点击返回
+    val canGoBack = navigator.state.topLevelRoute != navigator.state.startRoute ||
+            currentStack?.lastOrNull() != navigator.state.topLevelRoute
 
     Row(
-        modifier = Modifier.widthIn(min = jvmRouterMenuWidth),
+        modifier = Modifier
+            .fillMaxHeight()
+            .padding(start = XyTheme.dimens.outerHorizontalPadding),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
     ) {
         Image(
             painter = painterResource(Res.drawable.logo_new),
             contentDescription = stringResource(Res.string.app_icon_info),
             modifier = Modifier
-                .size(34.dp)
+                .size(28.dp)
                 .clip(RoundedCornerShape(XyTheme.dimens.corner))
         )
-        Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
         XyText(
             text = stringResource(Res.string.app_name),
             color = colors.foreground,
+            fontWeight = FontWeight.Bold,
+        )
+        if (routeTitle != null) {
+            XyText(
+                text = "/",
+                color = colors.foregroundVariant,
+                fontWeight = FontWeight.Normal,
+            )
+            XyText(
+                text = stringResource(routeTitle),
+                color = colors.foregroundVariant,
+                fontWeight = FontWeight.Normal,
+            )
+        }
+        // 返回按钮保留在面包屑右侧
+        DesktopTitleBarPlainIconButton(
+            resource = Res.drawable.arrow_back_24px,
+            enabled = canGoBack,
+            tooltip = stringResource(Res.string.back),
+            contentDescription = stringResource(Res.string.back),
+            onClick = navigator::goBack,
+            modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "BackButton"),
         )
     }
 }
 
 /**
- * 标题栏中间区域，承载返回、前进和搜索输入框。
+ * 标题栏中间搜索区。
+ * 搜索功能暂时隐藏，但完整实现保留在下方 [DesktopSearchField] 中。
  */
 @Composable
 private fun DesktopTitleCenter(
     navigator: Navigator,
     hitTestOwner: DesktopInteractiveHitTestOwner,
 ) {
+    // 搜索区已被产品要求暂时隐藏，开关关闭时直接不渲染，避免占用中间拖拽区域
+    if (!DesktopTitleBarShowSearch) {
+        return
+    }
+
     var keyword by remember { mutableStateOf("") }
-    val currentStack = navigator.state.backStacks[navigator.state.topLevelRoute]
-    val canGoBack = navigator.state.topLevelRoute != navigator.state.startRoute ||
-            currentStack?.lastOrNull() != navigator.state.topLevelRoute
 
     fun submitSearch() {
         val searchQuery = keyword.trim()
-        print("搜索内容${searchQuery}")
         if (searchQuery.isNotEmpty()) {
             keyword = searchQuery
             navigator.navigate(Search(searchQuery = searchQuery))
@@ -165,13 +259,6 @@ private fun DesktopTitleCenter(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
     ) {
-        DesktopToolbarIconButton(
-            resource = Res.drawable.arrow_back_24px,
-            enabled = canGoBack,
-            tooltip = stringResource(Res.string.back),
-            onClick = navigator::goBack,
-            modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "BackButton"),
-        )
         DesktopSearchField(
             value = keyword,
             onValueChange = { keyword = it },
@@ -249,39 +336,18 @@ private fun DesktopSearchField(
 
 /**
  * 标题栏右侧操作区。
- * 包含当前数据源展示、切换/创建连接菜单和窗口控制按钮。
+ * 只保留刷新登录按钮和主题模式切换按钮，数据源切换入口已收敛到左侧栏的连接管理。
  */
 @Composable
 private fun DesktopTitleActions(
-    navigator: Navigator,
     hitTestOwner: DesktopInteractiveHitTestOwner,
 ) {
     val koin = getKoin()
-    val dataSourceManager: DataSourceManager = remember { koin.get() }
     val sessionCoordinator: SessionCoordinator = remember { koin.get() }
-    val db: LocalDatabaseClient = remember { koin.get() }
-    val musicController: MusicCommonController = remember { koin.get() }
+    val settingsManager: SettingsManager = remember { koin.get() }
     val coroutineScope = rememberCoroutineScope()
-    var ifShowConnectionMenu by remember { mutableStateOf(false) }
-    val connectionList by db.connectionConfigDao.selectAllDataFlow()
-        .collectAsState(initial = emptyList())
-    val noConnectionSelected = stringResource(Res.string.no_connection_selected)
-    val dataSourceServer by dataSourceManager.dataSourceServerFlow.collectAsState()
-    val dataSourceType = dataSourceManager.dataSourceType
-    val currentConnectionId =
-        remember(connectionList, dataSourceServer, dataSourceType) {
-            // 标题栏只通过 DataSourceManager.getConnectionId 读取当前连接，避免维护第二份连接 ID 状态。
-            dataSourceManager.getConnectionId()
-        }
-    val currentDataSource =
-        remember(connectionList, currentConnectionId, dataSourceType) {
-            readCurrentDataSourceInfo(
-                connectionList = connectionList,
-                currentConnectionId = currentConnectionId,
-                dataSourceManager = dataSourceManager,
-                fallbackTitle = noConnectionSelected
-            )
-        }
+    // 当前主题模式，用于决定月牙按钮展示的图标与循环切换的下一档
+    val themeType by settingsManager.themeType.collectAsState()
     val colors = DesktopTitleBarColors.current
 
     Row(
@@ -289,137 +355,156 @@ private fun DesktopTitleActions(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
     ) {
-        Box {
-            Row(
-                modifier = Modifier
-                    .height(XyTheme.dimens.itemHeight * .8f)
-                    .desktopTitleBarHitTarget(hitTestOwner, "ConnectionMenu")
-                    .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .background(colors.iconButtonBackground)
-                    .jvmHoverDebounceClickable { ifShowConnectionMenu = true }
-                    .padding(
-                        horizontal = XyTheme.dimens.innerHorizontalPadding,
-                        vertical = XyTheme.dimens.innerVerticalPadding
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-            ) {
-                Image(
-                    painter = painterResource(currentDataSource.iconRes),
-                    contentDescription = null,
-                )
-                XyText(
-                    text = currentDataSource.title,
-                    color = colors.foreground,
-                )
-                Icon(
-                    painter = painterResource(Res.drawable.keyboard_arrow_down_24px),
-                    contentDescription = stringResource(Res.string.open_add_or_switch_data_sources),
-                    tint = colors.foreground,
-                    modifier = Modifier
-                        .size(18.dp)
-                        .jvmHoverDebounceClickable { ifShowConnectionMenu = true }
-                )
-            }
-            XyDropdownMenu(
-                offset = DpOffset(0.dp, XyTheme.dimens.outerVerticalPadding / 2),
-                onIfShowMenu = { ifShowConnectionMenu },
-                onSetIfShowMenu = { ifShowConnectionMenu = it },
-                modifier = Modifier.width(220.dp),
-                itemDataList = buildList {
-                    // 将“创建连接”放在菜单首项，方便从桌面标题栏直接进入新增流程。
-                    add(
-                        MenuItemDefaultData(
-                            title = stringResource(Res.string.add_connection),
-                            leadingIcon = {
-                                Icon(
-                                    painter = painterResource(Res.drawable.chevron_right_24px),
-                                    contentDescription = stringResource(Res.string.add_connection),
-                                    tint = colors.foreground,
-                                )
-                            },
-                            trailingIcon = {
-                                Icon(
-                                    painter = painterResource(Res.drawable.add_circle_24px),
-                                    contentDescription = stringResource(Res.string.add_connection),
-                                    tint = colors.foreground,
-                                )
-                            },
-                            onClick = {
-                                ifShowConnectionMenu = false
-                                navigator.navigate(Connection(connectionUiType = ConnectionUiType.ADD_CONNECTION))
-                            }
-                        )
-                    )
-
-                    addAll(
-                        connectionList.map { connection ->
-                            MenuItemDefaultData(
-                                title = connection.name,
-                                leadingIcon = {
-                                    if (currentConnectionId == connection.id) {
-                                        Icon(
-                                            painter = painterResource(Res.drawable.check_24px),
-                                            contentDescription = connection.name + stringResource(
-                                                Res.string.connection_link
-                                            ),
-                                            tint = colors.foreground,
-                                        )
-                                    }
-                                },
-                                trailingIcon = {
-                                    Image(
-                                        painter = painterResource(connection.type.img),
-                                        contentDescription = connection.name + stringResource(Res.string.icon),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                },
-                                onClick = {
-                                    coroutineScope.launch {
-                                        ifShowConnectionMenu = false
-                                        DataSourceChangeUtils.changeDataSource(
-                                            connectionConfig = connection,
-                                            sessionCoordinator = sessionCoordinator,
-                                            musicController = musicController
-                                        )
-                                    }
-                                },
-                                backgroundColor = {
-                                    if (currentConnectionId == connection.id) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        Color.Transparent
-                                    }
-                                },
-                            )
-                        }
-                    )
+        // 刷新登录按钮：沿用原有按钮样式，位置保持在主题切换按钮左侧
+        DesktopToolbarIconButton(
+            resource = Res.drawable.refresh_24px,
+            enabled = true,
+            tooltip = stringResource(Res.string.refresh_login),
+            onClick = {
+                coroutineScope.launch {
+                    sessionCoordinator.retry()
                 }
-            )
-        }
+            },
+            modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "RefreshButton"),
+            contentDescription = stringResource(Res.string.refresh_login)
+        )
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            verticalAlignment = Alignment.CenterVertically
+        // 月牙形主题模式切换按钮：按 跟随系统 -> 深色 -> 浅色 顺序循环
+        DesktopThemeModeButton(
+            themeType = themeType,
+            tint = colors.foreground,
+            onCycle = { nextThemeType ->
+                coroutineScope.launch {
+                    settingsManager.setThemeTypeData(nextThemeType)
+                }
+            },
+            modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "ThemeModeButton"),
+        )
+    }
+}
+
+/**
+ * 主题模式切换按钮。
+ * 按钮为圆形，图标随当前模式在月牙、太阳与跟随系统之间变化。
+ */
+@Composable
+private fun DesktopThemeModeButton(
+    themeType: ThemeTypeEnum,
+    tint: Color,
+    onCycle: (ThemeTypeEnum) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = DesktopTitleBarColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val tooltip = "${stringResource(Res.string.theme_mode)}：${themeType.modeLabel()}"
+
+    DesktopTooltipBox(tooltip = tooltip) {
+        Box(
+            modifier = modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(if (hovered) colors.iconButtonBackground else Color.Transparent)
+                .jvmHoverDebounceClickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = { onCycle(themeType.nextThemeMode()) },
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            DesktopToolbarIconButton(
-                resource = Res.drawable.refresh_24px,
-                enabled = true,
-                tooltip = stringResource(Res.string.refresh_login),
-                onClick = {
-                    coroutineScope.launch {
-                        sessionCoordinator.retry()
-                    }
-                },
-                modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "RefreshButton"),
-                contentDescription = stringResource(Res.string.refresh_login)
+            DesktopThemeModeIcon(
+                themeType = themeType,
+                tint = tint,
+                modifier = Modifier.size(18.dp),
             )
         }
     }
 }
 
 /**
- * 标题栏中的通用小图标按钮，用于导航等轻量操作。
+ * 主题模式图标。
+ * 使用 Canvas 直接绘制，避免为该按钮额外新增图片资源。
+ */
+@Composable
+private fun DesktopThemeModeIcon(
+    themeType: ThemeTypeEnum,
+    tint: Color,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier = modifier) {
+        // 统一描边宽度，保证三种图标观感一致
+        val strokeWidth = size.minDimension * 0.09f
+        val baseRadius = size.minDimension * 0.36f
+
+        when (themeType) {
+            ThemeTypeEnum.DARK -> {
+                // 月牙：整圆减去一个向右上偏移的圆
+                val outer = Path().apply {
+                    addOval(Rect(center = center, radius = baseRadius))
+                }
+                val cutCenter = Offset(
+                    x = center.x + baseRadius * 0.55f,
+                    y = center.y - baseRadius * 0.35f
+                )
+                val cut = Path().apply {
+                    addOval(Rect(center = cutCenter, radius = baseRadius * 0.9f))
+                }
+                val crescent = Path().apply {
+                    // 用整圆减去偏移圆得到月牙轮廓
+                    op(outer, cut, PathOperation.Difference)
+                }
+                drawPath(crescent, tint)
+            }
+
+            ThemeTypeEnum.LIGHT -> {
+                // 太阳：中心实心圆加八条射线
+                drawCircle(color = tint, radius = baseRadius * 0.62f)
+                val rayStart = baseRadius * 0.88f
+                val rayEnd = baseRadius * 1.22f
+                repeat(8) { index ->
+                    // 每 45 度画一条射线
+                    val angle = index * (Math.PI / 4).toFloat()
+                    val directionX = kotlin.math.cos(angle)
+                    val directionY = kotlin.math.sin(angle)
+                    drawLine(
+                        color = tint,
+                        start = Offset(
+                            x = center.x + directionX * rayStart,
+                            y = center.y + directionY * rayStart,
+                        ),
+                        end = Offset(
+                            x = center.x + directionX * rayEnd,
+                            y = center.y + directionY * rayEnd,
+                        ),
+                        strokeWidth = strokeWidth,
+                        cap = StrokeCap.Round,
+                    )
+                }
+            }
+
+            ThemeTypeEnum.SYSTEM -> {
+                // 跟随系统：圆环加右半圆实心
+                drawCircle(
+                    color = tint,
+                    radius = baseRadius,
+                    style = Stroke(width = strokeWidth)
+                )
+                val arcRect = Rect(center = center, radius = baseRadius)
+                drawArc(
+                    color = tint,
+                    startAngle = -90f,
+                    sweepAngle = 180f,
+                    useCenter = true,
+                    topLeft = arcRect.topLeft,
+                    size = arcRect.size,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 标题栏中的通用小图标按钮，用于刷新登录等轻量操作。
  */
 @Composable
 private fun DesktopToolbarIconButton(
@@ -472,12 +557,55 @@ private fun DesktopToolbarIconButton(
 }
 
 /**
- * 当前数据源在标题栏中的展示数据。
+ * 标题栏中的无底色图标按钮，用于返回等紧贴面包屑的轻量操作。
  */
-private data class DataSourceTitleInfo(
-    val title: String,
-    val iconRes: DrawableResource,
-)
+@Composable
+private fun DesktopTitleBarPlainIconButton(
+    resource: DrawableResource,
+    enabled: Boolean,
+    tooltip: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+) {
+    val colors = DesktopTitleBarColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val iconTint = if (enabled) {
+        colors.foreground
+    } else {
+        colors.foreground.copy(alpha = 0.35f)
+    }
+
+    DesktopTooltipBox(tooltip = tooltip) {
+        Box(
+            modifier = modifier
+                .size(30.dp)
+                .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                .background(
+                    if (hovered && enabled) {
+                        colors.iconButtonBackground
+                    } else {
+                        Color.Transparent
+                    }
+                )
+                .jvmHoverDebounceClickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    enabled = enabled,
+                    onClick = onClick,
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(resource),
+                contentDescription = contentDescription,
+                modifier = Modifier.size(18.dp),
+                tint = iconTint
+            )
+        }
+    }
+}
 
 /**
  * 标题栏使用的颜色集合，统一从当前 MaterialTheme 派生。
@@ -505,21 +633,62 @@ private data class DesktopTitleBarColors(
 }
 
 /**
- * 读取标题栏需要展示的数据源标题和图标。
+ * 主题模式循环顺序：跟随系统 -> 深色 -> 浅色 -> 跟随系统。
  */
-private fun readCurrentDataSourceInfo(
-    connectionList: List<ConnectionConfig>,
-    currentConnectionId: Long,
-    dataSourceManager: DataSourceManager,
-    fallbackTitle: String,
-): DataSourceTitleInfo {
-    // 优先展示当前连接配置；若尚未选中连接，则退回到数据源类型或兜底标题。
-    val currentConnection = connectionList.firstOrNull { it.id == currentConnectionId }
-    val dataSource = dataSourceManager.dataSourceType
-    return DataSourceTitleInfo(
-        title = currentConnection?.name ?: dataSource?.title ?: fallbackTitle,
-        iconRes = currentConnection?.type?.img ?: dataSource?.img ?: Res.drawable.logo_new
-    )
+private fun ThemeTypeEnum.nextThemeMode(): ThemeTypeEnum = when (this) {
+    ThemeTypeEnum.SYSTEM -> ThemeTypeEnum.DARK
+    ThemeTypeEnum.DARK -> ThemeTypeEnum.LIGHT
+    ThemeTypeEnum.LIGHT -> ThemeTypeEnum.SYSTEM
+}
+
+/**
+ * 主题模式的悬浮提示文案。
+ */
+@Composable
+private fun ThemeTypeEnum.modeLabel(): String = when (this) {
+    ThemeTypeEnum.SYSTEM -> stringResource(Res.string.system)
+    ThemeTypeEnum.DARK -> stringResource(Res.string.dark)
+    ThemeTypeEnum.LIGHT -> stringResource(Res.string.light)
+}
+
+/**
+ * 当前路由对应的面包屑标题资源。
+ * 入参使用 NavKey，未覆盖到的页面返回 null 时不展示面包屑标题。
+ */
+private fun currentRouteTitleRes(route: Any): StringResource? = when (route) {
+    Home -> Res.string.home
+    Music -> Res.string.all_music
+    Local -> Res.string.local_and_download
+    Album -> Res.string.album
+    Artist -> Res.string.artist
+    FavoriteList -> Res.string.favorite
+    Genres -> Res.string.genres
+    ConnectionManagement -> Res.string.connection_management
+    Setting -> Res.string.settings
+    is Search -> Res.string.search
+    is AlbumInfo -> if (route.dataType == MusicDataTypeEnum.PLAYLIST) {
+        Res.string.playlist
+    } else {
+        Res.string.album
+    }
+
+    is ArtistInfo -> Res.string.artist
+    is GenreInfo -> Res.string.genres
+    is Connection -> Res.string.server_connection
+    is ConnectionInfo -> Res.string.connection_info
+    MemoryManagement -> Res.string.storage_management
+    InterfaceSetting -> Res.string.interface_settings
+    LanguageConfig -> Res.string.language
+    About -> Res.string.about
+    CacheLimit -> Res.string.cache_limit
+    is SelectLibrary -> Res.string.media_library_selection
+    DailyRecommend -> Res.string.daily_recommendations
+    Download -> Res.string.download
+    SetBackgroundImage -> Res.string.background_image_setting
+    ProxyConfig -> Res.string.poxy_config
+    StreamingQuality -> Res.string.online_music_quality
+    CustomApi -> Res.string.customize_lyric_settings
+    else -> null
 }
 
 private fun Modifier.desktopTitleBarHitTarget(
