@@ -505,6 +505,7 @@ private fun DesktopThemeModeIcon(
 
 /**
  * 标题栏中的通用小图标按钮，用于刷新登录等轻量操作。
+ * 默认无背景与边框，仅在鼠标悬停时显示浅色背景。
  */
 @Composable
 private fun DesktopToolbarIconButton(
@@ -516,16 +517,8 @@ private fun DesktopToolbarIconButton(
     contentDescription: String? = null,
 ) {
     val colors = DesktopTitleBarColors.current
-    val backgroundColor = if (enabled) {
-        colors.iconButtonBackground
-    } else {
-        colors.iconButtonBackground.copy(alpha = 0.55f)
-    }
-    val borderColor = if (enabled) {
-        colors.outline
-    } else {
-        colors.outline.copy(alpha = 0.45f)
-    }
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
     val iconTint = if (enabled) {
         colors.foreground
     } else {
@@ -536,13 +529,19 @@ private fun DesktopToolbarIconButton(
             modifier = modifier
                 .size(36.dp)
                 .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                .background(backgroundColor)
-                .border(
-                    width = 1.dp,
-                    color = borderColor,
-                    shape = RoundedCornerShape(XyTheme.dimens.corner)
+                .background(
+                    if (hovered && enabled) {
+                        colors.iconButtonBackground
+                    } else {
+                        Color.Transparent
+                    }
                 )
-                .jvmHoverDebounceClickable(enabled = enabled, onClick = onClick),
+                .jvmHoverDebounceClickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    enabled = enabled,
+                    onClick = onClick,
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
