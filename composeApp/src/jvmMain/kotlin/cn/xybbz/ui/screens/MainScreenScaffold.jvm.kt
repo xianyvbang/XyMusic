@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -59,13 +58,13 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipBox
-import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.ModalSideSheetExtendComponent
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyIconButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.SidebarPlaylistViewModel
 import kotlinx.coroutines.launch
@@ -119,7 +118,6 @@ actual fun MainScreenScaffold(
     val loginErrorMessage = loginFailedState?.errorMessage.orEmpty()
     var playlistName by remember { mutableStateOf("") }
     var showLoginErrorSheet by remember { mutableStateOf(false) }
-    val sidebarListState = rememberLazyListState()
     val loginLoading = sessionState is AppSessionState.Restoring || sessionState is AppSessionState.LoggingIn
     val loginFailed = loginFailedState != null
     val sidebarColors = DesktopSidebarColors.current
@@ -158,137 +156,121 @@ actual fun MainScreenScaffold(
                     Box(
                         modifier = Modifier
                             .width(jvmRouterMenuWidth)
-                            .fillMaxSize()
-//                            .background(sidebarColors.background)
+                            .fillMaxHeight()
                             .padding(end = XyTheme.dimens.contentPadding)
                     ) {
-                        LazyColumnNotComponent(
+                        Column(
                             modifier = Modifier
-                                .fillMaxSize(),
-                            state = sidebarListState,
-                            contentPadding = PaddingValues(
-                                start = XyTheme.dimens.outerVerticalPadding,
-                                top = XyTheme.dimens.outerVerticalPadding,
-                                end = XyTheme.dimens.outerVerticalPadding,
-                                bottom = XyTheme.dimens.snackBarPlayerHeight +
-                                        DesktopLoginStatusActionHeight +
-                                        XyTheme.dimens.outerVerticalPadding * 2
-                            ),
-                            verticalArrangement = Arrangement.spacedBy(
-                                XyTheme.dimens.contentPadding
-                            ),
+                                .fillMaxSize()
+                                .clip(sidebarPanelShape)
+                                .background(sidebarColors.sidebarBackground)
+                                .padding(bottom = DesktopLoginStatusActionHeight)
+                                .verticalScroll(rememberScrollState()),
                         ) {
-                            item(key = "navigation_panel") {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(sidebarPanelShape)
-                                        .background(sidebarColors.panelBackground)
-                                        .padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                                ) {
-                                    jvmTopRouterDataList.forEach { item ->
-                                        DesktopNavigationItem(
-                                            item = item,
-                                            selected = (navigator.state.backStacks[navigator.state.topLevelRoute]
-                                                ?.lastOrNull()
-                                                ?: navigator.state.topLevelRoute) == item.route,
-                                            colors = sidebarColors,
-                                            onClick = {
-                                                if (item.route == navigationConfig.startRoute) {
-                                                    navigator.navigateToRoot(item.route)
-                                                } else {
-                                                    navigator.navigate(route = item.route)
-                                                }
+                            // 一级导航：图标与文字横排，选中项左侧带细指示条并填充背景
+                            jvmTopRouterDataList.forEach { item ->
+                                DesktopSidebarNavigationItem(
+                                    item = item,
+                                    selected = (navigator.state.backStacks[navigator.state.topLevelRoute]
+                                        ?.lastOrNull()
+                                        ?: navigator.state.topLevelRoute) == item.route,
+                                    selectedBackground = sidebarColors.navigationSelectedBackground,
+                                    onClick = {
+                                        if (item.route == navigationConfig.startRoute) {
+                                            navigator.navigateToRoot(item.route)
+                                        } else {
+                                            navigator.navigate(route = item.route)
+                                        }
+                                    },
+                                )
+                            }
+
+                            // 歌单分组标题
+                            XyRow(
+                                modifier = Modifier.padding(
+                                    start = 12.dp,
+                                    top = XyTheme.dimens.contentPadding,
+                                    bottom = XyTheme.dimens.innerVerticalPadding,
+                                ),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                XyTextSubSmall(
+                                    text = playlistTitle,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                XyIconButton(
+                                    onClick = {
+                                        playlistName = newPlaylist + playlists.size
+                                        AlertDialogObject(
+                                            title = createPlaylist,
+                                            content = {
+                                                XyEdit(
+                                                    text = playlistName,
+                                                    onChange = { playlistName = it }
+                                                )
                                             },
-                                        )
+                                            onDismissRequest = {},
+                                            onConfirmation = {
+                                                coroutineScope.launch {
+                                                    sidebarPlaylistViewModel.savePlaylist(
+                                                        playlistName
+                                                    )
+                                                }
+                                            }
+                                        ).show()
                                     }
+                                ) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.add_24px),
+                                        contentDescription = createPlaylist,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
                                 }
                             }
 
-                            item(key = "playlist_panel") {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(sidebarPanelShape)
-                                        .background(sidebarColors.panelBackground)
-                                        .padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                            if (playlists.isEmpty()) {
+                                XyRow(
+                                    modifier = Modifier.padding(
+                                        start = 12.dp
+                                    ),
                                 ) {
-                                    XyRow {
-                                        XyText(
-                                            text = playlistTitle,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                        )
-                                        XyIconButton(
-                                            onClick = {
-                                                playlistName = newPlaylist + playlists.size
-                                                AlertDialogObject(
-                                                    title = createPlaylist,
-                                                    content = {
-                                                        XyEdit(
-                                                            text = playlistName,
-                                                            onChange = { playlistName = it }
-                                                        )
-                                                    },
-                                                    onDismissRequest = {},
-                                                    onConfirmation = {
-                                                        coroutineScope.launch {
-                                                            sidebarPlaylistViewModel.savePlaylist(
-                                                                playlistName
-                                                            )
-                                                        }
-                                                    }
-                                                ).show()
-                                            }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(Res.drawable.add_24px),
-                                                contentDescription = createPlaylist,
-                                                tint = MaterialTheme.colorScheme.onSurface,
+                                    XyTextSubSmall(
+                                        text = noPlaylistsText,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            } else {
+                                playlists.forEach { playlist ->
+                                    val currentRoute = navigator.state.backStacks[navigator.state.topLevelRoute]
+                                        ?.lastOrNull()
+                                        ?: navigator.state.topLevelRoute
+                                    val selectedPlaylist = currentRoute is AlbumInfo &&
+                                            currentRoute.itemId == playlist.itemId &&
+                                            currentRoute.dataType == MusicDataTypeEnum.PLAYLIST
+                                    MusicPlaylistItemComponent(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = XyTheme.dimens.innerVerticalPadding)
+                                            .pointerHoverIcon(PointerIcon.Hand),
+                                        name = playlist.name,
+                                        subordination = "${playlist.musicCount}${songsCountSuffix}",
+                                        imgUrl = playlist.pic,
+                                        backgroundColor = if (selectedPlaylist) {
+                                            sidebarColors.playlistSelectedBackground
+                                        } else {
+                                            Color.Transparent
+                                        },
+                                        brush = null,
+                                        onClick = {
+                                            navigator.navigate(
+                                                route = AlbumInfo(
+                                                    itemId = playlist.itemId,
+                                                    dataType = MusicDataTypeEnum.PLAYLIST
+                                                )
                                             )
                                         }
-                                    }
-
-                                    if (playlists.isEmpty()) {
-                                        XyRow {
-                                            XyTextSubSmall(
-                                                text = noPlaylistsText,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                        }
-                                    } else {
-                                        playlists.forEach { playlist ->
-                                            val currentRoute = navigator.state.backStacks[navigator.state.topLevelRoute]
-                                                ?.lastOrNull()
-                                                ?: navigator.state.topLevelRoute
-                                            val selectedPlaylist = currentRoute is AlbumInfo &&
-                                                    currentRoute.itemId == playlist.itemId &&
-                                                    currentRoute.dataType == MusicDataTypeEnum.PLAYLIST
-                                            MusicPlaylistItemComponent(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .pointerHoverIcon(PointerIcon.Hand),
-                                                name = playlist.name,
-                                                subordination = "${playlist.musicCount}${songsCountSuffix}",
-                                                imgUrl = playlist.pic,
-                                                backgroundColor = if (selectedPlaylist) {
-                                                    sidebarColors.playlistSelectedBackground
-                                                } else {
-                                                    Color.Transparent
-                                                },
-                                                brush = null,
-                                                onClick = {
-                                                    navigator.navigate(
-                                                        route = AlbumInfo(
-                                                            itemId = playlist.itemId,
-                                                            dataType = MusicDataTypeEnum.PLAYLIST
-                                                        )
-                                                    )
-                                                }
-                                            )
-                                        }
-                                    }
+                                    )
                                 }
                             }
                         }
@@ -472,44 +454,77 @@ private fun DesktopLoginErrorSideSheet(
     }
 }
 
+/**
+ * JVM 左侧栏一级导航项。
+ *
+ * 图标与文字横排，选中时整行填充背景并在左侧显示细指示条。
+ */
 @Composable
-private fun DesktopNavigationItem(
+private fun DesktopSidebarNavigationItem(
     item: JvmTopRouterData,
     selected: Boolean,
-    colors: DesktopSidebarColors,
+    selectedBackground: Color,
     onClick: () -> Unit,
 ) {
+    // 统一的交互源，同时用于悬停检测与点击
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
-    val backgroundColor = if (selected || hovered) {
-        colors.navigationSelectedBackground
-    } else {
-        Color.Transparent
+    val backgroundColor = when {
+        selected -> selectedBackground
+        hovered -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+        else -> Color.Transparent
     }
-    val contentColor = MaterialTheme.colorScheme.onSurface
+    val itemShape = RoundedCornerShape(XyTheme.dimens.corner)
 
-    XyRow(
+    Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .fillMaxWidth()
+            .padding(horizontal = XyTheme.dimens.innerVerticalPadding, vertical = 2.dp)
+            .clip(itemShape)
             .background(backgroundColor)
             .jvmHoverDebounceClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
             ),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
     ) {
-        Icon(
-            painter = painterResource(item.icon),
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = contentColor,
-        )
-        XyText(
-            text = stringResource(item.title),
-            color = contentColor,
-            style = MaterialTheme.typography.bodyLarge,
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 12.dp,
+                    top = XyTheme.dimens.outerVerticalPadding,
+                    end = XyTheme.dimens.innerVerticalPadding,
+                    bottom = XyTheme.dimens.outerVerticalPadding,
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        ) {
+            Icon(
+                painter = painterResource(item.icon),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
+            XyTextSub(
+                text = stringResource(item.title),
+//                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+
+        // 选中状态左侧指示条
+        if (selected) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .width(3.dp)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(topEnd = 2.dp, bottomEnd = 2.dp))
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+        }
     }
 }
 
@@ -520,8 +535,7 @@ private fun DesktopNavigationItem(
  * 避免为了一个桌面专属区域改动全局 ColorScheme。
  */
 private data class DesktopSidebarColors(
-    val background: Color,
-    val panelBackground: Color,
+    val sidebarBackground: Color,
     val navigationSelectedBackground: Color,
     val playlistSelectedBackground: Color,
 ) {
@@ -532,15 +546,13 @@ private data class DesktopSidebarColors(
                 val colorScheme = MaterialTheme.colorScheme
                 return if (XyTheme.configs.isDarkTheme) {
                     DesktopSidebarColors(
-                        background = Color(0xFF111111),
-                        panelBackground = Color(0xFF242424),
-                        navigationSelectedBackground = Color(0xFF363636),
+                        sidebarBackground = Color(0xFF111111),
+                        navigationSelectedBackground = Color(0xFF232323),
                         playlistSelectedBackground = Color.White.copy(alpha = 0.05f),
                     )
                 } else {
                     DesktopSidebarColors(
-                        background = colorScheme.background,
-                        panelBackground = colorScheme.surfaceContainerLowest,
+                        sidebarBackground = colorScheme.surfaceContainerLowest,
                         navigationSelectedBackground = colorScheme.primary.copy(alpha = 0.10f),
                         playlistSelectedBackground = colorScheme.primary.copy(alpha = 0.08f),
                     )
