@@ -881,7 +881,7 @@
     <string name="jvm_setting_screen_text_11">记录专辑播放进度，便于下次继续。</string>
     <string name="jvm_setting_screen_text_12">保留系统音频焦点，不主动打断其他声音。</string>
     <string name="jvm_setting_screen_text_13">向服务端同步当前播放位置。</string>
-    <string name="jvm_setting_screen_text_14">下载与存储</string>
+    <string name="jvm_setting_screen_text_14">下载与缓存</string>
     <string name="jvm_setting_screen_text_15">下载并发、歌曲缓存路径与本地空间管理。</string>
     <string name="jvm_setting_screen_text_16">本机</string>
     <string name="jvm_setting_screen_text_17">查看缓存占用并清理本地文件。</string>
@@ -925,6 +925,8 @@
     <string name="jvm_setting_screen_text_55">通用入口</string>
     <string name="jvm_setting_screen_text_56">开机自启设置失败，请检查系统权限</string>
     <string name="jvm_setting_screen_text_57">常规</string>
+    <string name="jvm_setting_screen_text_58">音频音质</string>
+    <string name="jvm_setting_screen_text_59">缓存</string>
     <string name="jvm_streaming_quality_screen_text_01">选择桌面端播放时使用的在线音频品质和服务端转码格式。当前桌面端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。</string>
     <string name="jvm_streaming_quality_screen_text_02">播放品质</string>
     <string name="jvm_streaming_quality_screen_text_03">应用范围</string>

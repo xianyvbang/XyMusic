@@ -322,9 +322,10 @@ fun JvmSettingScreen(
                             }
                         }
 
+                        // 音质分组只保留在线音质入口，缓存上限与缓存位置移动到下载与缓存标签。
                         JvmSettingGroup(
                             modifier = Modifier.width(groupWidth),
-                            title = stringResource(Res.string.jvm_setting_screen_text_52),
+                            title = stringResource(Res.string.jvm_setting_screen_text_58),
                         ) {
                             JvmSettingNavigationRow(
                                 icon = Res.drawable.music_note_24px,
@@ -335,7 +336,55 @@ fun JvmSettingScreen(
                                     navigator.navigate(StreamingQuality)
                                 }
                             )
+                        }
+                    }
+                }
 
+                item(key = "storage") {
+                    JvmSettingGroupGrid { groupWidth ->
+                        // 下载与缓存合并为同一个分组：下载并发、歌曲缓存位置与存储管理。
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.download),
+                        ) {
+                            JvmSettingDownloadRow(
+                                selected = settings.maxConcurrentDownloads,
+                                onSelected = { maxConcurrentDownloads ->
+                                    coroutineScope.launch {
+                                        settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
+                                    }
+                                }
+                            )
+
+                            JvmSettingPathRow(
+                                icon = Res.drawable.queue_music_24px,
+                                title = stringResource(Res.string.song_cache_location),
+                                path = songStoragePath,
+                                onClick = {
+                                    if (songStoragePath.isNotBlank()) {
+                                        copyTextToClipboard(songStoragePath)
+                                        MessageUtils.sendPopTip(copySuccess)
+                                    }
+                                }
+                            )
+
+                            JvmSettingNavigationRow(
+                                icon = Res.drawable.folder_managed_24px,
+                                title = stringResource(Res.string.storage_management),
+                                description = stringResource(Res.string.jvm_setting_screen_text_17),
+                                value = stringResource(Res.string.jvm_setting_screen_text_18),
+                                onClick = {
+                                    navigator.navigate(MemoryManagement)
+                                }
+                            )
+                        }
+
+                        // 缓存分组承接从常规标签迁移过来的缓存上限与播放缓存位置。
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.jvm_setting_screen_text_59),
+                        ) {
+                            // 仅开启边下边播时才有缓存上限，关闭后隐藏该项。
                             AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
                                 JvmSettingNavigationRow(
                                     icon = Res.drawable.folder_managed_24px,
@@ -357,51 +406,6 @@ fun JvmSettingScreen(
                                         copyTextToClipboard(cacheFilePath)
                                         MessageUtils.sendPopTip(copySuccess)
                                     }
-                                }
-                            )
-                        }
-                    }
-                }
-
-                item(key = "storage") {
-                    JvmSettingGroupGrid { groupWidth ->
-                        JvmSettingGroup(
-                            modifier = Modifier.width(groupWidth),
-                            title = stringResource(Res.string.download),
-                        ) {
-                            JvmSettingDownloadRow(
-                                selected = settings.maxConcurrentDownloads,
-                                onSelected = { maxConcurrentDownloads ->
-                                    coroutineScope.launch {
-                                        settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
-                                    }
-                                }
-                            )
-                        }
-
-                        JvmSettingGroup(
-                            modifier = Modifier.width(groupWidth),
-                            title = stringResource(Res.string.jvm_setting_screen_text_53),
-                        ) {
-                            JvmSettingPathRow(
-                                icon = Res.drawable.queue_music_24px,
-                                title = stringResource(Res.string.song_cache_location),
-                                path = songStoragePath,
-                                onClick = {
-                                    if (songStoragePath.isNotBlank()) {
-                                        copyTextToClipboard(songStoragePath)
-                                        MessageUtils.sendPopTip(copySuccess)
-                                    }
-                                }
-                            )
-
-                            JvmSettingNavigationRow(
-                                icon = Res.drawable.folder_managed_24px,
-                                title = stringResource(Res.string.storage_management),
-                                description = stringResource(Res.string.jvm_setting_screen_text_17),
-                                value = stringResource(Res.string.jvm_setting_screen_text_18),
-                                onClick = {
-                                    navigator.navigate(MemoryManagement)
                                 }
                             )
                         }
