@@ -380,7 +380,7 @@ fun JvmSettingScreen(
                         // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
                         JvmSettingTabDivider()
                         JvmSettingGroupGrid { groupWidth ->
-                            // 下载与缓存合并为同一个分组：下载并发、歌曲缓存位置与存储管理。
+                            // 下载分组：下载并发与歌曲缓存位置。
                             JvmSettingGroup(
                                 modifier = Modifier.width(groupWidth),
                                 title = stringResource(Res.string.download),
@@ -405,7 +405,13 @@ fun JvmSettingScreen(
                                         }
                                     }
                                 )
+                            }
 
+                            // 存储管理独立成组，与下载分组同级。
+                            JvmSettingGroup(
+                                modifier = Modifier.width(groupWidth),
+                                title = stringResource(Res.string.jvm_setting_screen_text_53),
+                            ) {
                                 JvmSettingNavigationRow(
                                     icon = Res.drawable.folder_managed_24px,
                                     title = stringResource(Res.string.storage_management),
