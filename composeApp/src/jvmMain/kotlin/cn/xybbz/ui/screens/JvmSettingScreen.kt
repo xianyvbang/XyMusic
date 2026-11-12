@@ -138,9 +138,8 @@ fun JvmSettingScreen(
 
     // 顶部标签：顺序必须与下方 LazyColumn 中分组 item 的顺序保持一致
     val settingTabs = listOf(
-        // 常规放在最左侧，集中启动相关的桌面端基础设置。
+        // 常规放在最左侧，集中启动、播放与音质缓存等桌面端基础设置。
         JvmSettingTabItem(key = "general", title = stringResource(Res.string.jvm_setting_screen_text_57)),
-        JvmSettingTabItem(key = "playback", title = stringResource(Res.string.jvm_setting_screen_text_05)),
         JvmSettingTabItem(key = "storage", title = stringResource(Res.string.jvm_setting_screen_text_14)),
         JvmSettingTabItem(key = "connect", title = stringResource(Res.string.connect)),
         JvmSettingTabItem(key = "common", title = stringResource(Res.string.jvm_setting_screen_text_23)),
@@ -254,11 +253,8 @@ fun JvmSettingScreen(
                                 }
                             )
                         }
-                    }
-                }
 
-                item(key = "playback") {
-                    JvmSettingGroupGrid { groupWidth ->
+                        // 播放相关开关并入常规设置，与启动项同处一个分组页。
                         JvmSettingGroup(
                             modifier = Modifier.width(groupWidth),
                             title = stringResource(Res.string.jvm_setting_screen_text_51),
