@@ -84,7 +84,6 @@ import xymusic.composeapp.generated.resources.allow_simultaneous_playback
 import xymusic.composeapp.generated.resources.av_timer_24px
 import xymusic.composeapp.generated.resources.broadcast_while_down
 import xymusic.composeapp.generated.resources.cache_limit
-import xymusic.composeapp.generated.resources.cache_location
 import xymusic.composeapp.generated.resources.close_24px
 import xymusic.composeapp.generated.resources.connect
 import xymusic.composeapp.generated.resources.connection_management
@@ -124,7 +123,6 @@ fun JvmSettingScreen(
     val coroutineScope = rememberCoroutineScope()
     val settingsManager = settingsViewModel.settingsManager
     val settings = settingsViewModel.settingDataNow
-    val cacheFilePath by settingsManager.cacheFilePath.collectAsState()
     val ifSyncPasswordsByICloud by settingsManager.ifSyncPasswordsByICloud.collectAsState()
     val songStoragePath = settingsViewModel.songStoragePath
     val copySuccess = stringResource(Res.string.copy_success)
@@ -408,13 +406,13 @@ fun JvmSettingScreen(
                                 )
                             }
 
-                            // 存储占用与快速清理直接内嵌原存储管理页能力，不再跳转独立页面。
-                            JvmStorageManagementGroups(
+                            // 存储管理相关功能整体内嵌到设置页，不再跳转独立存储管理页。
+                            JvmStorageSettingsSection(
                                 memoryManagementViewModel = memoryManagementViewModel,
                                 modifier = Modifier.width(groupWidth),
                             )
 
-                            // 缓存分组承接从常规标签迁移过来的缓存上限与播放缓存位置。
+                            // 缓存分组只保留缓存上限；缓存路径的展示、调整与恢复默认由存储分区的存储位置分组统一负责。
                             JvmSettingGroup(
                                 modifier = Modifier.width(groupWidth),
                                 title = stringResource(Res.string.jvm_setting_screen_text_59),
@@ -431,23 +429,6 @@ fun JvmSettingScreen(
                                         }
                                     )
                                 }
-
-                                JvmSettingPathRow(
-                                    icon = Res.drawable.folder_managed_24px,
-                                    title = stringResource(Res.string.cache_location),
-                                    path = cacheFilePath,
-                                    onClick = {
-                                        if (cacheFilePath.isNotBlank()) {
-                                            copyTextToClipboard(cacheFilePath)
-                                            MessageUtils.sendPopTip(copySuccess)
-                                        }
-                                    }
-                                )
-
-                                // 缓存目录行承接原存储管理页的调整与恢复默认路径能力。
-                                JvmCacheDirectorySettingRow(
-                                    memoryManagementViewModel = memoryManagementViewModel,
-                                )
                             }
                         }
                     }
