@@ -62,6 +62,7 @@ import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingPathRow
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingTabBar
+import cn.xybbz.ui.components.JvmSettingTabDivider
 import cn.xybbz.ui.components.JvmSettingTabItem
 import cn.xybbz.ui.components.displayAudioBitRateText
 import cn.xybbz.ui.components.displayMessage
@@ -341,131 +342,143 @@ fun JvmSettingScreen(
                 }
 
                 item(key = "storage") {
-                    JvmSettingGroupGrid { groupWidth ->
-                        // 下载与缓存合并为同一个分组：下载并发、歌曲缓存位置与存储管理。
-                        JvmSettingGroup(
-                            modifier = Modifier.width(groupWidth),
-                            title = stringResource(Res.string.download),
-                        ) {
-                            JvmSettingDownloadRow(
-                                selected = settings.maxConcurrentDownloads,
-                                onSelected = { maxConcurrentDownloads ->
-                                    coroutineScope.launch {
-                                        settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
+                    Column {
+                        // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
+                        JvmSettingTabDivider()
+                        JvmSettingGroupGrid { groupWidth ->
+                            // 下载与缓存合并为同一个分组：下载并发、歌曲缓存位置与存储管理。
+                            JvmSettingGroup(
+                                modifier = Modifier.width(groupWidth),
+                                title = stringResource(Res.string.download),
+                            ) {
+                                JvmSettingDownloadRow(
+                                    selected = settings.maxConcurrentDownloads,
+                                    onSelected = { maxConcurrentDownloads ->
+                                        coroutineScope.launch {
+                                            settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
+                                        }
                                     }
-                                }
-                            )
+                                )
 
-                            JvmSettingPathRow(
-                                icon = Res.drawable.queue_music_24px,
-                                title = stringResource(Res.string.song_cache_location),
-                                path = songStoragePath,
-                                onClick = {
-                                    if (songStoragePath.isNotBlank()) {
-                                        copyTextToClipboard(songStoragePath)
-                                        MessageUtils.sendPopTip(copySuccess)
+                                JvmSettingPathRow(
+                                    icon = Res.drawable.queue_music_24px,
+                                    title = stringResource(Res.string.song_cache_location),
+                                    path = songStoragePath,
+                                    onClick = {
+                                        if (songStoragePath.isNotBlank()) {
+                                            copyTextToClipboard(songStoragePath)
+                                            MessageUtils.sendPopTip(copySuccess)
+                                        }
                                     }
-                                }
-                            )
+                                )
 
-                            JvmSettingNavigationRow(
-                                icon = Res.drawable.folder_managed_24px,
-                                title = stringResource(Res.string.storage_management),
-                                description = stringResource(Res.string.jvm_setting_screen_text_17),
-                                value = stringResource(Res.string.jvm_setting_screen_text_18),
-                                onClick = {
-                                    navigator.navigate(MemoryManagement)
-                                }
-                            )
-                        }
-
-                        // 缓存分组承接从常规标签迁移过来的缓存上限与播放缓存位置。
-                        JvmSettingGroup(
-                            modifier = Modifier.width(groupWidth),
-                            title = stringResource(Res.string.jvm_setting_screen_text_59),
-                        ) {
-                            // 仅开启边下边播时才有缓存上限，关闭后隐藏该项。
-                            AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
                                 JvmSettingNavigationRow(
                                     icon = Res.drawable.folder_managed_24px,
-                                    title = stringResource(Res.string.cache_limit),
-                                    description = stringResource(Res.string.jvm_setting_screen_text_09),
-                                    value = cacheLimitLabel,
+                                    title = stringResource(Res.string.storage_management),
+                                    description = stringResource(Res.string.jvm_setting_screen_text_17),
+                                    value = stringResource(Res.string.jvm_setting_screen_text_18),
                                     onClick = {
-                                        navigator.navigate(CacheLimit)
+                                        navigator.navigate(MemoryManagement)
                                     }
                                 )
                             }
 
-                            JvmSettingPathRow(
-                                icon = Res.drawable.folder_managed_24px,
-                                title = stringResource(Res.string.cache_location),
-                                path = cacheFilePath,
-                                onClick = {
-                                    if (cacheFilePath.isNotBlank()) {
-                                        copyTextToClipboard(cacheFilePath)
-                                        MessageUtils.sendPopTip(copySuccess)
-                                    }
+                            // 缓存分组承接从常规标签迁移过来的缓存上限与播放缓存位置。
+                            JvmSettingGroup(
+                                modifier = Modifier.width(groupWidth),
+                                title = stringResource(Res.string.jvm_setting_screen_text_59),
+                            ) {
+                                // 仅开启边下边播时才有缓存上限，关闭后隐藏该项。
+                                AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
+                                    JvmSettingNavigationRow(
+                                        icon = Res.drawable.folder_managed_24px,
+                                        title = stringResource(Res.string.cache_limit),
+                                        description = stringResource(Res.string.jvm_setting_screen_text_09),
+                                        value = cacheLimitLabel,
+                                        onClick = {
+                                            navigator.navigate(CacheLimit)
+                                        }
+                                    )
                                 }
-                            )
+
+                                JvmSettingPathRow(
+                                    icon = Res.drawable.folder_managed_24px,
+                                    title = stringResource(Res.string.cache_location),
+                                    path = cacheFilePath,
+                                    onClick = {
+                                        if (cacheFilePath.isNotBlank()) {
+                                            copyTextToClipboard(cacheFilePath)
+                                            MessageUtils.sendPopTip(copySuccess)
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
 
                 item(key = "connect") {
-                    JvmSettingGroupGrid { groupWidth ->
-                        JvmSettingGroup(
-                            modifier = Modifier.width(groupWidth),
-                            title = stringResource(Res.string.jvm_setting_screen_text_54),
-                        ) {
-                            JvmSettingNavigationRow(
-                                icon = Res.drawable.http_24px,
-                                title = stringResource(Res.string.connection_management),
-                                description = stringResource(Res.string.jvm_setting_screen_text_20),
-                                value = dataSourceLabel,
-                                onClick = {
-                                    navigator.navigate(ConnectionManagement)
-                                }
-                            )
-                        }
+                    Column {
+                        // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
+                        JvmSettingTabDivider()
+                        JvmSettingGroupGrid { groupWidth ->
+                            JvmSettingGroup(
+                                modifier = Modifier.width(groupWidth),
+                                title = stringResource(Res.string.jvm_setting_screen_text_54),
+                            ) {
+                                JvmSettingNavigationRow(
+                                    icon = Res.drawable.http_24px,
+                                    title = stringResource(Res.string.connection_management),
+                                    description = stringResource(Res.string.jvm_setting_screen_text_20),
+                                    value = dataSourceLabel,
+                                    onClick = {
+                                        navigator.navigate(ConnectionManagement)
+                                    }
+                                )
+                            }
 
-                        JvmSettingGroup(
-                            modifier = Modifier.width(groupWidth),
-                            title = stringResource(Res.string.jvm_setting_screen_text_22),
-                        ) {
-                            JvmSettingNavigationRow(
-                                icon = Res.drawable.signal_cellular_alt_24px,
-                                title = stringResource(Res.string.poxy_config),
-                                description = stringResource(Res.string.jvm_setting_screen_text_21),
-                                value = stringResource(Res.string.jvm_setting_screen_text_22),
-                                onClick = {
-                                    navigator.navigate(ProxyConfig)
-                                }
-                            )
+                            JvmSettingGroup(
+                                modifier = Modifier.width(groupWidth),
+                                title = stringResource(Res.string.jvm_setting_screen_text_22),
+                            ) {
+                                JvmSettingNavigationRow(
+                                    icon = Res.drawable.signal_cellular_alt_24px,
+                                    title = stringResource(Res.string.poxy_config),
+                                    description = stringResource(Res.string.jvm_setting_screen_text_21),
+                                    value = stringResource(Res.string.jvm_setting_screen_text_22),
+                                    onClick = {
+                                        navigator.navigate(ProxyConfig)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
 
                 item(key = "common") {
-                    JvmSettingGroupGrid { groupWidth ->
-                        JvmSettingGroup(
-                            modifier = Modifier.width(groupWidth),
-                            title = stringResource(Res.string.jvm_setting_screen_text_55),
-                        ) {
-                            JvmSettingActionGrid(
-                                onInterfaceClick = {
-                                    navigator.navigate(InterfaceSetting)
-                                },
-                                onLanguageClick = {
-                                    navigator.navigate(LanguageConfig)
-                                },
-                                onCustomApiClick = {
-                                    navigator.navigate(CustomApi)
-                                },
-                                onAboutClick = {
-                                    navigator.navigate(About)
-                                },
-                            )
+                    Column {
+                        // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
+                        JvmSettingTabDivider()
+                        JvmSettingGroupGrid { groupWidth ->
+                            JvmSettingGroup(
+                                modifier = Modifier.width(groupWidth),
+                                title = stringResource(Res.string.jvm_setting_screen_text_55),
+                            ) {
+                                JvmSettingActionGrid(
+                                    onInterfaceClick = {
+                                        navigator.navigate(InterfaceSetting)
+                                    },
+                                    onLanguageClick = {
+                                        navigator.navigate(LanguageConfig)
+                                    },
+                                    onCustomApiClick = {
+                                        navigator.navigate(CustomApi)
+                                    },
+                                    onAboutClick = {
+                                        navigator.navigate(About)
+                                    },
+                                )
+                            }
                         }
                     }
                 }

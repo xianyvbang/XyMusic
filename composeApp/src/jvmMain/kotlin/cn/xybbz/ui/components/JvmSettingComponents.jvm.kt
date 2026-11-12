@@ -1832,6 +1832,22 @@ internal fun JvmSettingTabBar(
 }
 
 /**
+ * JVM 设置页标签分区分隔线。
+ *
+ * 每个标签页顶部绘制一条横线，把不同标签的内容在视觉上区分开。
+ */
+@Composable
+internal fun JvmSettingTabDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = XyTheme.dimens.outerVerticalPadding)
+            .height(1.dp)
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+    )
+}
+
+/**
  * JVM 设置页专用 LazyColumn。
  *
  * 与 [JvmSettingPageScaffold] 中的通用列表不同，设置页需要“固定头部 + 独立滚动内容”，
