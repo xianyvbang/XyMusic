@@ -21,6 +21,8 @@ package cn.xybbz.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -29,6 +31,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -44,6 +47,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,15 +67,21 @@ import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
+import cn.xybbz.ui.components.JvmSettingGroupVerticalGap
+import cn.xybbz.ui.components.JvmSettingItemFlow
+import cn.xybbz.ui.components.JvmSettingNavigationRow
+import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingStatusCard
 import cn.xybbz.ui.components.JvmSettingStatusCardItem
 import cn.xybbz.ui.components.JvmSettingTwoPaneContent
+import cn.xybbz.ui.components.JvmSettingWideGroup
 import cn.xybbz.ui.components.rememberJvmFileKitDialogSettings
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.toExistingPlatformDirectoryOrNull
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.MemoryManagementViewModel
@@ -126,10 +137,6 @@ fun JvmMemoryManagementScreen(
     // 页面用到的资源文案集中读取，避免同一资源在多个子组件中重复解析。
     val warning = stringResource(Res.string.warning)
     val storageManagementTitle = stringResource(Res.string.storage_management)
-    val audioCacheTitle = stringResource(Res.string.audio_cache)
-    val temporaryCacheTitle = stringResource(Res.string.temporary_cache)
-    val databaseDataTitle = stringResource(Res.string.database_data)
-    val essentialDataTitle = stringResource(Res.string.essential_data)
     val cachePathTitle = stringResource(Res.string.cache_path)
     val clearTitle = stringResource(Res.string.clear)
     val adjustTitle = stringResource(Res.string.adjust)
@@ -180,47 +187,10 @@ fun JvmMemoryManagementScreen(
         ).show()
     }
 
-    // 将 ViewModel 暴露的字符串尺寸、可清理动作、颜色和图标统一整理为页面展示模型。
-    val storageItems = listOf(
-        JvmStorageDisplayItem(
-            title = audioCacheTitle,
-            description = stringResource(Res.string.audio_cache_description),
-            sizeText = memoryManagementViewModel.musicCacheSize,
-            sizeBytes = memoryManagementViewModel.musicCacheSize.toStorageBytes(),
-            icon = Res.drawable.music_note_24px,
-            color = MaterialTheme.colorScheme.primary,
-            meta = stringResource(Res.string.jvm_memory_management_screen_text_02),
-            onClear = { memoryManagementViewModel.clearMusicCache() },
-        ),
-        JvmStorageDisplayItem(
-            title = temporaryCacheTitle,
-            description = stringResource(Res.string.temporary_cache_description),
-            sizeText = memoryManagementViewModel.cacheSize,
-            sizeBytes = memoryManagementViewModel.cacheSize.toStorageBytes(),
-            icon = Res.drawable.queue_music_24px,
-            color = MaterialTheme.colorScheme.tertiary,
-            meta = stringResource(Res.string.jvm_memory_management_screen_text_03),
-            onClear = { memoryManagementViewModel.clearAllCache() },
-        ),
-        JvmStorageDisplayItem(
-            title = databaseDataTitle,
-            description = stringResource(Res.string.database_data_description),
-            sizeText = memoryManagementViewModel.databaseSize,
-            sizeBytes = memoryManagementViewModel.databaseSize.toStorageBytes(),
-            icon = Res.drawable.settings_24px,
-            color = MaterialTheme.colorScheme.error,
-            meta = stringResource(Res.string.jvm_memory_management_screen_text_04),
-            onClear = ::confirmClearDatabase,
-        ),
-        JvmStorageDisplayItem(
-            title = essentialDataTitle,
-            description = stringResource(Res.string.essential_data_description),
-            sizeText = memoryManagementViewModel.appDataSize,
-            sizeBytes = memoryManagementViewModel.appDataSize.toStorageBytes(),
-            icon = Res.drawable.info_24px,
-            color = MaterialTheme.colorScheme.secondary,
-            meta = stringResource(Res.string.jvm_memory_management_screen_text_05),
-        ),
+    // 将 ViewModel 暴露的容量文本、清理动作、颜色和图标统一整理为页面展示模型。
+    val storageItems = jvmStorageDisplayItems(
+        memoryManagementViewModel = memoryManagementViewModel,
+        onClearDatabase = ::confirmClearDatabase,
     )
     // 总占用用于头部状态和空间分布进度条的比例计算。
     val totalBytes = storageItems.sumOf { it.sizeBytes }
@@ -265,6 +235,341 @@ fun JvmMemoryManagementScreen(
             onRestoreDefaultPath = { memoryManagementViewModel.restoreDefaultMusicCacheDirectory() },
         )
     }
+}
+
+/**
+ * 设置页内嵌的存储管理分组。
+ *
+ * 把原存储管理页的占用概览与快速清理迁移到设置页，沿用设置页的分组标题和行样式。
+ *
+ * @param memoryManagementViewModel 存储管理 ViewModel，提供占用数据与清理动作。
+ * @param modifier 外层布局修饰符，通常由设置页分组网格下发宽度。
+ */
+@Composable
+internal fun JvmStorageManagementGroups(
+    memoryManagementViewModel: MemoryManagementViewModel,
+    modifier: Modifier = Modifier,
+) {
+    // 进入存储分组时刷新一次存储信息，避免展示上一次打开页面时的旧数据。
+    LaunchedEffect(memoryManagementViewModel) {
+        memoryManagementViewModel.logStorageInfo()
+    }
+    // 数据库清理属于高风险操作，先弹出确认框，再交给 ViewModel 清理数据库与相关状态。
+    val warning = stringResource(Res.string.warning)
+    fun confirmClearDatabase() {
+        AlertDialogObject(
+            title = warning,
+            content = {
+                XyTextSub(
+                    text = stringResource(Res.string.confirm_delete_database),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            ifWarning = true,
+            onConfirmation = {
+                memoryManagementViewModel.clearDatabaseData()
+            }
+        ).show()
+    }
+    val storageItems = jvmStorageDisplayItems(
+        memoryManagementViewModel = memoryManagementViewModel,
+        onClearDatabase = ::confirmClearDatabase,
+    )
+    val totalBytes = storageItems.sumOf { it.sizeBytes }
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(JvmSettingGroupVerticalGap),
+    ) {
+        JvmStorageUsageGroup(
+            storageItems = storageItems,
+            totalBytes = totalBytes,
+        )
+    }
+}
+
+/**
+ * 设置页存储占用分组：汇总本地占用，并用占比条和分类行展示各类数据。
+ *
+ * @param storageItems 已整理好的存储展示条目。
+ * @param totalBytes 总占用字节数，用于计算占比条比例。
+ */
+@Composable
+private fun JvmStorageUsageGroup(
+    storageItems: List<JvmStorageDisplayItem>,
+    totalBytes: Double,
+) {
+    val totalSizeText = totalBytes.toStorageLabel()
+    val clearableSizeText = storageItems
+        .filter { it.onClear != null }
+        .sumOf { it.sizeBytes }
+        .toStorageLabel()
+    val totalLabel = stringResource(Res.string.jvm_memory_management_screen_text_09)
+    val clearableLabel = stringResource(Res.string.jvm_memory_management_screen_text_10)
+
+    JvmSettingWideGroup(title = stringResource(Res.string.storage_management)) {
+        // 顶部汇总总占用与可清理容量，方便在设置页快速判断磁盘压力。
+        XyTextSub(
+            text = "$totalLabel $totalSizeText · $clearableLabel $clearableSizeText",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+        JvmStorageStackedBar(
+            storageItems = storageItems,
+            totalBytes = totalBytes,
+        )
+        // 图例与占比条使用同一分类颜色，鼠标扫过时可快速对应到具体数据。
+        JvmSettingFlowRow(
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+        ) {
+            storageItems.forEach { item ->
+                JvmStorageLegendItem(item = item)
+            }
+        }
+        // 分类项与其它设置分组保持一致，一行最多三个横向排列，不再绘制分割线。
+        // 每个分类的清理入口直接跟在对应条目尾部，避免再单独占用一块快速清理区域。
+        JvmSettingItemFlow {
+            storageItems.forEach { item ->
+                JvmSettingBaseRow(
+                    icon = item.icon,
+                    title = item.title,
+                    description = item.description,
+                    descriptionMaxLines = 2,
+                    minHeight = 64.dp,
+                    horizontalPadding = XyTheme.dimens.contentPadding,
+                    verticalPadding = XyTheme.dimens.outerVerticalPadding,
+                    iconSelected = true,
+                    iconColor = item.color,
+                    trailing = {
+                        JvmMemoryBadge(text = item.sizeText)
+                        val onClear = item.onClear
+                        if (onClear != null) {
+                            JvmStorageClearButton(
+                                enabled = item.hasStorage(),
+                                onClick = onClear,
+                            )
+                        }
+                    },
+                )
+            }
+        }
+        JvmSettingNote(text = stringResource(Res.string.jvm_memory_management_screen_text_14))
+    }
+}
+
+/**
+ * 存储分类行尾部的清理按钮。
+ *
+ * @param enabled 当前分类是否有可清理内容，为 false 时按钮置灰且不可点击。
+ * @param onClick 清理该分类的回调，调用方负责数据库等高风险操作的二次确认。
+ */
+@Composable
+private fun JvmStorageClearButton(
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val buttonHovered = enabled && hovered
+    val contentAlpha = if (enabled) 1f else 0.42f
+
+    Surface(
+        modifier = Modifier.jvmHoverDebounceClickable(
+            interactionSource = interactionSource,
+            enabled = enabled,
+            // 禁用态不挂点击回调，避免零占用时仍触发清理流程。
+            onClick = if (enabled) onClick else null,
+        ),
+        shape = RoundedCornerShape(999.dp),
+        color = MaterialTheme.colorScheme.primary.copy(
+            alpha = if (buttonHovered) 0.20f else 0.12f
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f * contentAlpha)
+        )
+    ) {
+        Text(
+            modifier = Modifier.padding(
+                horizontal = XyTheme.dimens.contentPadding,
+                vertical = XyTheme.dimens.outerVerticalPadding / 2,
+            ),
+            text = stringResource(Res.string.clear),
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = contentAlpha),
+            maxLines = 1,
+        )
+    }
+}
+
+/**
+ * 存储占比条：按分类占用比例绘制一条连续色带。
+ *
+ * @param storageItems 存储展示条目。
+ * @param totalBytes 总占用字节数，为 0 时只展示空轨道。
+ */
+@Composable
+private fun JvmStorageStackedBar(
+    storageItems: List<JvmStorageDisplayItem>,
+    totalBytes: Double,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(10.dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+    ) {
+        if (totalBytes > 0.0) {
+            storageItems.forEach { item ->
+                val weight = (item.sizeBytes / totalBytes).toFloat()
+                // 零占用分类不绘制，避免在占比条上出现不可见的零宽段。
+                if (weight > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .weight(weight)
+                            .fillMaxHeight()
+                            .background(item.color)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 存储占比图例：颜色圆点加分类名称与容量。
+ *
+ * @param item 单个存储展示条目。
+ */
+@Composable
+private fun JvmStorageLegendItem(item: JvmStorageDisplayItem) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(7.dp)
+                .background(item.color, RoundedCornerShape(999.dp))
+        )
+        XyTextSub(
+            text = "${item.title} ${item.sizeText}",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+    }
+}
+
+/**
+ * 设置页缓存目录行：展示当前播放缓存路径，点击后可调整或恢复默认目录。
+ *
+ * @param memoryManagementViewModel 存储管理 ViewModel，负责缓存路径读写。
+ */
+@Composable
+internal fun JvmCacheDirectorySettingRow(
+    memoryManagementViewModel: MemoryManagementViewModel,
+) {
+    val cachePathTitle = stringResource(Res.string.cache_path)
+    // 目录选择器是 suspend API，点击路径操作后需要使用页面协程启动。
+    val coroutineScope = rememberCoroutineScope()
+    // 绑定 JVM 主窗口的 FileKit 设置，避免系统目录选择弹窗出现在应用窗口后方。
+    val cacheDirectoryDialogSettings = rememberJvmFileKitDialogSettings(
+        stringResource(Res.string.jvm_memory_management_screen_text_01)
+    )
+
+    // 打开缓存路径弹窗：弹窗内的“调整”会继续拉起系统目录选择器，“恢复默认”直接调用 ViewModel。
+    fun showCachePathDialog() {
+        showJvmCachePathDialog(
+            title = cachePathTitle,
+            cachePath = memoryManagementViewModel.musicCachePath,
+            isDefaultPath = memoryManagementViewModel.isDefaultMusicCachePath,
+            onChoosePath = {
+                coroutineScope.launch {
+                    // 用户取消选择时返回 null，此时不修改当前缓存路径。
+                    chooseJvmCacheDirectory(
+                        currentPath = memoryManagementViewModel.musicCachePath,
+                        dialogSettings = cacheDirectoryDialogSettings,
+                    )?.let { selectedPath ->
+                        memoryManagementViewModel.changeMusicCacheDirectory(selectedPath)
+                    }
+                }
+            },
+            onRestoreDefault = {
+                memoryManagementViewModel.restoreDefaultMusicCacheDirectory()
+            }
+        )
+    }
+
+    JvmSettingNavigationRow(
+        icon = Res.drawable.folder_managed_24px,
+        title = cachePathTitle,
+        description = stringResource(Res.string.jvm_memory_management_screen_text_26),
+        value = if (memoryManagementViewModel.isDefaultMusicCachePath) {
+            stringResource(Res.string.jvm_memory_management_screen_text_06)
+        } else {
+            stringResource(Res.string.jvm_memory_management_screen_text_07)
+        },
+        onClick = ::showCachePathDialog,
+    )
+}
+
+/**
+ * 将 ViewModel 暴露的容量文本、清理动作、颜色和图标统一整理为页面展示模型。
+ *
+ * @param memoryManagementViewModel 存储管理 ViewModel。
+ * @param onClearDatabase 数据库清理回调，调用方负责确认逻辑。
+ * @return 按音频缓存、临时缓存、数据库、必要数据顺序排列的展示条目。
+ */
+@Composable
+private fun jvmStorageDisplayItems(
+    memoryManagementViewModel: MemoryManagementViewModel,
+    onClearDatabase: () -> Unit,
+): List<JvmStorageDisplayItem> {
+    return listOf(
+        JvmStorageDisplayItem(
+            title = stringResource(Res.string.audio_cache),
+            description = stringResource(Res.string.audio_cache_description),
+            sizeText = memoryManagementViewModel.musicCacheSize,
+            sizeBytes = memoryManagementViewModel.musicCacheSize.toStorageBytes(),
+            icon = Res.drawable.music_note_24px,
+            color = MaterialTheme.colorScheme.primary,
+            meta = stringResource(Res.string.jvm_memory_management_screen_text_02),
+            onClear = { memoryManagementViewModel.clearMusicCache() },
+        ),
+        JvmStorageDisplayItem(
+            title = stringResource(Res.string.temporary_cache),
+            description = stringResource(Res.string.temporary_cache_description),
+            sizeText = memoryManagementViewModel.cacheSize,
+            sizeBytes = memoryManagementViewModel.cacheSize.toStorageBytes(),
+            icon = Res.drawable.queue_music_24px,
+            color = MaterialTheme.colorScheme.tertiary,
+            meta = stringResource(Res.string.jvm_memory_management_screen_text_03),
+            onClear = { memoryManagementViewModel.clearAllCache() },
+        ),
+        JvmStorageDisplayItem(
+            title = stringResource(Res.string.database_data),
+            description = stringResource(Res.string.database_data_description),
+            sizeText = memoryManagementViewModel.databaseSize,
+            sizeBytes = memoryManagementViewModel.databaseSize.toStorageBytes(),
+            icon = Res.drawable.settings_24px,
+            color = MaterialTheme.colorScheme.error,
+            meta = stringResource(Res.string.jvm_memory_management_screen_text_04),
+            onClear = onClearDatabase,
+        ),
+        JvmStorageDisplayItem(
+            title = stringResource(Res.string.essential_data),
+            description = stringResource(Res.string.essential_data_description),
+            sizeText = memoryManagementViewModel.appDataSize,
+            sizeBytes = memoryManagementViewModel.appDataSize.toStorageBytes(),
+            icon = Res.drawable.info_24px,
+            color = MaterialTheme.colorScheme.secondary,
+            meta = stringResource(Res.string.jvm_memory_management_screen_text_05),
+        ),
+    )
 }
 
 /**

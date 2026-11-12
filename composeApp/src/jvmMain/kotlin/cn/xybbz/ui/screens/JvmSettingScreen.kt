@@ -46,7 +46,6 @@ import cn.xybbz.router.ConnectionManagement
 import cn.xybbz.router.CustomApi
 import cn.xybbz.router.InterfaceSetting
 import cn.xybbz.router.LanguageConfig
-import cn.xybbz.router.MemoryManagement
 import cn.xybbz.router.ProxyConfig
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
@@ -67,6 +66,7 @@ import cn.xybbz.ui.components.displayAudioBitRateText
 import cn.xybbz.ui.components.displayMessage
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.viewmodel.MemoryManagementViewModel
 import cn.xybbz.viewmodel.SettingsViewModel
 import cn.xybbz.viewmodel.StreamingQualityViewModel
 import kotlinx.coroutines.Dispatchers
@@ -107,7 +107,6 @@ import xymusic.composeapp.generated.resources.settings
 import xymusic.composeapp.generated.resources.settings_24px
 import xymusic.composeapp.generated.resources.signal_cellular_alt_24px
 import xymusic.composeapp.generated.resources.song_cache_location
-import xymusic.composeapp.generated.resources.storage_management
 import xymusic.composeapp.generated.resources.volume_up_24px
 
 /**
@@ -118,6 +117,8 @@ fun JvmSettingScreen(
     settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModel>(),
     // 音频音质分组直接内嵌在线音质设置，复用其视图模型读写品质档位与转码格式。
     streamingQualityViewModel: StreamingQualityViewModel = koinViewModel<StreamingQualityViewModel>(),
+    // 存储分组直接内嵌原存储管理页的占用与清理能力，复用其视图模型。
+    memoryManagementViewModel: MemoryManagementViewModel = koinViewModel<MemoryManagementViewModel>(),
 ) {
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
@@ -407,21 +408,11 @@ fun JvmSettingScreen(
                                 )
                             }
 
-                            // 存储管理独立成组，与下载分组同级。
-                            JvmSettingGroup(
+                            // 存储占用与快速清理直接内嵌原存储管理页能力，不再跳转独立页面。
+                            JvmStorageManagementGroups(
+                                memoryManagementViewModel = memoryManagementViewModel,
                                 modifier = Modifier.width(groupWidth),
-                                title = stringResource(Res.string.jvm_setting_screen_text_53),
-                            ) {
-                                JvmSettingNavigationRow(
-                                    icon = Res.drawable.folder_managed_24px,
-                                    title = stringResource(Res.string.storage_management),
-                                    description = stringResource(Res.string.jvm_setting_screen_text_17),
-                                    value = stringResource(Res.string.jvm_setting_screen_text_18),
-                                    onClick = {
-                                        navigator.navigate(MemoryManagement)
-                                    }
-                                )
-                            }
+                            )
 
                             // 缓存分组承接从常规标签迁移过来的缓存上限与播放缓存位置。
                             JvmSettingGroup(
@@ -451,6 +442,11 @@ fun JvmSettingScreen(
                                             MessageUtils.sendPopTip(copySuccess)
                                         }
                                     }
+                                )
+
+                                // 缓存目录行承接原存储管理页的调整与恢复默认路径能力。
+                                JvmCacheDirectorySettingRow(
+                                    memoryManagementViewModel = memoryManagementViewModel,
                                 )
                             }
                         }

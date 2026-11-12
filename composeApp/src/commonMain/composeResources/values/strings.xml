@@ -490,11 +490,11 @@
     <string name="jvm_cache_limit_screen_text_07">当前：%1$s</string>
     <string name="jvm_cache_limit_screen_text_08">JVM 端当前提供固定容量档位；历史自动或不缓存配置进入页面后会迁移到默认 2GB 档位。</string>
     <string name="jvm_cache_limit_screen_text_09">占用概览</string>
-    <string name="jvm_cache_limit_screen_text_10">真实占用与存储管理页的音频缓存使用同一套计算方式。</string>
+    <string name="jvm_cache_limit_screen_text_10">真实占用与设置页存储分组的音频缓存使用同一套计算方式。</string>
     <string name="jvm_cache_limit_screen_text_11">真实占用</string>
-    <string name="jvm_cache_limit_screen_text_12">缓存命中和当前播放条目会优先保留，超过上限时后台清理更早访问的缓存文件。缓存路径、真实占用和批量清理继续归入存储管理页。</string>
+    <string name="jvm_cache_limit_screen_text_12">缓存命中和当前播放条目会优先保留，超过上限时后台清理更早访问的缓存文件。缓存路径、真实占用和批量清理统一在设置页的下载与缓存分组中管理。</string>
     <string name="jvm_cache_limit_screen_text_13">音频缓存占用</string>
-    <string name="jvm_cache_limit_screen_text_14">点击查看歌曲缓存路径和其它存储分类。</string>
+    <string name="jvm_cache_limit_screen_text_14">本地音频缓存占用的真实大小。</string>
     <string name="jvm_cache_limit_screen_text_15">当前上限</string>
     <string name="jvm_cache_limit_screen_text_16">达到容量上限后自动触发 LRU 清理。</string>
     <string name="jvm_cache_limit_screen_text_17">系统建议</string>

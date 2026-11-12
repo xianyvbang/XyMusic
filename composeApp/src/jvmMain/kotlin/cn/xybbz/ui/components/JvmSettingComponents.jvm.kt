@@ -161,7 +161,7 @@ private val JvmSettingActionCardLiftOffset = (-6).dp
 private val JvmSettingIconSize = 30.dp
 
 /** 设置分组之间的纵向间距。 */
-private val JvmSettingGroupVerticalGap = 32.dp
+internal val JvmSettingGroupVerticalGap = 32.dp
 
 /** 设置分组内每个设置项的最小宽度，低于该宽度时减少每行展示的数量。 */
 private val JvmSettingGroupItemMinWidth = 240.dp
@@ -618,50 +618,105 @@ internal fun JvmSettingGroup(
     content: @Composable FlowRowScope.() -> Unit,
 ) {
     Column(modifier = modifier) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(JvmSettingGroupMarkerWidth)
-                    .height(JvmSettingGroupMarkerHeight)
-                    .background(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                        shape = RoundedCornerShape(2.dp),
-                    )
-            )
-            XyText(
-                text = title,
-                style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-            )
-        }
+        JvmSettingGroupHeader(title = title)
         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            val density = LocalDensity.current
-            // 先取整成像素再计算，避免 Dp 换算取整导致同一行放不下第三个设置项。
-            val maxWidthPx = with(density) { maxWidth.roundToPx() }
-            val itemGapPx = with(density) { JvmSettingGroupItemGap.roundToPx() }
-            val itemMinWidthPx = with(density) { JvmSettingGroupItemMinWidth.roundToPx() }
-            // 按可用宽度计算每行能放下的设置项数量，最多三个，窄窗口退化为单个。
-            val columnCount = ((maxWidthPx + itemGapPx) / (itemMinWidthPx + itemGapPx))
-                .coerceIn(1, JvmSettingGroupMaxColumnCount)
-            // 设置项等宽平分整行并向下取整，保证同一行内的设置项一定放得下。
-            val itemWidthPx = (maxWidthPx - itemGapPx * (columnCount - 1)) / columnCount
-            val itemWidth = with(density) { itemWidthPx.toDp() }
-            CompositionLocalProvider(LocalJvmSettingItemWidth provides itemWidth) {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(JvmSettingGroupItemGap),
-                    verticalArrangement = Arrangement.spacedBy(JvmSettingGroupItemVerticalGap),
-                    itemVerticalAlignment = Alignment.Top,
-                    content = content,
-                )
-            }
+        JvmSettingItemFlow(content = content)
+    }
+}
+
+/**
+ * JVM 设置页设置项横向排列容器。
+ *
+ * 按可用宽度计算每行能放下的设置项数量，最多三个并等宽平分整行；
+ * 供分组内容和需要混排整行信息的宽内容分组复用。
+ *
+ * @param modifier 外层修饰符。
+ * @param content 需要横向排列的设置项。
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun JvmSettingItemFlow(
+    modifier: Modifier = Modifier,
+    content: @Composable FlowRowScope.() -> Unit,
+) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val density = LocalDensity.current
+        // 先取整成像素再计算，避免 Dp 换算取整导致同一行放不下第三个设置项。
+        val maxWidthPx = with(density) { maxWidth.roundToPx() }
+        val itemGapPx = with(density) { JvmSettingGroupItemGap.roundToPx() }
+        val itemMinWidthPx = with(density) { JvmSettingGroupItemMinWidth.roundToPx() }
+        // 按可用宽度计算每行能放下的设置项数量，最多三个，窄窗口退化为单个。
+        val columnCount = ((maxWidthPx + itemGapPx) / (itemMinWidthPx + itemGapPx))
+            .coerceIn(1, JvmSettingGroupMaxColumnCount)
+        // 设置项等宽平分整行并向下取整，保证同一行内的设置项一定放得下。
+        val itemWidthPx = (maxWidthPx - itemGapPx * (columnCount - 1)) / columnCount
+        val itemWidth = with(density) { itemWidthPx.toDp() }
+        CompositionLocalProvider(LocalJvmSettingItemWidth provides itemWidth) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(JvmSettingGroupItemGap),
+                verticalArrangement = Arrangement.spacedBy(JvmSettingGroupItemVerticalGap),
+                itemVerticalAlignment = Alignment.Top,
+                content = content,
+            )
         }
+    }
+}
+
+/**
+ * JVM 设置页宽内容分组。
+ *
+ * 标题与普通设置分组保持一致，内容区不再切分固定宽度，
+ * 用于存储占用、路径管理等需要整行展示的信息块。
+ *
+ * @param title 分组标题。
+ * @param modifier 外层修饰符，通常由设置页分组网格下发宽度。
+ * @param content 分组内的整行内容。
+ */
+@Composable
+internal fun JvmSettingWideGroup(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(modifier = modifier) {
+        JvmSettingGroupHeader(title = title)
+        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            content = content,
+        )
+    }
+}
+
+/**
+ * 设置分组标题行：左侧强调条加小标题，保证普通分组与宽内容分组视觉一致。
+ *
+ * @param title 分组标题。
+ */
+@Composable
+private fun JvmSettingGroupHeader(title: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+    ) {
+        Box(
+            modifier = Modifier
+                .width(JvmSettingGroupMarkerWidth)
+                .height(JvmSettingGroupMarkerHeight)
+                .background(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                    shape = RoundedCornerShape(2.dp),
+                )
+        )
+        XyText(
+            text = title,
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
     }
 }
 

@@ -52,15 +52,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.music.CacheUpperLimitOption
 import cn.xybbz.music.cacheUpperLimitOptions
-import cn.xybbz.router.MemoryManagement
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.components.JvmSettingBaseRow
-import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.JvmSettingSection
@@ -91,9 +88,6 @@ import xymusic.composeapp.generated.resources.speed_24px
 fun JvmCacheLimitScreen(
     cacheLimitViewModel: CacheLimitViewModel = koinViewModel<CacheLimitViewModel>()
 ) {
-    // 桌面端设置页使用同一套路由对象，右侧概览卡可跳转到存储管理页。
-    val navigator = LocalNavigator.current
-
     // 点击档位后需要调用 suspend 写入方法，复用当前组合范围内的协程作用域。
     val coroutineScope = rememberCoroutineScope()
 
@@ -183,10 +177,6 @@ fun JvmCacheLimitScreen(
                 JvmCacheUsageOverviewSection(
                     selectedLimitLabel = displayedLimitLabel,
                     musicCacheSizeLabel = musicCacheSizeLabel,
-                    onStorageClick = {
-                        // 存储管理页负责更细的缓存路径、分类占用和批量清理操作。
-                        navigator.navigate(MemoryManagement)
-                    },
                 )
             }
         )
@@ -292,13 +282,11 @@ private fun CacheUpperLimitEnum.cacheLimitIcon(): DrawableResource {
  *
  * @param selectedLimitLabel 当前缓存上限的展示文案。
  * @param musicCacheSizeLabel 当前音乐缓存真实占用的展示文案。
- * @param onStorageClick 点击真实占用行时跳转到存储管理页。
  */
 @Composable
 private fun JvmCacheUsageOverviewSection(
     selectedLimitLabel: String,
     musicCacheSizeLabel: String,
-    onStorageClick: () -> Unit,
 ) {
     JvmSettingSection(
         title = stringResource(Res.string.jvm_cache_limit_screen_text_09),
@@ -327,14 +315,13 @@ private fun JvmCacheUsageOverviewSection(
                     label = stringResource(Res.string.jvm_cache_limit_screen_text_13),
                 )
                 JvmCacheInfoList(
-                    // 第一行可跳转到存储管理页，第二行只展示当前上限。
+                    // 两行都只展示信息：真实占用与当前上限，不再提供存储管理页跳转。
                     rows = listOf(
                         JvmCacheInfoRow(
                             icon = Res.drawable.music_note_24px,
                             title = stringResource(Res.string.jvm_cache_limit_screen_text_11),
                             description = stringResource(Res.string.jvm_cache_limit_screen_text_14),
                             value = musicCacheSizeLabel.addCapacitySpace(),
-                            onClick = onStorageClick,
                         ),
                         JvmCacheInfoRow(
                             icon = Res.drawable.folder_managed_24px,
@@ -430,38 +417,25 @@ private fun JvmCacheInfoList(rows: List<JvmCacheInfoRow>) {
 }
 
 /**
- * 渲染单行缓存信息；有点击行为时使用导航行，没有点击行为时使用基础展示行。
+ * 渲染单行缓存信息。
  *
- * @param row 当前行的展示数据和可选点击回调。
+ * @param row 当前行的展示数据。
  */
 @Composable
 private fun JvmCacheInfoListRow(row: JvmCacheInfoRow) {
-    // 将可空点击回调先取出，便于 Kotlin 智能类型判断两个 UI 分支。
-    val onClick = row.onClick
-    if (onClick == null) {
-        // 纯展示行只在右侧放置胶囊标签，不提供导航交互。
-        JvmSettingBaseRow(
-            icon = row.icon,
-            title = row.title,
-            description = row.description,
-            minHeight = 68.dp,
-            horizontalPadding = XyTheme.dimens.contentPadding,
-            verticalPadding = XyTheme.dimens.outerVerticalPadding,
-            iconSelected = true,
-            trailing = {
-                JvmCachePill(text = row.value)
-            }
-        )
-    } else {
-        // 可点击行复用桌面设置页的导航样式，保持与其它设置入口一致。
-        JvmSettingNavigationRow(
-            icon = row.icon,
-            title = row.title,
-            description = row.description,
-            value = row.value,
-            onClick = onClick,
-        )
-    }
+    // 纯展示行只在右侧放置胶囊标签，不提供导航交互。
+    JvmSettingBaseRow(
+        icon = row.icon,
+        title = row.title,
+        description = row.description,
+        minHeight = 68.dp,
+        horizontalPadding = XyTheme.dimens.contentPadding,
+        verticalPadding = XyTheme.dimens.outerVerticalPadding,
+        iconSelected = true,
+        trailing = {
+            JvmCachePill(text = row.value)
+        }
+    )
 }
 
 /**
@@ -539,14 +513,12 @@ private data class JvmCacheLimitProfile(
  * @property title 行标题。
  * @property description 行描述文案。
  * @property value 行尾展示值。
- * @property onClick 可选点击回调，为空时渲染为纯展示行。
  */
 private data class JvmCacheInfoRow(
     val icon: DrawableResource,
     val title: String,
     val description: String,
     val value: String,
-    val onClick: (() -> Unit)? = null,
 )
 
 /**
