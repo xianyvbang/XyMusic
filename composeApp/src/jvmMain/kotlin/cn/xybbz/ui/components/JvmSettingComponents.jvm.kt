@@ -58,6 +58,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -1057,6 +1059,131 @@ internal fun JvmSettingNavigationRow(
             JvmSettingChevron()
         }
     )
+}
+
+/**
+ * 单选列表选项行。
+ *
+ * 参考设置页设计稿的音质档位样式：左侧圆形单选标记，中间标题与说明，
+ * 右侧可选标签用于标注码率或格式，整行可点击并带悬停底色反馈。
+ *
+ * @param title 选项主标题。
+ * @param description 选项说明文案。
+ * @param selected 是否为当前选中项。
+ * @param tag 右侧标签文案；为空或空白时不展示。
+ * @param onClick 点击该选项时触发。
+ */
+@Composable
+internal fun JvmSettingPickRow(
+    title: String,
+    description: String,
+    selected: Boolean,
+    tag: String? = null,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    // 分组内横向排列时由分组统一下发固定宽度，与开关类设置项一样支持一行三个。
+    val itemWidth = LocalJvmSettingItemWidth.current
+
+    Row(
+        modifier = Modifier
+            .then(
+                if (itemWidth == null) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier.width(itemWidth)
+                }
+            )
+            .clip(RoundedCornerShape(7.dp))
+            .background(
+                if (hovered) {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                } else {
+                    Color.Transparent
+                }
+            )
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                role = Role.RadioButton,
+                onClick = onClick,
+            )
+            // 与其他设置项保持一致的行高，保证同一分组内各行高度统一。
+            .heightIn(min = XyTheme.dimens.itemHeight)
+            .padding(
+                horizontal = XyTheme.dimens.contentPadding,
+                vertical = XyTheme.dimens.outerVerticalPadding,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // 单选标记复用 Material3 RadioButton，整行已承担点击，这里不再重复响应点击；
+        // 固定 20dp 尺寸，避免默认 48dp 最小交互区域把行高撑高。
+        RadioButton(
+            modifier = Modifier.size(20.dp),
+            selected = selected,
+            onClick = null,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = MaterialTheme.colorScheme.primary,
+                unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.30f),
+            ),
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            XyText(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            XyTextSub(
+                text = description,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontSize = 11.5.sp,
+                    lineHeight = 16.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        if (!tag.isNullOrBlank()) {
+            JvmSettingPickTag(text = tag)
+        }
+    }
+}
+
+/**
+ * 单选列表右侧标签，用等宽字体和细边框区分格式、推荐等附加信息。
+ *
+ * @param text 标签文案。
+ */
+@Composable
+private fun JvmSettingPickTag(text: String) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .border(
+                BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
+                RoundedCornerShape(4.dp)
+            )
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+    ) {
+        XyTextSub(
+            text = text,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.5.sp,
+                letterSpacing = 1.sp,
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+    }
 }
 
 /**

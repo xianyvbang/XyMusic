@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,10 +26,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -38,8 +33,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.copyTextToClipboard
@@ -57,15 +50,15 @@ import cn.xybbz.router.MemoryManagement
 import cn.xybbz.router.ProxyConfig
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
-import cn.xybbz.ui.components.JvmSettingActionGridArrangement
 import cn.xybbz.ui.components.JvmSettingDownloadRow
 import cn.xybbz.ui.components.JvmSettingGroup
 import cn.xybbz.ui.components.JvmSettingGroupGrid
 import cn.xybbz.ui.components.JvmSettingHeadline
 import cn.xybbz.ui.components.JvmSettingLazyColumn
 import cn.xybbz.ui.components.JvmSettingNavigationRow
+import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPathRow
-import cn.xybbz.ui.components.JvmSettingSection
+import cn.xybbz.ui.components.JvmSettingPickRow
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingTabBar
 import cn.xybbz.ui.components.JvmSettingTabDivider
@@ -112,7 +105,6 @@ import xymusic.composeapp.generated.resources.queue_music_24px
 import xymusic.composeapp.generated.resources.restart_alt_24px
 import xymusic.composeapp.generated.resources.settings
 import xymusic.composeapp.generated.resources.settings_24px
-import xymusic.composeapp.generated.resources.settings_voice_24px
 import xymusic.composeapp.generated.resources.signal_cellular_alt_24px
 import xymusic.composeapp.generated.resources.song_cache_location
 import xymusic.composeapp.generated.resources.storage_management
@@ -332,15 +324,53 @@ fun JvmSettingScreen(
                             }
                         }
 
-                        // 音频音质分组：内嵌原“在线音乐品质”页面的品质档位与转码格式选项，
-                        // 由跳转独立页面改为在设置页内直接调整；缓存上限与缓存位置仍在下载与缓存标签。
+                        // 播放品质分组：把原在线音乐品质页的品质档位独立成组，与其他小类共用同一套分组样式。
                         JvmSettingGroup(
                             modifier = Modifier.width(groupWidth),
-                            title = stringResource(Res.string.jvm_setting_screen_text_58),
+                            title = stringResource(Res.string.jvm_streaming_quality_screen_text_02),
                         ) {
-                            JvmAudioQualityContent(
-                                streamingQualityViewModel = streamingQualityViewModel,
-                            )
+                            TranscodeAudioBitRateType.entries.forEach { quality ->
+                                JvmSettingPickRow(
+                                    title = quality.kickerText(),
+                                    description = quality.descriptionText(),
+                                    // 桌面端只维护一组品质设置，回显以 Wi-Fi 码率为准。
+                                    selected = streamingQualityViewModel.wifiNetworkAudioBitRate == quality,
+                                    tag = quality.bitRateTagText(),
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            // 桌面端只暴露一组品质设置，选择后同步写入 Wi-Fi 与移动网络两套码率。
+                                            streamingQualityViewModel.updateWifiNetworkAudioBitRate(quality)
+                                            streamingQualityViewModel.updateMobileNetworkAudioBitRate(quality)
+                                        }
+                                    },
+                                )
+                            }
+                        }
+
+                        // 转码格式分组：服务端支持的格式列表，同样使用统一的分组与单选行样式。
+                        JvmSettingGroup(
+                            modifier = Modifier.width(groupWidth),
+                            title = stringResource(Res.string.transcoding_format),
+                        ) {
+                            if (streamingQualityViewModel.transcodeAudioBitRateType.isEmpty()) {
+                                JvmSettingNote(
+                                    text = stringResource(Res.string.jvm_streaming_quality_screen_text_10)
+                                )
+                            } else {
+                                streamingQualityViewModel.transcodeAudioBitRateType.forEach { format ->
+                                    val targetFormat = format.targetFormat
+                                    JvmSettingPickRow(
+                                        title = format.name.ifBlank { targetFormat.uppercase() },
+                                        description = targetFormat.formatDescriptionText(),
+                                        selected = streamingQualityViewModel.transcodeFormat == targetFormat,
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                streamingQualityViewModel.updateTranscodeFormat(targetFormat)
+                                            }
+                                        },
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -561,117 +591,7 @@ private fun jvmSettingActionEntries(
     )
 }
 
-/**
- * “音频音质”分组内容。
- *
- * 将原“在线音乐品质”页面的播放品质与转码格式选项内嵌到设置页，
- * 沿用相同的卡片样式与选择逻辑，省去额外的页面跳转。
- *
- * @param streamingQualityViewModel 在线音质设置视图模型，负责读写品质档位与转码格式。
- */
-@Composable
-private fun JvmAudioQualityContent(
-    streamingQualityViewModel: StreamingQualityViewModel,
-) {
-    val coroutineScope = rememberCoroutineScope()
-    // 桌面端只暴露一组品质设置，选择后同步写入 Wi-Fi 与移动网络两套码率。
-    val selectedQuality = streamingQualityViewModel.wifiNetworkAudioBitRate
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
-    ) {
-        JvmSettingSection(
-            title = stringResource(Res.string.jvm_streaming_quality_screen_text_02),
-            subtitle = stringResource(Res.string.jvm_streaming_quality_screen_text_05),
-            badge = stringResource(Res.string.jvm_streaming_quality_screen_text_06),
-            titleMinWidth = 240.dp,
-            contentContainerEnabled = false,
-            qualityNote = stringResource(Res.string.jvm_streaming_quality_screen_text_07),
-        ) {
-            JvmSettingActionEntryGrid(
-                actionEntries = TranscodeAudioBitRateType.entries.map { quality ->
-                    JvmSettingActionEntry(
-                        icon = Res.drawable.volume_up_24px,
-                        kicker = quality.kickerText(),
-                        title = quality.displayAudioBitRateText(),
-                        description = quality.descriptionText(),
-                        selected = selectedQuality == quality,
-                        status = "${quality.levelText()} · ${quality.audioBitRate}",
-                        role = Role.RadioButton,
-                        onClick = {
-                            coroutineScope.launch {
-                                streamingQualityViewModel.updateWifiNetworkAudioBitRate(quality)
-                                streamingQualityViewModel.updateMobileNetworkAudioBitRate(quality)
-                            }
-                        },
-                    )
-                },
-                arrangement = JvmSettingActionGridArrangement.Horizontal,
-            )
-        }
-
-        JvmSettingSection(
-            title = stringResource(Res.string.transcoding_format),
-            subtitle = stringResource(Res.string.jvm_streaming_quality_screen_text_08),
-            badge = stringResource(Res.string.jvm_streaming_quality_screen_text_09),
-            titleMinWidth = 240.dp,
-            contentContainerEnabled = false,
-        ) {
-            if (streamingQualityViewModel.transcodeAudioBitRateType.isEmpty()) {
-                JvmAudioQualityEmptyState(text = stringResource(Res.string.jvm_streaming_quality_screen_text_10))
-            } else {
-                JvmSettingActionEntryGrid(
-                    actionEntries = streamingQualityViewModel.transcodeAudioBitRateType.map { format ->
-                        val targetFormat = format.targetFormat
-                        JvmSettingActionEntry(
-                            icon = Res.drawable.settings_voice_24px,
-                            kicker = targetFormat.formatKickerText(),
-                            title = format.name.ifBlank { targetFormat.uppercase() },
-                            description = targetFormat.formatDescriptionText(),
-                            selected = streamingQualityViewModel.transcodeFormat == targetFormat,
-                            status = "targetFormat · $targetFormat",
-                            role = Role.RadioButton,
-                            onClick = {
-                                coroutineScope.launch {
-                                    streamingQualityViewModel.updateTranscodeFormat(targetFormat)
-                                }
-                            },
-                        )
-                    },
-                    arrangement = JvmSettingActionGridArrangement.Horizontal,
-                )
-            }
-        }
-    }
-}
-
-/**
- * 转码格式尚未读取到服务端能力时的占位提示。
- *
- * @param text 提示文案。
- */
-@Composable
-private fun JvmAudioQualityEmptyState(text: String) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
-        )
-    ) {
-        Text(
-            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
-            text = text,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-/** 品质档位卡片的小标题文案。 */
+/** 品质档位的名称文案。 */
 @Composable
 private fun TranscodeAudioBitRateType.kickerText(): String {
     return when (this) {
@@ -695,28 +615,17 @@ private fun TranscodeAudioBitRateType.descriptionText(): String {
     }
 }
 
-/** 品质档位对应的英文等级标识，用于卡片底部状态行。 */
-private fun TranscodeAudioBitRateType.levelText(): String {
-    return when (this) {
-        TranscodeAudioBitRateType.LOSSLESS -> "Raw"
-        TranscodeAudioBitRateType.HIGHEST -> "Highest"
-        TranscodeAudioBitRateType.HIGH -> "High"
-        TranscodeAudioBitRateType.MEDIUM -> "Medium"
-        TranscodeAudioBitRateType.LOW -> "Low"
-    }
-}
-
-/** 转码格式卡片的小标题文案。 */
+/** 档位右侧标签文案；不转码档位无需标注码率，其余档位展示实际码率。 */
 @Composable
-private fun String.formatKickerText(): String {
-    return when (lowercase()) {
-        "mp3" -> stringResource(Res.string.jvm_streaming_quality_screen_text_20)
-        "aac" -> stringResource(Res.string.jvm_streaming_quality_screen_text_21)
-        else -> stringResource(Res.string.jvm_streaming_quality_screen_text_22)
+private fun TranscodeAudioBitRateType.bitRateTagText(): String? {
+    return if (this == TranscodeAudioBitRateType.LOSSLESS) {
+        null
+    } else {
+        displayAudioBitRateText()
     }
 }
 
-/** 转码格式卡片的主说明文案。 */
+/** 转码格式的主说明文案。 */
 @Composable
 private fun String.formatDescriptionText(): String {
     return when (lowercase()) {
