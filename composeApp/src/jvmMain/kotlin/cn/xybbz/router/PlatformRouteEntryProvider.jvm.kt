@@ -32,7 +32,6 @@ import cn.xybbz.ui.screens.JvmSearchScreen
 import cn.xybbz.ui.screens.JvmSelectLibraryScreen
 import cn.xybbz.ui.screens.JvmSetBackgroundImageScreen
 import cn.xybbz.ui.screens.JvmSettingScreen
-import cn.xybbz.ui.screens.JvmStreamingQualityScreen
 
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.desktopNode(noinline content: @Composable (T) -> Unit) {
     entry<T> {
@@ -78,7 +77,6 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<Local> { JvmLocalScreen() }
     desktopNode<SetBackgroundImage> { JvmSetBackgroundImageScreen() }
     desktopNode<ProxyConfig> { JvmProxyConfigScreen() }
-    desktopNode<StreamingQuality> { JvmStreamingQualityScreen() }
     desktopNode<CustomApi> { JvmCustomApiScreen() }
 }
 

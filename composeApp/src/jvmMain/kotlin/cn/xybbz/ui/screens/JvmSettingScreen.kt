@@ -18,6 +18,7 @@
 
 package cn.xybbz.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,6 +27,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -33,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
@@ -49,9 +55,9 @@ import cn.xybbz.router.InterfaceSetting
 import cn.xybbz.router.LanguageConfig
 import cn.xybbz.router.MemoryManagement
 import cn.xybbz.router.ProxyConfig
-import cn.xybbz.router.StreamingQuality
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
+import cn.xybbz.ui.components.JvmSettingActionGridArrangement
 import cn.xybbz.ui.components.JvmSettingDownloadRow
 import cn.xybbz.ui.components.JvmSettingGroup
 import cn.xybbz.ui.components.JvmSettingGroupGrid
@@ -59,6 +65,7 @@ import cn.xybbz.ui.components.JvmSettingHeadline
 import cn.xybbz.ui.components.JvmSettingLazyColumn
 import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingPathRow
+import cn.xybbz.ui.components.JvmSettingSection
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingTabBar
 import cn.xybbz.ui.components.JvmSettingTabDivider
@@ -68,6 +75,7 @@ import cn.xybbz.ui.components.displayMessage
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.SettingsViewModel
+import cn.xybbz.viewmodel.StreamingQualityViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -98,13 +106,13 @@ import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.interface_settings
 import xymusic.composeapp.generated.resources.language
 import xymusic.composeapp.generated.resources.music_note_24px
-import xymusic.composeapp.generated.resources.online_music_quality
 import xymusic.composeapp.generated.resources.password_24px
 import xymusic.composeapp.generated.resources.poxy_config
 import xymusic.composeapp.generated.resources.queue_music_24px
 import xymusic.composeapp.generated.resources.restart_alt_24px
 import xymusic.composeapp.generated.resources.settings
 import xymusic.composeapp.generated.resources.settings_24px
+import xymusic.composeapp.generated.resources.settings_voice_24px
 import xymusic.composeapp.generated.resources.signal_cellular_alt_24px
 import xymusic.composeapp.generated.resources.song_cache_location
 import xymusic.composeapp.generated.resources.storage_management
@@ -115,7 +123,9 @@ import xymusic.composeapp.generated.resources.volume_up_24px
  */
 @Composable
 fun JvmSettingScreen(
-    settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModel>()
+    settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModel>(),
+    // 音频音质分组直接内嵌在线音质设置，复用其视图模型读写品质档位与转码格式。
+    streamingQualityViewModel: StreamingQualityViewModel = koinViewModel<StreamingQualityViewModel>(),
 ) {
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
@@ -322,19 +332,14 @@ fun JvmSettingScreen(
                             }
                         }
 
-                        // 音质分组只保留在线音质入口，缓存上限与缓存位置移动到下载与缓存标签。
+                        // 音频音质分组：内嵌原“在线音乐品质”页面的品质档位与转码格式选项，
+                        // 由跳转独立页面改为在设置页内直接调整；缓存上限与缓存位置仍在下载与缓存标签。
                         JvmSettingGroup(
                             modifier = Modifier.width(groupWidth),
                             title = stringResource(Res.string.jvm_setting_screen_text_58),
                         ) {
-                            JvmSettingNavigationRow(
-                                icon = Res.drawable.music_note_24px,
-                                title = stringResource(Res.string.online_music_quality),
-                                description = stringResource(Res.string.jvm_setting_screen_text_10),
-                                value = "$selectedQuality · ${settings.transcodeFormat.uppercase()}",
-                                onClick = {
-                                    navigator.navigate(StreamingQuality)
-                                }
+                            JvmAudioQualityContent(
+                                streamingQualityViewModel = streamingQualityViewModel,
                             )
                         }
                     }
@@ -554,4 +559,169 @@ private fun jvmSettingActionEntries(
             onClick = onAboutClick,
         ),
     )
+}
+
+/**
+ * “音频音质”分组内容。
+ *
+ * 将原“在线音乐品质”页面的播放品质与转码格式选项内嵌到设置页，
+ * 沿用相同的卡片样式与选择逻辑，省去额外的页面跳转。
+ *
+ * @param streamingQualityViewModel 在线音质设置视图模型，负责读写品质档位与转码格式。
+ */
+@Composable
+private fun JvmAudioQualityContent(
+    streamingQualityViewModel: StreamingQualityViewModel,
+) {
+    val coroutineScope = rememberCoroutineScope()
+    // 桌面端只暴露一组品质设置，选择后同步写入 Wi-Fi 与移动网络两套码率。
+    val selectedQuality = streamingQualityViewModel.wifiNetworkAudioBitRate
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+    ) {
+        JvmSettingSection(
+            title = stringResource(Res.string.jvm_streaming_quality_screen_text_02),
+            subtitle = stringResource(Res.string.jvm_streaming_quality_screen_text_05),
+            badge = stringResource(Res.string.jvm_streaming_quality_screen_text_06),
+            titleMinWidth = 240.dp,
+            contentContainerEnabled = false,
+            qualityNote = stringResource(Res.string.jvm_streaming_quality_screen_text_07),
+        ) {
+            JvmSettingActionEntryGrid(
+                actionEntries = TranscodeAudioBitRateType.entries.map { quality ->
+                    JvmSettingActionEntry(
+                        icon = Res.drawable.volume_up_24px,
+                        kicker = quality.kickerText(),
+                        title = quality.displayAudioBitRateText(),
+                        description = quality.descriptionText(),
+                        selected = selectedQuality == quality,
+                        status = "${quality.levelText()} · ${quality.audioBitRate}",
+                        role = Role.RadioButton,
+                        onClick = {
+                            coroutineScope.launch {
+                                streamingQualityViewModel.updateWifiNetworkAudioBitRate(quality)
+                                streamingQualityViewModel.updateMobileNetworkAudioBitRate(quality)
+                            }
+                        },
+                    )
+                },
+                arrangement = JvmSettingActionGridArrangement.Horizontal,
+            )
+        }
+
+        JvmSettingSection(
+            title = stringResource(Res.string.transcoding_format),
+            subtitle = stringResource(Res.string.jvm_streaming_quality_screen_text_08),
+            badge = stringResource(Res.string.jvm_streaming_quality_screen_text_09),
+            titleMinWidth = 240.dp,
+            contentContainerEnabled = false,
+        ) {
+            if (streamingQualityViewModel.transcodeAudioBitRateType.isEmpty()) {
+                JvmAudioQualityEmptyState(text = stringResource(Res.string.jvm_streaming_quality_screen_text_10))
+            } else {
+                JvmSettingActionEntryGrid(
+                    actionEntries = streamingQualityViewModel.transcodeAudioBitRateType.map { format ->
+                        val targetFormat = format.targetFormat
+                        JvmSettingActionEntry(
+                            icon = Res.drawable.settings_voice_24px,
+                            kicker = targetFormat.formatKickerText(),
+                            title = format.name.ifBlank { targetFormat.uppercase() },
+                            description = targetFormat.formatDescriptionText(),
+                            selected = streamingQualityViewModel.transcodeFormat == targetFormat,
+                            status = "targetFormat · $targetFormat",
+                            role = Role.RadioButton,
+                            onClick = {
+                                coroutineScope.launch {
+                                    streamingQualityViewModel.updateTranscodeFormat(targetFormat)
+                                }
+                            },
+                        )
+                    },
+                    arrangement = JvmSettingActionGridArrangement.Horizontal,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 转码格式尚未读取到服务端能力时的占位提示。
+ *
+ * @param text 提示文案。
+ */
+@Composable
+private fun JvmAudioQualityEmptyState(text: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
+        )
+    ) {
+        Text(
+            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/** 品质档位卡片的小标题文案。 */
+@Composable
+private fun TranscodeAudioBitRateType.kickerText(): String {
+    return when (this) {
+        TranscodeAudioBitRateType.LOSSLESS -> stringResource(Res.string.jvm_streaming_quality_screen_text_11)
+        TranscodeAudioBitRateType.HIGHEST -> stringResource(Res.string.jvm_streaming_quality_screen_text_12)
+        TranscodeAudioBitRateType.HIGH -> stringResource(Res.string.jvm_cache_limit_screen_text_32)
+        TranscodeAudioBitRateType.MEDIUM -> stringResource(Res.string.jvm_streaming_quality_screen_text_13)
+        TranscodeAudioBitRateType.LOW -> stringResource(Res.string.jvm_streaming_quality_screen_text_14)
+    }
+}
+
+/** 品质档位卡片的主说明文案。 */
+@Composable
+private fun TranscodeAudioBitRateType.descriptionText(): String {
+    return when (this) {
+        TranscodeAudioBitRateType.LOSSLESS -> stringResource(Res.string.jvm_streaming_quality_screen_text_15)
+        TranscodeAudioBitRateType.HIGHEST -> stringResource(Res.string.jvm_streaming_quality_screen_text_16)
+        TranscodeAudioBitRateType.HIGH -> stringResource(Res.string.jvm_streaming_quality_screen_text_17)
+        TranscodeAudioBitRateType.MEDIUM -> stringResource(Res.string.jvm_streaming_quality_screen_text_18)
+        TranscodeAudioBitRateType.LOW -> stringResource(Res.string.jvm_streaming_quality_screen_text_19)
+    }
+}
+
+/** 品质档位对应的英文等级标识，用于卡片底部状态行。 */
+private fun TranscodeAudioBitRateType.levelText(): String {
+    return when (this) {
+        TranscodeAudioBitRateType.LOSSLESS -> "Raw"
+        TranscodeAudioBitRateType.HIGHEST -> "Highest"
+        TranscodeAudioBitRateType.HIGH -> "High"
+        TranscodeAudioBitRateType.MEDIUM -> "Medium"
+        TranscodeAudioBitRateType.LOW -> "Low"
+    }
+}
+
+/** 转码格式卡片的小标题文案。 */
+@Composable
+private fun String.formatKickerText(): String {
+    return when (lowercase()) {
+        "mp3" -> stringResource(Res.string.jvm_streaming_quality_screen_text_20)
+        "aac" -> stringResource(Res.string.jvm_streaming_quality_screen_text_21)
+        else -> stringResource(Res.string.jvm_streaming_quality_screen_text_22)
+    }
+}
+
+/** 转码格式卡片的主说明文案。 */
+@Composable
+private fun String.formatDescriptionText(): String {
+    return when (lowercase()) {
+        "mp3" -> stringResource(Res.string.jvm_streaming_quality_screen_text_23)
+        "aac" -> stringResource(Res.string.jvm_streaming_quality_screen_text_24)
+        else -> stringResource(Res.string.jvm_streaming_quality_screen_text_25)
+    }
 }

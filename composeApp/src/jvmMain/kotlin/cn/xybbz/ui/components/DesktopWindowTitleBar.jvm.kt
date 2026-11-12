@@ -75,7 +75,6 @@ import cn.xybbz.router.Search
 import cn.xybbz.router.SelectLibrary
 import cn.xybbz.router.SetBackgroundImage
 import cn.xybbz.router.Setting
-import cn.xybbz.router.StreamingQuality
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
@@ -116,7 +115,6 @@ import xymusic.composeapp.generated.resources.light
 import xymusic.composeapp.generated.resources.local_and_download
 import xymusic.composeapp.generated.resources.logo_new
 import xymusic.composeapp.generated.resources.media_library_selection
-import xymusic.composeapp.generated.resources.online_music_quality
 import xymusic.composeapp.generated.resources.playlist
 import xymusic.composeapp.generated.resources.poxy_config
 import xymusic.composeapp.generated.resources.refresh_24px
@@ -685,7 +683,6 @@ private fun currentRouteTitleRes(route: Any): StringResource? = when (route) {
     Download -> Res.string.download
     SetBackgroundImage -> Res.string.background_image_setting
     ProxyConfig -> Res.string.poxy_config
-    StreamingQuality -> Res.string.online_music_quality
     CustomApi -> Res.string.customize_lyric_settings
     else -> null
 }
