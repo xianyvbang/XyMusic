@@ -60,12 +60,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -155,14 +158,23 @@ private val JvmSettingActionCardLiftOffset = (-6).dp
 /** 设置页统一图标容器尺寸。 */
 private val JvmSettingIconSize = 30.dp
 
-/** 设置分组双列布局的宽度断点，低于该宽度时改为单列。 */
-private val JvmSettingGroupTwoColumnBreakpoint = 680.dp
-
-/** 设置分组双列布局的横向间距。 */
-private val JvmSettingGroupHorizontalGap = 40.dp
-
 /** 设置分组之间的纵向间距。 */
 private val JvmSettingGroupVerticalGap = 32.dp
+
+/** 设置分组内每个设置项的最小宽度，低于该宽度时减少每行展示的数量。 */
+private val JvmSettingGroupItemMinWidth = 240.dp
+
+/** 设置分组内设置项的横向间距。 */
+private val JvmSettingGroupItemGap = 12.dp
+
+/** 设置分组内设置项的纵向间距。 */
+private val JvmSettingGroupItemVerticalGap = 2.dp
+
+/** 设置分组内每行最多展示的设置项数量。 */
+private const val JvmSettingGroupMaxColumnCount = 3
+
+/** 分组内设置项的固定宽度；为空时设置项按整行铺满。 */
+private val LocalJvmSettingItemWidth = compositionLocalOf<Dp?> { null }
 
 /** 设置分组标题左侧强调条宽度。 */
 private val JvmSettingGroupMarkerWidth = 3.dp
@@ -560,35 +572,26 @@ internal fun JvmSettingHeadline(
 /**
  * JVM 设置页分组网格。
  *
- * 宽度足够时按设计稿排成两列，窄窗口退化为单列；回调参数为每个分组应使用的宽度。
+ * 分组按标签页内的先后顺序纵向排列，每组独占整行宽度；
+ * 回调参数为每个分组应使用的宽度，保证调用方无需关心布局细节。
  *
  * @param modifier 外层修饰符。
- * @param breakpoint 切换为双列的最小宽度。
- * @param horizontalGap 双列横向间距。
  * @param verticalGap 分组纵向间距。
  * @param content 分组内容，参数为单个分组的宽度。
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun JvmSettingGroupGrid(
     modifier: Modifier = Modifier,
-    breakpoint: Dp = JvmSettingGroupTwoColumnBreakpoint,
-    horizontalGap: Dp = JvmSettingGroupHorizontalGap,
     verticalGap: Dp = JvmSettingGroupVerticalGap,
     content: @Composable (groupWidth: Dp) -> Unit,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        val groupWidth = if (maxWidth >= breakpoint) {
-            (maxWidth - horizontalGap) / 2f
-        } else {
-            maxWidth
-        }
-        FlowRow(
+        // 先取出可用宽度，避免在 Column 作用域内隐式接收者遮蔽 maxWidth。
+        val groupWidth = maxWidth
+        // 分组纵向堆叠，宽度统一铺满内容区。
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            // 分组从左侧开始排列，只有一个分组时也不会被居中留出两侧空白。
-            horizontalArrangement = Arrangement.spacedBy(horizontalGap, Alignment.Start),
             verticalArrangement = Arrangement.spacedBy(verticalGap),
-            itemVerticalAlignment = Alignment.Top,
         ) {
             content(groupWidth)
         }
@@ -598,17 +601,19 @@ internal fun JvmSettingGroupGrid(
 /**
  * JVM 设置页分组。
  *
- * 分组使用设计稿的小标题加左侧强调条，内容行平铺在页面背景上，不再包一层卡片。
+ * 分组使用设计稿的小标题加左侧强调条；分组内的设置项横向排列，
+ * 每行最多三个，窄窗口下自动减少每行数量。
  *
  * @param title 分组标题。
  * @param modifier 外层修饰符，通常由 [JvmSettingGroupGrid] 下发宽度。
  * @param content 分组内的设置行。
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun JvmSettingGroup(
     title: String,
     modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
+    content: @Composable FlowRowScope.() -> Unit,
 ) {
     Column(modifier = modifier) {
         Row(
@@ -633,11 +638,28 @@ internal fun JvmSettingGroup(
             )
         }
         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-            content = content,
-        )
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val density = LocalDensity.current
+            // 先取整成像素再计算，避免 Dp 换算取整导致同一行放不下第三个设置项。
+            val maxWidthPx = with(density) { maxWidth.roundToPx() }
+            val itemGapPx = with(density) { JvmSettingGroupItemGap.roundToPx() }
+            val itemMinWidthPx = with(density) { JvmSettingGroupItemMinWidth.roundToPx() }
+            // 按可用宽度计算每行能放下的设置项数量，最多三个，窄窗口退化为单个。
+            val columnCount = ((maxWidthPx + itemGapPx) / (itemMinWidthPx + itemGapPx))
+                .coerceIn(1, JvmSettingGroupMaxColumnCount)
+            // 设置项等宽平分整行并向下取整，保证同一行内的设置项一定放得下。
+            val itemWidthPx = (maxWidthPx - itemGapPx * (columnCount - 1)) / columnCount
+            val itemWidth = with(density) { itemWidthPx.toDp() }
+            CompositionLocalProvider(LocalJvmSettingItemWidth provides itemWidth) {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(JvmSettingGroupItemGap),
+                    verticalArrangement = Arrangement.spacedBy(JvmSettingGroupItemVerticalGap),
+                    itemVerticalAlignment = Alignment.Top,
+                    content = content,
+                )
+            }
+        }
     }
 }
 
@@ -1302,6 +1324,8 @@ internal fun JvmSettingBaseRow(
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
     val rowHovered = enabled && hovered
+    // 分组内横向排列时由分组统一下发固定宽度，未下发时保持整行铺满。
+    val itemWidth = LocalJvmSettingItemWidth.current
     // 可点击且启用的行才附加 clickable，禁用行保持占位尺寸不变。
     val clickableModifier = if (enabled && onClick != null) {
         Modifier.clickable(
@@ -1315,7 +1339,13 @@ internal fun JvmSettingBaseRow(
 
     Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .then(
+                if (itemWidth == null) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier.width(itemWidth)
+                }
+            )
             .clip(RoundedCornerShape(7.dp))
             .background(
                 if (rowHovered) {

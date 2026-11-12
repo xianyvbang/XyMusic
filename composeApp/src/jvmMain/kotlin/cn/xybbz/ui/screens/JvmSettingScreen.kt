@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -388,8 +387,8 @@ fun JvmSettingScreen(
                                 modifier = Modifier.width(groupWidth),
                                 title = stringResource(Res.string.jvm_setting_screen_text_59),
                             ) {
-                                // 仅开启边下边播时才有缓存上限，关闭后隐藏该项。
-                                AnimatedVisibility(visible = settings.ifEnableEdgeDownload) {
+                                // 仅开启边下边播时才有缓存上限；直接条件渲染，避免隐藏项在横向排布中留下空位。
+                                if (settings.ifEnableEdgeDownload) {
                                     JvmSettingNavigationRow(
                                         icon = Res.drawable.folder_managed_24px,
                                         title = stringResource(Res.string.cache_limit),
