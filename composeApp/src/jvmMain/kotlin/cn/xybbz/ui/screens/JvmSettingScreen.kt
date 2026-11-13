@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -39,6 +40,7 @@ import cn.xybbz.common.utils.copyTextToClipboard
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.info.supportsICloudPasswordSync
 import cn.xybbz.config.setting.JvmAutoStartManager
+import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.router.About
 import cn.xybbz.router.CacheLimit
@@ -133,6 +135,16 @@ fun JvmSettingScreen(
         .displayAudioBitRateText()
     val dataSourceLabel = settings.dataSourceType?.title
         ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
+
+    // 迁移音乐缓存页的兜底逻辑：历史不可展示档位（自动/不缓存）在开启缓存后统一修正为默认 2GB 档位。
+    // 以开启状态与当前档位作为 key，用户在本页切换边下边播开关后也能立即完成迁移。
+    LaunchedEffect(settings.ifEnableEdgeDownload, settings.cacheUpperLimit) {
+        if (settings.ifEnableEdgeDownload &&
+            cacheUpperLimitOptions().none { it.limit == settings.cacheUpperLimit }
+        ) {
+            settingsManager.setCacheUpperLimit(CacheUpperLimitEnum.ThreeG)
+        }
+    }
 
     // 顶部标签：顺序必须与下方 LazyColumn 中分组 item 的顺序保持一致
     val settingTabs = listOf(
@@ -403,19 +415,15 @@ fun JvmSettingScreen(
                                 )
                             }
 
-                            // 存储管理相关功能整体内嵌到设置页，不再跳转独立存储管理页。
-                            JvmStorageSettingsSection(
-                                memoryManagementViewModel = memoryManagementViewModel,
-                                modifier = Modifier.width(groupWidth),
-                            )
-
-                            // 缓存分组只保留缓存上限；缓存路径的展示、调整与恢复默认由存储分区的存储位置分组统一负责。
+                            // 缓存分组放在存储管理之前：先配置缓存策略，再查看整体占用与清理入口。
+                            // 保留原有缓存上限跳转入口，并内嵌音乐缓存页迁移过来的档位选择。
                             JvmSettingGroup(
                                 modifier = Modifier.width(groupWidth),
                                 title = stringResource(Res.string.jvm_setting_screen_text_59),
                             ) {
                                 // 仅开启边下边播时才有缓存上限；直接条件渲染，避免隐藏项在横向排布中留下空位。
                                 if (settings.ifEnableEdgeDownload) {
+                                    // 原先的缓存上限跳转入口暂时保留，仍可进入独立的音乐缓存页面。
                                     JvmSettingNavigationRow(
                                         icon = Res.drawable.folder_managed_24px,
                                         title = stringResource(Res.string.cache_limit),
@@ -425,8 +433,24 @@ fun JvmSettingScreen(
                                             navigator.navigate(CacheLimit)
                                         }
                                     )
+                                    // 迁移自音乐缓存页：内嵌真实占用与缓存上限档位选择，样式适配为设置页设置行。
+                                    JvmCacheLimitSettingItems(
+                                        selectedLimit = settings.cacheUpperLimit,
+                                        usedCacheSizeLabel = memoryManagementViewModel.musicCacheSize,
+                                        onLimitSelected = { limit ->
+                                            coroutineScope.launch {
+                                                settingsManager.setCacheUpperLimit(limit)
+                                            }
+                                        },
+                                    )
                                 }
                             }
+
+                            // 存储管理相关功能整体内嵌到设置页，不再跳转独立存储管理页。
+                            JvmStorageSettingsSection(
+                                memoryManagementViewModel = memoryManagementViewModel,
+                                modifier = Modifier.width(groupWidth),
+                            )
                         }
                     }
                 }

@@ -498,7 +498,7 @@ private fun JvmCachePill(
  * @property footLabel 卡片底部状态文案左侧标签。
  * @property footValue 卡片底部状态文案右侧值。
  */
-private data class JvmCacheLimitProfile(
+internal data class JvmCacheLimitProfile(
     val kicker: String,
     val strategy: String,
     val description: String,
@@ -531,9 +531,11 @@ private val CacheLimitFallbackOption = CacheUpperLimitOption(
 
 /**
  * 将缓存上限枚举映射为 JVM 桌面端页面的展示画像。
+ *
+ * 同步供设置页内嵌的缓存上限设置项复用，保证两处档位文案完全一致。
  */
 @Composable
-private fun CacheUpperLimitEnum.cacheLimitProfile(): JvmCacheLimitProfile {
+internal fun CacheUpperLimitEnum.cacheLimitProfile(): JvmCacheLimitProfile {
     return when (this) {
         // 自动档位主要用于兼容共享枚举，JVM 页面会迁移到固定容量档位。
         CacheUpperLimitEnum.Auto -> JvmCacheLimitProfile(
@@ -603,7 +605,7 @@ private fun CacheUpperLimitEnum.cacheLimitProfile(): JvmCacheLimitProfile {
 /**
  * 给容量单位前补空格，把 "2GB" 统一展示为 "2 GB"，提升桌面端扫读性。
  */
-private fun String.addCapacitySpace(): String {
+internal fun String.addCapacitySpace(): String {
     // 只在数字后紧跟容量单位时插入空格，避免影响其它普通文案。
     return trim().replace(
         Regex("""(?<=\d)(?=(PB|TB|GB|MB|KB|B)(\s|$))"""),
