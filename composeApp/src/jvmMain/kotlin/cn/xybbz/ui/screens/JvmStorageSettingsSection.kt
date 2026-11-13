@@ -53,6 +53,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.Log
+import cn.xybbz.common.utils.formatStorageLabel
+import cn.xybbz.common.utils.parseStorageBytes
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
@@ -97,8 +99,6 @@ import xymusic.composeapp.generated.resources.temporary_cache
 import xymusic.composeapp.generated.resources.temporary_cache_description
 import xymusic.composeapp.generated.resources.warning
 import java.io.File
-import java.util.Locale
-import kotlin.math.roundToInt
 
 /**
  * 设置页内嵌的存储管理分区。
@@ -479,7 +479,7 @@ private fun JvmStorageLegendItem(item: JvmStorageSettingsItem, dotColor: Color) 
  * @param text 容量文本。
  */
 @Composable
-private fun JvmStorageValuePill(text: String) {
+internal fun JvmStorageValuePill(text: String) {
     Surface(
         shape = CircleShape,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
@@ -676,58 +676,5 @@ private fun defaultJvmStorageChooserDirectory(): File {
     val userHome = File(System.getProperty("user.home") ?: ".")
     val musicDir = File(userHome, "Music")
     return if (musicDir.exists()) musicDir else userHome
-}
-
-/**
- * 将容量文本解析为字节数。
- *
- * ViewModel 暴露的是格式化后的文本，例如 12.4MB、1GB 或 0B；页面需要数值做汇总和占比条占比，
- * 因此在 UI 层进行轻量解析。
- *
- * @return 解析后的字节数；解析失败时返回 0。
- */
-private fun String.parseStorageBytes(): Double {
-    val text = trim()
-    if (text.isEmpty()) return 0.0
-
-    // 容量文本由数字和单位组成，先截取数字部分，再根据单位换算。
-    val numberText = text.takeWhile { it.isDigit() || it == '.' }
-    val value = numberText.toDoubleOrNull() ?: return 0.0
-    val unit = text.drop(numberText.length).trim().uppercase()
-    val multiplier = when (unit) {
-        "PB" -> 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0
-        "TB" -> 1024.0 * 1024.0 * 1024.0 * 1024.0
-        "GB" -> 1024.0 * 1024.0 * 1024.0
-        "MB" -> 1024.0 * 1024.0
-        "KB" -> 1024.0
-        else -> 1.0
-    }
-    return value * multiplier
-}
-
-/**
- * 将字节数格式化为页面展示容量。
- *
- * @return 带单位的容量文本，例如 0B、42MB、1.5GB。
- */
-private fun Double.formatStorageLabel(): String {
-    if (this <= 0.0) return "0B"
-
-    val units = listOf("B", "KB", "MB", "GB", "TB", "PB")
-    var value = this
-    var unitIndex = 0
-    // 按 1024 进位找到最适合阅读的容量单位。
-    while (value >= 1024.0 && unitIndex < units.lastIndex) {
-        value /= 1024.0
-        unitIndex++
-    }
-
-    // 10 以上或接近整数时不保留小数；小容量精确到一位小数，减少状态文本宽度压力。
-    val numberText = if (value >= 10.0 || (value - value.roundToInt()).let { it < 0.05 && it > -0.05 }) {
-        String.format(Locale.US, "%.0f", value)
-    } else {
-        String.format(Locale.US, "%.1f", value)
-    }
-    return "$numberText${units[unitIndex]}"
 }
 

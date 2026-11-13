@@ -58,6 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.Log
+import cn.xybbz.common.utils.formatStorageLabel
+import cn.xybbz.common.utils.parseStorageBytes
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid
@@ -110,7 +112,6 @@ import xymusic.composeapp.generated.resources.temporary_cache_description
 import xymusic.composeapp.generated.resources.warning
 import java.io.File
 import java.util.Locale
-import kotlin.math.roundToInt
 
 /**
  * JVM 桌面端存储管理页面。
@@ -187,7 +188,7 @@ fun JvmMemoryManagementScreen(
             title = audioCacheTitle,
             description = stringResource(Res.string.audio_cache_description),
             sizeText = memoryManagementViewModel.musicCacheSize,
-            sizeBytes = memoryManagementViewModel.musicCacheSize.toStorageBytes(),
+            sizeBytes = memoryManagementViewModel.musicCacheSize.parseStorageBytes(),
             icon = Res.drawable.music_note_24px,
             color = MaterialTheme.colorScheme.primary,
             meta = stringResource(Res.string.jvm_memory_management_screen_text_02),
@@ -197,7 +198,7 @@ fun JvmMemoryManagementScreen(
             title = temporaryCacheTitle,
             description = stringResource(Res.string.temporary_cache_description),
             sizeText = memoryManagementViewModel.cacheSize,
-            sizeBytes = memoryManagementViewModel.cacheSize.toStorageBytes(),
+            sizeBytes = memoryManagementViewModel.cacheSize.parseStorageBytes(),
             icon = Res.drawable.queue_music_24px,
             color = MaterialTheme.colorScheme.tertiary,
             meta = stringResource(Res.string.jvm_memory_management_screen_text_03),
@@ -207,7 +208,7 @@ fun JvmMemoryManagementScreen(
             title = databaseDataTitle,
             description = stringResource(Res.string.database_data_description),
             sizeText = memoryManagementViewModel.databaseSize,
-            sizeBytes = memoryManagementViewModel.databaseSize.toStorageBytes(),
+            sizeBytes = memoryManagementViewModel.databaseSize.parseStorageBytes(),
             icon = Res.drawable.settings_24px,
             color = MaterialTheme.colorScheme.error,
             meta = stringResource(Res.string.jvm_memory_management_screen_text_04),
@@ -217,7 +218,7 @@ fun JvmMemoryManagementScreen(
             title = essentialDataTitle,
             description = stringResource(Res.string.essential_data_description),
             sizeText = memoryManagementViewModel.appDataSize,
-            sizeBytes = memoryManagementViewModel.appDataSize.toStorageBytes(),
+            sizeBytes = memoryManagementViewModel.appDataSize.parseStorageBytes(),
             icon = Res.drawable.info_24px,
             color = MaterialTheme.colorScheme.secondary,
             meta = stringResource(Res.string.jvm_memory_management_screen_text_05),
@@ -230,8 +231,8 @@ fun JvmMemoryManagementScreen(
         .filter { it.onClear != null }
         .sumOf { it.sizeBytes }
     // 将字节数重新格式化为更适合顶部状态卡展示的容量文本。
-    val totalSizeText = totalBytes.toStorageLabel()
-    val clearableSizeText = clearableBytes.toStorageLabel()
+    val totalSizeText = totalBytes.formatStorageLabel()
+    val clearableSizeText = clearableBytes.formatStorageLabel()
     // 路径状态用于提示当前是默认缓存目录还是用户自定义目录。
     val cachePathMode = if (memoryManagementViewModel.isDefaultMusicCachePath) stringResource(Res.string.jvm_memory_management_screen_text_06) else stringResource(Res.string.jvm_memory_management_screen_text_07)
 
@@ -1053,55 +1054,3 @@ private fun defaultJvmCacheDirectoryChooserDirectory(): File {
     return if (musicDir.exists()) musicDir else userHome
 }
 
-/**
- * 将容量文本解析为字节数。
- *
- * ViewModel 当前暴露的是格式化后的文本，例如 12.4MB、1GB 或 0B；页面需要数值做汇总和进度条占比，
- * 因此在 UI 层进行轻量解析。
- *
- * @return 解析后的字节数；解析失败时返回 0。
- */
-private fun String.toStorageBytes(): Double {
-    val text = trim()
-    if (text.isEmpty()) return 0.0
-
-    // 容量文本由数字和单位组成，先截取数字部分，再根据单位换算。
-    val numberText = text.takeWhile { it.isDigit() || it == '.' }
-    val value = numberText.toDoubleOrNull() ?: return 0.0
-    val unit = text.drop(numberText.length).trim().uppercase()
-    val multiplier = when (unit) {
-        "PB" -> 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0
-        "TB" -> 1024.0 * 1024.0 * 1024.0 * 1024.0
-        "GB" -> 1024.0 * 1024.0 * 1024.0
-        "MB" -> 1024.0 * 1024.0
-        "KB" -> 1024.0
-        else -> 1.0
-    }
-    return value * multiplier
-}
-
-/**
- * 将字节数格式化为页面展示容量。
- *
- * @return 带单位的容量文本，例如 0B、42MB、1.5GB。
- */
-private fun Double.toStorageLabel(): String {
-    if (this <= 0.0) return "0B"
-
-    val units = listOf("B", "KB", "MB", "GB", "TB", "PB")
-    var value = this
-    var unitIndex = 0
-    // 按 1024 进位找到最适合阅读的容量单位。
-    while (value >= 1024.0 && unitIndex < units.lastIndex) {
-        value /= 1024.0
-        unitIndex++
-    }
-
-    // 10 以上或接近整数时不保留小数；小容量精确到一位小数，减少状态卡宽度压力。
-    val numberText = if (value >= 10.0 || (value - value.roundToInt()).let { it < 0.05 && it > -0.05 }) {
-        String.format(Locale.US, "%.0f", value)
-    } else {
-        String.format(Locale.US, "%.1f", value)
-    }
-    return "$numberText${units[unitIndex]}"
-}
