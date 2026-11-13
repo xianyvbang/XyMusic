@@ -30,7 +30,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -340,7 +340,7 @@ private fun JvmStorageStackedBar(
         modifier = Modifier
             .fillMaxWidth()
             .height(10.dp)
-            .clip(RoundedCornerShape(999.dp))
+            .clip(CircleShape)
             .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
             .drawWithCache {
                 val trackWidth = size.width
@@ -447,7 +447,7 @@ private fun List<JvmStorageSettingsItem>.segmentGradientColors(
 }
 
 /**
- * 存储占比图例：颜色圆点加分类名称与容量。
+ * 存储占比图例：颜色方块加分类名称与容量。
  *
  * @param item 单个存储展示条目。
  * @param dotColor 该分类在占比条渐变中的实际颜色。
@@ -461,7 +461,8 @@ private fun JvmStorageLegendItem(item: JvmStorageSettingsItem, dotColor: Color) 
         Box(
             modifier = Modifier
                 .size(7.dp)
-                .background(dotColor, RoundedCornerShape(999.dp))
+                // 图例标记使用方形色块，与设计稿保持一致。
+                .background(dotColor)
         )
         XyTextSub(
             text = "${item.title} ${item.sizeText}",
@@ -480,7 +481,7 @@ private fun JvmStorageLegendItem(item: JvmStorageSettingsItem, dotColor: Color) 
 @Composable
 private fun JvmStorageValuePill(text: String) {
     Surface(
-        shape = RoundedCornerShape(999.dp),
+        shape = CircleShape,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
         border = BorderStroke(
             width = 1.dp,
@@ -526,7 +527,7 @@ private fun JvmStorageActionPill(
             // 禁用态不挂点击回调，避免零占用或默认目录时仍触发操作。
             onClick = if (enabled) onClick else null,
         ),
-        shape = RoundedCornerShape(999.dp),
+        shape = CircleShape,
         color = MaterialTheme.colorScheme.primary.copy(
             alpha = if (buttonHovered) 0.20f else 0.12f
         ),

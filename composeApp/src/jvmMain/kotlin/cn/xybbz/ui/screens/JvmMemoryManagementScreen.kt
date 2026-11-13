@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -650,7 +651,7 @@ private fun JvmMemoryProgressBar(
         modifier = modifier
             .fillMaxWidth()
             .height(8.dp)
-            .clip(RoundedCornerShape(999.dp)),
+            .clip(CircleShape),
         color = color,
         trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
     )
@@ -904,7 +905,7 @@ private fun JvmMemoryBadge(
     alpha: Float = 1f,
 ) {
     Surface(
-        shape = RoundedCornerShape(999.dp),
+        shape = CircleShape,
         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f * alpha),
         border = BorderStroke(
             width = 1.dp,
