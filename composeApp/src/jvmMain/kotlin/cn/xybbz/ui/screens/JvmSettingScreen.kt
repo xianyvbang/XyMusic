@@ -42,7 +42,6 @@ import cn.xybbz.config.setting.JvmAutoStartManager
 import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.router.About
 import cn.xybbz.router.CacheLimit
-import cn.xybbz.router.ConnectionManagement
 import cn.xybbz.router.CustomApi
 import cn.xybbz.router.InterfaceSetting
 import cn.xybbz.router.LanguageConfig
@@ -86,14 +85,12 @@ import xymusic.composeapp.generated.resources.broadcast_while_down
 import xymusic.composeapp.generated.resources.cache_limit
 import xymusic.composeapp.generated.resources.close_24px
 import xymusic.composeapp.generated.resources.connect
-import xymusic.composeapp.generated.resources.connection_management
 import xymusic.composeapp.generated.resources.copy_success
 import xymusic.composeapp.generated.resources.customize_lyric_settings
 import xymusic.composeapp.generated.resources.download
 import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.enabled_sync_play_progress
 import xymusic.composeapp.generated.resources.folder_managed_24px
-import xymusic.composeapp.generated.resources.http_24px
 import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.interface_settings
 import xymusic.composeapp.generated.resources.language
@@ -439,21 +436,6 @@ fun JvmSettingScreen(
                         // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
                         JvmSettingTabDivider()
                         JvmSettingGroupGrid { groupWidth ->
-                            JvmSettingGroup(
-                                modifier = Modifier.width(groupWidth),
-                                title = stringResource(Res.string.jvm_setting_screen_text_54),
-                            ) {
-                                JvmSettingNavigationRow(
-                                    icon = Res.drawable.http_24px,
-                                    title = stringResource(Res.string.connection_management),
-                                    description = stringResource(Res.string.jvm_setting_screen_text_20),
-                                    value = dataSourceLabel,
-                                    onClick = {
-                                        navigator.navigate(ConnectionManagement)
-                                    }
-                                )
-                            }
-
                             JvmSettingGroup(
                                 modifier = Modifier.width(groupWidth),
                                 title = stringResource(Res.string.jvm_setting_screen_text_22),
