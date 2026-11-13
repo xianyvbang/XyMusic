@@ -70,7 +70,6 @@ import cn.xybbz.router.Local
 import cn.xybbz.router.MemoryManagement
 import cn.xybbz.router.Music
 import cn.xybbz.router.Navigator
-import cn.xybbz.router.ProxyConfig
 import cn.xybbz.router.Search
 import cn.xybbz.router.SelectLibrary
 import cn.xybbz.router.SetBackgroundImage
@@ -116,7 +115,6 @@ import xymusic.composeapp.generated.resources.local_and_download
 import xymusic.composeapp.generated.resources.logo_new
 import xymusic.composeapp.generated.resources.media_library_selection
 import xymusic.composeapp.generated.resources.playlist
-import xymusic.composeapp.generated.resources.poxy_config
 import xymusic.composeapp.generated.resources.refresh_24px
 import xymusic.composeapp.generated.resources.refresh_login
 import xymusic.composeapp.generated.resources.search
@@ -682,7 +680,6 @@ private fun currentRouteTitleRes(route: Any): StringResource? = when (route) {
     DailyRecommend -> Res.string.daily_recommendations
     Download -> Res.string.download
     SetBackgroundImage -> Res.string.background_image_setting
-    ProxyConfig -> Res.string.poxy_config
     CustomApi -> Res.string.customize_lyric_settings
     else -> null
 }

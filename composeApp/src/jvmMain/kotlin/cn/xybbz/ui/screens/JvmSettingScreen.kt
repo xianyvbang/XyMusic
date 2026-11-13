@@ -46,7 +46,6 @@ import cn.xybbz.router.About
 import cn.xybbz.router.CustomApi
 import cn.xybbz.router.InterfaceSetting
 import cn.xybbz.router.LanguageConfig
-import cn.xybbz.router.ProxyConfig
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.components.JvmSettingDownloadRow
@@ -54,7 +53,6 @@ import cn.xybbz.ui.components.JvmSettingGroup
 import cn.xybbz.ui.components.JvmSettingGroupGrid
 import cn.xybbz.ui.components.JvmSettingHeadline
 import cn.xybbz.ui.components.JvmSettingLazyColumn
-import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPathRow
 import cn.xybbz.ui.components.JvmSettingPickRow
@@ -66,6 +64,7 @@ import cn.xybbz.ui.components.displayAudioBitRateText
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.MemoryManagementViewModel
+import cn.xybbz.viewmodel.ProxyConfigViewModel
 import cn.xybbz.viewmodel.SettingsViewModel
 import cn.xybbz.viewmodel.StreamingQualityViewModel
 import kotlinx.coroutines.Dispatchers
@@ -94,12 +93,10 @@ import xymusic.composeapp.generated.resources.interface_settings
 import xymusic.composeapp.generated.resources.language
 import xymusic.composeapp.generated.resources.music_note_24px
 import xymusic.composeapp.generated.resources.password_24px
-import xymusic.composeapp.generated.resources.poxy_config
 import xymusic.composeapp.generated.resources.queue_music_24px
 import xymusic.composeapp.generated.resources.restart_alt_24px
 import xymusic.composeapp.generated.resources.settings
 import xymusic.composeapp.generated.resources.settings_24px
-import xymusic.composeapp.generated.resources.signal_cellular_alt_24px
 import xymusic.composeapp.generated.resources.song_cache_location
 import xymusic.composeapp.generated.resources.volume_up_24px
 
@@ -113,6 +110,8 @@ fun JvmSettingScreen(
     streamingQualityViewModel: StreamingQualityViewModel = koinViewModel<StreamingQualityViewModel>(),
     // 存储分组直接内嵌原存储管理页的占用与清理能力，复用其视图模型。
     memoryManagementViewModel: MemoryManagementViewModel = koinViewModel<MemoryManagementViewModel>(),
+    // 网络分组内嵌原代理设置页的开关、地址与连通性测试能力，复用其视图模型。
+    proxyConfigViewModel: ProxyConfigViewModel = koinViewModel<ProxyConfigViewModel>(),
 ) {
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
@@ -440,20 +439,11 @@ fun JvmSettingScreen(
                         // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
                         JvmSettingTabDivider()
                         JvmSettingGroupGrid { groupWidth ->
-                            JvmSettingGroup(
+                            // 代理设置内容整体收进网络分组：开关、地址与测试保存能力都在这里。
+                            JvmProxySettingsSection(
+                                proxyConfigViewModel = proxyConfigViewModel,
                                 modifier = Modifier.width(groupWidth),
-                                title = stringResource(Res.string.jvm_setting_screen_text_22),
-                            ) {
-                                JvmSettingNavigationRow(
-                                    icon = Res.drawable.signal_cellular_alt_24px,
-                                    title = stringResource(Res.string.poxy_config),
-                                    description = stringResource(Res.string.jvm_setting_screen_text_21),
-                                    value = stringResource(Res.string.jvm_setting_screen_text_22),
-                                    onClick = {
-                                        navigator.navigate(ProxyConfig)
-                                    }
-                                )
-                            }
+                            )
                         }
                     }
                 }

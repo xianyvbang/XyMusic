@@ -815,6 +815,7 @@
     <string name="jvm_proxy_config_screen_text_31">按需直连</string>
     <string name="jvm_proxy_config_screen_text_32">当前页面不会自动维护例外列表；如果服务器在局域网内，通常不需要开启代理。</string>
     <string name="jvm_proxy_config_screen_text_33">未解析</string>
+    <string name="jvm_proxy_settings_section_text_01">开关与地址需要点击保存后才会应用到后续服务端请求。</string>
     <string name="jvm_select_library_screen_text_01">多媒体库</string>
     <string name="jvm_select_library_screen_text_02">单媒体库</string>
     <string name="jvm_select_library_screen_text_03">为当前连接指定桌面端可见的媒体库范围；专辑、歌曲、搜索和播放队列都会按照这个范围加载。</string>
