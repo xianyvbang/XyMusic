@@ -22,6 +22,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,7 +45,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingWideGroup
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
@@ -56,11 +56,9 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.http_24px
-import xymusic.composeapp.generated.resources.jvm_proxy_config_screen_text_08
 import xymusic.composeapp.generated.resources.jvm_proxy_settings_section_text_01
 import xymusic.composeapp.generated.resources.jvm_setting_screen_text_22
 import xymusic.composeapp.generated.resources.open_proxy
-import xymusic.composeapp.generated.resources.proxy_address
 import xymusic.composeapp.generated.resources.save
 import xymusic.composeapp.generated.resources.signal_cellular_alt_24px
 import xymusic.composeapp.generated.resources.test_connection
@@ -82,39 +80,37 @@ internal fun JvmProxySettingsSection(
     // 地址为空时禁用测试，避免发出必然失败的请求。
     val addressText = proxyConfigViewModel.addressValue.text.trim()
 
-    // 网络分组使用宽内容布局，地址输入与行尾操作才能整行展示。
+    // 网络分组使用宽内容布局，开关与地址输入同一行左右排布。
     JvmSettingWideGroup(
         modifier = modifier,
         title = stringResource(Res.string.jvm_setting_screen_text_22),
     ) {
-        // 开关行：保存提示直接写进说明，避免底部再堆一条重复提示。
-        JvmSettingSwitchRow(
-            icon = Res.drawable.signal_cellular_alt_24px,
-            title = stringResource(Res.string.open_proxy),
-            description = stringResource(Res.string.jvm_proxy_settings_section_text_01),
-            checked = proxyConfigViewModel.enabled,
-            onCheckedChange = { checked ->
-                proxyConfigViewModel.updateEnabled(checked)
-            },
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // 开关行占左半区，说明里直接提示保存后生效。
+            Box(modifier = Modifier.weight(1f)) {
+                JvmSettingSwitchRow(
+                    icon = Res.drawable.signal_cellular_alt_24px,
+                    title = stringResource(Res.string.open_proxy),
+                    description = stringResource(Res.string.jvm_proxy_settings_section_text_01),
+                    checked = proxyConfigViewModel.enabled,
+                    onCheckedChange = { checked ->
+                        proxyConfigViewModel.updateEnabled(checked)
+                    },
+                )
+            }
 
-        // 地址行：只保留标题与写法说明，测试与保存操作改由输入框内部承载。
-        JvmSettingBaseRow(
-            icon = Res.drawable.http_24px,
-            title = stringResource(Res.string.proxy_address),
-            description = stringResource(Res.string.jvm_proxy_config_screen_text_08),
-            descriptionMaxLines = 2,
-            descriptionOverflow = TextOverflow.Visible,
-            minHeight = 64.dp,
-            iconSelected = true,
-            trailing = {},
-        )
-
-        // 地址输入框：测试与保存按钮横向排在输入框右侧，保存动作仍由 ViewModel 负责。
-        JvmProxyAddressEditor(
-            proxyConfigViewModel = proxyConfigViewModel,
-            testEnabled = addressText.isNotBlank(),
-        )
+            // 地址输入框占右半区，测试与保存按钮横向排在输入框内部右侧。
+            Box(modifier = Modifier.weight(1f)) {
+                JvmProxyAddressEditor(
+                    proxyConfigViewModel = proxyConfigViewModel,
+                    testEnabled = addressText.isNotBlank(),
+                )
+            }
+        }
     }
 }
 
