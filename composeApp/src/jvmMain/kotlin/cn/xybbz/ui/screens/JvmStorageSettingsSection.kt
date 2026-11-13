@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -43,7 +42,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -168,6 +172,16 @@ private fun JvmStorageUsageGroup(
         .formatStorageLabel()
     val totalLabel = stringResource(Res.string.jvm_memory_management_screen_text_09)
     val clearableLabel = stringResource(Res.string.jvm_memory_management_screen_text_10)
+    // 占比条与图例共用同一份主题同色系渐变，保证两者颜色一一对应。
+    val gradientRamp = jvmStorageGradientRamp(
+        primary = MaterialTheme.colorScheme.primary,
+        isDarkTheme = XyTheme.configs.isDarkTheme,
+    )
+    // 每个分类取自己区间在渐变中的实际颜色，供图例圆点使用。
+    val segmentColors = storageItems.segmentGradientColors(
+        ramp = gradientRamp,
+        totalBytes = totalBytes,
+    )
 
     JvmSettingWideGroup(title = stringResource(Res.string.storage_management)) {
         // 顶部汇总总占用与可清理容量，方便直接判断磁盘压力。
@@ -180,14 +194,18 @@ private fun JvmStorageUsageGroup(
         JvmStorageStackedBar(
             storageItems = storageItems,
             totalBytes = totalBytes,
+            gradientRamp = gradientRamp,
         )
-        // 图例与占比条使用同一分类颜色，便于对应到具体分类。
+        // 图例圆点使用对应分段在渐变中的实际颜色，便于与占比条区间对应。
         JvmSettingFlowRow(
             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
         ) {
-            storageItems.forEach { item ->
-                JvmStorageLegendItem(item = item)
+            storageItems.forEachIndexed { index, item ->
+                JvmStorageLegendItem(
+                    item = item,
+                    dotColor = segmentColors.getOrElse(index) { gradientRamp.first() },
+                )
             }
         }
         // 分类项与其它设置分组保持一致，一行最多三个横向排列，不绘制分割线。
@@ -303,37 +321,128 @@ private fun JvmStorageLocationGroup(
 }
 
 /**
- * 存储占比条：按分类占用比例绘制一条连续色带。
+ * 存储占比条：按分类占用比例绘制一条主题同色系的连续渐变色带。
+ *
+ * 整条色带使用同一色相从亮到暗的线性渐变，各分段按其在总占用中的位置从整条渐变取样，
+ * 分段之间只保留 1px 分隔，因此视觉上是连续过渡而不是不同色块拼接。
  *
  * @param storageItems 存储展示条目。
  * @param totalBytes 总占用字节数，为 0 时只展示空轨道。
+ * @param gradientRamp 主题同色系渐变的颜色节点，从亮色过渡到深色。
  */
 @Composable
 private fun JvmStorageStackedBar(
     storageItems: List<JvmStorageSettingsItem>,
     totalBytes: Double,
+    gradientRamp: List<Color>,
 ) {
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(10.dp)
             .clip(RoundedCornerShape(999.dp))
-            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
-    ) {
-        if (totalBytes > 0.0) {
-            storageItems.forEach { item ->
-                val weight = (item.sizeBytes / totalBytes).toFloat()
-                // 零占用分类不绘制，避免在占比条上出现不可见的零宽段。
-                if (weight > 0f) {
-                    Box(
-                        modifier = Modifier
-                            .weight(weight)
-                            .fillMaxHeight()
-                            .background(item.color)
-                    )
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+            .drawWithCache {
+                val trackWidth = size.width
+                val trackHeight = size.height
+                // 分段之间保留 1px 间隙用于区分类别，同时不破坏整体渐变连续性。
+                val gap = 1.dp.toPx()
+                // 零占用分类不参与绘制，避免出现零宽空段或错位。
+                val visibleItems = if (totalBytes > 0.0) {
+                    storageItems.filter { it.sizeBytes > 0.0 }
+                } else {
+                    emptyList()
+                }
+                val gapCount = (visibleItems.size - 1).coerceAtLeast(0)
+                val drawableWidth = (trackWidth - gap * gapCount).coerceAtLeast(0f)
+                // 渐变锚定在整条轨道上，分段只负责裁剪出自己那一段区间。
+                val brush = Brush.horizontalGradient(
+                    colors = gradientRamp,
+                    startX = 0f,
+                    endX = trackWidth,
+                )
+                var cursor = 0f
+                val segmentRects = visibleItems.map { item ->
+                    val segmentWidth = (drawableWidth * (item.sizeBytes / totalBytes)).toFloat()
+                    val rect = Offset(cursor, 0f) to Size(segmentWidth, trackHeight)
+                    cursor += segmentWidth + gap
+                    rect
+                }
+                onDrawBehind {
+                    segmentRects.forEach { (topLeft, segmentSize) ->
+                        if (segmentSize.width > 0f) {
+                            drawRect(
+                                brush = brush,
+                                topLeft = topLeft,
+                                size = segmentSize,
+                            )
+                        }
+                    }
                 }
             }
-        }
+    )
+}
+
+/**
+ * 构建存储占比条与图例共用的主题同色系渐变。
+ *
+ * 只从主题 primary 派生出亮暗两端，避免使用其它色相导致偏粉偏橙的观感；
+ * 深色主题下深色端不会过度压暗，保证在深色背景上依旧可读。
+ *
+ * @param primary 主题主色。
+ * @param isDarkTheme 当前是否为深色主题。
+ * @return 从亮到暗的渐变颜色节点。
+ */
+private fun jvmStorageGradientRamp(primary: Color, isDarkTheme: Boolean): List<Color> {
+    return if (isDarkTheme) {
+        listOf(
+            lerp(primary, Color.White, 0.32f),
+            primary,
+            lerp(primary, Color.Black, 0.22f),
+        )
+    } else {
+        // 浅色主题下亮端混白比例不宜过大，否则与浅色轨道对比度不足。
+        listOf(
+            lerp(primary, Color.White, 0.42f),
+            primary,
+            lerp(primary, Color.Black, 0.30f),
+        )
+    }
+}
+
+/**
+ * 按比例从渐变节点中采样颜色。
+ *
+ * @param fraction 0 到 1 之间的取样位置，0 表示渐变起点。
+ * @return 该位置对应的颜色。
+ */
+private fun List<Color>.sampleGradient(fraction: Float): Color {
+    if (isEmpty()) return Color.Transparent
+    if (size == 1) return first()
+    val position = fraction.coerceIn(0f, 1f) * (size - 1)
+    val index = position.toInt().coerceIn(0, size - 2)
+    return lerp(this[index], this[index + 1], position - index)
+}
+
+/**
+ * 计算每个分类在其占用区间中点的实际渐变颜色，供图例圆点与占比条对应。
+ *
+ * @param ramp 主题同色系渐变节点。
+ * @param totalBytes 总占用字节数。
+ * @return 与展示条目顺序一一对应的颜色列表。
+ */
+private fun List<JvmStorageSettingsItem>.segmentGradientColors(
+    ramp: List<Color>,
+    totalBytes: Double,
+): List<Color> {
+    if (totalBytes <= 0.0) return List(size) { ramp.first() }
+    var cumulative = 0.0
+    return map { item ->
+        val weight = (item.sizeBytes / totalBytes).coerceIn(0.0, 1.0)
+        // 取区间中点取样，使图例颜色更接近该段在进度条上的观感。
+        val samplePosition = (cumulative + weight / 2.0).toFloat()
+        cumulative += weight
+        ramp.sampleGradient(samplePosition)
     }
 }
 
@@ -341,9 +450,10 @@ private fun JvmStorageStackedBar(
  * 存储占比图例：颜色圆点加分类名称与容量。
  *
  * @param item 单个存储展示条目。
+ * @param dotColor 该分类在占比条渐变中的实际颜色。
  */
 @Composable
-private fun JvmStorageLegendItem(item: JvmStorageSettingsItem) {
+private fun JvmStorageLegendItem(item: JvmStorageSettingsItem, dotColor: Color) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2),
         verticalAlignment = Alignment.CenterVertically,
@@ -351,7 +461,7 @@ private fun JvmStorageLegendItem(item: JvmStorageSettingsItem) {
         Box(
             modifier = Modifier
                 .size(7.dp)
-                .background(item.color, RoundedCornerShape(999.dp))
+                .background(dotColor, RoundedCornerShape(999.dp))
         )
         XyTextSub(
             text = "${item.title} ${item.sizeText}",
@@ -447,7 +557,7 @@ private fun JvmStorageActionPill(
  * @property sizeText ViewModel 提供的容量文本。
  * @property sizeBytes 容量文本解析后的字节数，用于汇总和占比条占比。
  * @property icon 分类图标资源。
- * @property color 分类强调色。
+ * @property color 分类图标强调色；占比条与图例不再使用该色，统一走主题同色系渐变。
  * @property meta 分类辅助标签。
  * @property onClear 清理动作；为空时表示该分类不能在设置页清理。
  */
