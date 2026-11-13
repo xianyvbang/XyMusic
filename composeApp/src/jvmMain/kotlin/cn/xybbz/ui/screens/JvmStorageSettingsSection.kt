@@ -92,7 +92,6 @@ import xymusic.composeapp.generated.resources.folder_managed_24px
 import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.music_note_24px
 import xymusic.composeapp.generated.resources.queue_music_24px
-import xymusic.composeapp.generated.resources.restore_default
 import xymusic.composeapp.generated.resources.settings_24px
 import xymusic.composeapp.generated.resources.storage_management
 import xymusic.composeapp.generated.resources.temporary_cache
@@ -273,8 +272,8 @@ private fun JvmStorageLocationGroup(
     }
 
     JvmSettingGroup(title = stringResource(Res.string.jvm_memory_management_screen_text_25)) {
-        // 目录行直接展示完整路径，点击行尾“调整”拉起系统目录选择器。
-        // 两个操作项交由分组容器横向排列，窄窗口下自动换行。
+        // 目录行直接展示完整路径，行尾依次提供“调整”与“恢复默认”两个操作。
+        // 已经是默认目录时禁用恢复操作，避免无意义的重复还原。
         JvmSettingBaseRow(
             icon = Res.drawable.folder_managed_24px,
             title = cachePathTitle,
@@ -289,32 +288,23 @@ private fun JvmStorageLocationGroup(
             verticalPadding = XyTheme.dimens.outerVerticalPadding,
             iconSelected = true,
             trailing = {
-                JvmStorageActionPill(
-                    text = stringResource(Res.string.adjust),
-                    onClick = ::chooseCacheDirectory,
-                )
-            },
-        )
-        // 已经是默认目录时禁用恢复操作，只保留状态提示。
-        JvmSettingBaseRow(
-            icon = Res.drawable.folder_managed_24px,
-            title = stringResource(Res.string.restore_default),
-            description = if (isDefaultPath) {
-                stringResource(Res.string.jvm_memory_management_screen_text_30)
-            } else {
-                stringResource(Res.string.jvm_memory_management_screen_text_31)
-            },
-            enabled = restoreDefaultEnabled,
-            minHeight = 72.dp,
-            horizontalPadding = XyTheme.dimens.contentPadding,
-            verticalPadding = XyTheme.dimens.outerVerticalPadding,
-            iconSelected = true,
-            trailing = {
-                JvmStorageActionPill(
-                    text = stringResource(Res.string.jvm_memory_management_screen_text_33),
-                    enabled = restoreDefaultEnabled,
-                    onClick = { memoryManagementViewModel.restoreDefaultMusicCacheDirectory() },
-                )
+                // 两个操作按钮横向排列，与存储分类行的按钮保持同样的视觉样式。
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    JvmStorageActionPill(
+                        text = stringResource(Res.string.adjust),
+                        onClick = ::chooseCacheDirectory,
+                    )
+                    JvmStorageActionPill(
+                        text = stringResource(Res.string.jvm_memory_management_screen_text_33),
+                        enabled = restoreDefaultEnabled,
+                        onClick = {
+                            memoryManagementViewModel.restoreDefaultMusicCacheDirectory()
+                        },
+                    )
+                }
             },
         )
     }
