@@ -479,7 +479,7 @@ private fun JvmStorageLegendItem(item: JvmStorageSettingsItem, dotColor: Color) 
  * @param text 容量文本。
  */
 @Composable
-internal fun JvmStorageValuePill(text: String) {
+private fun JvmStorageValuePill(text: String) {
     Surface(
         shape = CircleShape,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),

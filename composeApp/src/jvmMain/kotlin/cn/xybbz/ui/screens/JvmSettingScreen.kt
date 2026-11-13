@@ -43,7 +43,6 @@ import cn.xybbz.config.setting.JvmAutoStartManager
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.router.About
-import cn.xybbz.router.CacheLimit
 import cn.xybbz.router.CustomApi
 import cn.xybbz.router.InterfaceSetting
 import cn.xybbz.router.LanguageConfig
@@ -64,7 +63,6 @@ import cn.xybbz.ui.components.JvmSettingTabBar
 import cn.xybbz.ui.components.JvmSettingTabDivider
 import cn.xybbz.ui.components.JvmSettingTabItem
 import cn.xybbz.ui.components.displayAudioBitRateText
-import cn.xybbz.ui.components.displayMessage
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.MemoryManagementViewModel
@@ -84,7 +82,6 @@ import xymusic.composeapp.generated.resources.album_playback_history
 import xymusic.composeapp.generated.resources.allow_simultaneous_playback
 import xymusic.composeapp.generated.resources.av_timer_24px
 import xymusic.composeapp.generated.resources.broadcast_while_down
-import xymusic.composeapp.generated.resources.cache_limit
 import xymusic.composeapp.generated.resources.close_24px
 import xymusic.composeapp.generated.resources.connect
 import xymusic.composeapp.generated.resources.copy_success
@@ -92,7 +89,6 @@ import xymusic.composeapp.generated.resources.customize_lyric_settings
 import xymusic.composeapp.generated.resources.download
 import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.enabled_sync_play_progress
-import xymusic.composeapp.generated.resources.folder_managed_24px
 import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.interface_settings
 import xymusic.composeapp.generated.resources.language
@@ -126,10 +122,6 @@ fun JvmSettingScreen(
     val songStoragePath = settingsViewModel.songStoragePath
     val copySuccess = stringResource(Res.string.copy_success)
     val canShowICloudPasswordSync = supportsICloudPasswordSync()
-    val cacheLimitLabel = cacheUpperLimitOptions()
-        .firstOrNull { it.limit == settings.cacheUpperLimit }
-        ?.displayMessage()
-        ?: settings.cacheUpperLimit.name
     val selectedQuality = TranscodeAudioBitRateType
         .getTranscodeAudioBitRate(settings.wifiNetworkAudioBitRate)
         .displayAudioBitRateText()
@@ -415,28 +407,16 @@ fun JvmSettingScreen(
                                 )
                             }
 
-                            // 缓存分组放在存储管理之前：先配置缓存策略，再查看整体占用与清理入口。
-                            // 保留原有缓存上限跳转入口，并内嵌音乐缓存页迁移过来的档位选择。
+                            // 缓存分组：内嵌音乐缓存页迁移过来的缓存上限档位选择。
                             JvmSettingGroup(
                                 modifier = Modifier.width(groupWidth),
                                 title = stringResource(Res.string.jvm_setting_screen_text_59),
                             ) {
                                 // 仅开启边下边播时才有缓存上限；直接条件渲染，避免隐藏项在横向排布中留下空位。
                                 if (settings.ifEnableEdgeDownload) {
-                                    // 原先的缓存上限跳转入口暂时保留，仍可进入独立的音乐缓存页面。
-                                    JvmSettingNavigationRow(
-                                        icon = Res.drawable.folder_managed_24px,
-                                        title = stringResource(Res.string.cache_limit),
-                                        description = stringResource(Res.string.jvm_setting_screen_text_09),
-                                        value = cacheLimitLabel,
-                                        onClick = {
-                                            navigator.navigate(CacheLimit)
-                                        }
-                                    )
-                                    // 迁移自音乐缓存页：内嵌真实占用与缓存上限档位选择，样式适配为设置页设置行。
+                                    // 迁移自音乐缓存页：内嵌缓存上限档位选择，样式适配为设置页单选行。
                                     JvmCacheLimitSettingItems(
                                         selectedLimit = settings.cacheUpperLimit,
-                                        usedCacheSizeLabel = memoryManagementViewModel.musicCacheSize,
                                         onLimitSelected = { limit ->
                                             coroutineScope.launch {
                                                 settingsManager.setCacheUpperLimit(limit)

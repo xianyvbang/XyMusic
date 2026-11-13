@@ -13,7 +13,6 @@ import cn.xybbz.ui.screens.JvmAlbumInfoScreen
 import cn.xybbz.ui.screens.JvmAlbumScreen
 import cn.xybbz.ui.screens.JvmArtistInfoScreen
 import cn.xybbz.ui.screens.JvmArtistScreen
-import cn.xybbz.ui.screens.JvmCacheLimitScreen
 import cn.xybbz.ui.screens.JvmConnectionConfigInfoScreen
 import cn.xybbz.ui.screens.JvmConnectionManagement
 import cn.xybbz.ui.screens.JvmCustomApiScreen
@@ -64,7 +63,6 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<Genres> { JvmGenresScreen() }
     desktopNode<GenreInfo> { JvmGenresInfoScreen(genreId = it.genreId) }
     desktopNode<About> { JvmAboutScreen() }
-    desktopNode<CacheLimit> { JvmCacheLimitScreen() }
     desktopNode<SelectLibrary> {
         JvmSelectLibraryScreen(
             connectionId = it.connectionId,
