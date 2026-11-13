@@ -19,8 +19,6 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -39,7 +37,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,27 +44,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.ui.components.JvmSettingFlowRow
-import cn.xybbz.ui.components.JvmSettingNote
+import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingWideGroup
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.ProxyConfigViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.http_24px
-import xymusic.composeapp.generated.resources.jvm_connection_config_info_screen_text_01
-import xymusic.composeapp.generated.resources.jvm_proxy_config_screen_text_03
-import xymusic.composeapp.generated.resources.jvm_proxy_config_screen_text_04
 import xymusic.composeapp.generated.resources.jvm_proxy_config_screen_text_08
-import xymusic.composeapp.generated.resources.jvm_proxy_config_screen_text_15
-import xymusic.composeapp.generated.resources.jvm_proxy_config_screen_text_23
-import xymusic.composeapp.generated.resources.jvm_proxy_config_screen_text_24
 import xymusic.composeapp.generated.resources.jvm_proxy_settings_section_text_01
 import xymusic.composeapp.generated.resources.jvm_setting_screen_text_22
 import xymusic.composeapp.generated.resources.open_proxy
@@ -90,46 +79,59 @@ internal fun JvmProxySettingsSection(
     proxyConfigViewModel: ProxyConfigViewModel,
     modifier: Modifier = Modifier,
 ) {
-    // 网络分组使用宽内容布局，代理地址输入与操作按钮才能整行展示。
+    // 地址为空时禁用测试，避免发出必然失败的请求。
+    val addressText = proxyConfigViewModel.addressValue.text.trim()
+
+    // 网络分组使用宽内容布局，地址输入与行尾操作才能整行展示。
     JvmSettingWideGroup(
         modifier = modifier,
         title = stringResource(Res.string.jvm_setting_screen_text_22),
     ) {
-        // 代理开关：直接使用设置页统一的开关行，开关状态写入仍由 ViewModel 负责。
+        // 开关行：保存提示直接写进说明，避免底部再堆一条重复提示。
         JvmSettingSwitchRow(
             icon = Res.drawable.signal_cellular_alt_24px,
             title = stringResource(Res.string.open_proxy),
-            description = stringResource(Res.string.jvm_proxy_config_screen_text_15),
+            description = stringResource(Res.string.jvm_proxy_settings_section_text_01),
             checked = proxyConfigViewModel.enabled,
             onCheckedChange = { checked ->
                 proxyConfigViewModel.updateEnabled(checked)
             },
         )
 
-        // 代理地址小类的内容整体并入网络分组：地址输入、状态摘要与测试保存操作。
-        XyTextSub(
-            text = stringResource(Res.string.proxy_address),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
+        // 地址行：只保留标题与写法说明，测试与保存操作改由输入框内部承载。
+        JvmSettingBaseRow(
+            icon = Res.drawable.http_24px,
+            title = stringResource(Res.string.proxy_address),
+            description = stringResource(Res.string.jvm_proxy_config_screen_text_08),
+            descriptionMaxLines = 2,
+            descriptionOverflow = TextOverflow.Visible,
+            minHeight = 64.dp,
+            iconSelected = true,
+            trailing = {},
         )
-        JvmProxyAddressEditor(proxyConfigViewModel = proxyConfigViewModel)
-        JvmProxyStatusRow(proxyConfigViewModel = proxyConfigViewModel)
-        JvmProxyActionRow(proxyConfigViewModel = proxyConfigViewModel)
-        // 地址写法说明沿用代理设置页的同一套文案，避免两处配置口径不一致。
-        JvmSettingNote(text = stringResource(Res.string.jvm_proxy_config_screen_text_08))
+
+        // 地址输入框：测试与保存按钮横向排在输入框右侧，保存动作仍由 ViewModel 负责。
+        JvmProxyAddressEditor(
+            proxyConfigViewModel = proxyConfigViewModel,
+            testEnabled = addressText.isNotBlank(),
+        )
     }
 }
 
 /**
  * 代理地址输入框。
  *
- * 复用连接表单的输入框样式，行首保留 HTTP 图标，内容使用等宽字体便于核对地址。
+ * 复用连接表单的输入框样式，行首保留 HTTP 图标，内容使用等宽字体便于核对地址；
+ * 测试连接与保存按钮横向排列在输入框内部右侧。
  *
  * @param proxyConfigViewModel 代理设置 ViewModel，负责地址输入状态读写。
+ * @param testEnabled 是否允许测试连接，地址为空时禁用。
  */
 @Composable
-private fun JvmProxyAddressEditor(proxyConfigViewModel: ProxyConfigViewModel) {
+private fun JvmProxyAddressEditor(
+    proxyConfigViewModel: ProxyConfigViewModel,
+    testEnabled: Boolean,
+) {
     XyEdit(
         modifier = Modifier
             .fillMaxWidth()
@@ -157,131 +159,28 @@ private fun JvmProxyAddressEditor(proxyConfigViewModel: ProxyConfigViewModel) {
                 tint = MaterialTheme.colorScheme.primary,
             )
         },
+        // 行尾操作放在输入框内部，测试与保存两个胶囊按钮横向排列。
+        actionContent = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                JvmProxyActionPill(
+                    text = stringResource(Res.string.test_connection),
+                    enabled = testEnabled,
+                    onClick = {
+                        proxyConfigViewModel.testProxyConfig()
+                    },
+                )
+                JvmProxyActionPill(
+                    text = stringResource(Res.string.save),
+                    onClick = {
+                        proxyConfigViewModel.saveConfig()
+                    },
+                )
+            }
+        },
     )
-}
-
-/**
- * 代理状态与测试目标摘要。
- *
- * 把原代理设置页头部状态卡里的关键信息压缩成行内胶囊，适配设置页的紧凑排版。
- *
- * @param proxyConfigViewModel 代理设置 ViewModel，提供开关状态与当前连接地址。
- */
-@Composable
-private fun JvmProxyStatusRow(proxyConfigViewModel: ProxyConfigViewModel) {
-    val enabled = proxyConfigViewModel.enabled
-    // 开关状态文案沿用代理设置页的启用/直连表述，保证两处口径一致。
-    val statusLabel = if (enabled) {
-        stringResource(Res.string.jvm_proxy_config_screen_text_23)
-    } else {
-        stringResource(Res.string.jvm_proxy_config_screen_text_24)
-    }
-    val targetLabel = proxyConfigViewModel.getConnectionAddress()
-        .takeIf { it.isNotBlank() }
-        ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
-
-    JvmSettingFlowRow(
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-    ) {
-        JvmProxyInfoPill(
-            label = stringResource(Res.string.jvm_proxy_config_screen_text_03),
-            value = statusLabel,
-            highlighted = enabled,
-        )
-        JvmProxyInfoPill(
-            label = stringResource(Res.string.jvm_proxy_config_screen_text_04),
-            value = targetLabel,
-            highlighted = false,
-        )
-    }
-}
-
-/**
- * 代理测试与保存操作行。
- *
- * @param proxyConfigViewModel 代理设置 ViewModel，负责连通性测试与配置保存。
- */
-@Composable
-private fun JvmProxyActionRow(proxyConfigViewModel: ProxyConfigViewModel) {
-    // 地址为空时禁用测试，避免发出必然失败的请求。
-    val addressText = proxyConfigViewModel.addressValue.text.trim()
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        JvmProxyActionPill(
-            text = stringResource(Res.string.test_connection),
-            enabled = addressText.isNotBlank(),
-            onClick = {
-                proxyConfigViewModel.testProxyConfig()
-            },
-        )
-        JvmProxyActionPill(
-            text = stringResource(Res.string.save),
-            onClick = {
-                proxyConfigViewModel.saveConfig()
-            },
-        )
-        // 保存说明跟在操作按钮后，提示开关与地址需要保存后才会应用到后续请求。
-        XyTextSub(
-            modifier = Modifier.weight(1f),
-            text = stringResource(Res.string.jvm_proxy_settings_section_text_01),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-/**
- * 代理信息胶囊。
- *
- * @param label 信息标签。
- * @param value 信息当前值。
- * @param highlighted 是否使用强调色，用于区分已启用状态。
- */
-@Composable
-private fun JvmProxyInfoPill(
-    label: String,
-    value: String,
-    highlighted: Boolean,
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    val accentColor = if (highlighted) colorScheme.primary else colorScheme.onSurfaceVariant
-
-    Row(
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(accentColor.copy(alpha = 0.08f))
-            .border(
-                BorderStroke(1.dp, accentColor.copy(alpha = 0.18f)),
-                CircleShape,
-            )
-            .padding(
-                horizontal = XyTheme.dimens.contentPadding,
-                vertical = XyTheme.dimens.outerVerticalPadding / 2,
-            ),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        XyTextSub(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = colorScheme.onSurfaceVariant,
-            maxLines = 1,
-        )
-        XyText(
-            text = value,
-            style = MaterialTheme.typography.labelSmall,
-            color = accentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
 }
 
 /**
