@@ -78,6 +78,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.xybbz.common.enums.toResStringInt
+import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipBox
@@ -1371,6 +1373,115 @@ private fun JvmSettingDownloadSegment(
                 MaterialTheme.colorScheme.onSurfaceVariant
             }
         )
+    }
+}
+
+/**
+ * 主题外观模式选择行。
+ *
+ * 左侧展示外观模式标题与当前模式说明，右侧用分段控件直接切换主题模式；
+ * 选中段填充主题主色，未选中段保持透明，颜色完全跟随 MaterialTheme 不引入额外色值。
+ *
+ * @param selected 当前已保存的主题模式，用于标记选中段。
+ * @param onSelected 用户切换主题模式时的回调，设置写入由调用方负责。
+ */
+@Composable
+internal fun JvmSettingThemeRow(
+    selected: ThemeTypeEnum,
+    onSelected: (ThemeTypeEnum) -> Unit,
+) {
+    // 分段顺序与设计稿保持一致：跟随系统、浅色、深色。
+    val options = listOf(ThemeTypeEnum.SYSTEM, ThemeTypeEnum.LIGHT, ThemeTypeEnum.DARK)
+    JvmSettingBaseRow(
+        icon = Res.drawable.settings_24px,
+        title = stringResource(Res.string.jvm_setting_components_text_04),
+        description = selected.themeModeDescription(),
+        trailing = {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .border(
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f)),
+                        RoundedCornerShape(6.dp)
+                    )
+                    .padding(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                options.forEach { theme ->
+                    JvmSettingThemeSegment(
+                        label = stringResource(theme.toResStringInt()),
+                        selected = selected == theme,
+                        onClick = {
+                            // 重复点击当前模式不写入设置，减少无意义的数据更新。
+                            if (selected != theme) {
+                                onSelected(theme)
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    )
+}
+
+/**
+ * 主题外观模式的单个分段按钮。
+ *
+ * @param label 分段展示的主题名称。
+ * @param selected 是否为当前选中段。
+ * @param onClick 点击该分段时触发。
+ */
+@Composable
+private fun JvmSettingThemeSegment(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(4.dp)
+    Box(
+        modifier = Modifier
+            .height(26.dp)
+            .widthIn(min = 40.dp)
+            .clip(shape)
+            .background(
+                if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    Color.Transparent
+                }
+            )
+            .selectable(
+                selected = selected,
+                role = Role.RadioButton,
+                onClick = onClick
+            )
+            // 分段横向内边距收紧，保证三个分段能放进设置页的单列设置项宽度。
+            .padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        XyText(
+            text = label,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+            color = if (selected) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
+    }
+}
+
+/**
+ * 主题模式对应的说明文案，沿用界面设置页原有的主题描述。
+ */
+@Composable
+private fun ThemeTypeEnum.themeModeDescription(): String {
+    return when (this) {
+        ThemeTypeEnum.SYSTEM -> stringResource(Res.string.jvm_interface_setting_screen_text_10)
+        ThemeTypeEnum.LIGHT -> stringResource(Res.string.jvm_interface_setting_screen_text_14)
+        ThemeTypeEnum.DARK -> stringResource(Res.string.jvm_interface_setting_screen_text_13)
     }
 }
 

@@ -449,6 +449,7 @@
     <string name="jvm_setting_components_text_01">路径尚未生成</string>
     <string name="jvm_setting_components_text_02">点击复制</string>
     <string name="jvm_setting_components_text_03">限制并行下载任务数量，避免占满带宽。</string>
+    <string name="jvm_setting_components_text_04">外观模式</string>
     <string name="jvm_song_row_text_01">查看</string>
     <string name="jvm_about_screen_text_01">%1$s 类</string>
     <string name="jvm_about_screen_text_02">查看桌面端应用信息、当前版本、项目入口和核心技术栈。</string>
@@ -928,6 +929,7 @@
     <string name="jvm_setting_screen_text_57">常规</string>
     <string name="jvm_setting_screen_text_58">音频音质</string>
     <string name="jvm_setting_screen_text_59">缓存</string>
+    <string name="jvm_setting_screen_text_60">界面</string>
     <string name="jvm_streaming_quality_screen_text_01">选择桌面端播放时使用的在线音频品质和服务端转码格式。当前桌面端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。</string>
     <string name="jvm_streaming_quality_screen_text_02">播放品质</string>
     <string name="jvm_streaming_quality_screen_text_03">应用范围</string>

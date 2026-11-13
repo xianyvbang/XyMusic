@@ -46,6 +46,7 @@ import cn.xybbz.router.About
 import cn.xybbz.router.CustomApi
 import cn.xybbz.router.InterfaceSetting
 import cn.xybbz.router.LanguageConfig
+import cn.xybbz.router.SetBackgroundImage
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.components.JvmSettingDownloadRow
@@ -53,6 +54,7 @@ import cn.xybbz.ui.components.JvmSettingGroup
 import cn.xybbz.ui.components.JvmSettingGroupGrid
 import cn.xybbz.ui.components.JvmSettingHeadline
 import cn.xybbz.ui.components.JvmSettingLazyColumn
+import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPathRow
 import cn.xybbz.ui.components.JvmSettingPickRow
@@ -60,9 +62,11 @@ import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingTabBar
 import cn.xybbz.ui.components.JvmSettingTabDivider
 import cn.xybbz.ui.components.JvmSettingTabItem
+import cn.xybbz.ui.components.JvmSettingThemeRow
 import cn.xybbz.ui.components.displayAudioBitRateText
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.viewmodel.InterfaceSettingViewModel
 import cn.xybbz.viewmodel.MemoryManagementViewModel
 import cn.xybbz.viewmodel.ProxyConfigViewModel
 import cn.xybbz.viewmodel.SettingsViewModel
@@ -80,6 +84,8 @@ import xymusic.composeapp.generated.resources.album_24px
 import xymusic.composeapp.generated.resources.album_playback_history
 import xymusic.composeapp.generated.resources.allow_simultaneous_playback
 import xymusic.composeapp.generated.resources.av_timer_24px
+import xymusic.composeapp.generated.resources.background_image
+import xymusic.composeapp.generated.resources.background_image_setting
 import xymusic.composeapp.generated.resources.broadcast_while_down
 import xymusic.composeapp.generated.resources.close_24px
 import xymusic.composeapp.generated.resources.connect
@@ -90,6 +96,11 @@ import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.enabled_sync_play_progress
 import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.interface_settings
+import xymusic.composeapp.generated.resources.jvm_interface_setting_screen_text_01
+import xymusic.composeapp.generated.resources.jvm_interface_setting_screen_text_02
+import xymusic.composeapp.generated.resources.jvm_interface_setting_screen_text_04
+import xymusic.composeapp.generated.resources.jvm_interface_setting_screen_text_19
+import xymusic.composeapp.generated.resources.jvm_setting_screen_text_60
 import xymusic.composeapp.generated.resources.language
 import xymusic.composeapp.generated.resources.music_note_24px
 import xymusic.composeapp.generated.resources.password_24px
@@ -112,6 +123,8 @@ fun JvmSettingScreen(
     memoryManagementViewModel: MemoryManagementViewModel = koinViewModel<MemoryManagementViewModel>(),
     // 网络分组内嵌原代理设置页的开关、地址与连通性测试能力，复用其视图模型。
     proxyConfigViewModel: ProxyConfigViewModel = koinViewModel<ProxyConfigViewModel>(),
+    // 界面分组内嵌原界面设置页的主题外观与背景图片入口，复用其视图模型读写主题。
+    interfaceSettingViewModel: InterfaceSettingViewModel = koinViewModel<InterfaceSettingViewModel>(),
 ) {
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
@@ -121,6 +134,15 @@ fun JvmSettingScreen(
     val songStoragePath = settingsViewModel.songStoragePath
     val copySuccess = stringResource(Res.string.copy_success)
     val canShowICloudPasswordSync = supportsICloudPasswordSync()
+    // 当前主题用于界面分组回显，跟随设置流实时刷新。
+    val themeType by interfaceSettingViewModel.settingsManager.themeType.collectAsState()
+    // 背景图片路径用于判断界面分组入口行的状态文案。
+    val backgroundImagePath by settingsManager.imageFilePath.collectAsState()
+    val backgroundImageStatus = if (backgroundImagePath.isNullOrBlank()) {
+        stringResource(Res.string.jvm_interface_setting_screen_text_02)
+    } else {
+        stringResource(Res.string.jvm_interface_setting_screen_text_01)
+    }
     val selectedQuality = TranscodeAudioBitRateType
         .getTranscodeAudioBitRate(settings.wifiNetworkAudioBitRate)
         .displayAudioBitRateText()
@@ -143,6 +165,8 @@ fun JvmSettingScreen(
         JvmSettingTabItem(key = "general", title = stringResource(Res.string.jvm_setting_screen_text_57)),
         JvmSettingTabItem(key = "storage", title = stringResource(Res.string.jvm_setting_screen_text_14)),
         JvmSettingTabItem(key = "connect", title = stringResource(Res.string.connect)),
+        // 界面放在通用之前，集中主题外观与背景图片等桌面端视觉设置。
+        JvmSettingTabItem(key = "interface", title = stringResource(Res.string.jvm_setting_screen_text_60)),
         JvmSettingTabItem(key = "common", title = stringResource(Res.string.jvm_setting_screen_text_23)),
     )
     // 设置页使用独立滚动区：头部与标签固定，只有下方内容滚动
@@ -444,6 +468,43 @@ fun JvmSettingScreen(
                                 proxyConfigViewModel = proxyConfigViewModel,
                                 modifier = Modifier.width(groupWidth),
                             )
+                        }
+                    }
+                }
+
+                item(key = "interface") {
+                    Column {
+                        // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
+                        JvmSettingTabDivider()
+                        JvmSettingGroupGrid { groupWidth ->
+                            // 外观分组：迁移原界面设置页的主题外观，改为单行加右侧分段选择的外观模式设置。
+                            // 使用普通分组让设置行只占一列宽度，避免横向上铺满整个内容区。
+                            JvmSettingGroup(
+                                modifier = Modifier.width(groupWidth),
+                                title = stringResource(Res.string.jvm_interface_setting_screen_text_04),
+                            ) {
+                                JvmSettingThemeRow(
+                                    selected = themeType,
+                                    // 主题写入由视图模型内部切换到协程，这里直接透传选择结果。
+                                    onSelected = interfaceSettingViewModel::setThemeTypeData,
+                                )
+                            }
+
+                            // 背景图片分组：沿用原界面设置页的跳转入口，保留背景图片页的选择与清除能力。
+                            JvmSettingGroup(
+                                modifier = Modifier.width(groupWidth),
+                                title = stringResource(Res.string.background_image_setting),
+                            ) {
+                                JvmSettingNavigationRow(
+                                    icon = Res.drawable.album_24px,
+                                    title = stringResource(Res.string.background_image),
+                                    description = stringResource(Res.string.jvm_interface_setting_screen_text_19),
+                                    value = backgroundImageStatus,
+                                    onClick = {
+                                        navigator.navigate(SetBackgroundImage)
+                                    },
+                                )
+                            }
                         }
                     }
                 }
