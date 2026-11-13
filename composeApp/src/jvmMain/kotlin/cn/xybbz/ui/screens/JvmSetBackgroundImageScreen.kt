@@ -259,10 +259,19 @@ private fun JvmBackgroundPreviewWorkbench(
                 contentScale = ContentScale.Crop,
                 contentDescription = stringResource(Res.string.background_image),
             )
+            // 与主壳一致：背景图上垫一层主题背景色遮罩，预览效果即实际效果
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .background(colorScheme.scrim.copy(alpha = 0.18f))
+                    .background(
+                        colorScheme.background.copy(
+                            alpha = if (XyTheme.configs.isDarkTheme) {
+                                BackgroundImageScrimAlphaDark
+                            } else {
+                                BackgroundImageScrimAlphaLight
+                            }
+                        )
+                    )
             )
             JvmBackgroundMockDesktopOverlay(
                 modifier = Modifier
@@ -320,7 +329,7 @@ private fun JvmBackgroundMockDesktopOverlay(modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
         shape = shape,
-        color = colorScheme.surface.copy(alpha = 0.42f),
+        color = colorScheme.surface.copy(alpha = 0.86f),
         border = BorderStroke(
             width = 1.dp,
             color = colorScheme.onSurface.copy(alpha = 0.14f)
@@ -344,7 +353,7 @@ private fun JvmBackgroundMockTopBar() {
         modifier = Modifier
             .fillMaxWidth()
             .height(JvmSettingBackgroundPreviewTopBarHeight)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.54f))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.90f))
             .border(
                 BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
                 RoundedCornerShape(0.dp)
@@ -385,7 +394,7 @@ private fun JvmBackgroundMockMainArea(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .width(JvmSettingBackgroundPreviewSideWidth)
                         .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.42f))
+                        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.90f))
                         .border(
                             BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
                             RoundedCornerShape(0.dp)
@@ -433,7 +442,7 @@ private fun JvmBackgroundMockPlayerBar() {
         modifier = Modifier
             .fillMaxWidth()
             .height(JvmSettingBackgroundPreviewPlayerHeight)
-            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.72f))
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.90f))
             .border(
                 BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
                 RoundedCornerShape(0.dp)

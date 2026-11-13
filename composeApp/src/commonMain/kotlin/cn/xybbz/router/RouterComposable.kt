@@ -19,15 +19,11 @@
 package cn.xybbz.router
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.stringResource
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import xymusic.composeapp.generated.resources.Res
 import cn.xybbz.ui.screens.AboutScreen
 import cn.xybbz.ui.screens.AlbumInfoScreen
 import cn.xybbz.ui.screens.AlbumScreen
@@ -55,9 +51,6 @@ import cn.xybbz.ui.screens.SelectLibraryScreen
 import cn.xybbz.ui.screens.SetBackgroundImageScreen
 import cn.xybbz.ui.screens.SettingScreen
 import cn.xybbz.ui.screens.StreamingQualityScreen
-import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyImage
-import xymusic.composeapp.generated.resources.background_image
 
 /**
  * 节点页面
@@ -65,11 +58,6 @@ import xymusic.composeapp.generated.resources.background_image
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.nodeComposable(noinline content: @Composable (T) -> Unit) {
     entry<T> {
         Box {
-            XyImage(
-                modifier = Modifier.fillMaxSize(),
-                model = XyTheme.brash.backgroundImageUri,
-                contentDescription = stringResource(Res.string.background_image),
-            )
             content(it)
         }
     }
