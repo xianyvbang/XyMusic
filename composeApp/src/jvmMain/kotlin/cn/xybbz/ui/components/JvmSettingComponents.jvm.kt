@@ -80,6 +80,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyText
@@ -1244,6 +1245,8 @@ private fun JvmSettingPickTag(text: String) {
 /**
  * 路径展示设置行。
  *
+ * 路径固定单行展示，超出设置项宽度时省略；鼠标悬停时弹出提示气泡展示完整路径。
+ *
  * @param icon 行首图标资源。
  * @param title 设置项标题。
  * @param path 当前路径内容，空值时展示占位文案。
@@ -1256,17 +1259,25 @@ internal fun JvmSettingPathRow(
     path: String,
     onClick: () -> Unit,
 ) {
-    JvmSettingBaseRow(
-        icon = icon,
-        title = title,
-        description = path.ifBlank { stringResource(Res.string.jvm_setting_components_text_01) },
-        descriptionStyle = JvmSettingRowDescriptionStyle.Path,
-        descriptionMaxLines = 2,
-        onClick = onClick,
-        trailing = {
-            JvmSettingValuePill(value = stringResource(Res.string.jvm_setting_components_text_02))
-        }
-    )
+    // 复用同一份行内容，空路径时无需附加悬停提示。
+    val row: @Composable () -> Unit = {
+        JvmSettingBaseRow(
+            icon = icon,
+            title = title,
+            description = path.ifBlank { stringResource(Res.string.jvm_setting_components_text_01) },
+            descriptionStyle = JvmSettingRowDescriptionStyle.Path,
+            descriptionMaxLines = 1,
+            onClick = onClick,
+            trailing = {
+                JvmSettingValuePill(value = stringResource(Res.string.jvm_setting_components_text_02))
+            }
+        )
+    }
+    if (path.isBlank()) {
+        row()
+    } else {
+        DesktopTooltipBox(tooltip = path) { row() }
+    }
 }
 
 /**

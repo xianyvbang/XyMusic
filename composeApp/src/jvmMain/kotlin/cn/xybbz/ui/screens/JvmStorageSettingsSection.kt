@@ -56,9 +56,9 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
+import cn.xybbz.ui.components.JvmSettingGroup
 import cn.xybbz.ui.components.JvmSettingGroupVerticalGap
 import cn.xybbz.ui.components.JvmSettingItemFlow
-import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingRowDescriptionStyle
 import cn.xybbz.ui.components.JvmSettingWideGroup
 import cn.xybbz.ui.components.rememberJvmFileKitDialogSettings
@@ -272,8 +272,9 @@ private fun JvmStorageLocationGroup(
         }
     }
 
-    JvmSettingWideGroup(title = stringResource(Res.string.jvm_memory_management_screen_text_25)) {
+    JvmSettingGroup(title = stringResource(Res.string.jvm_memory_management_screen_text_25)) {
         // 目录行直接展示完整路径，点击行尾“调整”拉起系统目录选择器。
+        // 两个操作项交由分组容器横向排列，窄窗口下自动换行。
         JvmSettingBaseRow(
             icon = Res.drawable.folder_managed_24px,
             title = cachePathTitle,
@@ -316,7 +317,6 @@ private fun JvmStorageLocationGroup(
                 )
             },
         )
-        JvmSettingNote(text = stringResource(Res.string.jvm_memory_management_screen_text_27))
     }
 }
 
