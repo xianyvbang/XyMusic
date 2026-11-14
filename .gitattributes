@@ -1,0 +1,25 @@
+# 文本文件统一使用 LF 行尾，避免跨平台（Windows/macOS/Linux）行尾差异
+* text=auto eol=lf
+
+# Windows 批处理脚本必须使用 CRLF 行尾才能正常执行
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 常见二进制文件不做行尾转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.jar binary
+*.apk binary
+*.so binary
+*.dll binary
+*.dylib binary
+*.exe binary
+*.class binary
+*.bin binary
+*.so.* binary
