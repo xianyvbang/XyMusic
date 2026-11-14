@@ -21,13 +21,11 @@ import cn.xybbz.ui.screens.JvmDownloadScreen
 import cn.xybbz.ui.screens.JvmFavoriteScreen
 import cn.xybbz.ui.screens.JvmGenresInfoScreen
 import cn.xybbz.ui.screens.JvmGenresScreen
-import cn.xybbz.ui.screens.JvmInterfaceSettingScreen
 import cn.xybbz.ui.screens.JvmLanguageConfigScreen
 import cn.xybbz.ui.screens.JvmLocalScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
 import cn.xybbz.ui.screens.JvmSelectLibraryScreen
-import cn.xybbz.ui.screens.JvmSetBackgroundImageScreen
 import cn.xybbz.ui.screens.JvmSettingScreen
 
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.desktopNode(noinline content: @Composable (T) -> Unit) {
@@ -55,7 +53,6 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<Setting> { JvmSettingScreen() }
     desktopNode<ConnectionManagement> { JvmConnectionManagement() }
     desktopNode<ConnectionInfo> { JvmConnectionConfigInfoScreen(connectionId = it.connectionId) }
-    desktopNode<InterfaceSetting> { JvmInterfaceSettingScreen(showBackButton = false) }
     desktopNode<LanguageConfig> { JvmLanguageConfigScreen() }
     desktopNode<Genres> { JvmGenresScreen() }
     desktopNode<GenreInfo> { JvmGenresInfoScreen(genreId = it.genreId) }
@@ -70,7 +67,6 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<DailyRecommend> { JvmDailyRecommendScreen() }
     desktopNode<Download> { JvmDownloadScreen() }
     desktopNode<Local> { JvmLocalScreen() }
-    desktopNode<SetBackgroundImage> { JvmSetBackgroundImageScreen() }
     desktopNode<CustomApi> { JvmCustomApiScreen() }
 }
 

@@ -19,13 +19,17 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,7 +37,9 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.copyTextToClipboard
@@ -44,28 +50,31 @@ import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.router.About
 import cn.xybbz.router.CustomApi
-import cn.xybbz.router.InterfaceSetting
 import cn.xybbz.router.LanguageConfig
-import cn.xybbz.router.SetBackgroundImage
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
+import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingDownloadRow
 import cn.xybbz.ui.components.JvmSettingGroup
 import cn.xybbz.ui.components.JvmSettingGroupGrid
 import cn.xybbz.ui.components.JvmSettingHeadline
 import cn.xybbz.ui.components.JvmSettingLazyColumn
-import cn.xybbz.ui.components.JvmSettingNavigationRow
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPathRow
 import cn.xybbz.ui.components.JvmSettingPickRow
+import cn.xybbz.ui.components.JvmSettingRowDescriptionStyle
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingTabBar
 import cn.xybbz.ui.components.JvmSettingTabDivider
 import cn.xybbz.ui.components.JvmSettingTabItem
 import cn.xybbz.ui.components.JvmSettingThemeRow
+import cn.xybbz.ui.components.JvmSettingWideGroup
 import cn.xybbz.ui.components.displayAudioBitRateText
+import cn.xybbz.ui.components.rememberBackgroundImagePicker
+import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XyIconTextButton
 import cn.xybbz.viewmodel.InterfaceSettingViewModel
 import cn.xybbz.viewmodel.MemoryManagementViewModel
 import cn.xybbz.viewmodel.ProxyConfigViewModel
@@ -84,9 +93,9 @@ import xymusic.composeapp.generated.resources.album_24px
 import xymusic.composeapp.generated.resources.album_playback_history
 import xymusic.composeapp.generated.resources.allow_simultaneous_playback
 import xymusic.composeapp.generated.resources.av_timer_24px
-import xymusic.composeapp.generated.resources.background_image
 import xymusic.composeapp.generated.resources.background_image_setting
 import xymusic.composeapp.generated.resources.broadcast_while_down
+import xymusic.composeapp.generated.resources.clear_image
 import xymusic.composeapp.generated.resources.close_24px
 import xymusic.composeapp.generated.resources.connect
 import xymusic.composeapp.generated.resources.copy_success
@@ -94,18 +103,19 @@ import xymusic.composeapp.generated.resources.customize_lyric_settings
 import xymusic.composeapp.generated.resources.download
 import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.enabled_sync_play_progress
+import xymusic.composeapp.generated.resources.folder_managed_24px
 import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.interface_settings
-import xymusic.composeapp.generated.resources.jvm_interface_setting_screen_text_01
-import xymusic.composeapp.generated.resources.jvm_interface_setting_screen_text_02
 import xymusic.composeapp.generated.resources.jvm_interface_setting_screen_text_04
-import xymusic.composeapp.generated.resources.jvm_interface_setting_screen_text_19
+import xymusic.composeapp.generated.resources.jvm_set_background_image_screen_text_01
+import xymusic.composeapp.generated.resources.jvm_set_background_image_screen_text_20
 import xymusic.composeapp.generated.resources.jvm_setting_screen_text_60
 import xymusic.composeapp.generated.resources.language
 import xymusic.composeapp.generated.resources.music_note_24px
 import xymusic.composeapp.generated.resources.password_24px
 import xymusic.composeapp.generated.resources.queue_music_24px
 import xymusic.composeapp.generated.resources.restart_alt_24px
+import xymusic.composeapp.generated.resources.select_image
 import xymusic.composeapp.generated.resources.settings
 import xymusic.composeapp.generated.resources.settings_24px
 import xymusic.composeapp.generated.resources.song_cache_location
@@ -136,13 +146,20 @@ fun JvmSettingScreen(
     val canShowICloudPasswordSync = supportsICloudPasswordSync()
     // 当前主题用于界面分组回显，跟随设置流实时刷新。
     val themeType by interfaceSettingViewModel.settingsManager.themeType.collectAsState()
-    // 背景图片路径用于判断界面分组入口行的状态文案。
+    // 背景图片路径用于界面分组内嵌的预览与文件信息展示。
     val backgroundImagePath by settingsManager.imageFilePath.collectAsState()
-    val backgroundImageStatus = if (backgroundImagePath.isNullOrBlank()) {
-        stringResource(Res.string.jvm_interface_setting_screen_text_02)
-    } else {
-        stringResource(Res.string.jvm_interface_setting_screen_text_01)
-    }
+    // 是否已选择背景图片，驱动预览、清除按钮与状态标签。
+    val backgroundImageConfigured = !backgroundImagePath.isNullOrBlank()
+    // 从路径中提取文件名，作为文件信息行的标题。
+    val backgroundImageFileName = backgroundImagePath?.toBackgroundImageFileName()
+    // 背景图片选择器：选中后直接写入设置，主界面背景与内嵌预览同步刷新。
+    val backgroundImagePicker = rememberBackgroundImagePicker(
+        onImagePicked = { path ->
+            coroutineScope.launch {
+                settingsManager.setImageFilePath(path)
+            }
+        }
+    )
     val selectedQuality = TranscodeAudioBitRateType
         .getTranscodeAudioBitRate(settings.wifiNetworkAudioBitRate)
         .displayAudioBitRateText()
@@ -490,20 +507,69 @@ fun JvmSettingScreen(
                                 )
                             }
 
-                            // 背景图片分组：沿用原界面设置页的跳转入口，保留背景图片页的选择与清除能力。
-                            JvmSettingGroup(
+                            // 背景图片分组：原独立页的选择/清除与文件信息整体内嵌，避免二次跳转。
+                            // 设置行需要独立控制宽度，不参与普通分组的横向等分，因此改用宽内容分组。
+                            JvmSettingWideGroup(
                                 modifier = Modifier.width(groupWidth),
                                 title = stringResource(Res.string.background_image_setting),
                             ) {
-                                JvmSettingNavigationRow(
-                                    icon = Res.drawable.album_24px,
-                                    title = stringResource(Res.string.background_image),
-                                    description = stringResource(Res.string.jvm_interface_setting_screen_text_19),
-                                    value = backgroundImageStatus,
-                                    onClick = {
-                                        navigator.navigate(SetBackgroundImage)
-                                    },
-                                )
+                                // 限制最大宽度并左对齐，避免单个设置行横向铺满整个内容区。
+                                Box(modifier = Modifier.widthIn(max = JvmSettingBackgroundItemMaxWidth)) {
+                                    // 文件信息行：文件名加完整路径，点击复制；选择/清除按钮放在行尾，按内容宽度排布不横向铺满。
+                                    JvmSettingBaseRow(
+                                        icon = Res.drawable.album_24px,
+                                        title = backgroundImageFileName
+                                            ?: stringResource(Res.string.jvm_set_background_image_screen_text_01),
+                                        description = backgroundImagePath?.takeIf { it.isNotBlank() }
+                                            ?: stringResource(Res.string.jvm_set_background_image_screen_text_20),
+                                        descriptionStyle = JvmSettingRowDescriptionStyle.Path,
+                                        descriptionMaxLines = 2,
+                                        iconSelected = backgroundImageConfigured,
+                                        onClick = if (backgroundImageConfigured) {
+                                            {
+                                                copyTextToClipboard(backgroundImagePath.orEmpty())
+                                                MessageUtils.sendPopTip(copySuccess)
+                                            }
+                                        } else {
+                                            null
+                                        },
+                                        trailing = {
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                XyIconTextButton(
+                                                    onClick = composeClick(onClick = backgroundImagePicker::pickImage),
+                                                    text = stringResource(Res.string.select_image),
+                                                    icon = Res.drawable.folder_managed_24px,
+                                                    // 收紧内边距，让按钮只占自身内容宽度。
+                                                    paddingValues = PaddingValues(
+                                                        horizontal = XyTheme.dimens.contentPadding,
+                                                        vertical = XyTheme.dimens.outerVerticalPadding / 2,
+                                                    ),
+                                                )
+                                                XyIconTextButton(
+                                                    onClick = composeClick(onClick = {
+                                                        coroutineScope.launch {
+                                                            settingsManager.setImageFilePath(null)
+                                                        }
+                                                    }),
+                                                    text = stringResource(Res.string.clear_image),
+                                                    icon = Res.drawable.close_24px,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                                    borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
+                                                    enabled = backgroundImageConfigured,
+                                                    // 与选择按钮保持一致的内边距，两个按钮都按内容宽度排布。
+                                                    paddingValues = PaddingValues(
+                                                        horizontal = XyTheme.dimens.contentPadding,
+                                                        vertical = XyTheme.dimens.outerVerticalPadding / 2,
+                                                    ),
+                                                )
+                                            }
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
@@ -519,9 +585,6 @@ fun JvmSettingScreen(
                                 title = stringResource(Res.string.jvm_setting_screen_text_55),
                             ) {
                                 JvmSettingActionGrid(
-                                    onInterfaceClick = {
-                                        navigator.navigate(InterfaceSetting)
-                                    },
                                     onLanguageClick = {
                                         navigator.navigate(LanguageConfig)
                                     },
@@ -544,22 +607,19 @@ fun JvmSettingScreen(
 /**
  * 设置页通用入口卡片网格。
  *
- * @param onInterfaceClick 界面设置入口点击事件。
  * @param onLanguageClick 语言设置入口点击事件。
  * @param onCustomApiClick 自定义资源入口点击事件。
  * @param onAboutClick 关于页面入口点击事件。
  */
 @Composable
 private fun JvmSettingActionGrid(
-    onInterfaceClick: () -> Unit,
     onLanguageClick: () -> Unit,
     onCustomApiClick: () -> Unit,
     onAboutClick: () -> Unit,
 ) {
-    // 设置页只关心四个固定入口，通用网格负责真正的宽度计算和卡片渲染。
+    // 设置页只关心三个固定入口，通用网格负责真正的宽度计算和卡片渲染。
     JvmSettingActionEntryGrid(
         actionEntries = jvmSettingActionEntries(
-            onInterfaceClick = onInterfaceClick,
             onLanguageClick = onLanguageClick,
             onCustomApiClick = onCustomApiClick,
             onAboutClick = onAboutClick,
@@ -570,23 +630,15 @@ private fun JvmSettingActionGrid(
 }
 
 /**
- * 组装设置页右栏“通用”分组中的四个入口卡片。
+ * 组装设置页右栏“通用”分组中的三个入口卡片。
  */
 @Composable
 private fun jvmSettingActionEntries(
-    onInterfaceClick: () -> Unit,
     onLanguageClick: () -> Unit,
     onCustomApiClick: () -> Unit,
     onAboutClick: () -> Unit,
 ): List<JvmSettingActionEntry> {
     return listOf(
-        JvmSettingActionEntry(
-            icon = Res.drawable.settings_24px,
-            kicker = stringResource(Res.string.jvm_setting_screen_text_26),
-            title = stringResource(Res.string.interface_settings),
-            description = stringResource(Res.string.jvm_setting_screen_text_27),
-            onClick = onInterfaceClick,
-        ),
         JvmSettingActionEntry(
             icon = Res.drawable.info_24px,
             kicker = stringResource(Res.string.jvm_language_config_screen_text_02),
@@ -654,3 +706,13 @@ private fun String.formatDescriptionText(): String {
         else -> stringResource(Res.string.jvm_streaming_quality_screen_text_25)
     }
 }
+
+/** 从背景图片路径中提取文件名，用于文件信息行标题展示。 */
+private fun String.toBackgroundImageFileName(): String {
+    return substringAfterLast('\\')
+        .substringAfterLast('/')
+        .ifBlank { this }
+}
+
+/** 背景图片设置行的最大宽度：避免单个设置行横向铺满整个内容区。 */
+private val JvmSettingBackgroundItemMaxWidth = 560.dp

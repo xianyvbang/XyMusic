@@ -118,18 +118,6 @@ internal val JvmSettingConnectionFormCardMinHeight = 118.dp
 /** JVM 设置页内容卡片切换为双列的统一宽度断点。 */
 internal val JvmSettingContentGridTwoColumnBreakpoint = 640.dp
 
-/** JVM 设置页背景预览叠加层在窄宽度下隐藏侧栏的断点。 */
-internal val JvmSettingBackgroundPreviewCompactBreakpoint = 560.dp
-
-/** JVM 设置页背景预览中模拟桌面播放器的底栏高度。 */
-internal val JvmSettingBackgroundPreviewPlayerHeight = 58.dp
-
-/** JVM 设置页背景预览中模拟桌面顶栏的高度。 */
-internal val JvmSettingBackgroundPreviewTopBarHeight = 44.dp
-
-/** JVM 设置页背景预览中模拟桌面侧栏的宽度。 */
-internal val JvmSettingBackgroundPreviewSideWidth = 124.dp
-
 /** JVM 设置页媒体库列表单行最小高度。 */
 internal val JvmSettingLibraryRowMinHeight = 76.dp
 

@@ -64,7 +64,6 @@ import cn.xybbz.router.FavoriteList
 import cn.xybbz.router.GenreInfo
 import cn.xybbz.router.Genres
 import cn.xybbz.router.Home
-import cn.xybbz.router.InterfaceSetting
 import cn.xybbz.router.LanguageConfig
 import cn.xybbz.router.Local
 import cn.xybbz.router.MemoryManagement
@@ -72,7 +71,6 @@ import cn.xybbz.router.Music
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.Search
 import cn.xybbz.router.SelectLibrary
-import cn.xybbz.router.SetBackgroundImage
 import cn.xybbz.router.Setting
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -672,14 +670,12 @@ private fun currentRouteTitleRes(route: Any): StringResource? = when (route) {
     is Connection -> Res.string.server_connection
     is ConnectionInfo -> Res.string.connection_info
     MemoryManagement -> Res.string.storage_management
-    InterfaceSetting -> Res.string.interface_settings
     LanguageConfig -> Res.string.language
     About -> Res.string.about
     CacheLimit -> Res.string.cache_limit
     is SelectLibrary -> Res.string.media_library_selection
     DailyRecommend -> Res.string.daily_recommendations
     Download -> Res.string.download
-    SetBackgroundImage -> Res.string.background_image_setting
     CustomApi -> Res.string.customize_lyric_settings
     else -> null
 }
