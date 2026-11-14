@@ -50,7 +50,6 @@ import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.router.About
 import cn.xybbz.router.CustomApi
-import cn.xybbz.router.LanguageConfig
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.components.JvmSettingBaseRow
@@ -76,6 +75,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyIconTextButton
 import cn.xybbz.viewmodel.InterfaceSettingViewModel
+import cn.xybbz.viewmodel.LanguageConfigViewModel
 import cn.xybbz.viewmodel.MemoryManagementViewModel
 import cn.xybbz.viewmodel.ProxyConfigViewModel
 import cn.xybbz.viewmodel.SettingsViewModel
@@ -135,6 +135,8 @@ fun JvmSettingScreen(
     proxyConfigViewModel: ProxyConfigViewModel = koinViewModel<ProxyConfigViewModel>(),
     // 界面分组内嵌原界面设置页的主题外观与背景图片入口，复用其视图模型读写主题。
     interfaceSettingViewModel: InterfaceSettingViewModel = koinViewModel<InterfaceSettingViewModel>(),
+    // 语言分组内嵌原本地化页的语言选择与预览能力，复用其视图模型读写当前语言。
+    languageConfigViewModel: LanguageConfigViewModel = koinViewModel<LanguageConfigViewModel>(),
 ) {
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
@@ -184,6 +186,8 @@ fun JvmSettingScreen(
         JvmSettingTabItem(key = "connect", title = stringResource(Res.string.connect)),
         // 界面放在通用之前，集中主题外观与背景图片等桌面端视觉设置。
         JvmSettingTabItem(key = "interface", title = stringResource(Res.string.jvm_setting_screen_text_60)),
+        // 语言紧跟在界面之后，聚合语言选择、文本预览与缺失翻译说明。
+        JvmSettingTabItem(key = "language", title = stringResource(Res.string.language)),
         JvmSettingTabItem(key = "common", title = stringResource(Res.string.jvm_setting_screen_text_23)),
     )
     // 设置页使用独立滚动区：头部与标签固定，只有下方内容滚动
@@ -575,6 +579,20 @@ fun JvmSettingScreen(
                     }
                 }
 
+                item(key = "language") {
+                    Column {
+                        // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
+                        JvmSettingTabDivider()
+                        // 语言分区整块内嵌原本地化页能力，分组间距由分区内部统一控制。
+                        JvmSettingGroupGrid { groupWidth ->
+                            JvmLanguageSettingsSection(
+                                languageConfigViewModel = languageConfigViewModel,
+                                modifier = Modifier.width(groupWidth),
+                            )
+                        }
+                    }
+                }
+
                 item(key = "common") {
                     Column {
                         // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
@@ -585,9 +603,6 @@ fun JvmSettingScreen(
                                 title = stringResource(Res.string.jvm_setting_screen_text_55),
                             ) {
                                 JvmSettingActionGrid(
-                                    onLanguageClick = {
-                                        navigator.navigate(LanguageConfig)
-                                    },
                                     onCustomApiClick = {
                                         navigator.navigate(CustomApi)
                                     },
@@ -607,20 +622,17 @@ fun JvmSettingScreen(
 /**
  * 设置页通用入口卡片网格。
  *
- * @param onLanguageClick 语言设置入口点击事件。
  * @param onCustomApiClick 自定义资源入口点击事件。
  * @param onAboutClick 关于页面入口点击事件。
  */
 @Composable
 private fun JvmSettingActionGrid(
-    onLanguageClick: () -> Unit,
     onCustomApiClick: () -> Unit,
     onAboutClick: () -> Unit,
 ) {
-    // 设置页只关心三个固定入口，通用网格负责真正的宽度计算和卡片渲染。
+    // 设置页只关心两个固定入口，通用网格负责真正的宽度计算和卡片渲染。
     JvmSettingActionEntryGrid(
         actionEntries = jvmSettingActionEntries(
-            onLanguageClick = onLanguageClick,
             onCustomApiClick = onCustomApiClick,
             onAboutClick = onAboutClick,
         ),
@@ -630,22 +642,14 @@ private fun JvmSettingActionGrid(
 }
 
 /**
- * 组装设置页右栏“通用”分组中的三个入口卡片。
+ * 组装设置页右栏“通用”分组中的两个入口卡片。
  */
 @Composable
 private fun jvmSettingActionEntries(
-    onLanguageClick: () -> Unit,
     onCustomApiClick: () -> Unit,
     onAboutClick: () -> Unit,
 ): List<JvmSettingActionEntry> {
     return listOf(
-        JvmSettingActionEntry(
-            icon = Res.drawable.info_24px,
-            kicker = stringResource(Res.string.jvm_language_config_screen_text_02),
-            title = stringResource(Res.string.language),
-            description = stringResource(Res.string.jvm_setting_screen_text_28),
-            onClick = onLanguageClick,
-        ),
         JvmSettingActionEntry(
             icon = Res.drawable.music_note_24px,
             kicker = stringResource(Res.string.jvm_setting_screen_text_29),

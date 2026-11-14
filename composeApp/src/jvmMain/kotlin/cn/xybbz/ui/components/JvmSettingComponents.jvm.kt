@@ -1117,6 +1117,7 @@ internal fun JvmSettingNavigationRow(
  * @param description 选项说明文案。
  * @param selected 是否为当前选中项。
  * @param tag 右侧标签文案；为空或空白时不展示。
+ * @param enabled 是否允许点击，禁用时降低整体透明度并移除点击反馈。
  * @param onClick 点击该选项时触发。
  */
 @Composable
@@ -1125,10 +1126,15 @@ internal fun JvmSettingPickRow(
     description: String,
     selected: Boolean,
     tag: String? = null,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
+    // 禁用项不展示悬停底色，避免与可点击项混淆。
+    val rowHovered = enabled && hovered
+    // 禁用时整体降低内容透明度，与开关类设置项保持一致的禁用观感。
+    val contentAlpha = if (enabled) 1f else 0.48f
     // 分组内横向排列时由分组统一下发固定宽度，与开关类设置项一样支持一行三个。
     val itemWidth = LocalJvmSettingItemWidth.current
 
@@ -1143,7 +1149,7 @@ internal fun JvmSettingPickRow(
             )
             .clip(RoundedCornerShape(7.dp))
             .background(
-                if (hovered) {
+                if (rowHovered) {
                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
                 } else {
                     Color.Transparent
@@ -1151,8 +1157,10 @@ internal fun JvmSettingPickRow(
             )
             .jvmHoverDebounceClickable(
                 interactionSource = interactionSource,
+                enabled = enabled,
                 role = Role.RadioButton,
-                onClick = onClick,
+                // 禁用项不挂点击回调，避免发出无效的语言切换请求。
+                onClick = if (enabled) onClick else null,
             )
             // 与其他设置项保持一致的行高，保证同一分组内各行高度统一。
             .heightIn(min = XyTheme.dimens.itemHeight)
@@ -1168,6 +1176,7 @@ internal fun JvmSettingPickRow(
         RadioButton(
             modifier = Modifier.size(20.dp),
             selected = selected,
+            enabled = enabled,
             onClick = null,
             colors = RadioButtonDefaults.colors(
                 selectedColor = MaterialTheme.colorScheme.primary,
@@ -1182,7 +1191,7 @@ internal fun JvmSettingPickRow(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -1192,7 +1201,7 @@ internal fun JvmSettingPickRow(
                     fontSize = 11.5.sp,
                     lineHeight = 16.sp
                 ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
