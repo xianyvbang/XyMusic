@@ -482,6 +482,16 @@
     <string name="jvm_about_screen_text_29">桌面端界面框架。</string>
     <string name="jvm_about_screen_text_30">桌面端播放能力。</string>
     <string name="jvm_about_screen_text_31">跨平台音乐客户端，面向自托管音乐服务和本地桌面播放体验。</string>
+    <string name="jvm_about_screen_text_32">界面框架</string>
+    <string name="jvm_about_screen_text_33">共享业务逻辑与平台实现。</string>
+    <string name="jvm_about_screen_text_34">应用构建版本。</string>
+    <string name="jvm_about_screen_text_35">桌面端运行环境。</string>
+    <string name="jvm_about_screen_text_36">开源仓库</string>
+    <string name="jvm_about_screen_text_37">版本</string>
+    <string name="jvm_about_screen_text_38">已是最新</string>
+    <string name="jvm_about_screen_text_39">系统</string>
+    <string name="jvm_about_screen_text_40">检查更新</string>
+    <string name="jvm_about_screen_text_41">更新与链接</string>
     <string name="jvm_cache_limit_screen_text_01">%1$s · 已自动迁移</string>
     <string name="jvm_cache_limit_screen_text_02">把边下边播产生的播放缓存上限做成可扫读的容量面板。固定档位适合给桌面磁盘预留明确空间预算。</string>
     <string name="jvm_cache_limit_screen_text_03">容量策略</string>

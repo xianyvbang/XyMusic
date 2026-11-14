@@ -43,14 +43,10 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.copyTextToClipboard
-import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.info.supportsICloudPasswordSync
 import cn.xybbz.config.setting.JvmAutoStartManager
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.music.cacheUpperLimitOptions
-import cn.xybbz.router.About
-import cn.xybbz.ui.components.JvmSettingActionEntry
-import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingDownloadRow
 import cn.xybbz.ui.components.JvmSettingGroup
@@ -73,6 +69,7 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyIconTextButton
+import cn.xybbz.viewmodel.AboutViewModel
 import cn.xybbz.viewmodel.CustomLyricsViewModel
 import cn.xybbz.viewmodel.InterfaceSettingViewModel
 import cn.xybbz.viewmodel.LanguageConfigViewModel
@@ -103,7 +100,6 @@ import xymusic.composeapp.generated.resources.download
 import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.enabled_sync_play_progress
 import xymusic.composeapp.generated.resources.folder_managed_24px
-import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.interface_settings
 import xymusic.composeapp.generated.resources.jvm_interface_setting_screen_text_04
 import xymusic.composeapp.generated.resources.jvm_set_background_image_screen_text_01
@@ -137,8 +133,9 @@ fun JvmSettingScreen(
     languageConfigViewModel: LanguageConfigViewModel = koinViewModel<LanguageConfigViewModel>(),
     // 自定义资源分组内嵌原自定义 API 设置页的接口配置能力，复用其视图模型读写歌词与封面接口。
     customLyricsViewModel: CustomLyricsViewModel = koinViewModel<CustomLyricsViewModel>(),
+    // 关于分组内嵌原关于页的品牌信息、版本读数与应用入口，复用其视图模型刷新平台版本。
+    aboutViewModel: AboutViewModel = koinViewModel<AboutViewModel>(),
 ) {
-    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
     val settingsManager = settingsViewModel.settingsManager
     val settings = settingsViewModel.settingDataNow
@@ -190,7 +187,8 @@ fun JvmSettingScreen(
         JvmSettingTabItem(key = "language", title = stringResource(Res.string.language)),
         // 自定义资源紧跟在语言之后，承载原自定义 API 设置页的歌词与封面接口配置。
         JvmSettingTabItem(key = "custom", title = stringResource(Res.string.jvm_setting_screen_text_61)),
-        JvmSettingTabItem(key = "common", title = stringResource(Res.string.jvm_setting_screen_text_23)),
+        // 关于放在最后，承载迁移自独立关于页的应用信息、更新、链接与技术栈。
+        JvmSettingTabItem(key = "about", title = stringResource(Res.string.about)),
     )
     // 设置页使用独立滚动区：头部与标签固定，只有下方内容滚动
     val lazyState = rememberLazyListState()
@@ -607,62 +605,20 @@ fun JvmSettingScreen(
                     }
                 }
 
-                item(key = "common") {
+                item(key = "about") {
                     Column {
                         // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
                         JvmSettingTabDivider()
-                        JvmSettingGroupGrid { groupWidth ->
-                            JvmSettingGroup(
-                                modifier = Modifier.width(groupWidth),
-                                title = stringResource(Res.string.jvm_setting_screen_text_55),
-                            ) {
-                                JvmSettingActionGrid(
-                                    onAboutClick = {
-                                        navigator.navigate(About)
-                                    },
-                                )
-                            }
-                        }
+                        // 关于分区：品牌行、读数条与应用信息、更新、链接、技术栈四组内容。
+                        JvmAboutSettingsSection(
+                            aboutViewModel = aboutViewModel,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
                 }
             }
         }
     }
-}
-
-/**
- * 设置页通用入口卡片网格。
- *
- * @param onAboutClick 关于页面入口点击事件。
- */
-@Composable
-private fun JvmSettingActionGrid(
-    onAboutClick: () -> Unit,
-) {
-    // 设置页只关心关于入口，通用网格负责真正的宽度计算和卡片渲染。
-    JvmSettingActionEntryGrid(
-        actionEntries = jvmSettingActionEntries(onAboutClick = onAboutClick),
-        // 通用入口放在双列分组内，卡片平分分组宽度，保持设计稿的两列卡片排布。
-        fillTwoColumnWidth = true,
-    )
-}
-
-/**
- * 组装设置页右栏“通用”分组中的入口卡片。
- */
-@Composable
-private fun jvmSettingActionEntries(
-    onAboutClick: () -> Unit,
-): List<JvmSettingActionEntry> {
-    return listOf(
-        JvmSettingActionEntry(
-            icon = Res.drawable.info_24px,
-            kicker = stringResource(Res.string.jvm_setting_screen_text_31),
-            title = stringResource(Res.string.about),
-            description = stringResource(Res.string.jvm_setting_screen_text_32),
-            onClick = onAboutClick,
-        ),
-    )
 }
 
 /** 品质档位的名称文案。 */
