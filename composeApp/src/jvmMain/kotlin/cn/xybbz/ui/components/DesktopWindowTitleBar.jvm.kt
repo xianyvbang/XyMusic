@@ -57,7 +57,6 @@ import cn.xybbz.router.CacheLimit
 import cn.xybbz.router.Connection
 import cn.xybbz.router.ConnectionInfo
 import cn.xybbz.router.ConnectionManagement
-import cn.xybbz.router.CustomApi
 import cn.xybbz.router.DailyRecommend
 import cn.xybbz.router.Download
 import cn.xybbz.router.FavoriteList
@@ -99,7 +98,6 @@ import xymusic.composeapp.generated.resources.cancel_24px
 import xymusic.composeapp.generated.resources.clear
 import xymusic.composeapp.generated.resources.connection_info
 import xymusic.composeapp.generated.resources.connection_management
-import xymusic.composeapp.generated.resources.customize_lyric_settings
 import xymusic.composeapp.generated.resources.daily_recommendations
 import xymusic.composeapp.generated.resources.dark
 import xymusic.composeapp.generated.resources.download
@@ -676,7 +674,6 @@ private fun currentRouteTitleRes(route: Any): StringResource? = when (route) {
     is SelectLibrary -> Res.string.media_library_selection
     DailyRecommend -> Res.string.daily_recommendations
     Download -> Res.string.download
-    CustomApi -> Res.string.customize_lyric_settings
     else -> null
 }
 

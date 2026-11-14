@@ -55,7 +55,6 @@ import androidx.compose.ui.unit.sp
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.ui.components.JvmSettingContentGridTwoColumnBreakpoint
 import cn.xybbz.ui.components.JvmSettingGroupVerticalGap
-import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingWideGroup
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
@@ -68,9 +67,6 @@ import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.custom_cover_api_hint
 import xymusic.composeapp.generated.resources.jvm_connection_new_screen_text_28
 import xymusic.composeapp.generated.resources.jvm_custom_api_screen_text_13
-import xymusic.composeapp.generated.resources.jvm_custom_api_screen_text_19
-import xymusic.composeapp.generated.resources.jvm_custom_api_screen_text_22
-import xymusic.composeapp.generated.resources.jvm_custom_api_screen_text_23
 import xymusic.composeapp.generated.resources.jvm_custom_api_screen_text_24
 import xymusic.composeapp.generated.resources.jvm_custom_api_screen_text_49
 import xymusic.composeapp.generated.resources.jvm_setting_screen_text_63
@@ -97,7 +93,7 @@ private val JvmCustomResourceFieldLabelSize = 10.sp
 /**
  * 设置页内嵌的自定义资源分区。
  *
- * 自上而下依次为请求策略与接口配置两个分组：
+ * 只保留接口配置一个分组，自上而下依次为请求策略开关、三个接口输入框与操作区：
  * 请求策略承接原自定义 API 设置页的优先级开关，开关即时写入设置；
  * 接口配置包含歌词接口地址、封面接口地址与访问令牌三个横向排列的输入框，
  * 保存与恢复默认是接口配置共用的一个操作区。
@@ -166,82 +162,70 @@ internal fun JvmCustomResourceSettingsSection(
         ),
     )
 
-    Column(
+    // 接口配置分组：请求策略开关加三个输入框，以及一组共用的保存与恢复默认操作。
+    JvmSettingWideGroup(
+        title = stringResource(Res.string.jvm_custom_api_screen_text_13),
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(JvmSettingGroupVerticalGap),
     ) {
-        // 请求策略分组：迁移原自定义 API 设置页的优先级开关，开关即时写入设置。
-        JvmSettingWideGroup(title = stringResource(Res.string.jvm_custom_api_screen_text_19)) {
-            JvmSettingSwitchRow(
-                icon = Res.drawable.settings_24px,
-                title = stringResource(Res.string.prioritize_music_service_api),
-                description = stringResource(Res.string.jvm_custom_api_screen_text_24),
-                checked = customLyricsViewModel.ifPriorityMusicApi,
-                onCheckedChange = { checked ->
-                    customLyricsViewModel.updateIfPriorityMusicApi(checked)
-                    customLyricsViewModel.saveIfPriorityMusicApiSetting()
-                },
-            )
-            // 说明当前生效的资源读取顺序，随开关状态实时切换。
-            JvmSettingNote(
-                text = if (customLyricsViewModel.ifPriorityMusicApi) {
-                    stringResource(Res.string.jvm_custom_api_screen_text_22)
-                } else {
-                    stringResource(Res.string.jvm_custom_api_screen_text_23)
-                }
-            )
-        }
+        // 请求策略：迁移原自定义 API 设置页的优先级开关，开关即时写入设置。
+        JvmSettingSwitchRow(
+            icon = Res.drawable.settings_24px,
+            title = stringResource(Res.string.prioritize_music_service_api),
+            description = stringResource(Res.string.jvm_custom_api_screen_text_24),
+            checked = customLyricsViewModel.ifPriorityMusicApi,
+            onCheckedChange = { checked ->
+                customLyricsViewModel.updateIfPriorityMusicApi(checked)
+                customLyricsViewModel.saveIfPriorityMusicApiSetting()
+            },
+        )
 
-        // 接口配置分组：三个输入框加一组共用的保存与恢复默认操作。
-        JvmSettingWideGroup(title = stringResource(Res.string.jvm_custom_api_screen_text_13)) {
-            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                // 宽窗口下三个输入框等宽并排，窄窗口改为纵向堆叠保证输入宽度。
-                if (maxWidth >= JvmSettingContentGridTwoColumnBreakpoint) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(JvmSettingGroupVerticalGap),
-                        verticalAlignment = Alignment.Top,
-                    ) {
-                        fields.forEach { field ->
-                            Box(modifier = Modifier.weight(1f)) {
-                                JvmCustomResourceField(field = field)
-                            }
-                        }
-                    }
-                } else {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(JvmSettingGroupVerticalGap),
-                    ) {
-                        fields.forEach { field ->
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            // 宽窗口下三个输入框等宽并排，窄窗口改为纵向堆叠保证输入宽度。
+            if (maxWidth >= JvmSettingContentGridTwoColumnBreakpoint) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(JvmSettingGroupVerticalGap),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    fields.forEach { field ->
+                        Box(modifier = Modifier.weight(1f)) {
                             JvmCustomResourceField(field = field)
                         }
                     }
                 }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(JvmSettingGroupVerticalGap),
+                ) {
+                    fields.forEach { field ->
+                        JvmCustomResourceField(field = field)
+                    }
+                }
             }
+        }
 
-            // 整个分区共用一个操作区：保存写入全部配置，恢复默认清空三个输入。
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                JvmCustomResourceActionButton(
-                    text = stringResource(Res.string.save),
-                    primary = true,
-                    onClick = customLyricsViewModel::saveSettings,
-                )
-                JvmCustomResourceActionButton(
-                    text = stringResource(Res.string.restore_default),
-                    primary = false,
-                    onClick = {
-                        // 恢复默认：清空两个接口地址与共用令牌，并立即写回本地设置。
-                        customLyricsViewModel.updateCustomLrcSingleApi("")
-                        customLyricsViewModel.updateCustomCoverApi("")
-                        customLyricsViewModel.updateCustomLrcApiAuth("")
-                        customLyricsViewModel.saveSettings()
-                    },
-                )
-            }
+        // 整个分区共用一个操作区：保存写入全部配置，恢复默认清空三个输入。
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            JvmCustomResourceActionButton(
+                text = stringResource(Res.string.save),
+                primary = true,
+                onClick = customLyricsViewModel::saveSettings,
+            )
+            JvmCustomResourceActionButton(
+                text = stringResource(Res.string.restore_default),
+                primary = false,
+                onClick = {
+                    // 恢复默认：清空两个接口地址与共用令牌，并立即写回本地设置。
+                    customLyricsViewModel.updateCustomLrcSingleApi("")
+                    customLyricsViewModel.updateCustomCoverApi("")
+                    customLyricsViewModel.updateCustomLrcApiAuth("")
+                    customLyricsViewModel.saveSettings()
+                },
+            )
         }
     }
 }

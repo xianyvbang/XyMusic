@@ -15,7 +15,6 @@ import cn.xybbz.ui.screens.JvmArtistInfoScreen
 import cn.xybbz.ui.screens.JvmArtistScreen
 import cn.xybbz.ui.screens.JvmConnectionConfigInfoScreen
 import cn.xybbz.ui.screens.JvmConnectionManagement
-import cn.xybbz.ui.screens.JvmCustomApiScreen
 import cn.xybbz.ui.screens.JvmDailyRecommendScreen
 import cn.xybbz.ui.screens.JvmDownloadScreen
 import cn.xybbz.ui.screens.JvmFavoriteScreen
@@ -65,7 +64,6 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<DailyRecommend> { JvmDailyRecommendScreen() }
     desktopNode<Download> { JvmDownloadScreen() }
     desktopNode<Local> { JvmLocalScreen() }
-    desktopNode<CustomApi> { JvmCustomApiScreen() }
 }
 
 actual val platformEntryProvider: (NavKey) -> NavEntry<NavKey> = jvmDesktopEntryProvider2

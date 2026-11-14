@@ -49,7 +49,6 @@ import cn.xybbz.config.setting.JvmAutoStartManager
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.router.About
-import cn.xybbz.router.CustomApi
 import cn.xybbz.ui.components.JvmSettingActionEntry
 import cn.xybbz.ui.components.JvmSettingActionGrid as JvmSettingActionEntryGrid
 import cn.xybbz.ui.components.JvmSettingBaseRow
@@ -100,7 +99,6 @@ import xymusic.composeapp.generated.resources.clear_image
 import xymusic.composeapp.generated.resources.close_24px
 import xymusic.composeapp.generated.resources.connect
 import xymusic.composeapp.generated.resources.copy_success
-import xymusic.composeapp.generated.resources.customize_lyric_settings
 import xymusic.composeapp.generated.resources.download
 import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.enabled_sync_play_progress
@@ -112,7 +110,6 @@ import xymusic.composeapp.generated.resources.jvm_set_background_image_screen_te
 import xymusic.composeapp.generated.resources.jvm_set_background_image_screen_text_20
 import xymusic.composeapp.generated.resources.jvm_setting_screen_text_60
 import xymusic.composeapp.generated.resources.language
-import xymusic.composeapp.generated.resources.music_note_24px
 import xymusic.composeapp.generated.resources.password_24px
 import xymusic.composeapp.generated.resources.queue_music_24px
 import xymusic.composeapp.generated.resources.restart_alt_24px
@@ -620,9 +617,6 @@ fun JvmSettingScreen(
                                 title = stringResource(Res.string.jvm_setting_screen_text_55),
                             ) {
                                 JvmSettingActionGrid(
-                                    onCustomApiClick = {
-                                        navigator.navigate(CustomApi)
-                                    },
                                     onAboutClick = {
                                         navigator.navigate(About)
                                     },
@@ -639,41 +633,28 @@ fun JvmSettingScreen(
 /**
  * 设置页通用入口卡片网格。
  *
- * @param onCustomApiClick 自定义资源入口点击事件。
  * @param onAboutClick 关于页面入口点击事件。
  */
 @Composable
 private fun JvmSettingActionGrid(
-    onCustomApiClick: () -> Unit,
     onAboutClick: () -> Unit,
 ) {
-    // 设置页只关心两个固定入口，通用网格负责真正的宽度计算和卡片渲染。
+    // 设置页只关心关于入口，通用网格负责真正的宽度计算和卡片渲染。
     JvmSettingActionEntryGrid(
-        actionEntries = jvmSettingActionEntries(
-            onCustomApiClick = onCustomApiClick,
-            onAboutClick = onAboutClick,
-        ),
+        actionEntries = jvmSettingActionEntries(onAboutClick = onAboutClick),
         // 通用入口放在双列分组内，卡片平分分组宽度，保持设计稿的两列卡片排布。
         fillTwoColumnWidth = true,
     )
 }
 
 /**
- * 组装设置页右栏“通用”分组中的两个入口卡片。
+ * 组装设置页右栏“通用”分组中的入口卡片。
  */
 @Composable
 private fun jvmSettingActionEntries(
-    onCustomApiClick: () -> Unit,
     onAboutClick: () -> Unit,
 ): List<JvmSettingActionEntry> {
     return listOf(
-        JvmSettingActionEntry(
-            icon = Res.drawable.music_note_24px,
-            kicker = stringResource(Res.string.jvm_setting_screen_text_29),
-            title = stringResource(Res.string.customize_lyric_settings),
-            description = stringResource(Res.string.jvm_setting_screen_text_30),
-            onClick = onCustomApiClick,
-        ),
         JvmSettingActionEntry(
             icon = Res.drawable.info_24px,
             kicker = stringResource(Res.string.jvm_setting_screen_text_31),
