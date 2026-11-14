@@ -930,6 +930,13 @@
     <string name="jvm_setting_screen_text_58">音频音质</string>
     <string name="jvm_setting_screen_text_59">缓存</string>
     <string name="jvm_setting_screen_text_60">界面</string>
+    <string name="jvm_setting_screen_text_61">自定义资源</string>
+    <string name="jvm_setting_screen_text_63">访问令牌</string>
+    <string name="jvm_setting_screen_text_64">歌词接口</string>
+    <string name="jvm_setting_screen_text_65">封面接口</string>
+    <string name="jvm_setting_screen_text_66">需要返回 LRC 或逐行时间戳格式。</string>
+    <string name="jvm_setting_screen_text_67">留空时按「本地 → 服务器 → 第三方」回退。</string>
+    <string name="jvm_setting_screen_text_68">歌词与封面接口共用这一份令牌，会作为 %1$s 请求头传入。更多信息请参考</string>
     <string name="jvm_streaming_quality_screen_text_01">选择桌面端播放时使用的在线音频品质和服务端转码格式。当前桌面端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。</string>
     <string name="jvm_streaming_quality_screen_text_02">播放品质</string>
     <string name="jvm_streaming_quality_screen_text_03">应用范围</string>

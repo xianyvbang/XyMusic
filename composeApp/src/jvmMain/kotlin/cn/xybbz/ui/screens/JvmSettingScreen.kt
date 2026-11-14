@@ -74,6 +74,7 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyIconTextButton
+import cn.xybbz.viewmodel.CustomLyricsViewModel
 import cn.xybbz.viewmodel.InterfaceSettingViewModel
 import cn.xybbz.viewmodel.LanguageConfigViewModel
 import cn.xybbz.viewmodel.MemoryManagementViewModel
@@ -137,6 +138,8 @@ fun JvmSettingScreen(
     interfaceSettingViewModel: InterfaceSettingViewModel = koinViewModel<InterfaceSettingViewModel>(),
     // 语言分组内嵌原本地化页的语言选择与预览能力，复用其视图模型读写当前语言。
     languageConfigViewModel: LanguageConfigViewModel = koinViewModel<LanguageConfigViewModel>(),
+    // 自定义资源分组内嵌原自定义 API 设置页的接口配置能力，复用其视图模型读写歌词与封面接口。
+    customLyricsViewModel: CustomLyricsViewModel = koinViewModel<CustomLyricsViewModel>(),
 ) {
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
@@ -188,6 +191,8 @@ fun JvmSettingScreen(
         JvmSettingTabItem(key = "interface", title = stringResource(Res.string.jvm_setting_screen_text_60)),
         // 语言紧跟在界面之后，聚合语言选择、文本预览与缺失翻译说明。
         JvmSettingTabItem(key = "language", title = stringResource(Res.string.language)),
+        // 自定义资源紧跟在语言之后，承载原自定义 API 设置页的歌词与封面接口配置。
+        JvmSettingTabItem(key = "custom", title = stringResource(Res.string.jvm_setting_screen_text_61)),
         JvmSettingTabItem(key = "common", title = stringResource(Res.string.jvm_setting_screen_text_23)),
     )
     // 设置页使用独立滚动区：头部与标签固定，只有下方内容滚动
@@ -590,6 +595,18 @@ fun JvmSettingScreen(
                                 modifier = Modifier.width(groupWidth),
                             )
                         }
+                    }
+                }
+
+                item(key = "custom") {
+                    Column {
+                        // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
+                        JvmSettingTabDivider()
+                        // 自定义资源分区：歌词与封面接口的地址、共用访问令牌与保存操作。
+                        JvmCustomResourceSettingsSection(
+                            customLyricsViewModel = customLyricsViewModel,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
                 }
 

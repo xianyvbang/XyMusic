@@ -59,6 +59,19 @@ class CustomLyricsViewModel (
         this.ifPriorityMusicApi = ifPriorityMusicApi
     }
 
+    /**
+     * 立即持久化资源接口优先级
+     * 说明：设置页的开关行需要即时生效，这里只写入优先级字段，
+     * 避免把接口地址与令牌尚未保存的输入一起写回设置。
+     */
+    fun saveIfPriorityMusicApiSetting() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                settingsManager.setIfPriorityMusicApi(ifPriorityMusicApi)
+            }
+        }
+    }
+
     fun updateCustomLrcSingleApi(customLrcSingleApi: String) {
         customLrcSingleApiValue = customLrcSingleApi
     }
