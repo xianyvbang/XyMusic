@@ -63,17 +63,11 @@ import xymusic.composeapp.generated.resources.add_link_24px
 import xymusic.composeapp.generated.resources.app_icon_info
 import xymusic.composeapp.generated.resources.app_name
 import xymusic.composeapp.generated.resources.check_24px
-import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.function_not_implemented
-import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.jvm_about_screen_text_09
 import xymusic.composeapp.generated.resources.jvm_about_screen_text_10
 import xymusic.composeapp.generated.resources.jvm_about_screen_text_15
-import xymusic.composeapp.generated.resources.jvm_about_screen_text_16
-import xymusic.composeapp.generated.resources.jvm_about_screen_text_17
 import xymusic.composeapp.generated.resources.jvm_about_screen_text_23
-import xymusic.composeapp.generated.resources.jvm_about_screen_text_24
-import xymusic.composeapp.generated.resources.jvm_about_screen_text_25
 import xymusic.composeapp.generated.resources.jvm_about_screen_text_31
 import xymusic.composeapp.generated.resources.jvm_about_screen_text_32
 import xymusic.composeapp.generated.resources.jvm_about_screen_text_36
@@ -147,7 +141,7 @@ internal fun JvmAboutSettingsSection(
         )
 
         JvmSettingGroupGrid {
-            // 更新与链接：版本更新操作与开源仓库、问题反馈入口合并为一个分组。
+            // 更新与链接：版本更新操作与开源仓库入口合并为一个分组。
             JvmSettingGroup(
                 modifier = Modifier.width(it),
                 title = stringResource(Res.string.jvm_about_screen_text_41),
@@ -160,25 +154,11 @@ internal fun JvmAboutSettingsSection(
                     onClick = { MessageUtils.sendPopTip(functionNotImplemented) },
                 )
                 JvmAboutLinkRow(
-                    icon = Res.drawable.download_24px,
-                    title = stringResource(Res.string.jvm_about_screen_text_24),
-                    description = stringResource(Res.string.jvm_about_screen_text_25),
-                    value = stringResource(Res.string.jvm_about_screen_text_38),
-                    onClick = { MessageUtils.sendPopTip(functionNotImplemented) },
-                )
-                JvmAboutLinkRow(
                     icon = Res.drawable.add_link_24px,
                     title = stringResource(Res.string.jvm_about_screen_text_36),
                     description = repositoryLabel,
                     value = stringResource(Res.string.jvm_about_screen_text_15),
                     onClick = { uriHandler.openUri(JvmAboutRepositoryUrl) },
-                )
-                JvmAboutLinkRow(
-                    icon = Res.drawable.info_24px,
-                    title = stringResource(Res.string.jvm_about_screen_text_16),
-                    description = stringResource(Res.string.jvm_about_screen_text_17),
-                    value = stringResource(Res.string.jvm_about_screen_text_17),
-                    onClick = { MessageUtils.sendPopTip(functionNotImplemented) },
                 )
             }
         }
