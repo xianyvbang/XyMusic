@@ -80,6 +80,7 @@ import cn.xybbz.viewmodel.StreamingQualityViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.abs
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import java.awt.SystemTray
@@ -192,10 +193,27 @@ fun JvmSettingScreen(
     )
     // 设置页使用独立滚动区：头部与标签固定，只有下方内容滚动
     val lazyState = rememberLazyListState()
-    // 标签与滚动列表一一对应，首项索引即当前分组索引
+    // 标签与滚动列表一一对应，以“分组是否划过滚动区域中线”作为当前分组判定依据：
+    // 只有当分组内容跨过可视区域中线时才切换标签，避免分组刚触顶就跳到下一个标签。
     val selectedTabIndex by remember(settingTabs.size) {
         derivedStateOf {
-            lazyState.firstVisibleItemIndex.coerceIn(0, settingTabs.lastIndex)
+            val layoutInfo = lazyState.layoutInfo
+            val visibleItems = layoutInfo.visibleItemsInfo
+            if (visibleItems.isEmpty()) {
+                0
+            } else {
+                // 中线取滚动区可视范围的中点（含内容内边距偏移）。
+                val viewportCenter =
+                    (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
+                // 优先取跨过中线的分组；都没有跨过时取离中线最近的分组兜底。
+                val crossingItem = visibleItems.firstOrNull { item ->
+                    item.offset <= viewportCenter && item.offset + item.size >= viewportCenter
+                }
+                val targetItem = crossingItem ?: visibleItems.minBy { item ->
+                    abs(item.offset + item.size / 2 - viewportCenter)
+                }
+                targetItem.index.coerceIn(0, settingTabs.lastIndex)
+            }
         }
     }
 
