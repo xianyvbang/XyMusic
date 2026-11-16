@@ -1,6 +1,8 @@
 package cn.xybbz.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -178,7 +180,17 @@ internal fun SongRow(
         musicId = music.itemId,
         currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
     )
-    val rowBackgroundColor = if (rowIfPlay) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent
+    // 背景色层级：选中 > 正在播放 > 悬停 > 透明，高优先级状态不会被悬停覆盖
+    val rowBackgroundColor by animateColorAsState(
+        targetValue = when {
+            isSelected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+            rowIfPlay -> MaterialTheme.colorScheme.surfaceContainerHighest
+            hovered -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+            else -> Color.Transparent
+        },
+        animationSpec = tween(durationMillis = 120),
+        label = "songRowBackground",
+    )
     val menuItems = rememberSongRowContextMenuItems(
         music = music,
         onPlay = onClick,
