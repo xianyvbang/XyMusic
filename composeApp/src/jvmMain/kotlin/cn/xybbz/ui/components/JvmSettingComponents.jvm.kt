@@ -24,7 +24,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -53,7 +52,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -816,7 +814,8 @@ internal fun JvmSettingOverviewTile(
     val clickableModifier = if (onClick == null) {
         Modifier
     } else {
-        Modifier.clickable(onClick = onClick)
+        // 悬停时显示小手光标，无波纹背景。
+        Modifier.jvmHoverDebounceClickable(indication = null, onClick = onClick)
     }
 
     Surface(
@@ -1054,6 +1053,7 @@ private fun JvmSettingSwitch(
         animationSpec = tween(durationMillis = 220),
         label = "jvm_setting_switch_offset",
     )
+    val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = Modifier
@@ -1061,8 +1061,11 @@ private fun JvmSettingSwitch(
             .clip(CircleShape)
             .background(trackColor)
             .border(BorderStroke(1.dp, borderColor), CircleShape)
-            .clickable(
+            // 悬停时显示小手光标，无波纹背景。
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
                 enabled = enabled,
+                indication = null,
                 role = Role.Switch,
                 onClick = { onCheckedChange(!checked) },
             )
@@ -1337,6 +1340,7 @@ private fun JvmSettingDownloadSegment(
     onClick: () -> Unit,
 ) {
     val shape = RoundedCornerShape(4.dp)
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .height(26.dp)
@@ -1349,8 +1353,10 @@ private fun JvmSettingDownloadSegment(
                     Color.Transparent
                 }
             )
-            .selectable(
-                selected = selected,
+            // 悬停时显示小手光标，无波纹背景。
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
                 role = Role.RadioButton,
                 onClick = onClick
             )
@@ -1436,6 +1442,7 @@ private fun JvmSettingThemeSegment(
     onClick: () -> Unit,
 ) {
     val shape = RoundedCornerShape(4.dp)
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .height(26.dp)
@@ -1448,8 +1455,10 @@ private fun JvmSettingThemeSegment(
                     Color.Transparent
                 }
             )
-            .selectable(
-                selected = selected,
+            // 悬停时显示小手光标，无波纹背景。
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
                 role = Role.RadioButton,
                 onClick = onClick
             )
@@ -1627,10 +1636,12 @@ internal fun JvmSettingBaseRow(
     val rowHovered = enabled && hovered
     // 分组内横向排列时由分组统一下发固定宽度，未下发时保持整行铺满。
     val itemWidth = LocalJvmSettingItemWidth.current
-    // 可点击且启用的行才附加 clickable，禁用行保持占位尺寸不变。
+    // 可点击且启用的行才附加点击交互，禁用行保持占位尺寸不变。
     val clickableModifier = if (enabled && onClick != null) {
-        Modifier.clickable(
+        // 悬停时显示小手光标，无波纹背景。
+        Modifier.jvmHoverDebounceClickable(
             interactionSource = interactionSource,
+            enabled = enabled,
             indication = null,
             onClick = onClick,
         )
@@ -2110,45 +2121,11 @@ internal fun JvmSettingTabBar(
         ) {
             tabs.forEachIndexed { index, tab ->
                 val selected = index == selectedIndex
-                Column(
-                    modifier = Modifier
-                        // 用文字宽度作为列宽，让下划线与文字等宽而不是撑满整行。
-                        .width(IntrinsicSize.Max)
-                        .clickable(role = Role.Tab, onClick = { onSelected(index) })
-                        .padding(
-                            top = XyTheme.dimens.outerVerticalPadding / 2,
-                            bottom = JvmSettingTabBottomPadding,
-                        ),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    XyText(
-                        text = tab.title,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = if (selected) {
-                            MaterialTheme.colorScheme.onSurface
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                        maxLines = 1,
-                    )
-                    Spacer(modifier = Modifier.height(JvmSettingTabUnderlineGap))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(JvmSettingTabUnderlineHeight)
-                            .background(
-                                color = if (selected) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    Color.Transparent
-                                },
-                                shape = RoundedCornerShape(JvmSettingTabUnderlineHeight)
-                            )
-                    )
-                }
+                JvmSettingTabItemContent(
+                    selected = selected,
+                    title = tab.title,
+                    onSelected = { onSelected(index) },
+                )
             }
         }
 
@@ -2158,6 +2135,69 @@ internal fun JvmSettingTabBar(
                 .fillMaxWidth()
                 .height(1.dp)
                 .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+        )
+    }
+}
+
+/**
+ * JVM 设置页顶部单个标签项。
+ *
+ * hover 时文字切换为主题色并显示小手光标，选中态保留高亮下划线。
+ *
+ * @param selected 是否为当前选中的标签。
+ * @param title 标签展示文案。
+ * @param onSelected 标签点击回调。
+ */
+@Composable
+private fun JvmSettingTabItemContent(
+    selected: Boolean,
+    title: String,
+    onSelected: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    Column(
+        modifier = Modifier
+            // 用文字宽度作为列宽，让下划线与文字等宽而不是撑满整行。
+            .width(IntrinsicSize.Max)
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.Tab,
+                onClick = onSelected,
+            )
+            .padding(
+                top = XyTheme.dimens.outerVerticalPadding / 2,
+                bottom = JvmSettingTabBottomPadding,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        XyText(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold
+            ),
+            color = when {
+                selected -> MaterialTheme.colorScheme.onSurface
+                hovered -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            maxLines = 1,
+        )
+        Spacer(modifier = Modifier.height(JvmSettingTabUnderlineGap))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(JvmSettingTabUnderlineHeight)
+                .background(
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        Color.Transparent
+                    },
+                    shape = RoundedCornerShape(JvmSettingTabUnderlineHeight)
+                )
         )
     }
 }

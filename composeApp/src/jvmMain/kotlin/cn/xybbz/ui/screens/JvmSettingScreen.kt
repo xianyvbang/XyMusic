@@ -95,7 +95,6 @@ import xymusic.composeapp.generated.resources.background_image_setting
 import xymusic.composeapp.generated.resources.broadcast_while_down
 import xymusic.composeapp.generated.resources.clear_image
 import xymusic.composeapp.generated.resources.close_24px
-import xymusic.composeapp.generated.resources.connect
 import xymusic.composeapp.generated.resources.copy_success
 import xymusic.composeapp.generated.resources.download
 import xymusic.composeapp.generated.resources.download_24px
@@ -178,10 +177,9 @@ fun JvmSettingScreen(
 
     // 顶部标签：顺序必须与下方 LazyColumn 中分组 item 的顺序保持一致
     val settingTabs = listOf(
-        // 常规放在最左侧，集中启动、播放与音质缓存等桌面端基础设置。
+        // 常规放在最左侧，集中启动、播放、音质与网络代理等桌面端基础设置。
         JvmSettingTabItem(key = "general", title = stringResource(Res.string.jvm_setting_screen_text_57)),
         JvmSettingTabItem(key = "storage", title = stringResource(Res.string.jvm_setting_screen_text_14)),
-        JvmSettingTabItem(key = "connect", title = stringResource(Res.string.connect)),
         // 界面放在通用之前，集中主题外观与背景图片等桌面端视觉设置。
         JvmSettingTabItem(key = "interface", title = stringResource(Res.string.jvm_setting_screen_text_60)),
         // 语言紧跟在界面之后，聚合语言选择、文本预览与缺失翻译说明。
@@ -434,6 +432,12 @@ fun JvmSettingScreen(
                                 }
                             }
                         }
+
+                        // 网络分组：原“连接”标签页的代理设置整体并入常规页，与其他小类共用同一分组网格。
+                        JvmProxySettingsSection(
+                            proxyConfigViewModel = proxyConfigViewModel,
+                            modifier = Modifier.width(groupWidth),
+                        )
                     }
                 }
 
@@ -491,20 +495,6 @@ fun JvmSettingScreen(
                             // 存储管理相关功能整体内嵌到设置页，不再跳转独立存储管理页。
                             JvmStorageSettingsSection(
                                 memoryManagementViewModel = memoryManagementViewModel,
-                                modifier = Modifier.width(groupWidth),
-                            )
-                        }
-                    }
-                }
-
-                item(key = "connect") {
-                    Column {
-                        // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
-                        JvmSettingTabDivider()
-                        JvmSettingGroupGrid { groupWidth ->
-                            // 代理设置内容整体收进网络分组：开关、地址与测试保存能力都在这里。
-                            JvmProxySettingsSection(
-                                proxyConfigViewModel = proxyConfigViewModel,
                                 modifier = Modifier.width(groupWidth),
                             )
                         }

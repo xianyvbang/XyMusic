@@ -48,7 +48,6 @@ import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.startup.SessionCoordinator
-import cn.xybbz.router.About
 import cn.xybbz.router.Album
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.Artist
@@ -84,7 +83,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.getKoin
 import xymusic.composeapp.generated.resources.Res
-import xymusic.composeapp.generated.resources.about
 import xymusic.composeapp.generated.resources.all_music
 import xymusic.composeapp.generated.resources.album
 import xymusic.composeapp.generated.resources.app_icon_info
@@ -669,7 +667,6 @@ private fun currentRouteTitleRes(route: Any): StringResource? = when (route) {
     is ConnectionInfo -> Res.string.connection_info
     MemoryManagement -> Res.string.storage_management
     LanguageConfig -> Res.string.language
-    About -> Res.string.about
     CacheLimit -> Res.string.cache_limit
     is SelectLibrary -> Res.string.media_library_selection
     DailyRecommend -> Res.string.daily_recommendations

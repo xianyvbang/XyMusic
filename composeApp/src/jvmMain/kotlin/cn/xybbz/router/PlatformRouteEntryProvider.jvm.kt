@@ -8,7 +8,6 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import cn.xybbz.ui.screens.ConnectionScreen
 import cn.xybbz.ui.screens.HomeScreen
-import cn.xybbz.ui.screens.JvmAboutScreen
 import cn.xybbz.ui.screens.JvmAlbumInfoScreen
 import cn.xybbz.ui.screens.JvmAlbumScreen
 import cn.xybbz.ui.screens.JvmArtistInfoScreen
@@ -53,7 +52,6 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<ConnectionInfo> { JvmConnectionConfigInfoScreen(connectionId = it.connectionId) }
     desktopNode<Genres> { JvmGenresScreen() }
     desktopNode<GenreInfo> { JvmGenresInfoScreen(genreId = it.genreId) }
-    desktopNode<About> { JvmAboutScreen() }
     desktopNode<SelectLibrary> {
         JvmSelectLibraryScreen(
             connectionId = it.connectionId,
