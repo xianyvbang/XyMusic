@@ -135,7 +135,9 @@ fun MemoryManagementScreen(
                             kicker = Res.string.dialog_kicker_danger,
                             onConfirmation = {
                                 memoryManagementViewModel.clearDatabaseData()
-                            }
+                            },
+                            // 提供取消回调，动作区才会同时出现「取消」与「确定」
+                            onDismissRequest = {}
                         ).show()
                     },
                     text = stringResource(Res.string.database_data),
