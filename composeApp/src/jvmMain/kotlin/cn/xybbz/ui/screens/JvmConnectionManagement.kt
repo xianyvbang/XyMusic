@@ -71,6 +71,7 @@ import cn.xybbz.router.Connection
 import cn.xybbz.router.ConnectionInfo
 import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingAvatarSize
 import cn.xybbz.ui.components.JvmSettingConnectionCardMinWidth
@@ -964,7 +965,7 @@ private fun JvmConnectionDeleteDialog(
                 text = content
             )
         },
-        ifWarning = true,
+        tone = XyDialogTone.Danger,
         onConfirmation = onDelete,
     ).show()
 }

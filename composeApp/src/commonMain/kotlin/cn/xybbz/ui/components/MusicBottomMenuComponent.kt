@@ -538,7 +538,7 @@ fun MusicBottomMenuComponent(
                                             text = stringResource(Res.string.delete_warning)
                                         )
                                     },
-                                    ifWarning = true,
+                                    tone = XyDialogTone.Danger,
                                     onConfirmation = {
                                         coroutineScope.launch {
                                             sheetState.hide()

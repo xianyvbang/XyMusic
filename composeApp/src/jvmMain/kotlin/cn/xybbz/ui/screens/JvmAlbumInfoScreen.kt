@@ -85,6 +85,7 @@ import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
@@ -389,7 +390,7 @@ fun JvmAlbumInfoScreen(
                                                         )
                                                     )
                                                 },
-                                                ifWarning = true,
+                                                tone = XyDialogTone.Danger,
                                                 onConfirmation = {
                                                     coroutineScope.launch {
                                                         albumInfoViewModel.removePlaylist(itemId)

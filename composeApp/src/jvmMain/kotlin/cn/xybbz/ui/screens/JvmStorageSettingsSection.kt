@@ -56,6 +56,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.formatStorageLabel
 import cn.xybbz.common.utils.parseStorageBytes
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingGroup
@@ -127,7 +128,7 @@ internal fun JvmStorageSettingsSection(
                     style = MaterialTheme.typography.bodyMedium,
                 )
             },
-            ifWarning = true,
+            tone = XyDialogTone.Danger,
             onConfirmation = {
                 memoryManagementViewModel.clearDatabaseData()
             }

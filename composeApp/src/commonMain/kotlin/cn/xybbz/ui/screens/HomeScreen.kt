@@ -88,6 +88,7 @@ import cn.xybbz.router.Search
 import cn.xybbz.router.Setting
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.BottomSheetObject
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicMusicCardComponent
@@ -821,7 +822,7 @@ internal fun MobileHomeScreen(
                                                 )
                                             )
                                         },
-                                        ifWarning = true,
+                                        tone = XyDialogTone.Danger,
                                         onConfirmation = {
                                             homeViewModel.removePlaylist(
                                                 item.itemId

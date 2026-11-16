@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
@@ -128,7 +129,7 @@ fun MemoryManagementScreen(
                                     text = stringResource(Res.string.confirm_delete_database)
                                 )
                             },
-                            ifWarning = true,
+                            tone = XyDialogTone.Danger,
                             onConfirmation = {
                                 memoryManagementViewModel.clearDatabaseData()
                             }

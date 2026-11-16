@@ -64,6 +64,7 @@ import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.router.Setting
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -141,7 +142,7 @@ fun DownloadScreen(
                             downloadViewModel.performBatchDelete()
                         }, onDismissRequest = {
                             downloadViewModel.enterMultiSelectMode()
-                        }, ifWarning = true
+                        }, tone = XyDialogTone.Danger
                     ).show()
             },
             onSelectAll = {

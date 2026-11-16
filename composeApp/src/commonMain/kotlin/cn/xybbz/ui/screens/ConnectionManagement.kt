@@ -42,6 +42,7 @@ import cn.xybbz.router.Connection
 import cn.xybbz.router.ConnectionInfo
 import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.BottomSheetObject
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SettingItemComponent
@@ -200,7 +201,7 @@ fun ConnectionManagement(
                                                                 text = stringResource(Res.string.confirm_delete_connection)
                                                             )
                                                         },
-                                                        ifWarning = true,
+                                                        tone = XyDialogTone.Danger,
                                                         onConfirmation = {
                                                             coroutineScope.launch {
                                                                 connectionManagementViewModel.removeConnection(

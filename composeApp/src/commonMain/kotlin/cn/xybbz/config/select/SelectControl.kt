@@ -29,6 +29,7 @@ import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.ui.components.AddPlaylistBottomData
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.xy.XyTextSubSmall
 import kotlinx.coroutines.CoroutineScope
@@ -108,7 +109,7 @@ class SelectControl {
                         text = stringResource(Res.string.delete_warning)
                     )
                 },
-                ifWarning = true,
+                tone = XyDialogTone.Danger,
                 onConfirmation = {
                     removeSelectListResource(dataSourceManager, viewModelScope)
                 },

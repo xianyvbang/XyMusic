@@ -73,6 +73,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
@@ -203,7 +204,7 @@ internal fun JvmLocalDownloadScreen(
                             onConfirmation = {
                                 downloadViewModel.deleteDownloads(activeDownloadTasks)
                             },
-                            ifWarning = true,
+                            tone = XyDialogTone.Danger,
                         ).show()
                     }
                 },

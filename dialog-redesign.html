@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>XyMusic · Windows 弹窗重设计（原型）</title>
+<style>
+  /* ============================================================
+     设计语言：Signal Deck（信号台）
+     弹窗 = 一个收紧的信号面板：一条语义导轨 + 一处图标 + 一句读数
+     与 settings-redesign.html 共用同一套令牌与字体
+     ============================================================ */
+  :root{
+    --accent:#4D93CB;
+    --font-ui:"Segoe UI Variable Display","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif;
+    --font-mono:"Cascadia Code","Consolas","JetBrains Mono",ui-monospace,monospace;
+
+    --bg:#0C0C0E;
+    --bg-deep:#08080A;
+    --surface:#121215;
+    --surface-2:#17171B;
+    --card:#2B2E32;
+    --line:rgba(255,255,255,.09);
+    --line-strong:rgba(255,255,255,.17);
+    --ink:#ECEAE6;
+    --ink-soft:#A9A49C;
+    --ink-mute:#767169;
+    --wash:rgba(255,255,255,.05);
+    --shadow:0 26px 64px rgba(0,0,0,.58);
+    --scrim:rgba(8,8,10,.74);
+  }
+  html[data-theme="light"]{
+    --accent:#2F70B1;
+    --bg:#EDEAE3;
+    --bg-deep:#E2DED5;
+    --surface:#F7F5F0;
+    --surface-2:#FBF9F5;
+    --card:#FFFFFF;
+    --line:rgba(23,20,14,.12);
+    --line-strong:rgba(23,20,14,.22);
+    --ink:#17150F;
+    --ink-soft:#5E574C;
+    --ink-mute:#8B8377;
+    --wash:rgba(23,20,14,.045);
+    --shadow:0 26px 64px rgba(40,32,20,.2);
+    --scrim:rgba(23,20,14,.4);
+  }
+
+  /* ---------- 语义色：三档，只作用于图标/导轨/主按钮 ---------- */
+  .tone-info{--tone:#4D93CB;--tone-ink:#fff;}
+  .tone-danger{--tone:#CF6B62;--tone-ink:#fff;}
+  .tone-success{--tone:#4FA37A;--tone-ink:#fff;}
+  html[data-theme="light"] .tone-info{--tone:#2F70B1;}
+  html[data-theme="light"] .tone-danger{--tone:#A84A44;}
+  html[data-theme="light"] .tone-success{--tone:#2E7A57;}
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--font-ui);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%),
+      radial-gradient(900px 520px at 100% 4%, rgba(207,107,98,.06), transparent 62%),
+      var(--bg-deep);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    padding:26px 26px 60px;
+    min-height:100vh;
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+    opacity:.035;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .wrap{max-width:1440px;margin:0 auto;position:relative;z-index:2;}
+
+  /* ---------- 页头 ---------- */
+  .hero{display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;padding-bottom:26px;border-bottom:1px solid var(--line);}
+  .hero .lead{flex:1;min-width:280px;display:flex;flex-direction:column;gap:12px;}
+  .rule-top{width:34px;height:3px;border-radius:2px;background:var(--accent);}
+  .k{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;}
+  .hero h1{margin:9px 0 0;font-size:clamp(26px,3vw,38px);font-weight:800;letter-spacing:-.035em;line-height:1.05;}
+  .hero p{margin:0;font-size:12.5px;line-height:1.8;color:var(--ink-soft);max-width:60ch;}
+  .readouts{display:flex;align-items:flex-end;flex:none;}
+  .readout{padding:0 16px;display:flex;flex-direction:column;gap:5px;}
+  .readout:first-child{padding-left:0;}
+  .readout:last-child{padding-right:0;}
+  .readout .lbl{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;color:var(--ink-mute);white-space:nowrap;}
+  .readout .val{font-size:15px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;}
+  .vr{width:1px;align-self:stretch;background:var(--line);margin:4px 0 2px;}
+  .theme-btn{
+    width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:transparent;
+    color:var(--ink-soft);display:grid;place-items:center;cursor:pointer;transition:.16s;flex:none;
+  }
+  .theme-btn:hover{color:var(--ink);background:var(--wash);border-color:var(--line-strong);}
+
+  /* ---------- 分区 ---------- */
+  section{margin-top:44px;}
+  .shead{display:flex;align-items:flex-end;gap:14px;}
+  .shead .idx{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--accent);padding-bottom:3px;}
+  .shead .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+  .shead h2{margin:0;font-size:15.5px;font-weight:700;letter-spacing:-.01em;}
+  .shead .sub{font-size:11.5px;color:var(--ink-soft);}
+  .srule{height:1px;margin:13px 0 22px;background:var(--line);position:relative;}
+  .srule::before{content:"";position:absolute;left:0;top:0;width:84px;height:1px;background:var(--accent);opacity:.8;}
+
+  /* ---------- 01 取向 + 语义色 ---------- */
+  .intro{display:grid;grid-template-columns:1.25fr 1fr;gap:40px;align-items:start;}
+  .intro p{margin:0 0 12px;font-size:12.5px;line-height:1.9;color:var(--ink-soft);}
+  .intro p b{color:var(--ink);font-weight:600;}
+  .tones{display:flex;flex-direction:column;gap:10px;}
+  .tone-row{
+    display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);
+    border-radius:9px;background:color-mix(in srgb,var(--surface-2) 60%,transparent);
+  }
+  .tone-swatch{width:30px;height:30px;border-radius:8px;flex:none;background:color-mix(in srgb,var(--tone) 14%,transparent);border:1px solid color-mix(in srgb,var(--tone) 42%,transparent);color:var(--tone);display:grid;place-items:center;}
+  .tone-meta{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .tone-meta b{font-size:12.5px;font-weight:650;}
+  .tone-meta span{font-family:var(--font-mono);font-size:10px;color:var(--ink-mute);letter-spacing:.04em;}
+  .tone-use{margin-left:auto;font-size:11px;color:var(--ink-soft);white-space:nowrap;}
+  @media (max-width:980px){ .intro{grid-template-columns:1fr;gap:26px;} }
+
+  /* ============================================================
+     弹窗本体
+     ============================================================ */
+  .dlg{
+    --pad:22px;
+    width:420px;max-width:100%;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+    position:relative;
+    color:var(--ink);
+  }
+  /* 01 顶部语义导轨 */
+  .dlg-rail{
+    height:2px;
+    background:linear-gradient(90deg,var(--tone),color-mix(in srgb,var(--tone) 12%,transparent) 58%,transparent);
+  }
+  .dlg-body{padding:22px var(--pad) 18px;}
+
+  /* 头部：图标 + kicker + 标题 */
+  .dlg-head{display:flex;align-items:center;gap:12px;}
+  .dlg-ico{
+    width:34px;height:34px;flex:none;border-radius:9px;display:grid;place-items:center;
+    background:color-mix(in srgb,var(--tone) 13%,transparent);
+    border:1px solid color-mix(in srgb,var(--tone) 40%,transparent);
+    color:var(--tone);
+  }
+  .dlg-titles{min-width:0;display:flex;flex-direction:column;gap:4px;}
+  .dlg-kicker{
+    font-family:var(--font-mono);font-size:9.5px;font-weight:600;
+    letter-spacing:1.7px;text-transform:uppercase;color:var(--tone);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .dlg-title{margin:0;font-size:17px;font-weight:700;line-height:21px;letter-spacing:-.015em;color:var(--ink);}
+  .dlg-text{margin:15px 0 0;font-size:13px;line-height:22px;color:var(--ink-soft);}
+  .dlg-text b{color:var(--ink);font-weight:600;}
+  .dlg-slot{margin-top:15px;}
+
+  /* 动作区 */
+  .dlg-foot{
+    margin-top:18px;padding-top:14px;border-top:1px solid var(--line);
+    display:flex;align-items:center;gap:10px;
+  }
+  .dlg-hint{
+    margin-right:auto;display:flex;align-items:center;gap:5px;
+    font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink-mute);
+  }
+  kbd{
+    font-family:var(--font-mono);font-size:9.5px;line-height:1;padding:3px 5px;border-radius:4px;
+    border:1px solid var(--line-strong);background:var(--wash);color:var(--ink-soft);
+  }
+  .dlg-actions{display:flex;align-items:center;gap:10px;}
+
+  .db{
+    height:36px;padding:0 16px;border-radius:7px;cursor:pointer;
+    font-family:var(--font-ui);font-size:12.5px;font-weight:600;letter-spacing:.01em;
+    border:1px solid var(--line-strong);background:transparent;color:var(--ink);
+    display:inline-flex;align-items:center;gap:7px;justify-content:center;
+    transition:background .16s ease,border-color .16s ease,filter .16s ease,transform .16s ease;
+    white-space:nowrap;
+  }
+  .db:hover,.db.is-hover{background:var(--wash);border-color:var(--ink-mute);}
+  .db:focus-visible{outline:2px solid var(--tone);outline-offset:2px;}
+  .db.primary{background:var(--tone);border-color:var(--tone);color:var(--tone-ink);}
+  .db.primary:hover,.db.primary.is-hover{filter:brightness(1.08);background:var(--tone);border-color:var(--tone);}
+  .db[disabled],.db.is-disabled{opacity:.4;cursor:not-allowed;pointer-events:none;}
+  .db.is-loading{pointer-events:none;color:transparent;position:relative;}
+  .db.is-loading::after{
+    content:"";position:absolute;width:13px;height:13px;border-radius:50%;
+    border:1.6px solid color-mix(in srgb,var(--tone-ink) 35%,transparent);
+    border-top-color:var(--tone-ink);animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* 输入框 */
+  .inp{
+    width:100%;height:38px;padding:0 12px;border-radius:7px;
+    background:var(--wash);border:1px solid var(--line-strong);color:var(--ink);
+    font-family:var(--font-ui);font-size:13px;outline:none;
+    transition:border-color .16s ease,box-shadow .16s ease;
+  }
+  .inp::placeholder{color:var(--ink-mute);}
+  .inp:focus{border-color:var(--tone);box-shadow:0 0 0 3px color-mix(in srgb,var(--tone) 18%,transparent);}
+  .inp-meta{display:flex;justify-content:space-between;gap:10px;margin-top:7px;font-family:var(--font-mono);font-size:10px;color:var(--ink-mute);letter-spacing:.04em;}
+  .inp-meta .err{color:var(--tone);}
+
+  /* 单选列表 */
+  .pick{display:flex;flex-direction:column;gap:6px;}
+  .pick-row{
+    display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;cursor:pointer;
+    border:1px solid var(--line);background:transparent;transition:.16s ease;
+  }
+  .pick-row:hover{background:var(--wash);border-color:var(--line-strong);}
+  .pick-row.on{border-color:color-mix(in srgb,var(--tone) 45%,transparent);background:color-mix(in srgb,var(--tone) 7%,transparent);}
+  .radio{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line-strong);flex:none;display:grid;place-items:center;transition:.16s;}
+  .pick-row.on .radio{border-color:var(--tone);}
+  .pick-row.on .radio::after{content:"";width:7px;height:7px;border-radius:50%;background:var(--tone);}
+  .pick-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .pick-main b{font-size:12.5px;font-weight:600;}
+  .pick-main span{font-size:11px;color:var(--ink-soft);}
+  .tag{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;padding:2px 6px;border-radius:4px;border:1px solid var(--line);color:var(--ink-soft);white-space:nowrap;}
+
+  /* 进度 */
+  .prog-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:9px;}
+  .prog-top .nm{font-size:12.5px;font-weight:600;}
+  .prog-top .pc{font-family:var(--font-mono);font-size:11px;color:var(--tone);letter-spacing:.04em;}
+  .track{height:6px;border-radius:3px;background:var(--wash);border:1px solid var(--line);overflow:hidden;}
+  .track i{display:block;height:100%;background:linear-gradient(90deg,color-mix(in srgb,var(--tone) 55%,transparent),var(--tone));border-radius:3px;animation:fill 1.1s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes fill{from{width:0;}to{width:var(--w,62%);}}
+  .prog-sub{margin-top:9px;font-family:var(--font-mono);font-size:10px;color:var(--ink-mute);letter-spacing:.04em;}
+
+  /* 代码块（错误详情） */
+  .code{
+    margin:0;padding:10px 12px;border-radius:7px;border:1px solid var(--line);background:var(--wash);
+    font-family:var(--font-mono);font-size:11px;line-height:1.75;color:var(--ink-soft);white-space:pre-wrap;word-break:break-all;
+  }
+  .code b{color:var(--tone);font-weight:600;}
+
+  /* 结果概要（成功） */
+  .sum{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .sum-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;font-size:11.5px;}
+  .sum-row + .sum-row{border-top:1px solid var(--line);}
+  .sum-row span{color:var(--ink-soft);}
+  .sum-row b{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.02em;}
+
+  /* ============================================================
+     02 结构解剖
+     ============================================================ */
+  .ano{display:grid;grid-template-columns:auto minmax(240px,1fr);gap:44px;align-items:start;}
+  .ano-stage{display:flex;justify-content:center;padding:8px 0 4px;}
+  .ano .dlg [data-region]{transition:outline-color .16s ease,background .16s ease;border-radius:6px;}
+  .ano .dlg [data-region].hl{
+    outline:1px dashed var(--tone);outline-offset:5px;
+    background:color-mix(in srgb,var(--tone) 7%,transparent);
+  }
+  .legend{display:flex;flex-direction:column;gap:2px;}
+  .legend li{
+    display:flex;gap:12px;padding:9px 10px;border-radius:8px;cursor:default;transition:.15s ease;
+    border:1px solid transparent;
+  }
+  .legend li:hover,.legend li.on{background:var(--wash);border-color:var(--line);}
+  .legend li b{
+    font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--accent);
+    padding-top:3px;width:16px;flex:none;
+  }
+  .legend li div{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .legend li strong{font-size:12.5px;font-weight:600;}
+  .legend li em{font-family:var(--font-mono);font-size:10px;font-style:normal;color:var(--ink-mute);line-height:1.6;letter-spacing:.02em;}
+  @media (max-width:1000px){ .ano{grid-template-columns:1fr;} }
+
+  /* 令牌表 */
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  thead th{
+    text-align:left;font-family:var(--font-mono);font-size:9.5px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-mute);padding:0 0 10px;border-bottom:1px solid var(--line);
+  }
+  tbody td{padding:10px 12px 10px 0;border-bottom:1px solid var(--line);vertical-align:top;}
+  tbody tr:hover{background:var(--wash);}
+  td.nm{font-weight:600;white-space:nowrap;}
+  td.v{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);white-space:nowrap;}
+  td.c{font-family:var(--font-mono);font-size:11px;color:var(--ink-mute);}
+  .swatch{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:middle;margin-right:6px;}
+
+  /* ============================================================
+     03 变体矩阵
+     ============================================================ */
+  .board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px;}
+  @media (max-width:1100px){ .board{grid-template-columns:1fr;} }
+  .case{
+    border:1px solid var(--line);border-radius:12px;padding:18px;cursor:pointer;
+    background:color-mix(in srgb,var(--surface-2) 55%,transparent);
+    display:flex;flex-direction:column;gap:16px;transition:.2s ease;position:relative;overflow:hidden;
+  }
+  .case:hover{border-color:var(--line-strong);transform:translateY(-2px);}
+  .case:hover .case-open{opacity:1;transform:none;}
+  .case-head{display:flex;align-items:baseline;gap:10px;}
+  .case-head .no{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.06em;}
+  .case-head .tt{font-size:12.5px;font-weight:650;}
+  .case-head .ds{font-size:11px;color:var(--ink-mute);margin-left:auto;font-family:var(--font-mono);letter-spacing:.04em;}
+  .case-stage{display:flex;justify-content:center;padding:6px 0 2px;}
+  .case-stage .dlg{box-shadow:0 16px 38px rgba(0,0,0,.42);}
+  .case-open{
+    position:absolute;right:14px;top:12px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;
+    color:var(--accent);opacity:0;transform:translateY(-3px);transition:.18s ease;
+  }
+
+  /* ============================================================
+     04 状态 & 交互
+     ============================================================ */
+  .pairs{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
+  @media (max-width:1000px){ .pairs{grid-template-columns:1fr;} }
+  .st-card{border:1px solid var(--line);border-radius:12px;padding:18px;background:color-mix(in srgb,var(--surface-2) 55%,transparent);}
+  .st-card h4{margin:0 0 14px;font-size:12px;font-weight:700;color:var(--ink-soft);display:flex;align-items:center;gap:8px;}
+  .st-card h4::before{content:"";width:3px;height:11px;border-radius:2px;background:var(--accent);opacity:.75;}
+  .btn-strip{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .cap{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;color:var(--ink-mute);}
+  .stack{display:flex;flex-direction:column;gap:14px;}
+  .rule-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;}
+  .rule-list li{display:flex;gap:10px;font-size:12px;line-height:1.75;color:var(--ink-soft);}
+  .rule-list li::before{content:"";width:2px;height:13px;margin-top:5px;flex:none;background:var(--accent);border-radius:1px;}
+  .rule-list b{color:var(--ink);font-weight:600;}
+  .rule-list code{font-family:var(--font-mono);font-size:10.5px;padding:1px 5px;border-radius:4px;background:var(--wash);border:1px solid var(--line);color:var(--ink);}
+
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);display:flex;gap:16px;flex-wrap:wrap;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-mute);}
+
+  /* ============================================================
+     遮罩层（真实弹窗预览）
+     ============================================================ */
+  .scrim{
+    position:fixed;inset:0;z-index:90;display:none;place-items:center;padding:24px;
+    background:var(--scrim);backdrop-filter:blur(3px);
+    animation:fade .18s ease both;
+  }
+  .scrim.on{display:grid;}
+  .scrim .dlg{animation:pop .22s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.97);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms !important;transition-duration:.01ms !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= 页头 ================= -->
+  <header class="hero">
+    <div class="lead">
+      <div class="rule-top"></div>
+      <div>
+        <div class="k">XyMusic · Windows / Dialogs</div>
+        <h1>弹窗重设计 · Signal Panel</h1>
+      </div>
+      <p>现有弹窗把整句标题染成红色，其余全是同一块底色和两个等宽按钮，危险与普通无法区分。新方案收成一条语义导轨、一处同色图标、一句等宽引导语——语义只占三个小面积色块，正文仍然是可读的中性色。</p>
+    </div>
+    <div class="readouts">
+      <div class="readout"><div class="lbl">宽度</div><div class="val">420 px</div></div>
+      <div class="vr"></div>
+      <div class="readout"><div class="lbl">圆角</div><div class="val">14 px</div></div>
+      <div class="vr"></div>
+      <div class="readout"><div class="lbl">语义</div><div class="val">3 档</div></div>
+      <div class="vr"></div>
+      <div class="readout"><div class="lbl">段落</div><div class="val">7 段</div></div>
+    </div>
+    <button class="theme-btn" id="themeBtn" title="切换明暗主题" aria-label="切换明暗主题">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.5 6.5 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+  </header>
+
+  <!-- ================= 01 取向 ================= -->
+  <section>
+    <div class="shead">
+      <div class="idx">01</div>
+      <div class="txt"><h2>设计取向</h2><div class="sub">语义只出现在三处小面积上，标题恢复为正文色</div></div>
+    </div>
+    <div class="srule"></div>
+    <div class="intro">
+      <div>
+        <p><b>不再给标题上色。</b>旧实现里红色标题会让「删除」和「取消」看起来同等重要，真正的主按钮反而没有视觉权重。新方案把语义色全部收到 <b>导轨 / 图标 / 主按钮</b> 三个位置，标题回到 <code>onSurface</code>，一眼能分出「说什么」和「点哪个」。</p>
+        <p><b>每个弹窗都是同一条流水线。</b>导轨 → 图标 → 引导语 → 标题 → 正文 → 插槽 → 动作区，缺省段落自动收起。输入、单选、进度、结果只替换插槽，不再各自复制外壳，23 处调用点因此可以共用一套样式。</p>
+        <p><b>桌面端优先。</b>固定 420 px 上限、36 px 动作按钮、右侧对齐，并在动作区左侧留出 <kbd>Esc</kbd> / <kbd>Enter</kbd> 提示——键盘是桌面端的主要操作方式，移动端自动隐藏该提示。</p>
+      </div>
+      <div class="tones">
+        <div class="tone-row tone-info">
+          <div class="tone-swatch"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".9" fill="currentColor" stroke="none"/></svg></div>
+          <div class="tone-meta"><b>Info · 信息</b><span>Info</span></div>
+          <div class="tone-use">输入 / 选择 / 提示</div>
+        </div>
+        <div class="tone-row tone-danger">
+          <div class="tone-swatch"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 4.5 21 20H3z"/><path d="M12 10v4.4"/><circle cx="12" cy="17.2" r=".9" fill="currentColor" stroke="none"/></svg></div>
+          <div class="tone-meta"><b>Danger · 危险</b><span>Danger</span></div>
+          <div class="tone-use">删除 / 覆盖 / 断开</div>
+        </div>
+        <div class="tone-row tone-success">
+          <div class="tone-swatch"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4.2 4.2L19 7"/></svg></div>
+          <div class="tone-meta"><b>Success · 成功</b><span>Success</span></div>
+          <div class="tone-use">导入完成 / 已保存</div>
+        </div>
+        <div class="note" style="display:flex;gap:10px;font-size:11.5px;line-height:1.75;color:var(--ink-soft);padding:4px 0 0">
+          <span style="width:2px;height:13px;margin-top:4px;flex:none;background:var(--accent);border-radius:1px"></span>
+          <span>色值沿用应用现有 <b style="color:var(--ink)">primary / danger / success</b>，不引入额外主色，保证与侧栏、列表、播放条一致。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 02 解剖 ================= -->
+  <section>
+    <div class="shead">
+      <div class="idx">02</div>
+      <div class="txt"><h2>结构解剖</h2><div class="sub">悬停右侧条目，对应区域会亮起</div></div>
+    </div>
+    <div class="srule"></div>
+    <div class="ano">
+      <div class="ano-stage">
+        <div class="dlg tone-danger" id="anoDlg">
+          <div class="dlg-rail" data-region="rail"></div>
+          <div class="dlg-body">
+            <div data-region="head">
+              <div class="dlg-head">
+                <div class="dlg-ico">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg>
+                </div>
+                <div class="dlg-titles">
+                  <div class="dlg-kicker">危险操作 / 不可撤销</div>
+                  <h3 class="dlg-title">永久删除所选音乐</h3>
+                </div>
+              </div>
+            </div>
+            <p class="dlg-text" data-region="body">将从硬盘删除 <b>24 首歌曲</b> 及其缓存文件，并从所有歌单中移除。此操作无法撤销。</p>
+            <div class="dlg-slot" data-region="slot">
+              <div class="sum">
+                <div class="sum-row"><span>歌曲</span><b>24 首</b></div>
+                <div class="sum-row"><span>预计释放</span><b>1.42 GB</b></div>
+              </div>
+            </div>
+            <div class="dlg-foot" data-region="foot">
+              <div class="dlg-hint"><kbd>Esc</kbd><span>关闭</span><kbd>Enter</kbd><span>确认</span></div>
+              <div class="dlg-actions">
+                <button class="db">取消</button>
+                <button class="db primary">删除</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="legend" id="legend">
+        <li data-target="rail"><b>01</b><div><strong>语义导轨</strong><em>2 px 横向渐变：tone → 12% → 透明</em></div></li>
+        <li data-target="head"><b>02</b><div><strong>图标 + 引导语 + 标题</strong><em>34 px 方块 / r9 / 描边 40% · kicker 9.5 sp 字距 1.7 · 标题 17 sp / 700 / 行高 21</em></div></li>
+        <li data-target="body"><b>03</b><div><strong>正文</strong><em>13 sp / 行高 22 · onSurfaceVariant · 与标题间距 15</em></div></li>
+        <li data-target="slot"><b>04</b><div><strong>插槽</strong><em>输入 / 单选 / 进度 / 结果 / 概要，一律撑满内容宽</em></div></li>
+        <li data-target="foot"><b>05</b><div><strong>动作区</strong><em>1 px 分隔线（9%）· 上间距 16 · 右对齐横排 · 键位提示靠左</em></div></li>
+        <li data-target="rail"><b>06</b><div><strong>卡片</strong><em>420 宽 / r14 / 内边距 22·22·18 / surfaceContainerLowest</em></div></li>
+      </ul>
+    </div>
+
+    <h4 style="margin:34px 0 12px;font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--ink-mute);text-transform:uppercase">Token / 设计稿与 Compose 的对应</h4>
+    <table>
+      <thead>
+        <tr><th style="width:22%">项</th><th style="width:26%">设计值</th><th style="width:26%">色 / 样式</th><th>Compose 落点</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="nm">卡片宽度</td><td class="v">420 px（窄屏撑满）</td><td class="c">surfaceContainerLowest</td><td class="c">XyDialogTokens.maxWidth</td></tr>
+        <tr><td class="nm">圆角</td><td class="v">14</td><td class="c">RoundedCornerShape(14.dp)</td><td class="c">XyDialogTokens.corner</td></tr>
+        <tr><td class="nm">内边距</td><td class="v">22 / 22 / 22 / 18</td><td class="c">—</td><td class="c">padHorizontal / padTop / padBottom</td></tr>
+        <tr><td class="nm">导轨</td><td class="v">高 2</td><td class="c"><span class="swatch" style="background:#CF6B62"></span>tone → 12% → 透明</td><td class="c">Box + horizontalGradient</td></tr>
+        <tr><td class="nm">图标方块</td><td class="v">34 / r9 / 描边 1</td><td class="c">底色 13% · 描边 40%</td><td class="c">background + border</td></tr>
+        <tr><td class="nm">kicker</td><td class="v">9.5 / 字距 1.7</td><td class="c">Monospace · tone</td><td class="c">FontFamily.Monospace</td></tr>
+        <tr><td class="nm">标题</td><td class="v">17 / 700 / 行高 21</td><td class="c">onSurface</td><td class="c">Text(17.sp)</td></tr>
+        <tr><td class="nm">正文</td><td class="v">13 / 行高 22</td><td class="c">onSurfaceVariant</td><td class="c">Text(13.sp)</td></tr>
+        <tr><td class="nm">分隔线</td><td class="v">1，上间距 16</td><td class="c">onSurface 9%</td><td class="c">HorizontalDivider</td></tr>
+        <tr><td class="nm">按钮</td><td class="v">高 36 / r7 / 间距 10 / 内距 16</td><td class="c">主按钮 = tone，次按钮 = 16% 描边</td><td class="c">XyDialogButton</td></tr>
+        <tr><td class="nm">按钮文字</td><td class="v">12.5 / 600</td><td class="c">主 #fff · 次 onSurface</td><td class="c">—</td></tr>
+        <tr><td class="nm">遮罩</td><td class="v">—</td><td class="c"><span class="swatch" style="background:rgba(8,8,10,.74)"></span>rgba(8,8,10,.74) + 3px 模糊</td><td class="c">scrimColor（待实测）</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ================= 03 变体 ================= -->
+  <section>
+    <div class="shead">
+      <div class="idx">03</div>
+      <div class="txt"><h2>变体矩阵</h2><div class="sub">点击任意卡片，在遮罩上查看真实弹窗</div></div>
+    </div>
+    <div class="srule"></div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <!-- ================= 04 状态与交互 ================= -->
+  <section>
+    <div class="shead">
+      <div class="idx">04</div>
+      <div class="txt"><h2>状态与交互</h2><div class="sub">按钮四态、焦点可见性、键盘约定</div></div>
+    </div>
+    <div class="srule"></div>
+    <div class="pairs">
+      <div class="stack">
+        <div class="st-card">
+          <h4>按钮状态</h4>
+          <div class="btn-strip">
+            <button class="db">取消</button>
+            <button class="db is-hover">取消 · 悬停</button>
+            <button class="db primary">确认</button>
+            <button class="db primary is-disabled">确认 · 禁用</button>
+            <button class="db primary is-loading">确认</button>
+          </div>
+          <div class="btn-strip" style="margin-top:14px">
+            <span class="cap">DISABLED = 40% 不透明度，不换色</span>
+          </div>
+        </div>
+        <div class="st-card">
+          <h4>输入态</h4>
+          <div class="stack">
+            <div>
+              <input class="inp" value="我的歌单 · 夜间" />
+              <div class="inp-meta"><span>12 / 40</span><span>名称可随时修改</span></div>
+            </div>
+            <div>
+              <input class="inp" value="" placeholder="输入歌单名称" style="border-color:var(--tone);box-shadow:0 0 0 3px color-mix(in srgb,var(--tone) 18%,transparent)" />
+              <div class="inp-meta"><span class="err">名称为空，无法创建</span><span>0 / 40</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="st-card">
+        <h4>交互约定</h4>
+        <ul class="rule-list">
+          <li><span><b>Esc</b> 关闭并触发 <code>onCloseRequest</code>；点击遮罩等同 Esc。危险操作可在 <code>properties</code> 里关掉遮罩关闭。</span></li>
+          <li><span><b>Enter</b> 触发主按钮；输入框内回车等于「确认」，与鼠标点击同一路径，回调只触发一次。</span></li>
+          <li><span><b>顺序</b>：先执行回调、再 <code>dismiss()</code>，避免回调里读取已被移除的弹窗对象。</span></li>
+          <li><span><b>焦点</b>：打开后焦点落在主按钮或首个输入框，用 2 px tone 外描边表示 <code>:focus-visible</code>，不用默认蓝色方框。</span></li>
+          <li><span><b>叠加</b>：多个弹窗同时存在时只渲染最后一个，避免双层遮罩把界面压黑。</span></li>
+          <li><span><b>长内容</b>：选择型插槽超过 6 行时内部滚动，上限 320 px，外壳高度不再撑破窗口。</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>XYMUSIC · SIGNAL DECK</span>
+    <span>DIALOG SPEC v1</span>
+    <span>与 settings-redesign.html 共用令牌</span>
+  </footer>
+</div>
+
+<!-- 遮罩层 -->
+<div class="scrim" id="scrim" role="presentation"></div>
+
+<script>
+/* ============================ 图标 ============================ */
+const ICONS = {
+  ask:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.5 2.5 0 1 1 3.6 2.3c-.7.4-1.2 1-1.2 1.8v.4"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/>',
+  warn:'<path d="M12 4.5 21 20H3z"/><path d="M12 10v4.4"/><circle cx="12" cy="17.2" r=".9" fill="currentColor" stroke="none"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".9" fill="currentColor" stroke="none"/>',
+  check:'<path d="m5 13 4.2 4.2L19 7"/>',
+  edit:'<path d="M4 20h4l10-10-4-4L4 16z"/><path d="M14 6l4 4"/>',
+  list:'<path d="M8 7h12M8 12h12M8 17h8"/><circle cx="4.6" cy="7" r="1.1" fill="currentColor" stroke="none"/><circle cx="4.6" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="4.6" cy="17" r="1.1" fill="currentColor" stroke="none"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>',
+  box:'<path d="M4 8h16v12H4z"/><path d="M4 8l2-4h12l2 4"/><path d="M9 12h6"/>',
+  download:'<path d="M12 4v11"/><path d="M7 12l5 5 5-5"/><path d="M5 20h14"/>',
+  close:'<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>',
+  gear:'<circle cx="12" cy="12" r="3.1"/><path d="M12 2.8v3M12 18.2v3M4.5 7.5l2.6 1.5M16.9 15l2.6 1.5M4.5 16.5l2.6-1.5M16.9 9l2.6-1.5"/>'
+};
+const svg = (n, s = 17) =>
+  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[n] || ICONS.ask}</svg>`;
+
+/* ============================ 弹窗构造 ============================ */
+/**
+ * 生成一个弹窗的 HTML。
+ * @param {object} v 变体配置
+ */
+function dlgHTML(v) {
+  const icon = v.icon === null ? '' : `<div class="dlg-ico">${svg(v.icon || 'ask')}</div>`;
+  const head = (v.title || v.kicker)
+    ? `<div class="dlg-head">
+         ${icon}
+         <div class="dlg-titles">
+           ${v.kicker ? `<div class="dlg-kicker">${v.kicker}</div>` : ''}
+           ${v.title ? `<h3 class="dlg-title">${v.title}</h3>` : ''}
+         </div>
+       </div>`
+    : '';
+  const body = v.text ? `<p class="dlg-text">${v.text}</p>` : '';
+  const slot = v.slot ? `<div class="dlg-slot">${v.slot}</div>` : '';
+  const actions = (v.actions || []).map(a =>
+    `<button class="db${a.primary ? ' primary' : ''}${a.disabled ? ' is-disabled' : ''}${a.loading ? ' is-loading' : ''}">${a.text}</button>`
+  ).join('');
+  const hint = v.hint === false ? '' : `<div class="dlg-hint"><kbd>Esc</kbd><span>关闭</span><kbd>Enter</kbd><span>确认</span></div>`;
+  const foot = actions
+    ? `<div class="dlg-foot">${hint}<div class="dlg-actions">${actions}</div></div>`
+    : '';
+  return `<div class="dlg tone-${v.tone || 'info'}" role="dialog" aria-modal="true">
+    <div class="dlg-rail"></div>
+    <div class="dlg-body">${head}${body}${slot}${foot}</div>
+  </div>`;
+}
+
+/* ============================ 变体数据 ============================ */
+const CASES = [
+  {
+    key: 'delete-music', label: '危险确认 · 删除', desc: 'DANGER / 2 BTN',
+    tone: 'danger', icon: 'trash',
+    kicker: '危险操作 / 不可撤销',
+    title: '永久删除所选音乐',
+    text: '将从硬盘删除 <b>24 首歌曲</b> 及其缓存文件，并从所有歌单中移除。此操作无法撤销。',
+    slot: `<div class="sum">
+      <div class="sum-row"><span>歌曲</span><b>24 首</b></div>
+      <div class="sum-row"><span>预计释放</span><b>1.42 GB</b></div>
+    </div>`,
+    actions: [{ text: '取消' }, { text: '删除', primary: true }]
+  },
+  {
+    key: 'clear-cache', label: '普通确认 · 清理', desc: 'INFO / 2 BTN',
+    tone: 'info', icon: 'box',
+    kicker: '存储 / 可安全清理',
+    title: '清空音频缓存？',
+    text: '将删除 <b>386 MB</b> 的已下载缓存文件。歌曲仍在资料库中，下次播放会重新下载。',
+    actions: [{ text: '取消' }, { text: '清理', primary: true }]
+  },
+  {
+    key: 'create-playlist', label: '输入 · 新建歌单', desc: 'INFO / INPUT',
+    tone: 'info', icon: 'edit',
+    kicker: '输入 / 创建',
+    title: '新建歌单',
+    slot: `<div>
+      <input class="inp" value="我的歌单 · 夜间" />
+      <div class="inp-meta"><span>10 / 40</span><span>创建后可重命名</span></div>
+    </div>`,
+    hint: false,
+    actions: [{ text: '取消' }, { text: '创建', primary: true }]
+  },
+  {
+    key: 'rename-disabled', label: '校验 · 名称为空', desc: 'INFO / DISABLED',
+    tone: 'info', icon: 'edit',
+    kicker: '输入 / 需要修正',
+    title: '重命名歌单',
+    slot: `<div>
+      <input class="inp" value="" placeholder="输入歌单名称"
+        style="border-color:var(--tone);box-shadow:0 0 0 3px color-mix(in srgb,var(--tone) 18%,transparent)" />
+      <div class="inp-meta"><span class="err">名称为空，无法保存</span><span>0 / 40</span></div>
+    </div>`,
+    hint: false,
+    actions: [{ text: '取消' }, { text: '保存', primary: true, disabled: true }]
+  },
+  {
+    key: 'export-select', label: '选择 · 导出格式', desc: 'INFO / LIST',
+    tone: 'info', icon: 'list',
+    kicker: '导出 / 选择格式',
+    title: '导出歌单',
+    text: '选择文件格式后继续选择保存位置。',
+    slot: `<div class="pick">
+      <div class="pick-row on"><span class="radio"></span><div class="pick-main"><b>M3U8 播放列表</b><span>保留曲序与路径，兼容多数播放器</span></div><span class="tag">.m3u8</span></div>
+      <div class="pick-row"><span class="radio"></span><div class="pick-main"><b>纯文本清单</b><span>仅曲目信息，便于阅读与打印</span></div><span class="tag">.txt</span></div>
+    </div>`,
+    actions: [{ text: '取消' }, { text: '导出', primary: true }]
+  },
+  {
+    key: 'tip', label: '提示 · 单按钮', desc: 'INFO / 1 BTN',
+    tone: 'info', icon: 'info',
+    kicker: '提示',
+    title: '尚未连接服务器',
+    text: '连接成功后才可以浏览媒体库与同步播放进度。',
+    actions: [{ text: '知道了', primary: true }]
+  },
+  {
+    key: 'import-success', label: '结果 · 导入成功', desc: 'SUCCESS / SUMMARY',
+    tone: 'success', icon: 'check',
+    kicker: '完成 / 已同步',
+    title: '歌单导入完成',
+    text: '已从 <b>night-list.m3u8</b> 导入曲目。',
+    slot: `<div class="sum">
+      <div class="sum-row"><span>成功</span><b>128 首</b></div>
+      <div class="sum-row"><span>跳过（已存在）</span><b>6 首</b></div>
+      <div class="sum-row"><span>失败</span><b>0 首</b></div>
+    </div>`,
+    actions: [{ text: '关闭' }, { text: '查看歌单', primary: true }]
+  },
+  {
+    key: 'progress', label: '进度 · 清理中', desc: 'INFO / PROGRESS',
+    tone: 'info', icon: 'gear',
+    kicker: '进行中 / 请稍候',
+    title: '正在清理缓存',
+    slot: `<div>
+      <div class="prog-top"><span class="nm">音频缓存</span><span class="pc">62%</span></div>
+      <div class="track"><i style="--w:62%"></i></div>
+      <div class="prog-sub">已清理 241 MB / 386 MB · 剩余约 4 秒</div>
+    </div>`,
+    hint: false,
+    actions: [{ text: '取消' }]
+  },
+  {
+    key: 'error', label: '错误 · 连接失败', desc: 'DANGER / DETAIL',
+    tone: 'danger', icon: 'close',
+    kicker: '连接 / 失败',
+    title: '无法连接到服务器',
+    text: '请求在 10 秒后超时，请确认地址与网络是否可用。',
+    slot: `<pre class="code">POST https://nas.local/jellyfin/Users/Authenticate
+<b>HTTP 503</b> · 服务端未响应</pre>`,
+    actions: [{ text: '关闭' }, { text: '重试', primary: true }]
+  },
+  {
+    key: 'multi', label: '多动作 · 退出播放器', desc: 'INFO / 3 BTN',
+    tone: 'info', icon: 'warn',
+    kicker: '退出 / 有未保存更改',
+    title: '退出前是否保存队列？',
+    text: '当前播放队列已修改但尚未同步到服务器。',
+    hint: false,
+    actions: [{ text: '取消' }, { text: '不保存' }, { text: '保存并退出', primary: true }]
+  }
+];
+
+/* ============================ 渲染变体矩阵 ============================ */
+const board = document.getElementById('board');
+board.innerHTML = CASES.map((c, i) => `
+  <article class="case" data-key="${c.key}" tabindex="0" role="button" aria-label="预览 ${c.label}">
+    <span class="case-open">点击预览</span>
+    <div class="case-head">
+      <span class="no">${String(i + 1).padStart(2, '0')}</span>
+      <span class="tt">${c.label}</span>
+      <span class="ds">${c.desc}</span>
+    </div>
+    <div class="case-stage">${dlgHTML(c)}</div>
+  </article>
+`).join('');
+
+/* ============================ 遮罩预览 ============================ */
+const scrim = document.getElementById('scrim');
+
+function openCase(key) {
+  const c = CASES.find(x => x.key === key);
+  if (!c) return;
+  scrim.innerHTML = dlgHTML(c);
+  scrim.classList.add('on');
+  const primary = scrim.querySelector('.db.primary');
+  if (primary) primary.focus({ preventScroll: true });
+}
+function closeScrim() {
+  scrim.classList.remove('on');
+  scrim.innerHTML = '';
+}
+board.addEventListener('click', e => {
+  const card = e.target.closest('.case');
+  if (card) openCase(card.dataset.key);
+});
+board.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const card = e.target.closest('.case');
+  if (card) { e.preventDefault(); openCase(card.dataset.key); }
+});
+scrim.addEventListener('click', e => {
+  // 只有点遮罩本身才关闭，点卡片内部不关闭
+  if (e.target === scrim) closeScrim();
+});
+document.addEventListener('keydown', e => {
+  if (!scrim.classList.contains('on')) return;
+  if (e.key === 'Escape') { closeScrim(); return; }
+  if (e.key === 'Enter') {
+    const primary = scrim.querySelector('.db.primary:not(.is-disabled)');
+    if (primary) { e.preventDefault(); primary.classList.add('is-loading'); }
+  }
+});
+
+/* ============================ 解剖联动 ============================ */
+const legend = document.getElementById('legend');
+const anoDlg = document.getElementById('anoDlg');
+legend.addEventListener('mouseover', e => {
+  const li = e.target.closest('li');
+  if (!li) return;
+  legend.querySelectorAll('li').forEach(x => x.classList.toggle('on', x === li));
+  anoDlg.querySelectorAll('[data-region]').forEach(r =>
+    r.classList.toggle('hl', r.dataset.region === li.dataset.target)
+  );
+});
+legend.addEventListener('mouseleave', () => {
+  legend.querySelectorAll('li').forEach(x => x.classList.remove('on'));
+  anoDlg.querySelectorAll('[data-region]').forEach(r => r.classList.remove('hl'));
+});
+// 反向：悬停弹窗区域时高亮对应条目
+anoDlg.addEventListener('mouseover', e => {
+  const region = e.target.closest('[data-region]');
+  if (!region) return;
+  legend.querySelectorAll('li').forEach(li =>
+    li.classList.toggle('on', li.dataset.target === region.dataset.region)
+  );
+});
+
+/* ============================ 主题切换 ============================ */
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+});
+</script>
+</body>
+</html>
