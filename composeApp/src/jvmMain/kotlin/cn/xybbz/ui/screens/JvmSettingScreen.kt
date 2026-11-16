@@ -39,12 +39,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.copyTextToClipboard
 import cn.xybbz.config.info.supportsICloudPasswordSync
 import cn.xybbz.config.setting.JvmAutoStartManager
+import cn.xybbz.download.core.DownloadDirectoryIssue
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.ui.components.JvmSettingBaseRow
@@ -54,7 +56,6 @@ import cn.xybbz.ui.components.JvmSettingGroupGrid
 import cn.xybbz.ui.components.JvmSettingHeadline
 import cn.xybbz.ui.components.JvmSettingLazyColumn
 import cn.xybbz.ui.components.JvmSettingNote
-import cn.xybbz.ui.components.JvmSettingPathRow
 import cn.xybbz.ui.components.JvmSettingPickRow
 import cn.xybbz.ui.components.JvmSettingRowDescriptionStyle
 import cn.xybbz.ui.components.JvmSettingSwitchRow
@@ -65,6 +66,7 @@ import cn.xybbz.ui.components.JvmSettingThemeRow
 import cn.xybbz.ui.components.JvmSettingWideGroup
 import cn.xybbz.ui.components.displayAudioBitRateText
 import cn.xybbz.ui.components.rememberBackgroundImagePicker
+import cn.xybbz.ui.components.rememberJvmFileKitDialogSettings
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -81,6 +83,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import java.awt.SystemTray
@@ -109,10 +112,21 @@ import xymusic.composeapp.generated.resources.language
 import xymusic.composeapp.generated.resources.password_24px
 import xymusic.composeapp.generated.resources.queue_music_24px
 import xymusic.composeapp.generated.resources.restart_alt_24px
+import xymusic.composeapp.generated.resources.restore_default
 import xymusic.composeapp.generated.resources.select_image
 import xymusic.composeapp.generated.resources.settings
 import xymusic.composeapp.generated.resources.settings_24px
-import xymusic.composeapp.generated.resources.song_cache_location
+import xymusic.composeapp.generated.resources.song_download_location
+import xymusic.composeapp.generated.resources.song_download_location_changed
+import xymusic.composeapp.generated.resources.song_download_location_default
+import xymusic.composeapp.generated.resources.song_download_location_fallback
+import xymusic.composeapp.generated.resources.song_download_location_no_space
+import xymusic.composeapp.generated.resources.song_download_location_note
+import xymusic.composeapp.generated.resources.song_download_location_not_creatable
+import xymusic.composeapp.generated.resources.song_download_location_not_directory
+import xymusic.composeapp.generated.resources.song_download_location_not_writable
+import xymusic.composeapp.generated.resources.song_download_location_restored
+import xymusic.composeapp.generated.resources.song_download_location_unsupported
 import xymusic.composeapp.generated.resources.volume_up_24px
 
 /**
@@ -142,6 +156,10 @@ fun JvmSettingScreen(
     val ifSyncPasswordsByICloud by settingsManager.ifSyncPasswordsByICloud.collectAsState()
     val songStoragePath = settingsViewModel.songStoragePath
     val copySuccess = stringResource(Res.string.copy_success)
+    // 下载目录选择器绑定主窗口，避免系统弹窗落到应用窗口后面。
+    val downloadDirectoryDialogSettings = rememberJvmFileKitDialogSettings(
+        stringResource(Res.string.song_download_location)
+    )
     val canShowICloudPasswordSync = supportsICloudPasswordSync()
     // 当前主题用于界面分组回显，跟随设置流实时刷新。
     val themeType by interfaceSettingViewModel.settingsManager.themeType.collectAsState()
@@ -446,30 +464,63 @@ fun JvmSettingScreen(
                         // 标签页之间用横线分隔，避免不同标签的内容视觉上连成一片。
                         JvmSettingTabDivider()
                         JvmSettingGroupGrid { groupWidth ->
-                            // 下载分组：下载并发与歌曲缓存位置。
-                            JvmSettingGroup(
+                            // 下载分组：下载并发与歌曲下载位置。
+                            // 下载位置需要整行展示路径和操作按钮，因此改用宽内容分组。
+                            JvmSettingWideGroup(
                                 modifier = Modifier.width(groupWidth),
                                 title = stringResource(Res.string.download),
                             ) {
-                                JvmSettingDownloadRow(
-                                    selected = settings.maxConcurrentDownloads,
-                                    onSelected = { maxConcurrentDownloads ->
-                                        coroutineScope.launch {
-                                            settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
+                                // 并发数保持普通设置项宽度节奏，避免单个下拉独占整行。
+                                Box(modifier = Modifier.widthIn(max = JvmDownloadConcurrencyMaxWidth)) {
+                                    JvmSettingDownloadRow(
+                                        selected = settings.maxConcurrentDownloads,
+                                        onSelected = { maxConcurrentDownloads ->
+                                            coroutineScope.launch {
+                                                settingsViewModel.setMaxConcurrentDownloads(maxConcurrentDownloads)
+                                            }
                                         }
-                                    }
+                                    )
+                                }
+
+                                // 歌曲下载位置：整行展示生效目录，行尾提供切换与恢复默认操作。
+                                // 已下载文件不做搬运，旧记录仍保留原路径，因此这里只提示新任务生效。
+                                JvmDownloadLocationRow(
+                                    path = songStoragePath,
+                                    isDefaultPath = settingsViewModel.isDefaultDownloadPath,
+                                    isFallback = settingsViewModel.isDownloadDirectoryFallback,
+                                    onChangeDirectory = {
+                                        coroutineScope.launch {
+                                            chooseJvmStorageDirectory(
+                                                currentPath = songStoragePath,
+                                                dialogSettings = downloadDirectoryDialogSettings,
+                                            )?.let { selectedPath ->
+                                                val issue = settingsViewModel.changeDownloadDirectory(
+                                                    selectedPath
+                                                )
+                                                if (issue == null) {
+                                                    MessageUtils.sendPopTipSuccess(
+                                                        Res.string.song_download_location_changed
+                                                    )
+                                                } else {
+                                                    MessageUtils.sendPopTipError(
+                                                        issue.toDirectoryIssueText()
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    },
+                                    onRestoreDefault = {
+                                        coroutineScope.launch {
+                                            settingsViewModel.restoreDefaultDownloadDirectory()
+                                            MessageUtils.sendPopTipSuccess(
+                                                Res.string.song_download_location_restored
+                                            )
+                                        }
+                                    },
                                 )
 
-                                JvmSettingPathRow(
-                                    icon = Res.drawable.queue_music_24px,
-                                    title = stringResource(Res.string.song_cache_location),
-                                    path = songStoragePath,
-                                    onClick = {
-                                        if (songStoragePath.isNotBlank()) {
-                                            copyTextToClipboard(songStoragePath)
-                                            MessageUtils.sendPopTip(copySuccess)
-                                        }
-                                    }
+                                JvmSettingNote(
+                                    text = stringResource(Res.string.song_download_location_note)
                                 )
                             }
 
@@ -682,3 +733,88 @@ private fun String.toBackgroundImageFileName(): String {
 
 /** 背景图片设置行的最大宽度：避免单个设置行横向铺满整个内容区。 */
 private val JvmSettingBackgroundItemMaxWidth = 560.dp
+
+/** 下载并发设置行的最大宽度：保持与普通设置项一致的单列宽度节奏。 */
+private val JvmDownloadConcurrencyMaxWidth = 560.dp
+
+/**
+ * 歌曲下载位置设置行。
+ *
+ * 整行展示当前生效的下载目录，行尾提供「修改」与「恢复默认」两个操作；
+ * 已在使用默认目录时禁用恢复操作，避免无意义的重复还原。
+ *
+ * @param path 当前生效的下载目录路径。
+ * @param isDefaultPath 设置表中是否没有保存自定义下载目录。
+ * @param isFallback 自定义目录是否因不可用而回退到了平台默认目录。
+ * @param onChangeDirectory 点击修改目录时触发。
+ * @param onRestoreDefault 点击恢复默认目录时触发。
+ */
+@Composable
+private fun JvmDownloadLocationRow(
+    path: String,
+    isDefaultPath: Boolean,
+    isFallback: Boolean,
+    onChangeDirectory: () -> Unit,
+    onRestoreDefault: () -> Unit,
+) {
+    JvmSettingBaseRow(
+        icon = Res.drawable.folder_managed_24px,
+        title = stringResource(Res.string.song_download_location),
+        description = when {
+            // 自定义目录失效时明确提示已回退，避免用户以为仍在自定义目录下载。
+            isFallback -> stringResource(Res.string.song_download_location_fallback, path)
+            path.isBlank() -> stringResource(Res.string.song_download_location_default)
+            else -> path
+        },
+        descriptionStyle = JvmSettingRowDescriptionStyle.Path,
+        descriptionMaxLines = 2,
+        descriptionOverflow = TextOverflow.Visible,
+        onClick = {
+            // 点击整行复制当前路径，保留原有「点击复制」习惯。
+            if (path.isNotBlank()) {
+                copyTextToClipboard(path)
+                MessageUtils.sendPopTip(Res.string.copy_success)
+            }
+        },
+        trailing = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                JvmStorageActionPill(
+                    text = stringResource(Res.string.adjust),
+                    onClick = onChangeDirectory,
+                )
+                JvmStorageActionPill(
+                    text = stringResource(Res.string.restore_default),
+                    enabled = !isDefaultPath,
+                    onClick = onRestoreDefault,
+                )
+            }
+        },
+    )
+}
+
+/**
+ * 把下载目录不可用原因转换成提示文案。
+ *
+ * @return 对应的字符串资源。
+ */
+private fun DownloadDirectoryIssue.toDirectoryIssueText(): StringResource {
+    return when (this) {
+        DownloadDirectoryIssue.Unsupported ->
+            Res.string.song_download_location_unsupported
+
+        DownloadDirectoryIssue.NotCreatable ->
+            Res.string.song_download_location_not_creatable
+
+        DownloadDirectoryIssue.NotDirectory ->
+            Res.string.song_download_location_not_directory
+
+        DownloadDirectoryIssue.NotWritable ->
+            Res.string.song_download_location_not_writable
+
+        DownloadDirectoryIssue.NoSpace ->
+            Res.string.song_download_location_no_space
+    }
+}

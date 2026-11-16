@@ -85,6 +85,10 @@ class SettingsManager(
     val cacheFilePath = settings.map { it.cacheFilePath }.distinctUntilChanged()
         .stateIn(scope, SharingStarted.Eagerly, settings.value.cacheFilePath)
 
+    //歌曲下载文件所在位置，空字符串表示使用平台默认目录
+    val downloadFilePath = settings.map { it.downloadFilePath }.distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, settings.value.downloadFilePath)
+
     /**
      * 是否允许 iOS 通过 iCloud Keychain 同步密码。
      */
@@ -454,6 +458,13 @@ class SettingsManager(
      */
     suspend fun setCacheFilePath(cacheFilePath: String) {
         updateSettings { it.copy(cacheFilePath = cacheFilePath) }
+    }
+
+    /**
+     * 保存歌曲下载目录。空字符串表示使用平台默认目录。
+     */
+    suspend fun setDownloadFilePath(downloadFilePath: String) {
+        updateSettings { it.copy(downloadFilePath = downloadFilePath) }
     }
 
     /**

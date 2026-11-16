@@ -1387,6 +1387,15 @@ val Migration_9_10 = object : Migration(9, 10) {
 }
 
 /**
+ * v12 到 v13 的设置迁移：新增自定义歌曲下载目录字段。
+ */
+val Migration_12_13 = object : Migration(12, 13) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE xy_settings ADD COLUMN downloadFilePath TEXT NOT NULL DEFAULT ''")
+    }
+}
+
+/**
  * v11 到 v12 的设置迁移：新增桌面端启动选项字段。
  */
 val Migration_11_12 = object : Migration(11, 12) {

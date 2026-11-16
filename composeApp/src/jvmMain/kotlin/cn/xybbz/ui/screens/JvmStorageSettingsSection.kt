@@ -503,7 +503,7 @@ private fun JvmStorageValuePill(text: String) {
  * @param onClick 点击回调，调用方负责数据库等高风险操作的二次确认。
  */
 @Composable
-private fun JvmStorageActionPill(
+internal fun JvmStorageActionPill(
     text: String,
     enabled: Boolean = true,
     onClick: () -> Unit,
@@ -637,7 +637,7 @@ private fun jvmStorageSettingsItems(
  * @param dialogSettings FileKit 弹窗配置，包含标题和主窗口 parent。
  * @return 用户选择的目录绝对路径；取消或打开失败时返回 null。
  */
-private suspend fun chooseJvmStorageDirectory(
+internal suspend fun chooseJvmStorageDirectory(
     currentPath: String,
     dialogSettings: io.github.vinceglb.filekit.dialogs.FileKitDialogSettings,
 ): String? {

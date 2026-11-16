@@ -216,6 +216,17 @@
     <string name="custom_cover_api_hint">api.lrc.cx/cover</string>
     <string name="cache_location">缓存位置</string>
     <string name="song_cache_location">歌曲存储位置</string>
+    <string name="song_download_location">歌曲下载位置</string>
+    <string name="song_download_location_default">使用默认下载目录</string>
+    <string name="song_download_location_fallback">原目录不可用，已回退到 %1$s</string>
+    <string name="song_download_location_note">更改下载目录后，新建下载任务保存到新目录；已下载文件保留在原路径，仍可正常播放与删除。</string>
+    <string name="song_download_location_changed">已切换歌曲下载目录</string>
+    <string name="song_download_location_restored">已恢复默认歌曲下载目录</string>
+    <string name="song_download_location_unsupported">当前平台暂不支持自定义下载目录</string>
+    <string name="song_download_location_not_creatable">无法创建所选目录，请重新选择</string>
+    <string name="song_download_location_not_directory">所选路径不是目录，请重新选择</string>
+    <string name="song_download_location_not_writable">所选目录没有写入权限，请重新选择</string>
+    <string name="song_download_location_no_space">所选目录所在磁盘空间不足，请重新选择</string>
     <string name="connection_management">连接管理</string>
     <string name="download_max_list">最大同时下载数量</string>
     <string name="more">更多</string>
