@@ -1387,6 +1387,19 @@ val Migration_9_10 = object : Migration(9, 10) {
 }
 
 /**
+ * v11 到 v12 的设置迁移：新增桌面端启动选项字段。
+ */
+val Migration_11_12 = object : Migration(11, 12) {
+    override fun migrate(connection: SQLiteConnection) {
+        listOf(
+            "ALTER TABLE xy_settings ADD COLUMN ifAutoStart INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE xy_settings ADD COLUMN ifRestorePlayQueue INTEGER NOT NULL DEFAULT 1",
+            "ALTER TABLE xy_settings ADD COLUMN ifMinimizeToTray INTEGER NOT NULL DEFAULT 0",
+        ).forEach { connection.execSQL(it) }
+    }
+}
+
+/**
  * v10 到 v11 的查询性能索引迁移：补齐大列表分页、年份过滤和关系表排序使用的复合索引。
  */
 val Migration_10_11 = object : Migration(10, 11) {

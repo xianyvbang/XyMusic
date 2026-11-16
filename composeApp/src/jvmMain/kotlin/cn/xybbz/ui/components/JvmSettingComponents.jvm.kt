@@ -18,12 +18,14 @@
 
 package cn.xybbz.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +36,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -46,29 +49,39 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.xybbz.common.enums.toResStringInt
+import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.windows.DesktopTooltipBox
+import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
@@ -103,18 +116,6 @@ internal val JvmSettingConnectionFormCardMinHeight = 118.dp
 /** JVM 设置页内容卡片切换为双列的统一宽度断点。 */
 internal val JvmSettingContentGridTwoColumnBreakpoint = 640.dp
 
-/** JVM 设置页背景预览叠加层在窄宽度下隐藏侧栏的断点。 */
-internal val JvmSettingBackgroundPreviewCompactBreakpoint = 560.dp
-
-/** JVM 设置页背景预览中模拟桌面播放器的底栏高度。 */
-internal val JvmSettingBackgroundPreviewPlayerHeight = 58.dp
-
-/** JVM 设置页背景预览中模拟桌面顶栏的高度。 */
-internal val JvmSettingBackgroundPreviewTopBarHeight = 44.dp
-
-/** JVM 设置页背景预览中模拟桌面侧栏的宽度。 */
-internal val JvmSettingBackgroundPreviewSideWidth = 124.dp
-
 /** JVM 设置页媒体库列表单行最小高度。 */
 internal val JvmSettingLibraryRowMinHeight = 76.dp
 
@@ -140,13 +141,55 @@ private val JvmSettingActionCardCompactWidth = 154.dp
 private val JvmSettingActionCardMaxWidth = 196.dp
 
 /** 通用入口卡片统一高度，保证设置、档位和分段选择卡片等高排列。 */
-private val JvmSettingActionCardHeight = 160.dp
+private val JvmSettingActionCardHeight = 152.dp
 
 /** 通用入口卡片移入时的上移距离，保持与专辑卡片 hover 反馈一致。 */
 private val JvmSettingActionCardLiftOffset = (-6).dp
 
 /** 设置页统一图标容器尺寸。 */
-private val JvmSettingIconSize = 32.dp
+private val JvmSettingIconSize = 30.dp
+
+/** 设置分组之间的纵向间距。 */
+internal val JvmSettingGroupVerticalGap = 32.dp
+
+/** 设置分组内每个设置项的最小宽度，低于该宽度时减少每行展示的数量。 */
+private val JvmSettingGroupItemMinWidth = 240.dp
+
+/** 设置分组内设置项的横向间距。 */
+private val JvmSettingGroupItemGap = 12.dp
+
+/** 设置分组内设置项的纵向间距。 */
+private val JvmSettingGroupItemVerticalGap = 2.dp
+
+/** 设置分组内每行最多展示的设置项数量。 */
+private const val JvmSettingGroupMaxColumnCount = 3
+
+/** 分组内设置项的固定宽度；为空时设置项按整行铺满。 */
+private val LocalJvmSettingItemWidth = compositionLocalOf<Dp?> { null }
+
+/** 设置分组标题左侧强调条宽度。 */
+private val JvmSettingGroupMarkerWidth = 3.dp
+
+/** 设置分组标题左侧强调条高度。 */
+private val JvmSettingGroupMarkerHeight = 11.dp
+
+/** 设计稿开关宽度。 */
+private val JvmSettingSwitchWidth = 36.dp
+
+/** 设计稿开关高度。 */
+private val JvmSettingSwitchHeight = 20.dp
+
+/** 设计稿开关滑块尺寸。 */
+private val JvmSettingSwitchThumbSize = 14.dp
+
+/** 开关滑块开启态的最大横向位移。 */
+private val JvmSettingSwitchThumbOffset = 18.dp
+
+/** 设置行悬停时左侧强调条宽度。 */
+private val JvmSettingRowMarkerWidth = 2.dp
+
+/** 设置行悬停时左侧强调条高度。 */
+private val JvmSettingRowMarkerHeight = 40.dp
 
 /**
  * 通用入口卡片的渲染数据。
@@ -374,8 +417,32 @@ private fun JvmSettingPaneStack(
     )
 }
 
+/** 页面头部标题前的强调短条宽度，对齐设计稿顶部装饰线。 */
+private val JvmSettingHeaderRuleWidth = 34.dp
+
+/** 页面头部标题前的强调短条高度。 */
+private val JvmSettingHeaderRuleHeight = 3.dp
+
+/** 页面头部标题与说明文案之间的间距。 */
+private val JvmSettingHeaderContentGap = 12.dp
+
+/** 页面头部标题行高，对应设计稿的紧凑大标题。 */
+private val JvmSettingHeaderTitleLineHeight = 34.sp
+
+/** 页面头部标题字距，对应设计稿的负字距大标题。 */
+private val JvmSettingHeaderTitleLetterSpacing = (-0.9).sp
+
+/** 页面头部说明文案的最大宽度，避免超宽窗口下单行文字过长。 */
+private val JvmSettingHeaderDescriptionMaxWidth = 560.dp
+
+/** 页面头部说明文案行高，对应设计稿较松的阅读行距。 */
+private val JvmSettingHeaderDescriptionLineHeight = 22.sp
+
 /**
  * JVM 设置类页面的通用头部。
+ *
+ * 排版对齐设计稿：标题上方是主色短横条，标题使用加粗紧字距大字，
+ * 说明文案加宽行距并限制最大宽度，右侧保留状态摘要卡片。
  *
  * @param modifier 头部外层修饰符。
  * @param title 页面标题。
@@ -389,32 +456,256 @@ internal fun JvmSettingPageHeader(
     description: String,
     statusContent: @Composable () -> Unit,
 ) {
-    val gap = XyTheme.dimens.contentPadding * 2
-
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(gap),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding * 2),
         verticalAlignment = Alignment.Bottom
     ) {
         Column(
             modifier = Modifier
                 // 标题说明只吃状态卡之外的剩余空间，保证头部摘要始终在同一行。
                 .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+            verticalArrangement = Arrangement.spacedBy(JvmSettingHeaderContentGap)
         ) {
+            // 标题上方的强调短条，呼应设计稿页面头部的装饰线。
+            Box(
+                modifier = Modifier
+                    .width(JvmSettingHeaderRuleWidth)
+                    .height(JvmSettingHeaderRuleHeight)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = RoundedCornerShape(JvmSettingHeaderRuleHeight)
+                    )
+            )
             XyTextLarge(
                 text = title,
-                style = MaterialTheme.typography.headlineMedium,
+                // 标题字重通过参数传入，避免被 XyTextLarge 的默认字重覆盖。
+                fontWeight = FontWeight.ExtraBold,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    letterSpacing = JvmSettingHeaderTitleLetterSpacing,
+                    lineHeight = JvmSettingHeaderTitleLineHeight,
+                ),
                 color = MaterialTheme.colorScheme.onSurface
             )
             XyTextSub(
+                modifier = Modifier.widthIn(max = JvmSettingHeaderDescriptionMaxWidth),
                 text = description,
-                style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    lineHeight = JvmSettingHeaderDescriptionLineHeight
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         statusContent()
+    }
+}
+
+/** 紧凑标题字号，对应设计稿设置页顶部大标题。 */
+private val JvmSettingHeadlineTitleSize = 32.sp
+
+/** 紧凑标题行高。 */
+private val JvmSettingHeadlineTitleLineHeight = 36.sp
+
+/** 紧凑标题字距。 */
+private val JvmSettingHeadlineTitleLetterSpacing = (-1.1).sp
+
+/** 标题与右侧读数之间的间距。 */
+private val JvmSettingHeadlineGap = 16.dp
+
+/** 顶部读数文本字号。 */
+private val JvmSettingHeadlineMetaSize = 10.5.sp
+
+/**
+ * JVM 设置页紧凑头部。
+ *
+ * 排版对齐设计稿：左侧是加粗大标题，右侧是等宽小字的当前数据源读数。
+ *
+ * @param title 页面标题。
+ * @param meta 标题右侧的等宽读数文案。
+ * @param modifier 外层修饰符。
+ */
+@Composable
+internal fun JvmSettingHeadline(
+    title: String,
+    meta: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(JvmSettingHeadlineGap),
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        XyTextLarge(
+            text = title,
+            fontWeight = FontWeight.ExtraBold,
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontSize = JvmSettingHeadlineTitleSize,
+                lineHeight = JvmSettingHeadlineTitleLineHeight,
+                letterSpacing = JvmSettingHeadlineTitleLetterSpacing,
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        XyTextSub(
+            modifier = Modifier.weight(1f, fill = false),
+            text = meta,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontSize = JvmSettingHeadlineMetaSize,
+                letterSpacing = 0.9.sp,
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+    }
+}
+
+/**
+ * JVM 设置页分组网格。
+ *
+ * 分组按标签页内的先后顺序纵向排列，每组独占整行宽度；
+ * 回调参数为每个分组应使用的宽度，保证调用方无需关心布局细节。
+ *
+ * @param modifier 外层修饰符。
+ * @param verticalGap 分组纵向间距。
+ * @param content 分组内容，参数为单个分组的宽度。
+ */
+@Composable
+internal fun JvmSettingGroupGrid(
+    modifier: Modifier = Modifier,
+    verticalGap: Dp = JvmSettingGroupVerticalGap,
+    content: @Composable (groupWidth: Dp) -> Unit,
+) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        // 先取出可用宽度，避免在 Column 作用域内隐式接收者遮蔽 maxWidth。
+        val groupWidth = maxWidth
+        // 分组纵向堆叠，宽度统一铺满内容区。
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(verticalGap),
+        ) {
+            content(groupWidth)
+        }
+    }
+}
+
+/**
+ * JVM 设置页分组。
+ *
+ * 分组使用设计稿的小标题加左侧强调条；分组内的设置项横向排列，
+ * 每行最多三个，窄窗口下自动减少每行数量。
+ *
+ * @param title 分组标题。
+ * @param modifier 外层修饰符，通常由 [JvmSettingGroupGrid] 下发宽度。
+ * @param content 分组内的设置行。
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun JvmSettingGroup(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable FlowRowScope.() -> Unit,
+) {
+    Column(modifier = modifier) {
+        JvmSettingGroupHeader(title = title)
+        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+        JvmSettingItemFlow(content = content)
+    }
+}
+
+/**
+ * JVM 设置页设置项横向排列容器。
+ *
+ * 按可用宽度计算每行能放下的设置项数量，最多三个并等宽平分整行；
+ * 供分组内容和需要混排整行信息的宽内容分组复用。
+ *
+ * @param modifier 外层修饰符。
+ * @param content 需要横向排列的设置项。
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun JvmSettingItemFlow(
+    modifier: Modifier = Modifier,
+    content: @Composable FlowRowScope.() -> Unit,
+) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val density = LocalDensity.current
+        // 先取整成像素再计算，避免 Dp 换算取整导致同一行放不下第三个设置项。
+        val maxWidthPx = with(density) { maxWidth.roundToPx() }
+        val itemGapPx = with(density) { JvmSettingGroupItemGap.roundToPx() }
+        val itemMinWidthPx = with(density) { JvmSettingGroupItemMinWidth.roundToPx() }
+        // 按可用宽度计算每行能放下的设置项数量，最多三个，窄窗口退化为单个。
+        val columnCount = ((maxWidthPx + itemGapPx) / (itemMinWidthPx + itemGapPx))
+            .coerceIn(1, JvmSettingGroupMaxColumnCount)
+        // 设置项等宽平分整行并向下取整，保证同一行内的设置项一定放得下。
+        val itemWidthPx = (maxWidthPx - itemGapPx * (columnCount - 1)) / columnCount
+        val itemWidth = with(density) { itemWidthPx.toDp() }
+        CompositionLocalProvider(LocalJvmSettingItemWidth provides itemWidth) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(JvmSettingGroupItemGap),
+                verticalArrangement = Arrangement.spacedBy(JvmSettingGroupItemVerticalGap),
+                itemVerticalAlignment = Alignment.Top,
+                content = content,
+            )
+        }
+    }
+}
+
+/**
+ * JVM 设置页宽内容分组。
+ *
+ * 标题与普通设置分组保持一致，内容区不再切分固定宽度，
+ * 用于存储占用、路径管理等需要整行展示的信息块。
+ *
+ * @param title 分组标题。
+ * @param modifier 外层修饰符，通常由设置页分组网格下发宽度。
+ * @param content 分组内的整行内容。
+ */
+@Composable
+internal fun JvmSettingWideGroup(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(modifier = modifier) {
+        JvmSettingGroupHeader(title = title)
+        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            content = content,
+        )
+    }
+}
+
+/**
+ * 设置分组标题行：左侧强调条加小标题，保证普通分组与宽内容分组视觉一致。
+ *
+ * @param title 分组标题。
+ */
+@Composable
+private fun JvmSettingGroupHeader(title: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+    ) {
+        Box(
+            modifier = Modifier
+                .width(JvmSettingGroupMarkerWidth)
+                .height(JvmSettingGroupMarkerHeight)
+                .background(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                    shape = RoundedCornerShape(2.dp),
+                )
+        )
+        XyText(
+            text = title,
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
     }
 }
 
@@ -523,7 +814,8 @@ internal fun JvmSettingOverviewTile(
     val clickableModifier = if (onClick == null) {
         Modifier
     } else {
-        Modifier.clickable(onClick = onClick)
+        // 悬停时显示小手光标，无波纹背景。
+        Modifier.jvmHoverDebounceClickable(indication = null, onClick = onClick)
     }
 
     Surface(
@@ -693,30 +985,100 @@ internal fun JvmSettingSwitchRow(
         title = title,
         description = description,
         enabled = enabled,
+        // 开启状态的行首图标同步使用强调色，和设计稿的开关行保持一致。
+        iconSelected = checked,
         onClick = {
             if (enabled) {
                 onCheckedChange(!checked)
             }
         },
         trailing = {
-            Switch(
+            JvmSettingSwitch(
                 checked = checked,
                 enabled = enabled,
                 onCheckedChange = {
                     if (enabled) {
                         onCheckedChange(it)
                     }
-                },
-                colors = SwitchDefaults.colors(
-                    checkedTrackColor = MaterialTheme.colorScheme.primary,
-                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                    uncheckedBorderColor = Color.Transparent,
-                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface,
-                    uncheckedTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f)
-                )
+                }
             )
         }
     )
+}
+
+/**
+ * 设计稿样式的开关控件。
+ *
+ * 使用 36×20 的胶囊轨道与 14dp 圆形滑块，替代 Material 默认的大尺寸开关。
+ *
+ * @param checked 当前开关状态。
+ * @param enabled 是否允许交互。
+ * @param onCheckedChange 状态变化回调。
+ */
+@Composable
+private fun JvmSettingSwitch(
+    checked: Boolean,
+    enabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    val trackColor by animateColorAsState(
+        targetValue = if (checked) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+        },
+        animationSpec = tween(durationMillis = 220),
+        label = "jvm_setting_switch_track",
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (checked) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f)
+        },
+        animationSpec = tween(durationMillis = 220),
+        label = "jvm_setting_switch_border",
+    )
+    val thumbColor by animateColorAsState(
+        targetValue = if (checked) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        animationSpec = tween(durationMillis = 220),
+        label = "jvm_setting_switch_thumb",
+    )
+    val thumbOffset by animateDpAsState(
+        targetValue = if (checked) JvmSettingSwitchThumbOffset else 0.dp,
+        animationSpec = tween(durationMillis = 220),
+        label = "jvm_setting_switch_offset",
+    )
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = Modifier
+            .size(width = JvmSettingSwitchWidth, height = JvmSettingSwitchHeight)
+            .clip(CircleShape)
+            .background(trackColor)
+            .border(BorderStroke(1.dp, borderColor), CircleShape)
+            // 悬停时显示小手光标，无波纹背景。
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                enabled = enabled,
+                indication = null,
+                role = Role.Switch,
+                onClick = { onCheckedChange(!checked) },
+            )
+            .padding(horizontal = 2.dp, vertical = 2.dp),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Box(
+            modifier = Modifier
+                .offset(x = thumbOffset)
+                .size(JvmSettingSwitchThumbSize)
+                .background(thumbColor, CircleShape)
+        )
+    }
 }
 
 /**
@@ -749,7 +1111,143 @@ internal fun JvmSettingNavigationRow(
 }
 
 /**
+ * 单选列表选项行。
+ *
+ * 参考设置页设计稿的音质档位样式：左侧圆形单选标记，中间标题与说明，
+ * 右侧可选标签用于标注码率或格式，整行可点击并带悬停底色反馈。
+ *
+ * @param title 选项主标题。
+ * @param description 选项说明文案。
+ * @param selected 是否为当前选中项。
+ * @param tag 右侧标签文案；为空或空白时不展示。
+ * @param enabled 是否允许点击，禁用时降低整体透明度并移除点击反馈。
+ * @param onClick 点击该选项时触发。
+ */
+@Composable
+internal fun JvmSettingPickRow(
+    title: String,
+    description: String,
+    selected: Boolean,
+    tag: String? = null,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    // 禁用项不展示悬停底色，避免与可点击项混淆。
+    val rowHovered = enabled && hovered
+    // 禁用时整体降低内容透明度，与开关类设置项保持一致的禁用观感。
+    val contentAlpha = if (enabled) 1f else 0.48f
+    // 分组内横向排列时由分组统一下发固定宽度，与开关类设置项一样支持一行三个。
+    val itemWidth = LocalJvmSettingItemWidth.current
+
+    Row(
+        modifier = Modifier
+            .then(
+                if (itemWidth == null) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier.width(itemWidth)
+                }
+            )
+            .clip(RoundedCornerShape(7.dp))
+            .background(
+                if (rowHovered) {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                } else {
+                    Color.Transparent
+                }
+            )
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                enabled = enabled,
+                role = Role.RadioButton,
+                // 禁用项不挂点击回调，避免发出无效的语言切换请求。
+                onClick = if (enabled) onClick else null,
+            )
+            // 与其他设置项保持一致的行高，保证同一分组内各行高度统一。
+            .heightIn(min = XyTheme.dimens.itemHeight)
+            .padding(
+                horizontal = XyTheme.dimens.contentPadding,
+                vertical = XyTheme.dimens.outerVerticalPadding,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // 单选标记复用 Material3 RadioButton，整行已承担点击，这里不再重复响应点击；
+        // 固定 20dp 尺寸，避免默认 48dp 最小交互区域把行高撑高。
+        RadioButton(
+            modifier = Modifier.size(20.dp),
+            selected = selected,
+            enabled = enabled,
+            onClick = null,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = MaterialTheme.colorScheme.primary,
+                unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.30f),
+            ),
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            XyText(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            XyTextSub(
+                text = description,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontSize = 11.5.sp,
+                    lineHeight = 16.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        if (!tag.isNullOrBlank()) {
+            JvmSettingPickTag(text = tag)
+        }
+    }
+}
+
+/**
+ * 单选列表右侧标签，用等宽字体和细边框区分格式、推荐等附加信息。
+ *
+ * @param text 标签文案。
+ */
+@Composable
+private fun JvmSettingPickTag(text: String) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .border(
+                BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
+                RoundedCornerShape(4.dp)
+            )
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+    ) {
+        XyTextSub(
+            text = text,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.5.sp,
+                letterSpacing = 1.sp,
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+    }
+}
+
+/**
  * 路径展示设置行。
+ *
+ * 路径固定单行展示，超出设置项宽度时省略；鼠标悬停时弹出提示气泡展示完整路径。
  *
  * @param icon 行首图标资源。
  * @param title 设置项标题。
@@ -763,17 +1261,25 @@ internal fun JvmSettingPathRow(
     path: String,
     onClick: () -> Unit,
 ) {
-    JvmSettingBaseRow(
-        icon = icon,
-        title = title,
-        description = path.ifBlank { stringResource(Res.string.jvm_setting_components_text_01) },
-        descriptionStyle = JvmSettingRowDescriptionStyle.Path,
-        descriptionMaxLines = 2,
-        onClick = onClick,
-        trailing = {
-            JvmSettingValuePill(value = stringResource(Res.string.jvm_setting_components_text_02))
-        }
-    )
+    // 复用同一份行内容，空路径时无需附加悬停提示。
+    val row: @Composable () -> Unit = {
+        JvmSettingBaseRow(
+            icon = icon,
+            title = title,
+            description = path.ifBlank { stringResource(Res.string.jvm_setting_components_text_01) },
+            descriptionStyle = JvmSettingRowDescriptionStyle.Path,
+            descriptionMaxLines = 1,
+            onClick = onClick,
+            trailing = {
+                JvmSettingValuePill(value = stringResource(Res.string.jvm_setting_components_text_02))
+            }
+        )
+    }
+    if (path.isBlank()) {
+        row()
+    } else {
+        DesktopTooltipBox(tooltip = path) { row() }
+    }
 }
 
 /**
@@ -794,14 +1300,13 @@ internal fun JvmSettingDownloadRow(
         trailing = {
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+                    .clip(RoundedCornerShape(6.dp))
                     .border(
-                        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
-                        RoundedCornerShape(XyTheme.dimens.corner)
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f)),
+                        RoundedCornerShape(6.dp)
                     )
-                    .padding(XyTheme.dimens.outerVerticalPadding / 2),
-                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2),
+                    .padding(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 listOf(1, 3, 5).forEach { count ->
@@ -834,35 +1339,155 @@ private fun JvmSettingDownloadSegment(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
+    val shape = RoundedCornerShape(4.dp)
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
-            .height(34.dp)
-            .width(48.dp)
+            .height(26.dp)
+            .widthIn(min = 38.dp)
             .clip(shape)
             .background(
                 if (selected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.26f)
+                    MaterialTheme.colorScheme.primary
                 } else {
                     Color.Transparent
                 }
             )
-            .selectable(
-                selected = selected,
+            // 悬停时显示小手光标，无波纹背景。
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
                 role = Role.RadioButton,
                 onClick = onClick
-            ),
+            )
+            .padding(horizontal = 9.dp),
         contentAlignment = Alignment.Center
     ) {
         XyText(
             text = value.toString(),
-            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 11.sp,
+            ),
             color = if (selected) {
-                MaterialTheme.colorScheme.primary
+                MaterialTheme.colorScheme.onPrimary
             } else {
                 MaterialTheme.colorScheme.onSurfaceVariant
             }
         )
+    }
+}
+
+/**
+ * 主题外观模式选择行。
+ *
+ * 左侧展示外观模式标题与当前模式说明，右侧用分段控件直接切换主题模式；
+ * 选中段填充主题主色，未选中段保持透明，颜色完全跟随 MaterialTheme 不引入额外色值。
+ *
+ * @param selected 当前已保存的主题模式，用于标记选中段。
+ * @param onSelected 用户切换主题模式时的回调，设置写入由调用方负责。
+ */
+@Composable
+internal fun JvmSettingThemeRow(
+    selected: ThemeTypeEnum,
+    onSelected: (ThemeTypeEnum) -> Unit,
+) {
+    // 分段顺序与设计稿保持一致：跟随系统、浅色、深色。
+    val options = listOf(ThemeTypeEnum.SYSTEM, ThemeTypeEnum.LIGHT, ThemeTypeEnum.DARK)
+    JvmSettingBaseRow(
+        icon = Res.drawable.settings_24px,
+        title = stringResource(Res.string.jvm_setting_components_text_04),
+        description = selected.themeModeDescription(),
+        trailing = {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .border(
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f)),
+                        RoundedCornerShape(6.dp)
+                    )
+                    .padding(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                options.forEach { theme ->
+                    JvmSettingThemeSegment(
+                        label = stringResource(theme.toResStringInt()),
+                        selected = selected == theme,
+                        onClick = {
+                            // 重复点击当前模式不写入设置，减少无意义的数据更新。
+                            if (selected != theme) {
+                                onSelected(theme)
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    )
+}
+
+/**
+ * 主题外观模式的单个分段按钮。
+ *
+ * @param label 分段展示的主题名称。
+ * @param selected 是否为当前选中段。
+ * @param onClick 点击该分段时触发。
+ */
+@Composable
+private fun JvmSettingThemeSegment(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(4.dp)
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .height(26.dp)
+            .widthIn(min = 40.dp)
+            .clip(shape)
+            .background(
+                if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    Color.Transparent
+                }
+            )
+            // 悬停时显示小手光标，无波纹背景。
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.RadioButton,
+                onClick = onClick
+            )
+            // 分段横向内边距收紧，保证三个分段能放进设置页的单列设置项宽度。
+            .padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        XyText(
+            text = label,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+            color = if (selected) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
+    }
+}
+
+/**
+ * 主题模式对应的说明文案，沿用界面设置页原有的主题描述。
+ */
+@Composable
+private fun ThemeTypeEnum.themeModeDescription(): String {
+    return when (this) {
+        ThemeTypeEnum.SYSTEM -> stringResource(Res.string.jvm_interface_setting_screen_text_10)
+        ThemeTypeEnum.LIGHT -> stringResource(Res.string.jvm_interface_setting_screen_text_14)
+        ThemeTypeEnum.DARK -> stringResource(Res.string.jvm_interface_setting_screen_text_13)
     }
 }
 
@@ -997,75 +1622,130 @@ internal fun JvmSettingBaseRow(
     descriptionOverflow: TextOverflow = TextOverflow.Ellipsis,
     enabled: Boolean = true,
     minHeight: Dp = XyTheme.dimens.itemHeight,
-    horizontalPadding: Dp = XyTheme.dimens.outerHorizontalPadding,
-    verticalPadding: Dp = XyTheme.dimens.contentPadding,
+    horizontalPadding: Dp = XyTheme.dimens.contentPadding,
+    verticalPadding: Dp = XyTheme.dimens.outerVerticalPadding,
     iconSelected: Boolean = false,
     iconColor: Color? = null,
     contentAlpha: Float = if (enabled) 1f else 0.48f,
     onClick: (() -> Unit)? = null,
     trailing: @Composable () -> Unit,
 ) {
-    // 可点击且启用的行才附加 clickable，禁用行保持占位尺寸不变。
+    // 行悬停状态用于绘制设计稿里的浅色背景与左侧强调条。
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val rowHovered = enabled && hovered
+    // 分组内横向排列时由分组统一下发固定宽度，未下发时保持整行铺满。
+    val itemWidth = LocalJvmSettingItemWidth.current
+    // 可点击且启用的行才附加点击交互，禁用行保持占位尺寸不变。
     val clickableModifier = if (enabled && onClick != null) {
-        Modifier.clickable(onClick = onClick)
+        // 悬停时显示小手光标，无波纹背景。
+        Modifier.jvmHoverDebounceClickable(
+            interactionSource = interactionSource,
+            enabled = enabled,
+            indication = null,
+            onClick = onClick,
+        )
     } else {
         Modifier
     }
 
-    Row(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = minHeight)
-            .then(clickableModifier)
-            .padding(
-                horizontal = horizontalPadding,
-                vertical = verticalPadding
-            ),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            modifier = Modifier
-                .weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            JvmSettingIcon(
-                icon = icon,
-                selected = iconSelected,
-                color = iconColor,
-                contentAlpha = contentAlpha,
+            .then(
+                if (itemWidth == null) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier.width(itemWidth)
+                }
             )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
-            ) {
-                XyText(
-                    text = title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                XyTextSub(
-                    text = description,
-                    style = if (descriptionStyle == JvmSettingRowDescriptionStyle.Path) {
-                        MaterialTheme.typography.labelSmall
-                    } else {
-                        MaterialTheme.typography.bodySmall
-                    },
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
-                    maxLines = descriptionMaxLines,
-                    overflow = descriptionOverflow
-                )
-            }
+            .clip(RoundedCornerShape(7.dp))
+            .background(
+                if (rowHovered) {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                } else {
+                    Color.Transparent
+                }
+            )
+            .hoverable(interactionSource)
+            .then(clickableModifier)
+    ) {
+        if (rowHovered) {
+            // 悬停时左侧出现强调条，对齐设计稿的设置行反馈。
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .width(JvmSettingRowMarkerWidth)
+                    .height(JvmSettingRowMarkerHeight)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = RoundedCornerShape(JvmSettingRowMarkerWidth),
+                    )
+            )
         }
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = minHeight)
+                .padding(
+                    horizontal = horizontalPadding,
+                    vertical = verticalPadding
+                ),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            trailing()
+            Row(
+                modifier = Modifier
+                    .weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                JvmSettingIcon(
+                    icon = icon,
+                    selected = iconSelected,
+                    color = iconColor,
+                    contentAlpha = contentAlpha,
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    XyText(
+                        text = title,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    XyTextSub(
+                        text = description,
+                        style = if (descriptionStyle == JvmSettingRowDescriptionStyle.Path) {
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Normal,
+                                lineHeight = 16.sp,
+                            )
+                        } else {
+                            MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Normal,
+                                lineHeight = 16.sp,
+                            )
+                        },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
+                        maxLines = descriptionMaxLines,
+                        overflow = descriptionOverflow
+                    )
+                }
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(9.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                trailing()
+            }
         }
     }
 }
@@ -1140,7 +1820,7 @@ private fun JvmSettingActionCard(
             Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
             XyText(
                 text = actionEntry.title,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -1148,7 +1828,10 @@ private fun JvmSettingActionCard(
             Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding / 2))
             XyTextSub(
                 text = actionEntry.description,
-                style = MaterialTheme.typography.labelSmall.copy(lineHeight = 17.sp),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 10.5.sp,
+                    lineHeight = 17.sp
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -1174,42 +1857,30 @@ private fun JvmSettingActionCard(
  */
 @Composable
 internal fun JvmSettingNote(text: String) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
-        )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = XyTheme.dimens.outerVerticalPadding),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top,
     ) {
-        Row(
-            modifier = Modifier.padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
-                vertical = XyTheme.dimens.contentPadding
-            ),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f), RoundedCornerShape(10.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                XyText(
-                    text = "i",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
+        // 设计稿提示条使用左侧细强调线，不再使用整块提示卡片。
+        Box(
+            modifier = Modifier
+                .padding(top = 3.dp)
+                .width(2.dp)
+                .height(13.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(1.dp),
                 )
-            }
-            XyTextSub(
-                modifier = Modifier.weight(1f),
-                text = text,
-                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        )
+        XyTextSub(
+            modifier = Modifier.weight(1f),
+            text = text,
+            style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -1241,7 +1912,12 @@ private fun JvmSettingKicker(
         )
         XyTextSub(
             text = text,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.5.sp,
+                fontWeight = FontWeight.Normal,
+                letterSpacing = 1.2.sp,
+            ),
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -1268,35 +1944,36 @@ private fun JvmSettingIcon(
 ) {
     // 统一计算强调色，设置页不传色值时仍然沿用 Material 主题主色。
     val accentColor = color ?: MaterialTheme.colorScheme.primary
+    val iconShape = RoundedCornerShape(7.dp)
 
     Box(
         modifier = Modifier
             .size(size)
             .background(
                 color = if (selected) {
-                    accentColor.copy(alpha = 0.18f * contentAlpha)
+                    accentColor.copy(alpha = 0.16f * contentAlpha)
                 } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f * contentAlpha)
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f * contentAlpha)
                 },
-                shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
+                shape = iconShape
             )
             .border(
                 BorderStroke(
                     width = 1.dp,
                     color = if (selected) {
-                        accentColor.copy(alpha = 0.26f * contentAlpha)
+                        accentColor.copy(alpha = 0.30f * contentAlpha)
                     } else {
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f * contentAlpha)
                     }
                 ),
-                shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
+                shape = iconShape
             ),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(icon),
             contentDescription = null,
-            modifier = Modifier.size(size * 0.58f),
+            modifier = Modifier.size(size * 0.52f),
             tint = if (selected) {
                 accentColor.copy(alpha = contentAlpha)
             } else {
@@ -1342,23 +2019,25 @@ private fun JvmSettingBadge(text: String) {
 @Composable
 private fun JvmSettingValuePill(value: String) {
     Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+        shape = RoundedCornerShape(5.dp),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
         contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f)
         )
     ) {
         XyText(
             modifier = Modifier
-                .widthIn(max = 180.dp)
-                .padding(
-                    horizontal = XyTheme.dimens.contentPadding,
-                    vertical = XyTheme.dimens.outerVerticalPadding / 2
-            ),
+                .widthIn(max = 190.dp)
+                .padding(horizontal = 8.dp, vertical = 3.dp),
             text = value,
-            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Normal,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+            ),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.86f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -1370,25 +2049,12 @@ private fun JvmSettingValuePill(value: String) {
  */
 @Composable
 private fun JvmSettingChevron() {
-    Box(
-        modifier = Modifier
-            .size(30.dp)
-            .background(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
-                shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
-            )
-            .border(
-                BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
-                RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(Res.drawable.chevron_right_24px),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+    Icon(
+        painter = painterResource(Res.drawable.chevron_right_24px),
+        contentDescription = null,
+        modifier = Modifier.size(14.dp),
+        tint = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 /**
@@ -1400,4 +2066,191 @@ internal enum class JvmSettingRowDescriptionStyle {
 
     /** 路径说明文本，允许两行展示以保留更多路径信息。 */
     Path,
+}
+
+/** 设置页顶部标签之间的横向间距，对齐设计稿的标签排布。 */
+private val JvmSettingTabSpacing = 26.dp
+
+/** 标签文字与底部下划线之间的间距。 */
+private val JvmSettingTabUnderlineGap = 7.dp
+
+/** 标签底部下划线高度。 */
+private val JvmSettingTabUnderlineHeight = 2.dp
+
+/** 标签底部留白，让下划线贴近标签栏分隔线。 */
+private val JvmSettingTabBottomPadding = 9.dp
+
+/**
+ * JVM 设置页顶部标签项数据。
+ *
+ * @param key 标签唯一标识，同时用作滚动列表中分组 item 的 key。
+ * @param title 标签展示文案。
+ */
+internal data class JvmSettingTabItem(
+    val key: String,
+    val title: String,
+)
+
+/**
+ * JVM 设置页顶部标签栏。
+ *
+ * 固定在页面顶部，不随内容滚动；点击标签会回调对应索引，由调用方负责滚动到指定分组。
+ *
+ * @param tabs 标签数据列表。
+ * @param selectedIndex 当前高亮的标签索引。
+ * @param modifier 外层修饰符。
+ * @param onSelected 标签点击回调，参数为被点击标签的索引。
+ */
+@Composable
+internal fun JvmSettingTabBar(
+    tabs: List<JvmSettingTabItem>,
+    selectedIndex: Int,
+    modifier: Modifier = Modifier,
+    onSelected: (Int) -> Unit,
+) {
+    // 标签数量较多时允许横向滚动，避免窄窗口下挤压变形。
+    val scrollState = rememberScrollState()
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(scrollState),
+            horizontalArrangement = Arrangement.spacedBy(JvmSettingTabSpacing),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            tabs.forEachIndexed { index, tab ->
+                val selected = index == selectedIndex
+                JvmSettingTabItemContent(
+                    selected = selected,
+                    title = tab.title,
+                    onSelected = { onSelected(index) },
+                )
+            }
+        }
+
+        // 标签栏底部分隔线，呼应设计稿中固定头部与滚动内容之间的细线。
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+        )
+    }
+}
+
+/**
+ * JVM 设置页顶部单个标签项。
+ *
+ * hover 时文字切换为主题色并显示小手光标，选中态保留高亮下划线。
+ *
+ * @param selected 是否为当前选中的标签。
+ * @param title 标签展示文案。
+ * @param onSelected 标签点击回调。
+ */
+@Composable
+private fun JvmSettingTabItemContent(
+    selected: Boolean,
+    title: String,
+    onSelected: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    Column(
+        modifier = Modifier
+            // 用文字宽度作为列宽，让下划线与文字等宽而不是撑满整行。
+            .width(IntrinsicSize.Max)
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.Tab,
+                onClick = onSelected,
+            )
+            .padding(
+                top = XyTheme.dimens.outerVerticalPadding / 2,
+                bottom = JvmSettingTabBottomPadding,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        XyText(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold
+            ),
+            color = when {
+                selected -> MaterialTheme.colorScheme.onSurface
+                hovered -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            maxLines = 1,
+        )
+        Spacer(modifier = Modifier.height(JvmSettingTabUnderlineGap))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(JvmSettingTabUnderlineHeight)
+                .background(
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        Color.Transparent
+                    },
+                    shape = RoundedCornerShape(JvmSettingTabUnderlineHeight)
+                )
+        )
+    }
+}
+
+/**
+ * JVM 设置页标签分区分隔线。
+ *
+ * 每个标签页顶部绘制一条横线，把不同标签的内容在视觉上区分开。
+ */
+@Composable
+internal fun JvmSettingTabDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = XyTheme.dimens.outerVerticalPadding)
+            .height(1.dp)
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+    )
+}
+
+/**
+ * JVM 设置页专用 LazyColumn。
+ *
+ * 与 [JvmSettingPageScaffold] 中的通用列表不同，设置页需要“固定头部 + 独立滚动内容”，
+ * 因此这里把 [LazyListState] 暴露给调用方，便于顶部标签栏做滚动定位与滚动联动。
+ *
+ * @param lazyState 列表滚动状态，调用方持有以便标签栏定位。
+ * @param modifier 外层修饰符。
+ * @param contentPadding 列表内容内边距。
+ * @param verticalArrangement 列表条目之间的纵向间距。
+ * @param horizontalAlignment 列表条目的横向对齐方式。
+ * @param content 列表条目内容。
+ */
+@Composable
+internal fun JvmSettingLazyColumn(
+    lazyState: LazyListState,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(
+        horizontal = XyTheme.dimens.outerHorizontalPadding,
+        vertical = XyTheme.dimens.outerVerticalPadding * 2,
+    ),
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(
+        XyTheme.dimens.outerVerticalPadding * 2
+    ),
+    horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    content: LazyListScope.() -> Unit,
+) {
+    LazyColumnNotComponent(
+        modifier = modifier.fillMaxSize(),
+        state = lazyState,
+        contentPadding = contentPadding,
+        verticalArrangement = verticalArrangement,
+        horizontalAlignment = horizontalAlignment,
+        items = content,
+    )
 }

@@ -169,4 +169,16 @@ data class XySettings @OptIn(ExperimentalUuidApi::class) constructor(
      * 是否允许 iOS 通过 iCloud Keychain 同步服务器密码。
      */
     val ifSyncPasswordsByICloud: Boolean = false,
+    /**
+     * 是否开机自动启动，仅桌面端生效。
+     */
+    val ifAutoStart: Boolean = false,
+    /**
+     * 启动时是否恢复上次播放队列。
+     */
+    val ifRestorePlayQueue: Boolean = true,
+    /**
+     * 关闭窗口时是否最小化到系统托盘，仅桌面端生效。
+     */
+    val ifMinimizeToTray: Boolean = false,
 )

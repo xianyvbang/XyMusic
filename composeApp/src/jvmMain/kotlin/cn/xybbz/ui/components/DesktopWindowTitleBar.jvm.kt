@@ -48,7 +48,6 @@ import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.startup.SessionCoordinator
-import cn.xybbz.router.About
 import cn.xybbz.router.Album
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.Artist
@@ -57,25 +56,20 @@ import cn.xybbz.router.CacheLimit
 import cn.xybbz.router.Connection
 import cn.xybbz.router.ConnectionInfo
 import cn.xybbz.router.ConnectionManagement
-import cn.xybbz.router.CustomApi
 import cn.xybbz.router.DailyRecommend
 import cn.xybbz.router.Download
 import cn.xybbz.router.FavoriteList
 import cn.xybbz.router.GenreInfo
 import cn.xybbz.router.Genres
 import cn.xybbz.router.Home
-import cn.xybbz.router.InterfaceSetting
 import cn.xybbz.router.LanguageConfig
 import cn.xybbz.router.Local
 import cn.xybbz.router.MemoryManagement
 import cn.xybbz.router.Music
 import cn.xybbz.router.Navigator
-import cn.xybbz.router.ProxyConfig
 import cn.xybbz.router.Search
 import cn.xybbz.router.SelectLibrary
-import cn.xybbz.router.SetBackgroundImage
 import cn.xybbz.router.Setting
-import cn.xybbz.router.StreamingQuality
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
@@ -89,7 +83,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.getKoin
 import xymusic.composeapp.generated.resources.Res
-import xymusic.composeapp.generated.resources.about
 import xymusic.composeapp.generated.resources.all_music
 import xymusic.composeapp.generated.resources.album
 import xymusic.composeapp.generated.resources.app_icon_info
@@ -103,7 +96,6 @@ import xymusic.composeapp.generated.resources.cancel_24px
 import xymusic.composeapp.generated.resources.clear
 import xymusic.composeapp.generated.resources.connection_info
 import xymusic.composeapp.generated.resources.connection_management
-import xymusic.composeapp.generated.resources.customize_lyric_settings
 import xymusic.composeapp.generated.resources.daily_recommendations
 import xymusic.composeapp.generated.resources.dark
 import xymusic.composeapp.generated.resources.download
@@ -116,9 +108,7 @@ import xymusic.composeapp.generated.resources.light
 import xymusic.composeapp.generated.resources.local_and_download
 import xymusic.composeapp.generated.resources.logo_new
 import xymusic.composeapp.generated.resources.media_library_selection
-import xymusic.composeapp.generated.resources.online_music_quality
 import xymusic.composeapp.generated.resources.playlist
-import xymusic.composeapp.generated.resources.poxy_config
 import xymusic.composeapp.generated.resources.refresh_24px
 import xymusic.composeapp.generated.resources.refresh_login
 import xymusic.composeapp.generated.resources.search
@@ -676,17 +666,11 @@ private fun currentRouteTitleRes(route: Any): StringResource? = when (route) {
     is Connection -> Res.string.server_connection
     is ConnectionInfo -> Res.string.connection_info
     MemoryManagement -> Res.string.storage_management
-    InterfaceSetting -> Res.string.interface_settings
     LanguageConfig -> Res.string.language
-    About -> Res.string.about
     CacheLimit -> Res.string.cache_limit
     is SelectLibrary -> Res.string.media_library_selection
     DailyRecommend -> Res.string.daily_recommendations
     Download -> Res.string.download
-    SetBackgroundImage -> Res.string.background_image_setting
-    ProxyConfig -> Res.string.poxy_config
-    StreamingQuality -> Res.string.online_music_quality
-    CustomApi -> Res.string.customize_lyric_settings
     else -> null
 }
 

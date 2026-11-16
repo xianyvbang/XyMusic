@@ -1,9 +1,12 @@
-# KMP 单元测试工作流：在 push、PR 和手动触发时验证核心 JVM 与 Android 本地单测。
+# KMP 单元测试工作流：仅在推送 tag（正式发布）和手动触发时验证核心 JVM 与 Android 本地单测。
 name: KMP 单元测试
 
 on:
+  # 普通分支提交和 PR 不再触发，避免每次提交都跑单测。
   push:
-  pull_request:
+    tags:
+      - 'v*'
+  # 保留手动触发，便于需要时单独执行一次单测。
   workflow_dispatch:
 
 # 单元测试只需要读取仓库内容，不需要写入 Release、Issue 或 PR。

@@ -62,7 +62,6 @@ import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.xy.ModalSideSheetExtendComponent
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyIconButton
-import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
@@ -75,7 +74,6 @@ import org.koin.compose.getKoin
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.add_24px
-import xymusic.composeapp.generated.resources.background_image
 import xymusic.composeapp.generated.resources.create_playlist
 import xymusic.composeapp.generated.resources.empty_info
 import xymusic.composeapp.generated.resources.logging_in
@@ -135,11 +133,7 @@ actual fun MainScreenScaffold(
     }
 
     Box(modifier = modifier) {
-        XyImage(
-            modifier = Modifier.fillMaxSize(),
-            model = XyTheme.brash.backgroundImageUri,
-            contentDescription = stringResource(Res.string.background_image),
-        )
+        MainScreenBackgroundLayer(modifier = Modifier.fillMaxSize())
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             snackbarHost = snackbarHost,

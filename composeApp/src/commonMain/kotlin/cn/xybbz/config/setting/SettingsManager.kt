@@ -91,6 +91,12 @@ class SettingsManager(
     val ifSyncPasswordsByICloud = settings.map { it.ifSyncPasswordsByICloud }.distinctUntilChanged()
         .stateIn(scope, SharingStarted.Eagerly, settings.value.ifSyncPasswordsByICloud)
 
+    /**
+     * 关闭窗口时是否最小化到系统托盘。
+     */
+    val ifMinimizeToTray = settings.map { it.ifMinimizeToTray }.distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, settings.value.ifMinimizeToTray)
+
     //是否为非计费网络
     var isUnmeteredWifi: Boolean = false
 
@@ -455,6 +461,27 @@ class SettingsManager(
      */
     suspend fun setIfSyncPasswordsByICloud(ifSyncPasswordsByICloud: Boolean) {
         updateSettings { it.copy(ifSyncPasswordsByICloud = ifSyncPasswordsByICloud) }
+    }
+
+    /**
+     * 设置是否开机自动启动。
+     */
+    suspend fun setIfAutoStart(ifAutoStart: Boolean) {
+        updateSettings { it.copy(ifAutoStart = ifAutoStart) }
+    }
+
+    /**
+     * 设置启动时是否恢复上次播放队列。
+     */
+    suspend fun setIfRestorePlayQueue(ifRestorePlayQueue: Boolean) {
+        updateSettings { it.copy(ifRestorePlayQueue = ifRestorePlayQueue) }
+    }
+
+    /**
+     * 设置关闭窗口时是否最小化到系统托盘。
+     */
+    suspend fun setIfMinimizeToTray(ifMinimizeToTray: Boolean) {
+        updateSettings { it.copy(ifMinimizeToTray = ifMinimizeToTray) }
     }
 
     fun sengTranscodingEvent(transcodingState: TranscodingState = TranscodingState.Transcoding) {

@@ -36,3 +36,6 @@ node_modules/
 .cursor/
 Downloads/
 **/schemas/
+# JVM 崩溃日志与回放文件由本机运行生成，不进入仓库。
+hs_err_pid*.log
+replay_pid*.log
