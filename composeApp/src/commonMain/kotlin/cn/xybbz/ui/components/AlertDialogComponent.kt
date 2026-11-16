@@ -213,7 +213,7 @@ data class XyDialogActionSpec(
  * @param [confirmEnabled] 确认按钮是否可用
  * @param [tone] 语义色，默认信息态
  * @param [icon] 外壳图标
- * @param [kicker] 引导语，等宽小字，如「危险操作 / 不可撤销」；不传则不显示该行
+ * @param [kicker] 引导语资源，等宽小字，如「危险操作 / 不可撤销」；不传则不显示该行
  * @param [body] 正文，提供后不必再在 content 里手写 XyTextSubSmall
  * @param [actions] 自定义动作区；为空时按 dismiss / confirm 生成默认两键
  */
@@ -235,8 +235,8 @@ data class AlertDialogObject(
     val tone: XyDialogTone = XyDialogTone.Info,
     /** 外壳图标；不传时按 [tone] 自动派生（危险→警告、成功→对勾、信息→询问） */
     val icon: XyDialogIcon? = null,
-    /** 引导语，等宽小字，如「危险操作 / 不可撤销」 */
-    val kicker: String? = null,
+    /** 引导语资源，等宽小字，如「危险操作 / 不可撤销」；不传则不显示该行 */
+    val kicker: StringResource? = null,
     /** 正文；提供后不必再在 content 里手写 XyTextSubSmall */
     val body: String? = null,
     /** 自定义动作区；为空时按 dismiss / confirm 生成默认两键 */
@@ -603,6 +603,8 @@ fun AlertDialogComponent() {
         // 文案必须先在这里解析，不能放进非 composable 的 buildList 里
         val dismissLabel = stringResource(dialogObject.dismissText)
         val confirmLabel = stringResource(dialogObject.confirmText)
+        // 引导语同样在这里解析，调用点只负责传资源，避免在非 composable 回调里取值
+        val kickerText = dialogObject.kicker?.let { stringResource(it) }
         // 自定义 actions 优先，否则由 dismiss / confirm 生成默认两键
         val actions = dialogObject.actions ?: buildList {
             dialogObject.onDismissRequest?.let { onDismiss ->
@@ -652,7 +654,7 @@ fun AlertDialogComponent() {
         ) {
             XyDialogShell(
                 title = dialogObject.title,
-                kicker = dialogObject.kicker,
+                kicker = kickerText,
                 body = dialogObject.body,
                 tone = tone,
                 icon = dialogObject.icon ?: tone.defaultIcon(),

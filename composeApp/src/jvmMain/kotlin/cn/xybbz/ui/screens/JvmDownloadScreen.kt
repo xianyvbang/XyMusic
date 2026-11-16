@@ -73,6 +73,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
@@ -87,7 +88,6 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.ui.xy.XyTextSub
-import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.DownloadViewModel
 import cn.xybbz.viewmodel.LocalViewModel
 import kotlinx.coroutines.flow.map
@@ -198,13 +198,13 @@ internal fun JvmLocalDownloadScreen(
                     if (activeDownloadTasks.isNotEmpty()) {
                         AlertDialogObject(
                             title = removeDownloadTitle,
-                            content = {
-                                XyTextSubSmall(text = confirmClearDownloads)
-                            },
+                            body = confirmClearDownloads,
+                            tone = XyDialogTone.Danger,
+                            icon = XyDialogIcon.Trash,
+                            kicker = Res.string.dialog_kicker_danger,
                             onConfirmation = {
                                 downloadViewModel.deleteDownloads(activeDownloadTasks)
                             },
-                            tone = XyDialogTone.Danger,
                         ).show()
                     }
                 },

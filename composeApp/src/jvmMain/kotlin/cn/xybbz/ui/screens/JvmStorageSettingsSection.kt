@@ -56,6 +56,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.formatStorageLabel
 import cn.xybbz.common.utils.parseStorageBytes
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
@@ -119,16 +120,15 @@ internal fun JvmStorageSettingsSection(
     }
     // 数据库清理属于高风险操作，先弹出确认框，再交给 ViewModel 清理数据库与相关状态。
     val warning = stringResource(Res.string.warning)
+    // 弹窗在本地函数里创建，正文必须先在 composable 作用域解析
+    val confirmDeleteDatabaseText = stringResource(Res.string.confirm_delete_database)
     fun confirmClearDatabase() {
         AlertDialogObject(
             title = warning,
-            content = {
-                XyTextSub(
-                    text = stringResource(Res.string.confirm_delete_database),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            },
+            body = confirmDeleteDatabaseText,
             tone = XyDialogTone.Danger,
+            icon = XyDialogIcon.Trash,
+            kicker = Res.string.dialog_kicker_danger,
             onConfirmation = {
                 memoryManagementViewModel.clearDatabaseData()
             }

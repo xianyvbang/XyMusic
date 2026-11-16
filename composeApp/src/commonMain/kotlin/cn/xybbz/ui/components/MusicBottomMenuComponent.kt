@@ -111,6 +111,7 @@ import xymusic.composeapp.generated.resources.custom_timer_suffix
 import xymusic.composeapp.generated.resources.delete_forever_24px
 import xymusic.composeapp.generated.resources.delete_permanently
 import xymusic.composeapp.generated.resources.delete_warning
+import xymusic.composeapp.generated.resources.dialog_kicker_danger
 import xymusic.composeapp.generated.resources.double_speed
 import xymusic.composeapp.generated.resources.download
 import xymusic.composeapp.generated.resources.download_24px
@@ -190,6 +191,8 @@ fun MusicBottomMenuComponent(
 
     val addToNextPlaySuccess = stringResource(Res.string.add_to_next_play_success)
     val deletePermanently = stringResource(Res.string.delete_permanently)
+    // 正文与引导语在 composable 作用域先解析，弹窗是在点击回调里创建的
+    val deleteWarning = stringResource(Res.string.delete_warning)
     val timerClose = stringResource(Res.string.timer_close)
 
 
@@ -533,12 +536,10 @@ fun MusicBottomMenuComponent(
                             onClick = {
                                 AlertDialogObject(
                                     title = deletePermanently,
-                                    content = {
-                                        XyTextSubSmall(
-                                            text = stringResource(Res.string.delete_warning)
-                                        )
-                                    },
+                                    body = deleteWarning,
                                     tone = XyDialogTone.Danger,
+                                    icon = XyDialogIcon.Trash,
+                                    kicker = Res.string.dialog_kicker_danger,
                                     onConfirmation = {
                                         coroutineScope.launch {
                                             sheetState.hide()

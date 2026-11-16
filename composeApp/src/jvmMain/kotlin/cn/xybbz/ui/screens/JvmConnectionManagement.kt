@@ -71,6 +71,7 @@ import cn.xybbz.router.Connection
 import cn.xybbz.router.ConnectionInfo
 import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingAvatarSize
@@ -960,12 +961,10 @@ private fun JvmConnectionDeleteDialog(
 ) {
     AlertDialogObject(
         title = warning,
-        content = {
-            XyTextSubSmall(
-                text = content
-            )
-        },
+        body = content,
         tone = XyDialogTone.Danger,
+        icon = XyDialogIcon.Trash,
+        kicker = Res.string.dialog_kicker_danger,
         onConfirmation = onDelete,
     ).show()
 }

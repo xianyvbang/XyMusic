@@ -29,6 +29,7 @@ import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.ui.components.AddPlaylistBottomData
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.xy.XyTextSubSmall
@@ -42,6 +43,7 @@ import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.delete_permanently
 import xymusic.composeapp.generated.resources.delete_warning
+import xymusic.composeapp.generated.resources.dialog_kicker_danger
 
 /**
  * 选择模式下的界面状态。
@@ -110,6 +112,8 @@ class SelectControl {
                     )
                 },
                 tone = XyDialogTone.Danger,
+                icon = XyDialogIcon.Trash,
+                kicker = Res.string.dialog_kicker_danger,
                 onConfirmation = {
                     removeSelectListResource(dataSourceManager, viewModelScope)
                 },

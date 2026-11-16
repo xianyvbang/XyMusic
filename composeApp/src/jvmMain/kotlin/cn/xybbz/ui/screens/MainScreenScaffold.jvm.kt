@@ -52,6 +52,7 @@ import cn.xybbz.router.Navigator
 import cn.xybbz.router.PlatformNavigationConfig
 import cn.xybbz.router.jvmTopRouterDataList
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.DesktopWindowTitleBar
 import cn.xybbz.ui.components.JvmRightClickDropdownMenuComponent
 import cn.xybbz.ui.components.MusicPlaylistItemComponent
@@ -75,6 +76,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.add_24px
 import xymusic.composeapp.generated.resources.create_playlist
+import xymusic.composeapp.generated.resources.dialog_kicker_create
 import xymusic.composeapp.generated.resources.empty_info
 import xymusic.composeapp.generated.resources.logging_in
 import xymusic.composeapp.generated.resources.login_exception_info
@@ -209,9 +211,12 @@ actual fun MainScreenScaffold(
                                             content = {
                                                 XyEdit(
                                                     text = playlistName,
-                                                    onChange = { playlistName = it }
+                                                    onChange = { playlistName = it },
+                                                    modifier = Modifier.fillMaxWidth()
                                                 )
                                             },
+                                            icon = XyDialogIcon.Edit,
+                                            kicker = Res.string.dialog_kicker_create,
                                             onDismissRequest = {},
                                             onConfirmation = {
                                                 coroutineScope.launch {

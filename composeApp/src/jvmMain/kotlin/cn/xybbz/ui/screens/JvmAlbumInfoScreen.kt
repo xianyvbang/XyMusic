@@ -85,6 +85,7 @@ import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.JvmLazyListComponent
@@ -111,7 +112,6 @@ import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyTextSub
-import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.AlbumInfoViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -129,6 +129,9 @@ import xymusic.composeapp.generated.resources.confirm_delete_playlist
 import xymusic.composeapp.generated.resources.delete_24px
 import xymusic.composeapp.generated.resources.delete_playback_history
 import xymusic.composeapp.generated.resources.delete_playlist
+import xymusic.composeapp.generated.resources.dialog_kicker_danger
+import xymusic.composeapp.generated.resources.dialog_kicker_import
+import xymusic.composeapp.generated.resources.dialog_kicker_rename
 import xymusic.composeapp.generated.resources.edit_24px
 import xymusic.composeapp.generated.resources.enable_playback_history
 import xymusic.composeapp.generated.resources.export_playlist
@@ -226,6 +229,12 @@ fun JvmAlbumInfoScreen(
     val removePlaylistAlertTitle = stringResource(Res.string.delete_playlist)
     val editPlaylistAlertTitle = stringResource(Res.string.modify_playlist_name)
     val importPlaylistAlertTitle = stringResource(Res.string.import_playlist)
+    // 弹窗都在菜单点击回调里创建，正文必须先在 composable 作用域解析
+    val importPlaylistHint = stringResource(Res.string.import_playlist_hint)
+    val confirmDeletePlaylistText = stringResource(
+        Res.string.confirm_delete_playlist,
+        albumInfoViewModel.xyAlbumInfoData?.name ?: ""
+    )
 
     XyColumnScreen {
             TopAppBarComponent(
@@ -301,11 +310,9 @@ fun JvmAlbumInfoScreen(
                                         onClick = importPlaylistsCompose(onCreatePlaylist = {
                                             AlertDialogObject(
                                                 title = importPlaylistAlertTitle,
-                                                content = {
-                                                    XyTextSubSmall(
-                                                        text = stringResource(Res.string.import_playlist_hint)
-                                                    )
-                                                },
+                                                body = importPlaylistHint,
+                                                icon = XyDialogIcon.Download,
+                                                kicker = Res.string.dialog_kicker_import,
                                                 onConfirmation = {
                                                     coroutineScope.launch {
                                                         albumInfoViewModel.importPlaylist(it)
@@ -350,10 +357,15 @@ fun JvmAlbumInfoScreen(
                                                 content = {
                                                     XyEdit(
                                                         text = albumInfoViewModel.xyAlbumInfoData?.name
-                                                            ?: "", onChange = {
+                                                            ?: "",
+                                                        onChange = {
                                                             playlistName = it
-                                                        })
+                                                        },
+                                                        modifier = Modifier.fillMaxWidth()
+                                                    )
                                                 },
+                                                icon = XyDialogIcon.Edit,
+                                                kicker = Res.string.dialog_kicker_rename,
                                                 onConfirmation = {
                                                     albumInfoViewModel.editPlaylistName(
                                                         itemId,
@@ -381,16 +393,10 @@ fun JvmAlbumInfoScreen(
                                             ifShowMenu = false
                                             AlertDialogObject(
                                                 title = removePlaylistAlertTitle,
-                                                content = {
-                                                    XyTextSubSmall(
-                                                        text = stringResource(
-                                                            Res.string.confirm_delete_playlist,
-                                                            albumInfoViewModel.xyAlbumInfoData?.name
-                                                                ?: ""
-                                                        )
-                                                    )
-                                                },
+                                                body = confirmDeletePlaylistText,
                                                 tone = XyDialogTone.Danger,
+                                                icon = XyDialogIcon.Trash,
+                                                kicker = Res.string.dialog_kicker_danger,
                                                 onConfirmation = {
                                                     coroutineScope.launch {
                                                         albumInfoViewModel.removePlaylist(itemId)
