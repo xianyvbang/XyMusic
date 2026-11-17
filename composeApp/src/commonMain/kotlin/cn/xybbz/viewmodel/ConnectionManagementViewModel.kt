@@ -26,7 +26,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.DatabaseUtils
-import cn.xybbz.common.utils.Log
 import cn.xybbz.config.security.ConnectionCredentialManager
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
@@ -84,7 +83,6 @@ class ConnectionManagementViewModel (
     private fun getConnectionListData() {
         viewModelScope.launch {
             db.connectionConfigDao.selectAllDataExtFlow().collect {
-                Log.e("=====","加载链接数据")
                 connectionList = it
                 libraryNameMap = it.associate { connectionConfig ->
                     connectionConfig.id to db.libraryDao.selectListByConnectionId(connectionConfig.id)
