@@ -44,8 +44,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.startup.AppSessionState
-import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.JvmTopRouterData
@@ -53,11 +51,13 @@ import cn.xybbz.router.NavigationState
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.PlatformNavigationConfig
 import cn.xybbz.router.jvmTopRouterDataList
+import cn.xybbz.startup.AppSessionState
+import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.ui.components.AlertDialogObject
-import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.DesktopWindowTitleBar
 import cn.xybbz.ui.components.JvmRightClickDropdownMenuComponent
 import cn.xybbz.ui.components.MusicPlaylistItemComponent
+import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -68,7 +68,6 @@ import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyIconButton
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.SidebarPlaylistViewModel
 import kotlinx.coroutines.launch
@@ -126,7 +125,8 @@ actual fun MainScreenScaffold(
     var showLoginErrorSheet by remember { mutableStateOf(false) }
     // 用户主动关闭登录失败提示后置为 true，避免同一次失败重复弹出
     var loginStatusDismissed by remember { mutableStateOf(false) }
-    val loginLoading = sessionState is AppSessionState.Restoring || sessionState is AppSessionState.LoggingIn
+    val loginLoading =
+        sessionState is AppSessionState.Restoring || sessionState is AppSessionState.LoggingIn
     val loginFailed = loginFailedState != null
     val sidebarColors = XyTheme.extendedColors
     val sidebarPanelShape = RoundedCornerShape(XyTheme.dimens.corner)
@@ -218,12 +218,7 @@ actual fun MainScreenScaffold(
                             // 歌单分组标题
                             item(key = "sidebar_playlist_header") {
                                 XyRow(
-                                    modifier = Modifier.padding(
-                                        start = 12.dp,
-                                        top = XyTheme.dimens.contentPadding,
-                                        bottom = XyTheme.dimens.innerVerticalPadding,
-                                    ),
-                                    verticalAlignment = Alignment.CenterVertically,
+                                    paddingValues = PaddingValues(horizontal = XyTheme.dimens.innerVerticalPadding)
                                 ) {
                                     XyTextSubSmall(
                                         text = playlistTitle,
@@ -231,6 +226,7 @@ actual fun MainScreenScaffold(
                                         modifier = Modifier.weight(1f),
                                     )
                                     XyIconButton(
+                                        modifier = Modifier.size(28.dp),
                                         onClick = {
                                             playlistName = newPlaylist + playlists.size
                                             AlertDialogObject(
@@ -320,7 +316,7 @@ actual fun MainScreenScaffold(
                                     end = XyTheme.dimens.outerVerticalPadding,
                                     // 播放栏已改为只占右侧内容区，不再遮挡侧边栏，因此无需为它预留高度
                                     bottom = XyTheme.dimens.outerVerticalPadding
-                            ),
+                                ),
                             loginLoading = loginLoading,
                             loginFailed = loginFailed && !loginStatusDismissed,
                             errorHint = loginErrorHint,
@@ -564,10 +560,8 @@ private fun DesktopSidebarNavigationItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = 12.dp,
-                    top = XyTheme.dimens.outerVerticalPadding,
-                    end = XyTheme.dimens.innerVerticalPadding,
-                    bottom = XyTheme.dimens.outerVerticalPadding,
+                    horizontal = XyTheme.dimens.innerVerticalPadding,
+                    vertical = XyTheme.dimens.outerVerticalPadding
                 ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
