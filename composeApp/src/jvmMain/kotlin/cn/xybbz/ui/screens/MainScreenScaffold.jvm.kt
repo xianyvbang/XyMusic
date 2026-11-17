@@ -264,7 +264,7 @@ actual fun MainScreenScaffold(
                                 item(key = "sidebar_playlist_empty") {
                                     XyRow(
                                         modifier = Modifier.padding(
-                                            start = 12.dp
+//                                            start = 12.dp
                                         ),
                                     ) {
                                         XyTextSubSmall(
@@ -284,7 +284,7 @@ actual fun MainScreenScaffold(
                                     MusicPlaylistItemComponent(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(horizontal = XyTheme.dimens.innerVerticalPadding)
+//                                            .padding(horizontal = XyTheme.dimens.innerVerticalPadding)
                                             .pointerHoverIcon(PointerIcon.Hand),
                                         name = playlist.name,
                                         subordination = "${playlist.musicCount}${songsCountSuffix}",
