@@ -617,6 +617,14 @@
     <string name="jvm_connection_management_text_15">添加连接后可以在这里切换数据源并管理媒体库范围。</string>
     <string name="jvm_connection_management_text_16">暂无当前连接</string>
     <string name="jvm_connection_management_text_17">选择或添加连接后，这里会展示服务端、权限和媒体库信息。</string>
+    <string name="jvm_connection_management_text_18">网络 / 服务器</string>
+    <string name="jvm_connection_management_text_19">连接数</string>
+    <string name="jvm_connection_management_text_20">类型</string>
+    <string name="jvm_connection_management_text_21">%1$s 个库</string>
+    <string name="jvm_connection_management_text_23">全部媒体库</string>
+    <string name="jvm_connection_management_text_28">支持 Jellyfin / Navidrome / Subsonic / Emby / Plex</string>
+    <string name="jvm_connection_management_text_29">切换连接后会重新读取媒体库；正在播放的队列会保留，需重新点播以使用新数据源。</string>
+    <string name="jvm_connection_management_text_30">已连接</string>
     <string name="jvm_connection_new_screen_text_01">选择服务</string>
     <string name="jvm_connection_new_screen_text_02">输入凭据</string>
     <string name="jvm_connection_new_screen_text_03">选择资源</string>

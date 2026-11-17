@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>XyMusic · JVM 连接管理重设计（原型）</title>
+<style>
+  /* ============================================================
+     设计语言：Signal Deck（信号台）· Connection Matrix（连接矩阵）
+     与设置页同一套：模块 + 细线 + 等宽读数
+     连接管理在此基础上增加：扫描仪面板 / 拓扑连线 / 心跳指示
+     ============================================================ */
+  :root{
+    --accent:#F0A03C;
+    --accent-ink:#1A1206;
+    --font-ui:"Segoe UI Variable Display","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif;
+    --font-mono:"Cascadia Code","Consolas","JetBrains Mono",ui-monospace,monospace;
+
+    --bg:#0C0C0E;
+    --bg-deep:#08080A;
+    --surface:#121215;
+    --surface-2:#17171B;
+    --line:rgba(255,255,255,.09);
+    --line-strong:rgba(255,255,255,.16);
+    --ink:#ECEAE6;
+    --ink-soft:#A9A49C;
+    --ink-mute:#767169;
+    --wash:rgba(255,255,255,.05);
+    --shadow:0 24px 60px rgba(0,0,0,.55);
+    --ok:#5FBF7F;
+    --warn:#D8A03A;
+    --bad:#D0553F;
+  }
+  html[data-theme="light"]{
+    --accent:#A9611A;
+    --accent-ink:#FFF7EC;
+    --bg:#EDEAE3;
+    --bg-deep:#E2DED5;
+    --surface:#F7F5F0;
+    --surface-2:#FBF9F5;
+    --line:rgba(23,20,14,.12);
+    --line-strong:rgba(23,20,14,.22);
+    --ink:#17150F;
+    --ink-soft:#5E574C;
+    --ink-mute:#8B8377;
+    --wash:rgba(23,20,14,.045);
+    --shadow:0 24px 60px rgba(40,32,20,.18);
+    --ok:#2F7D4E;
+    --warn:#8F6A12;
+    --bad:#A63A26;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:var(--font-ui);
+    background:
+      radial-gradient(1200px 600px at 12% -10%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
+      radial-gradient(900px 500px at 100% 0%, rgba(90,120,255,.05), transparent 60%),
+      var(--bg-deep);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    padding:26px 26px 40px;
+    min-height:100%;
+  }
+  body::after{
+    content:"";
+    position:fixed;inset:0;pointer-events:none;z-index:99;
+    opacity:.035;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- 页面级预览工具条（非产品 UI） ---------- */
+  .proto{max-width:1440px;margin:0 auto 18px;display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;}
+  .proto-title{display:flex;flex-direction:column;gap:6px;}
+  .proto-title .k{font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;}
+  .proto-title h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em;}
+  .proto-title p{margin:0;color:var(--ink-soft);font-size:12.5px;}
+
+  /* ---------- 窗口 ---------- */
+  .window{
+    max-width:1440px;margin:0 auto;height:min(900px, calc(100vh - 190px));min-height:660px;
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    border-radius:14px;overflow:hidden;
+    box-shadow:var(--shadow);
+    display:flex;flex-direction:column;position:relative;
+  }
+  .titlebar{
+    height:42px;flex:none;display:flex;align-items:center;gap:10px;
+    padding:0 0 0 14px;border-bottom:1px solid var(--line);
+    background:color-mix(in srgb, var(--surface) 88%, transparent);
+  }
+  .mark{
+    width:18px;height:18px;border-radius:5px;flex:none;
+    background:linear-gradient(140deg, var(--accent), color-mix(in srgb, var(--accent) 35%, #7A4BFF));
+    box-shadow:0 0 14px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .titlebar .name{font-size:12px;font-weight:700;}
+  .titlebar .crumb{font-family:var(--font-mono);font-size:10px;color:var(--ink-mute);letter-spacing:.12em;}
+  .tb-right{margin-left:auto;display:flex;align-items:center;gap:4px;padding-right:6px;}
+  .icon-btn{
+    width:30px;height:26px;display:grid;place-items:center;border:0;background:transparent;
+    color:var(--ink-soft);border-radius:5px;cursor:pointer;transition:.15s;
+  }
+  .icon-btn:hover{background:var(--wash);color:var(--ink);}
+  .icon-btn.close:hover{background:#C4402F;color:#fff;}
+  .winctl{display:flex;gap:2px;margin-left:6px;}
+
+  .app{flex:1;display:flex;min-height:0;}
+
+  /* ---------- 应用侧栏 ---------- */
+  .sidebar{
+    width:228px;flex:none;border-right:1px solid var(--line);
+    padding:16px 12px;display:flex;flex-direction:column;gap:22px;
+    background:color-mix(in srgb, var(--surface) 60%, var(--bg-deep));
+  }
+  .nav-group{display:flex;flex-direction:column;gap:2px;}
+  .nav-label{
+    font-family:var(--font-mono);font-size:9.5px;letter-spacing:.18em;color:var(--ink-mute);
+    padding:0 8px 8px;text-transform:uppercase;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:7px;
+    color:var(--ink-soft);font-size:12.5px;cursor:pointer;position:relative;
+    transition:.16s ease;border:0;background:transparent;text-align:left;width:100%;
+    font-family:var(--font-ui);
+  }
+  .nav-item:hover{background:var(--wash);color:var(--ink);}
+  .nav-item.active{color:var(--ink);background:var(--wash);font-weight:600;}
+  .nav-item.active::before{
+    content:"";position:absolute;left:-12px;top:9px;bottom:9px;width:2px;
+    background:var(--accent);border-radius:2px;
+  }
+  .nav-item svg{flex:none;opacity:.8;}
+  .sidebar-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;}
+  .now-bar{border:1px solid var(--line);border-radius:8px;padding:9px 10px;display:flex;flex-direction:column;gap:7px;}
+  .now-top{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;color:var(--ink-mute);}
+  .now-title{font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .now-art{height:3px;background:var(--line);border-radius:2px;overflow:hidden;}
+  .now-art i{display:block;height:100%;width:42%;background:var(--accent);}
+
+  /* ---------- 内容区 ---------- */
+  .content{
+    flex:1;min-width:0;overflow-y:auto;overflow-x:hidden;position:relative;
+    padding:34px 40px 56px;
+    scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent;
+  }
+  .content::-webkit-scrollbar{width:10px;}
+  .content::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:6px;border:3px solid transparent;background-clip:content-box;}
+  .content::before{
+    content:"";position:absolute;pointer-events:none;inset:0;
+    background:radial-gradient(700px 260px at 6% -6%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 65%);
+  }
+  .page{position:relative;animation:rise .5s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes rise{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  .stagger>*{animation:rise .5s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i,0) * 60ms + 40ms);}
+
+  /* ---------- 页头 ---------- */
+  .phead{display:flex;align-items:flex-end;gap:32px;}
+  .phead .lead{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;}
+  .lead .rule-top{width:34px;height:3px;border-radius:2px;background:var(--accent);}
+  .phead h1{margin:0;font-size:clamp(26px,3.1vw,38px);font-weight:800;letter-spacing:-.03em;line-height:1.06;}
+  .phead p{margin:0;font-size:12.5px;line-height:1.75;color:var(--ink-soft);max-width:62ch;}
+
+  .readouts{display:flex;align-items:flex-end;gap:0;flex:none;}
+  .readout{padding:0 16px;display:flex;flex-direction:column;gap:5px;min-width:0;}
+  .readout:first-child{padding-left:0;}
+  .readout:last-child{padding-right:0;}
+  .readout .lbl{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;color:var(--ink-mute);white-space:nowrap;}
+  .readout .val{font-family:var(--font-mono);font-size:12.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;}
+  .readout .val.big{font-size:15px;}
+  .vr{width:1px;align-self:stretch;background:var(--line);margin:0 0 2px;}
+
+  /* ---------- 分区 ---------- */
+  .panes{display:grid;grid-template-columns:1.42fr 1fr;gap:40px;margin-top:34px;align-items:start;}
+  .pane{display:flex;flex-direction:column;gap:38px;min-width:0;}
+  .section{min-width:0;}
+  .shead{display:flex;align-items:flex-end;gap:14px;}
+  .shead .idx{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.04em;padding-bottom:3px;}
+  .shead .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+  .shead h2{margin:0;font-size:15.5px;font-weight:700;letter-spacing:-.01em;}
+  .shead .sub{font-size:11.5px;color:var(--ink-soft);}
+  .badge{
+    display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9.5px;
+    letter-spacing:.14em;color:var(--accent);text-transform:uppercase;white-space:nowrap;
+  }
+  .badge::before{content:"";width:4px;height:4px;border-radius:1px;background:var(--accent);}
+  .srule{height:1px;margin:13px 0 12px;position:relative;background:var(--line);}
+  .srule::before{content:"";position:absolute;left:0;top:0;width:84px;height:1px;background:var(--accent);opacity:.75;}
+
+  /* ---------- 设置行 ---------- */
+  .rows{display:flex;flex-direction:column;}
+  .row{
+    display:flex;align-items:center;gap:12px;padding:12px;min-height:62px;
+    border-radius:7px;position:relative;transition:background .15s ease;cursor:default;
+  }
+  .row.click{cursor:pointer;}
+  .row:hover{background:var(--wash);}
+  .row:hover::before{
+    content:"";position:absolute;left:0;top:18%;bottom:18%;width:2px;border-radius:2px;background:var(--accent);
+    animation:marker .16s ease both;
+  }
+  @keyframes marker{from{opacity:0;transform:scaleY(.5);}to{opacity:1;transform:none;}}
+  .ico{
+    width:30px;height:30px;flex:none;border-radius:7px;display:grid;place-items:center;
+    background:rgba(255,255,255,.045);border:1px solid var(--line);color:var(--ink-soft);transition:.18s ease;
+  }
+  html[data-theme="light"] .ico{background:rgba(23,20,14,.04);}
+  .ico.on{background:color-mix(in srgb, var(--accent) 16%, transparent);border-color:color-mix(in srgb, var(--accent) 30%, transparent);color:var(--accent);}
+  .row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .row-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .row-desc{font-size:11.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .row-desc.mono{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.01em;}
+  .row-tail{flex:none;display:flex;align-items:center;gap:9px;margin-left:8px;}
+
+  .chipval{
+    font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:5px;
+    border:1px solid var(--line);background:var(--wash);color:color-mix(in srgb, var(--ink) 86%, transparent);
+    white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis;
+  }
+  .chipval.ok{color:var(--ok);border-color:color-mix(in srgb, var(--ok) 34%, transparent);}
+  .chipval.warn{color:var(--warn);border-color:color-mix(in srgb, var(--warn) 34%, transparent);}
+  .chev{color:var(--ink-mute);display:grid;place-items:center;}
+
+  /* 开关 */
+  .switch{
+    width:36px;height:20px;border-radius:999px;flex:none;position:relative;cursor:pointer;
+    background:var(--wash);border:1px solid var(--line-strong);transition:.22s cubic-bezier(.4,0,.2,1);
+  }
+  .switch::after{
+    content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:var(--ink-soft);transition:.22s cubic-bezier(.4,0,.2,1);
+  }
+  .switch.on{background:var(--accent);border-color:var(--accent);}
+  .switch.on::after{left:18px;background:var(--accent-ink);}
+
+  /* 分段控件 */
+  .seg{display:flex;gap:2px;padding:2px;border:1px solid var(--line);border-radius:6px;flex:none;}
+  .seg button{
+    min-width:38px;height:26px;padding:0 9px;border:0;border-radius:4px;background:transparent;
+    color:var(--ink-soft);font-family:var(--font-mono);font-size:11px;font-weight:600;cursor:pointer;transition:.16s;
+  }
+  .seg button:hover{color:var(--ink);background:var(--wash);}
+  .seg button.on{background:var(--accent);color:var(--accent-ink);}
+
+  .note{display:flex;gap:10px;align-items:flex-start;padding:8px 0;font-size:11.5px;line-height:1.7;color:var(--ink-soft);}
+  .note::before{content:"";width:2px;height:13px;margin-top:3px;flex:none;background:var(--accent);border-radius:1px;}
+
+  /* ---------- 表单 ---------- */
+  .field{display:flex;flex-direction:column;gap:7px;min-width:0;}
+  .field label{
+    font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;color:var(--ink-mute);
+    text-transform:uppercase;display:flex;align-items:center;gap:7px;
+  }
+  .field input{
+    height:34px;border-radius:6px;border:1px solid var(--line);background:var(--wash);
+    color:var(--ink);font-family:var(--font-mono);font-size:12px;padding:0 10px;outline:none;transition:.16s;width:100%;
+  }
+  .field input:focus{border-color:color-mix(in srgb, var(--accent) 60%, transparent);background:transparent;}
+  .field input[readonly]{color:var(--ink-soft);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  .btn{
+    height:34px;padding:0 14px;border-radius:6px;border:1px solid var(--line);background:transparent;
+    color:var(--ink);font-size:12px;font-weight:600;cursor:pointer;transition:.16s;font-family:var(--font-ui);
+    display:inline-flex;align-items:center;gap:7px;
+  }
+  .btn:hover{border-color:var(--line-strong);background:var(--wash);}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .btn.primary:hover{filter:brightness(1.06);}
+  .btn.danger{color:var(--bad);border-color:color-mix(in srgb, var(--bad) 40%, transparent);}
+  .btn.danger:hover{background:color-mix(in srgb, var(--bad) 12%, transparent);}
+  .btn.sm{height:28px;padding:0 10px;font-size:11.5px;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);flex:none;}
+  .dot.off{background:var(--ink-mute);box-shadow:none;}
+  .dot.ok{background:var(--ok);box-shadow:0 0 8px color-mix(in srgb,var(--ok) 70%,transparent);}
+  .dot.bad{background:var(--bad);box-shadow:none;}
+  .pulse{animation:pulse 2.4s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  .tag{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;padding:2px 6px;border-radius:4px;border:1px solid var(--line);color:var(--ink-soft);white-space:nowrap;}
+  .tag.on{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent);}
+  .tag.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent);}
+
+  /* ============================================================
+     连接矩阵：卡片网格
+     ============================================================ */
+  .cgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+  .ccard{
+    position:relative;border:1px solid var(--line);border-radius:10px;padding:15px 15px 11px;
+    display:flex;flex-direction:column;gap:11px;cursor:pointer;overflow:hidden;
+    transition:transform .18s ease,border-color .18s ease,background .18s ease;
+    background:transparent;
+  }
+  .ccard:hover{transform:translateY(-4px);border-color:var(--line-strong);background:color-mix(in srgb, var(--surface-2) 80%, transparent);}
+  .ccard.is-current{
+    border-color:color-mix(in srgb, var(--accent) 52%, transparent);
+    background:color-mix(in srgb, var(--accent) 7%, transparent);
+  }
+  /* 当前连接：左侧扫描光带 */
+  .ccard.is-current::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent);
+    box-shadow:0 0 14px var(--accent);
+  }
+  .ccard.is-current::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(115deg, transparent 35%, color-mix(in srgb, var(--accent) 10%, transparent) 50%, transparent 65%);
+    background-size:280% 100%;animation:sweep 5.5s ease-in-out infinite;
+  }
+  @keyframes sweep{0%{background-position:130% 0;}55%,100%{background-position:-30% 0;}}
+  .cc-top{display:flex;align-items:center;gap:10px;position:relative;}
+  .cc-logo{
+    width:30px;height:30px;border-radius:8px;flex:none;display:grid;place-items:center;
+    border:1px solid var(--line);background:var(--wash);font-family:var(--font-mono);
+    font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--ink-soft);
+  }
+  .ccard.is-current .cc-logo{
+    color:var(--accent);border-color:color-mix(in srgb,var(--accent) 38%,transparent);
+    background:color-mix(in srgb,var(--accent) 14%,transparent);
+  }
+  .cc-id{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .cc-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cc-addr{font-family:var(--font-mono);font-size:10px;color:var(--ink-mute);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cc-chips{display:flex;gap:5px;flex-wrap:wrap;position:relative;}
+  .ccfoot{
+    display:flex;align-items:center;gap:4px;padding-top:9px;margin-top:1px;
+    border-top:1px dotted var(--line);position:relative;justify-content:flex-end;
+  }
+  .ccbtn{
+    width:26px;height:26px;border-radius:6px;border:1px solid transparent;background:transparent;
+    display:grid;place-items:center;color:var(--ink-mute);cursor:pointer;transition:.15s;
+  }
+  .ccbtn:hover{background:var(--wash);border-color:var(--line);color:var(--ink);}
+  .ccbtn.del:hover{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,transparent);background:color-mix(in srgb,var(--bad) 10%,transparent);}
+  .ccfoot .sync{margin-right:auto;font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-mute);}
+  .ccfoot .sync b{color:var(--ok);font-weight:600;}
+
+  /* 新建连接虚线卡 */
+  .ccard.add{
+    border-style:dashed;align-items:center;justify-content:center;gap:7px;min-height:132px;
+    color:var(--ink-mute);
+  }
+  .ccard.add:hover{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 50%,transparent);}
+  .ccard.add .plus{font-family:var(--font-mono);font-size:15px;}
+
+  /* ---------- 新增连接：左协议栏 + 步骤 ---------- */
+  .nw{display:grid;grid-template-columns:250px 1fr 330px;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:28px;min-height:520px;}
+  .nw-rail{
+    border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:12px;
+    background:color-mix(in srgb, var(--surface) 60%, var(--bg-deep));
+  }
+  .nw-rail-h{display:flex;align-items:center;justify-content:space-between;padding:0 6px 4px;}
+  .nw-rail-h b{font-size:12.5px;}
+  .proto{
+    display:flex;align-items:center;gap:10px;padding:9px;border-radius:8px;cursor:pointer;
+    border:1px solid transparent;transition:.16s;position:relative;
+  }
+  .proto:hover{background:var(--wash);}
+  .proto.on{border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 8%,transparent);}
+  .proto .pl{width:26px;height:26px;border-radius:6px;flex:none;display:grid;place-items:center;font-family:var(--font-mono);
+    font-size:9px;font-weight:700;border:1px solid var(--line);background:var(--wash);color:var(--ink-soft);}
+  .proto.on .pl{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:color-mix(in srgb,var(--accent) 14%,transparent);}
+  .proto .pm{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .proto .pm b{font-size:12px;font-weight:650;}
+  .proto .pm span{font-size:10px;color:var(--ink-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .proto .port{font-family:var(--font-mono);font-size:9px;color:var(--ink-mute);padding:1px 5px;border:1px solid var(--line);border-radius:4px;}
+
+  .nw-main{padding:22px 26px 26px;display:flex;flex-direction:column;gap:18px;min-width:0;}
+  .steps{display:flex;align-items:center;gap:0;}
+  .step{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-mute);white-space:nowrap;}
+  .step .n{
+    width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex:none;
+    border:1px solid var(--line-strong);font-family:var(--font-mono);font-size:9.5px;font-weight:700;
+  }
+  .step.on{color:var(--ink);}
+  .step.on .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .step.done{color:var(--ink-soft);}
+  .step.done .n{border-color:color-mix(in srgb,var(--ok) 55%,transparent);color:var(--ok);}
+  .step-line{flex:1;height:1px;background:var(--line);margin:0 9px;min-width:12px;}
+  .step-line.done{background:color-mix(in srgb,var(--ok) 45%,transparent);}
+
+  .nw-title{display:flex;flex-direction:column;gap:5px;}
+  .nw-title h2{margin:0;font-size:18px;font-weight:750;letter-spacing:-.02em;}
+  .nw-title p{margin:0;font-size:11.5px;color:var(--ink-soft);line-height:1.7;}
+
+  .formcard{border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:13px;}
+  .formcard .fc-h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;}
+  .formcard .fc-h .tag{margin-left:auto;}
+  .inline-hint{display:flex;gap:6px;flex-wrap:wrap;}
+  .nw-actions{display:flex;align-items:center;gap:9px;margin-top:auto;padding-top:6px;}
+  .nw-actions .grow{flex:1;}
+
+  /* 右侧资源面板 */
+  .nw-side{
+    border-left:1px solid var(--line);padding:18px 16px;display:flex;flex-direction:column;gap:13px;
+    background:color-mix(in srgb, var(--surface) 55%, var(--bg-deep));min-width:0;
+  }
+  .side-h{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.17em;color:var(--ink-mute);text-transform:uppercase;}
+  .side-block{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;}
+  .side-block.active{border-color:color-mix(in srgb,var(--accent) 42%,transparent);background:color-mix(in srgb,var(--accent) 6%,transparent);}
+  .kv{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;color:var(--ink-soft);}
+  .kv b{font-family:var(--font-mono);font-size:10.5px;color:var(--ink);font-weight:600;text-align:right;word-break:break-all;}
+  .cand{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10px;color:var(--ink-soft);padding:6px 0;border-bottom:1px dotted var(--line);}
+  .cand:last-child{border-bottom:0;}
+  .cand b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:var(--ink);}
+  .login-prog{display:flex;flex-direction:column;gap:8px;}
+  .lp{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink-soft);}
+  .lp i{width:13px;height:13px;border-radius:50%;border:1px solid var(--line-strong);flex:none;display:grid;place-items:center;}
+  .lp.done i{border-color:var(--ok);color:var(--ok);}
+  .lp.doing i{border-color:var(--accent);}
+  .lp.doing i::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent);animation:pulse 1s ease-in-out infinite;}
+  .lp.done{color:var(--ink);}
+  .banner-ok{
+    display:flex;align-items:flex-start;gap:9px;border:1px solid color-mix(in srgb,var(--ok) 40%,transparent);
+    background:color-mix(in srgb,var(--ok) 9%,transparent);border-radius:8px;padding:10px 11px;
+  }
+  .banner-ok .bk{display:flex;flex-direction:column;gap:2px;font-size:11px;}
+  .banner-ok .bk b{font-size:12px;color:var(--ok);}
+  .banner-ok .bk span{color:var(--ink-soft);line-height:1.6;}
+
+  /* 单选列表（媒体库） */
+  .pick{display:flex;flex-direction:column;gap:2px;}
+  .pick-row{display:flex;align-items:center;gap:11px;padding:11px 10px;border-radius:7px;cursor:pointer;transition:background .15s ease;}
+  .pick-row:hover{background:var(--wash);}
+  .checkbox{width:15px;height:15px;border-radius:4px;border:1px solid var(--line-strong);flex:none;display:grid;place-items:center;transition:.18s;color:var(--accent-ink);}
+  .pick-row.on .checkbox{background:var(--accent);border-color:var(--accent);}
+  .checkbox svg{opacity:0;transition:.18s;transform:scale(.7);}
+  .pick-row.on .checkbox svg{opacity:1;transform:none;}
+  .pick-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .pick-main b{font-size:12.5px;font-weight:600;}
+  .pick-main span{font-size:11px;color:var(--ink-soft);}
+
+  /* 危险确认弹层 */
+  .modal-mask{
+    position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);
+    display:none;place-items:center;
+  }
+  .modal-mask.show{display:grid;}
+  .modal{
+    width:min(420px,92vw);background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;
+    padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:13px;
+    animation:rise .28s cubic-bezier(.22,1,.36,1) both;
+  }
+  .modal .mk{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.18em;color:var(--bad);text-transform:uppercase;}
+  .modal h3{margin:0;font-size:15px;}
+  .modal p{margin:0;font-size:11.5px;line-height:1.75;color:var(--ink-soft);}
+  .modal .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:4px;}
+
+  /* toast */
+  .toast{
+    position:fixed;left:50%;bottom:34px;transform:translate(-50%,20px);z-index:130;
+    background:var(--surface-2);border:1px solid var(--line-strong);color:var(--ink);
+    padding:9px 15px;border-radius:8px;font-size:12px;box-shadow:var(--shadow);
+    opacity:0;pointer-events:none;transition:.26s cubic-bezier(.22,1,.36,1);
+    display:flex;align-items:center;gap:8px;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  @media (max-width:1180px){
+    .nw{grid-template-columns:210px 1fr;}
+    .nw-side{display:none;}
+  }
+  @media (max-width:1080px){
+    .panes{grid-template-columns:1fr;gap:36px;}
+    .sidebar{width:64px;padding:14px 8px;}
+    .sidebar .nav-label,.nav-item span,.now-title,.now-top,.sidebar-foot{display:none;}
+    .nav-item{justify-content:center;}
+    .content{padding:28px 24px 44px;}
+    .phead{flex-direction:column;align-items:flex-start;gap:20px;}
+    .readouts{align-self:stretch;}
+  }
+  @media (max-width:720px){
+    body{padding:14px;}
+    .window{height:auto;min-height:0;}
+    .app{flex-direction:column;}
+    .sidebar{width:100%;flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);}
+    .cgrid{grid-template-columns:1fr;}
+    .nw{grid-template-columns:1fr;}
+    .nw-rail{border-right:0;border-bottom:1px solid var(--line);flex-direction:row;overflow-x:auto;}
+    .nw-rail-h{display:none;}
+    .proto{flex:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="proto">
+  <div class="proto-title">
+    <div class="k">XyMusic · Windows / Connection</div>
+    <h1>连接管理重设计 · Connection Matrix</h1>
+    <p>沿用设置页的 Signal Deck 语言；卡片承载连接身份与状态，右侧展示当前连接的完整读数与媒体库范围；新增连接为四步流程。</p>
+  </div>
+</header>
+
+<div class="window">
+  <div class="titlebar">
+    <div class="mark"></div>
+    <span class="name">XyMusic</span>
+    <span class="crumb" id="crumb">/ 连接管理</span>
+    <div class="tb-right">
+      <button class="icon-btn" id="themeBtn" title="切换主题">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.5 6.5 0 0 0 9.8 9.8Z"/></svg>
+      </button>
+      <div class="winctl">
+        <button class="icon-btn" title="最小化"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5h6" stroke="currentColor" stroke-width="1.2"/></svg></button>
+        <button class="icon-btn" title="最大化"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="2" width="6" height="6"/></svg></button>
+        <button class="icon-btn close" title="关闭"><svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.2"><path d="M2.5 2.5l5 5M7.5 2.5l-5 5"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="nav-group">
+        <div class="nav-label">浏览</div>
+        <button class="nav-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg><span>主页</span></button>
+        <button class="nav-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>搜索</span></button>
+        <button class="nav-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16M4 12h16M4 19h10"/></svg><span>媒体库</span></button>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">系统</div>
+        <button class="nav-item active" data-go="manage"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg><span>连接管理</span></button>
+        <button class="nav-item" onclick="location.href='settings-redesign.html'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.5-2.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.7 2 2 0 1 1 14 4.7a1.7 1.7 0 0 0 2.6 1.5l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4Z"/></svg><span>设置</span></button>
+      </div>
+      <div class="sidebar-foot">
+        <div class="now-bar">
+          <div class="now-top"><span>当前数据源</span><span id="nowKind">JELLYFIN</span></div>
+          <div class="now-title" id="nowTitle">家庭 NAS · menglong</div>
+          <div class="now-art"><i style="width:64%"></i></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- 危险确认弹层 -->
+<div class="modal-mask" id="modal">
+  <div class="modal">
+    <div class="mk">Danger · 删除连接</div>
+    <h3 id="mdTitle">删除「家庭 NAS」？</h3>
+    <p id="mdBody">将清除该连接的账号凭据与媒体库范围，并移除未完成的下载任务。若它是当前连接，会自动切换到最早创建的连接；本地已下载的歌曲文件不会删除。</p>
+    <div class="acts">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn danger" onclick="confirmDelete()">删除连接</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================ 图标 ============================ */
+const I = {
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  edit:'<path d="M4 20h4L20 8l-4-4L4 16z"/><path d="m14 6 4 4"/>',
+  lib:'<path d="M4 5h16M4 12h10M4 19h13"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  http:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.3-6 8-6s6.5 2 8 6"/>',
+  lock:'<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V8a4 4 0 0 1 8 0v2"/>',
+  timer:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  signal:'<path d="M5 19V9M10 19V5M15 19v-7M20 19V8"/>',
+  check:'<path d="m5 13 4 4L19 7"/>',
+  server:'<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  dl:'<path d="M12 4v11"/><path d="M7 12l5 5 5-5"/><path d="M5 20h14"/>',
+  power:'<path d="M12 3v9"/><path d="M7 6a8 8 0 1 0 10 0"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.2"/>',
+  back:'<path d="m14 6-6 6 6 6"/>'
+};
+const svg=(n,s=15)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${I[n]||''}</svg>`;
+
+/* ============================ 数据（对齐 JVM 端 DataSourceType / ConnectionConfig） ============================ */
+const PROTOCOLS = {
+  JELLYFIN:{title:'Jellyfin',describe:'开源家庭媒体服务器，支持实时转码',port:8096,mark:'JF'},
+  SUBSONIC:{title:'Subsonic',describe:'经典 Subsonic API，兼容多数客户端',port:4040,mark:'SS'},
+  NAVIDROME:{title:'Navidrome',describe:'轻量自托管音乐服务，支持多媒体库',port:4533,mark:'ND'},
+  EMBY:{title:'Emby',describe:'Emby Server，媒体库与播放同步',port:8096,mark:'EM'},
+  PLEX:{title:'Plex',describe:'通过账号自动读取可用服务器',port:32400,mark:'PX'}
+};
+
+/* 连接列表：name 为别名，serverName 为服务端名，username 为账号 */
+const state = {
+  connections:[
+    { id:1, type:'JELLYFIN', name:'家庭 NAS', serverName:'HomeMedia', address:'http://192.168.1.12:8096', username:'menglong',
+      serverVersion:'10.10.7', libraries:['音乐','有声书'], ifDl:true, ifDel:true, lastLogin:'2026-11-17 08:34', sync:'刚刚' },
+    { id:2, type:'NAVIDROME', name:'书房服务器', serverName:'StudyBox', address:'http://192.168.1.21:4533', username:'menglong',
+      serverVersion:'0.53.3', libraries:['Music', 'Podcasts'], ifDl:true, ifDel:false, lastLogin:'2026-11-15 21:02', sync:'2 天前' },
+    { id:3, type:'SUBSONIC', name:'备用服务器', serverName:'Backup', address:'https://music.example.com:4040', username:'guest',
+      serverVersion:'1.16.1', libraries:null, ifDl:false, ifDel:false, lastLogin:'2026-10-28 10:11', sync:'20 天前' }
+  ],
+  currentId:1,
+  draft:{ type:'JELLYFIN', step:0, address:'', username:'', password:'', alias:'', libs:[] },
+  newStep:0
+};
+
+const cur = () => state.connections.find(c => c.id === state.currentId) || null;
+
+/* ============================ 页面 ============================ */
+const pages = {};
+let route = 'manage';
+
+const readouts = items => `<div class="readouts">${items.map((it,i)=>`
+  ${i?'<div class="vr"></div>':''}
+  <div class="readout"><div class="lbl">${it[0]}</div><div class="val${it[2]?' big':''}">${it[1]}</div></div>`).join('')}</div>`;
+
+const phead = (k,title,desc,rights) => `
+  <div class="phead">
+    <div class="lead">
+      <div class="rule-top"></div>
+      <div>
+        <div style="font-family:var(--font-mono);font-size:9.5px;letter-spacing:.2em;color:var(--accent);margin-bottom:9px">${k}</div>
+        <h1>${title}</h1>
+      </div>
+      ${desc?`<p>${desc}</p>`:''}
+    </div>
+    ${rights||''}
+  </div>`;
+
+const section = (idx,title,sub,badgeText,body,extra='') => `
+  <section class="section">
+    <div class="shead">
+      ${idx?`<div class="idx">${idx}</div>`:''}
+      <div class="txt"><h2>${title}</h2>${sub?`<div class="sub">${sub}</div>`:''}</div>
+      ${badgeText?`<div class="badge">${badgeText}</div>`:''}
+    </div>
+    <div class="srule"></div>
+    ${body}${extra}
+  </section>`;
+
+const row = ({icon,title,desc,mono,checked,value,valueCls,click,onClick,tail}) => {
+  const isClick = click || onClick;
+  return `<div class="row${isClick?' click':''}" ${onClick?`onclick="${onClick}"`:''}>
+    <div class="ico${checked?' on':''}">${svg(icon,15)}</div>
+    <div class="row-main">
+      <div class="row-title">${title}</div>
+      <div class="row-desc${mono?' mono':''}">${desc}</div>
+    </div>
+    <div class="row-tail">${tail ?? (checked!==undefined ? `<div class="switch${checked?' on':''}" data-switch></div>` : '')}
+      ${value?`<span class="chipval ${valueCls||''}">${value}</span>`:''}
+      ${isClick?'<span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></span>':''}
+    </div>
+  </div>`;
+};
+
+/* 连接卡片 */
+function connCard(c){
+  const p = PROTOCOLS[c.type];
+  const on = c.id === state.currentId;
+  const libs = c.libraries ? `${c.libraries.length} 个库` : '全部';
+  const perm = c.ifDel ? '下载 · 删除' : (c.ifDl ? '下载' : '只读');
+  return `<article class="ccard${on?' is-current':''}" data-conn="${c.id}" title="点击切换为当前连接">
+    <div class="cc-top">
+      <div class="cc-logo">${p.mark}</div>
+      <div class="cc-id">
+        <div class="cc-name">${p.title} - ${c.username}</div>
+        <div class="cc-addr">${c.address}</div>
+      </div>
+      ${on?`<span class="tag on">当前</span>`:`<span class="dot off"></span>`}
+    </div>
+    <div class="cc-chips">
+      <span class="tag">${c.name}</span>
+      <span class="tag">v${c.serverVersion}</span>
+      <span class="tag">${libs}</span>
+      <span class="tag">${perm}</span>
+    </div>
+    <div class="ccfoot">
+      <span class="sync">${on?'<b>已连接</b>':'上次登录'} · ${on?'在线':c.sync}</span>
+      <button class="ccbtn" data-edit="${c.id}" title="修改连接">${svg('edit',13)}</button>
+      <button class="ccbtn" data-lib="${c.id}" title="媒体库">${svg('lib',13)}</button>
+      <button class="ccbtn del" data-del="${c.id}" title="删除连接">${svg('trash',13)}</button>
+    </div>
+  </article>`;
+}
+
+/* --- 连接管理列表页 --- */
+pages.manage = { crumb:'/ 连接管理', render: () => {
+  const c = cur();
+  const n = state.connections.length;
+  return `
+  ${phead('网络 / 服务器','连接管理','',
+    readouts([['当前连接', c ? c.name : '—', 1], ['连接数', String(n)], ['类型', c ? PROTOCOLS[c.type].title : '—']]))}
+
+  <div style="margin-top:30px">
+    ${section('01','连接设置列表','',`${n} 个连接`,
+      `<div class="cgrid">
+        ${state.connections.map(connCard).join('')}
+        <article class="ccard add" onclick="goNew()">
+          <span class="plus">+</span>
+          <span style="font-size:12px;font-weight:650">添加连接</span>
+          <span style="font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em">ADD CONNECTION</span>
+        </article>
+      </div>
+      <div class="note" style="margin-top:6px">切换连接后会重新读取媒体库；正在播放的队列会保留，需重新点播以使用新数据源。</div>`)}
+  </div>`;
+}};
+
+/* --- 新增连接（四步） --- */
+const STEP_NAMES = ['选择服务','输入凭据','选择资源','登录验证'];
+
+pages.new = { crumb:'/ 连接管理 / 添加连接', render: () => {
+  const d = state.draft;
+  const p = PROTOCOLS[d.type];
+  const isPlex = d.type === 'PLEX';
+  const step = state.newStep;
+  const canSubmit = isPlex ? !!d.username : (!!d.address && !!d.username);
+  const allLibs = ['音乐','有声书','播客','Lossless 收藏','儿童曲库'];
+
+  return `
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="btn sm" onclick="go('manage')">${svg('back',13)}返回列表</button>
+    <span class="tag">${step===0?'首次打开 / 添加连接':'添加连接'}</span>
+  </div>
+  ${phead('服务器连接 / 新增','连接到媒体服务器',
+    d.address ? `正在连接 ${d.address}` : '选择服务类型并填写凭据；地址、用户名与密码仅用于建立会话，密码会加密保存。',
+    `<span class="tag on">${p.title} · ${p.port}</span>`)}
+
+  <div class="nw">
+    <!-- 左：协议栏 -->
+    <aside class="nw-rail">
+      <div class="nw-rail-h"><b>服务器连接</b><span class="tag">${Object.keys(PROTOCOLS).length}</span></div>
+      ${Object.entries(PROTOCOLS).map(([k,v])=>`
+        <div class="proto${k===d.type?' on':''}" data-proto="${k}">
+          <span class="pl">${v.mark}</span>
+          <span class="pm"><b>${v.title}</b><span>${v.describe}</span></span>
+          <span class="port">${v.port}</span>
+        </div>`).join('')}
+      <div class="note" style="margin-top:auto">端口与协议由地址隐式给出，无需单独选择 SSL。</div>
+    </aside>
+
+    <!-- 中：步骤与表单 -->
+    <div class="nw-main">
+      <div class="steps">
+        ${STEP_NAMES.map((s,i)=>`
+          ${i?`<span class="step-line${i<=step?' done':''}"></span>`:''}
+          <span class="step${i===step?' on':(i<step?' done':'')}"><span class="n">${i<step?'✓':i+1}</span>${s}</span>`).join('')}
+      </div>
+
+      <div class="nw-title">
+        <h2>${p.title} 凭据</h2>
+        <p>${isPlex ? 'Plex 将通过账号自动读取可用服务器，无需填写地址。' : '填写服务地址与账号后读取可用媒体库，并在右侧完成登录验证。'}</p>
+      </div>
+
+      <div class="formcard">
+        <div class="fc-h">${svg('server',14)}${p.title} 凭据<span class="tag">必填</span></div>
+        ${isPlex ? `
+          <div class="inline-hint">
+            <span class="tag">Plex 将通过账号自动读取可用服务器</span>
+            <span class="tag">自动发现</span>
+          </div>` : `
+          <div class="field">
+            <label>链接地址 <span class="tag">URI</span></label>
+            <input id="fAddr" placeholder="http://192.168.1.12:${p.port}" value="${d.address}" spellcheck="false" />
+          </div>
+          <div class="inline-hint">
+            <span class="tag">默认端口 ${p.port}</span>
+            <span class="tag">支持 http / https</span>
+            ${d.address?`<span class="tag ok">地址格式可用</span>`:''}
+          </div>`}
+        <div class="grid2">
+          <div class="field">
+            <label>用户名 <span class="tag">账号</span></label>
+            <input id="fUser" placeholder="admin" value="${d.username}" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label>密码 <span class="tag">加密</span></label>
+            <input id="fPass" type="password" placeholder="••••••••" value="${d.password}" />
+          </div>
+        </div>
+        <div class="field">
+          <label>设置别名 <span class="tag">本地</span></label>
+          <input id="fAlias" placeholder="例如：家庭 NAS" value="${d.alias}" />
+        </div>
+      </div>
+
+      <div class="nw-actions">
+        <button class="btn" onclick="go('manage')">${svg('back',13)}重新选择</button>
+        <span class="grow"></span>
+        <span id="hintConnect" style="font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;color:var(--ink-mute)">
+          ${canSubmit ? '可以连接' : (isPlex ? '填写用户名后可用' : '填写地址与用户名后可用')}</span>
+        <button class="btn primary" id="btnConnect" ${canSubmit?'':'disabled'} onclick="submitLogin()">${svg('power',13)}连接</button>
+      </div>
+    </div>
+
+    <!-- 右：资源与登录状态 -->
+    <aside class="nw-side">
+      <div class="side-h">资源读取 / 登录验证</div>
+      <div class="side-block">
+        <div class="kv"><span>协议</span><b>${p.title}</b></div>
+        <div class="kv"><span>地址</span><b>${isPlex?'自动发现':(d.address||'未填写')}</b></div>
+        <div class="kv"><span>版本</span><b>${d.address||isPlex?'账号发现':'等待读取'}</b></div>
+        <div class="kv"><span>准备同步</span><b>媒体库</b></div>
+      </div>
+
+      ${d.address||isPlex ? `
+      <div class="side-block">
+        <div class="side-h" style="letter-spacing:.14em">候选地址</div>
+        <div class="cand"><b>${d.address||'auto://plex.tv'}</b><span class="tag on">推荐</span></div>
+        <div class="cand"><b>${(d.address||'https://discover.plex.tv').replace('http://','https://')}</b><span class="tag">可选</span></div>
+      </div>` : ''}
+
+      <div class="side-block ${canSubmit?'active':''}">
+        <div class="kv"><span>登录状态</span><b style="color:${canSubmit?'var(--accent)':'var(--ink-mute)'}">${canSubmit?'待验证':'等待凭据'}</b></div>
+        <div class="login-prog">
+          <div class="lp ${canSubmit?'doing':''}"><i></i>验证账号</div>
+          <div class="lp"><i></i>建立会话</div>
+          <div class="lp"><i></i>同步资料</div>
+        </div>
+      </div>
+
+      <div class="side-block">
+        <div class="side-h" style="letter-spacing:.14em">媒体库</div>
+        <div class="pick">
+          ${allLibs.slice(0,3).map(l=>`<div class="pick-row" data-dlib="${l}"><span class="checkbox">${svg('check',10)}</span><span class="pick-main"><b>${l}</b></span></div>`).join('')}
+        </div>
+        <div class="note" style="font-size:11px">提交连接信息后读取完整资源列表。</div>
+      </div>
+    </aside>
+  </div>`;
+}};
+
+/* --- 连接信息（编辑） --- */
+pages.edit = { crumb:'/ 连接管理 / 连接信息', render: () => {
+  const c = cur();
+  if(!c) { route='manage'; return pages.manage.render(); }
+  const p = PROTOCOLS[c.type];
+  return `
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="btn sm" onclick="go('manage')">${svg('back',13)}返回列表</button>
+    <span class="tag">连接信息</span>
+  </div>
+  ${phead('连接信息 / 维护','连接信息',
+    '维护当前音乐服务地址、账号凭据和显示别名；地址、用户名或密码变更后，保存会触发当前连接重新登录。',
+    readouts([['连接状态', c.id===state.currentId?'当前':'备用',1], ['服务端', 'v'+c.serverVersion], ['类型', p.title]]))}
+
+  <div class="panes">
+    <div class="pane">
+      ${section('01','凭据与别名','地址与别名必填；密码留空表示不修改。','服务器',
+        `<div class="formcard">
+          <div class="field"><label>链接地址 <span class="tag">必填</span></label><input value="${c.address}" /></div>
+          <div class="inline-hint"><span class="tag">示例 http://192.168.1.2:${p.port}</span><span class="tag">支持 https</span></div>
+          <div class="grid2">
+            <div class="field"><label>用户名 <span class="tag">账号</span></label><input value="${c.username}" /></div>
+            <div class="field"><label>密码 <span class="tag">加密</span></label><input type="password" placeholder="留空则不修改" /></div>
+          </div>
+          <div class="field"><label>设置别名 <span class="tag">必填</span></label><input value="${c.name}" /></div>
+          <div style="display:flex;gap:9px;margin-top:4px">
+            <button class="btn primary" onclick="saveEdit()">保存</button>
+            <button class="btn" onclick="go('manage')">取消</button>
+          </div>
+        </div>`)}
+    </div>
+    <div class="pane">
+      ${section('02','保存影响','变更前后会做什么。','影响',
+        `<div class="rows">
+          ${row({icon:'power',title:'重新登录',desc:'地址、用户名或密码变更后下次生效',value:'会重登',valueCls:'warn'})}
+          ${row({icon:'edit',title:'别名修改',desc:'仅影响本地显示，不写入服务端',value:'本地'})}
+          ${row({icon:'shield',title:'空值校验',desc:'地址与别名都非空才允许保存',value:'通过',valueCls:'ok'})}
+        </div>
+        <div class="note">服务类型不可在此修改；如需切换协议请新建连接。</div>`)}
+      ${section('03','连接状态','当前连接的实时读数。','',
+        `<div class="rows">
+          ${row({icon:'server',title:'服务端',desc:c.serverName,value:'v'+c.serverVersion})}
+          ${row({icon:'timer',title:'最近登录',desc:c.lastLogin,value:'已加密'})}
+        </div>`)}
+    </div>
+  </div>`;
+}};
+
+/* ============================ 交互 ============================ */
+const content = document.getElementById('content');
+
+function go(id){
+  if(!pages[id]) return;
+  route = id;
+  content.innerHTML = `<div class="page stagger">${pages[id].render()}</div>`;
+  document.getElementById('crumb').textContent = pages[id].crumb;
+  document.querySelectorAll('.nav-item[data-go]').forEach(n=>n.classList.toggle('active', n.dataset.go === (id==='new'||id==='edit'?'manage':id)));
+  content.scrollTop = 0;
+  [...content.querySelector('.page').children].forEach((el,i)=>el.style.setProperty('--i', i));
+  bind();
+  const c = cur();
+  document.getElementById('nowKind').textContent = c ? c.type : '—';
+  document.getElementById('nowTitle').textContent = c ? `${c.name} · ${c.username}` : '未连接';
+}
+
+function bind(){
+  /* 开关 */
+  content.querySelectorAll('[data-switch]').forEach(sw=>{
+    sw.onclick = e=>{ e.stopPropagation(); sw.classList.toggle('on'); };
+  });
+  /* 分段 */
+  content.querySelectorAll('[data-seg]').forEach(seg=>{
+    seg.querySelectorAll('button').forEach(btn=>{
+      btn.onclick = e=>{ e.stopPropagation();
+        seg.querySelectorAll('button').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); };
+    });
+  });
+  /* 卡片：切换当前连接（点击底部按钮时不切换） */
+  content.querySelectorAll('[data-conn]').forEach(card=>{
+    card.onclick = e=>{
+      if(e.target.closest('[data-edit],[data-lib],[data-del]')) return;
+      const id = Number(card.dataset.conn);
+      if(id === state.currentId) return;
+      state.currentId = id;
+      const c = cur();
+      go('manage');
+      toast(`已切换到 ${c.name} · ${PROTOCOLS[c.type].title}，正在重新读取媒体库`);
+    };
+  });
+  content.querySelectorAll('[data-edit]').forEach(b=>{
+    b.onclick = e=>{ e.stopPropagation(); openEdit(Number(b.dataset.edit)); };
+  });
+  content.querySelectorAll('[data-lib]').forEach(b=>{
+    b.onclick = e=>{ e.stopPropagation(); const c = cur(); toast(`打开「${c?c.name:''}」的媒体库选择`); };
+  });
+  content.querySelectorAll('[data-del]').forEach(b=>{
+    b.onclick = e=>{ e.stopPropagation(); openDelete(Number(b.dataset.del)); };
+  });
+  /* 协议切换 */
+  content.querySelectorAll('[data-proto]').forEach(p=>{
+    p.onclick = ()=>{
+      state.draft.type = p.dataset.proto;
+      const np = PROTOCOLS[state.draft.type];
+      if(state.draft.address) state.draft.address = `http://192.168.1.12:${np.port}`;
+      go('new');
+    };
+  });
+  /* 媒体库（新增页） */
+  content.querySelectorAll('[data-dlib]').forEach(el=>{
+    el.onclick = ()=>el.classList.toggle('on');
+  });
+  /* 表单输入绑定，避免重渲染丢值；同时实时更新「连接」按钮可用状态 */
+  const bindInput = (id,key)=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.oninput = ()=>{ state.draft[key] = el.value; refreshSubmit(); };
+  };
+  bindInput('fAddr','address'); bindInput('fUser','username'); bindInput('fPass','password'); bindInput('fAlias','alias');
+}
+
+/* 依据当前草稿判断是否可提交，并同步按钮与提示文案 */
+function refreshSubmit(){
+  const d = state.draft, isPlex = d.type === 'PLEX';
+  const ok = isPlex ? !!d.username : (!!d.address && !!d.username);
+  const btn = document.getElementById('btnConnect');
+  const hint = document.getElementById('hintConnect');
+  if(btn) btn.disabled = !ok;
+  if(hint) hint.textContent = ok ? '可以连接' : (isPlex ? '填写用户名后可用' : '填写地址与用户名后可用');
+}
+
+function goNew(){
+  state.draft = { type:'JELLYFIN', step:0, address:'', username:'', password:'', alias:'', libs:[] };
+  state.newStep = 0;
+  go('new');
+}
+function submitLogin(){
+  const d = state.draft, p = PROTOCOLS[d.type];
+  const addr = d.type==='PLEX' ? `https://discover.plex.tv:${p.port}` : (d.address || `http://192.168.1.12:${p.port}`);
+  const id = Math.max(0, ...state.connections.map(c=>c.id)) + 1;
+  state.connections.push({
+    id, type:d.type, name: d.alias || `${p.title} 连接`, serverName: p.title+' Server',
+    address: addr, username: d.username || 'admin', serverVersion:'—',
+    libraries:['音乐'], ifDl:true, ifDel:false, lastLogin:'刚刚', sync:'刚刚'
+  });
+  state.currentId = id;
+  go('manage');
+  toast('登录成功 · 已创建连接并切换为当前数据源');
+}
+
+let pendingDelete = null;
+function openDelete(id){
+  pendingDelete = id;
+  const c = state.connections.find(x=>x.id===id);
+  document.getElementById('mdTitle').textContent = `删除「${c.name}」？`;
+  document.getElementById('mdBody').textContent =
+    `将清除该连接的账号凭据与媒体库范围，并移除未完成的下载任务。${id===state.currentId?'若它是当前连接，会自动切换到最早创建的连接；':''}本地已下载的歌曲文件不会删除。`;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('show'); pendingDelete=null; }
+function confirmDelete(){
+  const id = pendingDelete;
+  const c = state.connections.find(x=>x.id===id);
+  state.connections = state.connections.filter(x=>x.id!==id);
+  if(state.currentId === id){
+    state.connections.sort((a,b)=>a.id-b.id);
+    state.currentId = state.connections[0]?.id ?? null;
+  }
+  closeModal();
+  go('manage');
+  toast(`已删除连接「${c.name}」`);
+}
+function openEdit(id){
+  state.currentId = id;
+  go('edit');
+}
+function saveEdit(){ go('manage'); toast('已保存，地址或凭据变更将触发重新登录'); }
+
+let toastTimer = null;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.innerHTML = `<span class="dot ok"></span><span>${msg}</span>`;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+document.getElementById('themeBtn').onclick = ()=>{
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+};
+document.querySelectorAll('.nav-item[data-go]').forEach(n=>{ n.onclick = ()=>go(n.dataset.go); });
+document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+
+go('manage');
+</script>
+</body>
+</html>
