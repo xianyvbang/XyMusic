@@ -303,7 +303,6 @@ private fun JvmConnectionCredentialFormCard(
             // 设置别名
             JvmConnectionFormField(
                 label = stringResource(Res.string.set_alias),
-                tag = stringResource(Res.string.jvm_connection_config_info_screen_text_43),
             ) {
                 JvmConnectionNameInputEdit(
                     connectionName = connectionName,
@@ -427,7 +426,6 @@ private fun JvmConnectionCredentialGrid(
     val usernameField: @Composable () -> Unit = {
         JvmConnectionFormField(
             label = stringResource(Res.string.username),
-            tag = stringResource(Res.string.jvm_connection_config_info_screen_text_45),
         ) {
             JvmUsernameInputEdit(
                 username = username,
@@ -438,7 +436,6 @@ private fun JvmConnectionCredentialGrid(
     val passwordField: @Composable () -> Unit = {
         JvmConnectionFormField(
             label = stringResource(Res.string.password),
-            tag = stringResource(Res.string.jvm_connection_config_info_screen_text_47),
         ) {
             JvmPasswordInputEdit(
                 password = password,
