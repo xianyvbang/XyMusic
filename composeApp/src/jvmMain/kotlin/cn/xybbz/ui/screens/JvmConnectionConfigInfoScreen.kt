@@ -152,7 +152,7 @@ fun JvmConnectionConfigInfoScreen(
             },
         )
 
-        JvmConnectionCredentialSection(
+        JvmConnectionCredentialFormCard(
             address = address,
             username = username,
             password = connectionConfigInfoViewModel.password,
@@ -219,84 +219,6 @@ private fun JvmConnectionInfoReadoutDivider() {
             .width(1.dp)
             .height(30.dp)
             .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f))
-    )
-}
-
-/**
- * 连接凭据分区：分区头 + 单张表单卡片。
- *
- * @param address 当前连接地址。
- * @param username 当前用户名。
- * @param password 当前密码。
- * @param connectionName 当前连接别名。
- * @param canSave 是否允许保存。
- * @param saveText 保存按钮文案。
- * @param cancelText 取消按钮文案。
- * @param onAddressChange 地址变更回调。
- * @param onUsernameChange 用户名变更回调。
- * @param onPasswordChange 密码变更回调。
- * @param onConnectionNameChange 别名变更回调。
- * @param onSave 保存回调。
- * @param onCancel 取消回调。
- */
-@Composable
-private fun JvmConnectionCredentialSection(
-    address: String,
-    username: String,
-    password: String,
-    connectionName: String,
-    canSave: Boolean,
-    saveText: String,
-    cancelText: String,
-    onAddressChange: (String) -> Unit,
-    onUsernameChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onConnectionNameChange: (String) -> Unit,
-    onSave: () -> Unit,
-    onCancel: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-    ) {
-        JvmConnectionSectionHeader(
-            // 设计稿用序号标记分区顺序，这里沿用「01」。
-            index = "01",
-        )
-
-        JvmConnectionCredentialFormCard(
-            address = address,
-            username = username,
-            password = password,
-            connectionName = connectionName,
-            canSave = canSave,
-            saveText = saveText,
-            cancelText = cancelText,
-            onAddressChange = onAddressChange,
-            onUsernameChange = onUsernameChange,
-            onPasswordChange = onPasswordChange,
-            onConnectionNameChange = onConnectionNameChange,
-            onSave = onSave,
-            onCancel = onCancel,
-        )
-    }
-}
-
-/**
- * 分区头：只保留序号标记。
- *
- * @param index 分区序号。
- */
-@Composable
-private fun JvmConnectionSectionHeader(index: String) {
-    XyText(
-        text = index,
-        style = MaterialTheme.typography.labelMedium.copy(
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold,
-        ),
-        color = MaterialTheme.colorScheme.primary,
-        maxLines = 1,
     )
 }
 
