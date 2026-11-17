@@ -34,6 +34,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalAtomicApi::class, FlowPreview::class)
 class HomeDataRepository(
@@ -94,7 +95,7 @@ class HomeDataRepository(
             db.invalidationTracker
                 .createFlow(*HOME_DATA_TABLES)
                 // 首页刷新会连续写多张表，先合并短时间内的多次失效。
-                .debounce(OBSERVE_DEBOUNCE_MS)
+                .debounce(OBSERVE_DEBOUNCE_MS.milliseconds)
                 .conflate()
                 .collect {
                     // 收集期间产生的新信号会被合并，不会并发发起多组查询。
