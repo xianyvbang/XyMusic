@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -194,15 +193,8 @@ fun JvmConnectionManagement(
     }
     val currentDisplayItem = displayItems.firstOrNull { it.selected } ?: displayItems.firstOrNull()
 
-    JvmSettingPageScaffold(
-        // 与设置页保持一致：左右使用标准外边距，顶部留出标题间距，底部留出滚动余量。
-        contentPadding = PaddingValues(
-            start = XyTheme.dimens.outerHorizontalPadding,
-            end = XyTheme.dimens.outerHorizontalPadding,
-            top = XyTheme.dimens.outerVerticalPadding * 2,
-            bottom = XyTheme.dimens.outerVerticalPadding * 6,
-        )
-    ) {
+    // 与设置页保持一致：内容内边距使用 JvmSettingPageScaffold 的统一默认值。
+    JvmSettingPageScaffold {
         // 统一页面头部：左侧大标题，右侧当前连接读数
         JvmPageHeader(
             title = stringResource(Res.string.connection_management),

@@ -258,10 +258,31 @@ internal fun JvmSettingFlowRow(
 }
 
 /**
+ * 设置类页面固定头部的统一内边距：左右对齐窗口边距，顶部预留与内容区一致的页头间距。
+ */
+internal val JvmSettingPageHeaderPadding: PaddingValues
+    @Composable get() = PaddingValues(
+        start = XyTheme.dimens.outerHorizontalPadding,
+        end = XyTheme.dimens.outerHorizontalPadding,
+        top = XyTheme.dimens.outerVerticalPadding * 2,
+    )
+
+/**
+ * 设置类页面内容的统一内边距：左右对齐窗口边距，顶部预留页头间距，底部留出滚动余量。
+ */
+internal val JvmSettingPageContentPadding: PaddingValues
+    @Composable get() = PaddingValues(
+        start = XyTheme.dimens.outerHorizontalPadding,
+        end = XyTheme.dimens.outerHorizontalPadding,
+        top = XyTheme.dimens.outerVerticalPadding * 2,
+        bottom = XyTheme.dimens.outerVerticalPadding * 6,
+    )
+
+/**
  * JVM 设置类页面的通用列表外壳。
  *
  * @param modifier 传给内部列表的修饰符。
- * @param contentPadding 列表内容内边距。
+ * @param contentPadding 列表内容内边距，默认使用设置类页面的统一内边距。
  * @param verticalArrangement 列表条目之间的纵向间距。
  * @param topBar 页面顶部栏；为空时不显示。
  * @param content 页面主体内容，默认按设置页统一纵向间距排列。
@@ -269,9 +290,7 @@ internal fun JvmSettingFlowRow(
 @Composable
 internal fun JvmSettingPageScaffold(
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(
-        horizontal = XyTheme.dimens.outerHorizontalPadding,
-    ),
+    contentPadding: PaddingValues = JvmSettingPageContentPadding,
     verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(
         XyTheme.dimens.outerVerticalPadding * 2
     ),

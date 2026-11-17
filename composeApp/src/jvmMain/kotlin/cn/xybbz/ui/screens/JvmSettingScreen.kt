@@ -56,6 +56,8 @@ import cn.xybbz.ui.components.JvmSettingGroup
 import cn.xybbz.ui.components.JvmSettingGroupGrid
 import cn.xybbz.ui.components.JvmSettingLazyColumn
 import cn.xybbz.ui.components.JvmSettingNote
+import cn.xybbz.ui.components.JvmSettingPageContentPadding
+import cn.xybbz.ui.components.JvmSettingPageHeaderPadding
 import cn.xybbz.ui.components.JvmSettingPickRow
 import cn.xybbz.ui.components.JvmSettingRowDescriptionStyle
 import cn.xybbz.ui.components.JvmSettingSwitchRow
@@ -239,11 +241,7 @@ fun JvmSettingScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        start = XyTheme.dimens.outerHorizontalPadding,
-                        end = XyTheme.dimens.outerHorizontalPadding,
-                        top = XyTheme.dimens.outerVerticalPadding * 2,
-                    ),
+                    .padding(JvmSettingPageHeaderPadding),
                 verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
             ) {
                 JvmPageHeader(
@@ -271,13 +269,8 @@ fun JvmSettingScreen(
             JvmSettingLazyColumn(
                 lazyState = lazyState,
                 modifier = Modifier.weight(1f),
-                // 底部留出更大滚动余量，避免最后一组设置贴住窗口底边。
-                contentPadding = PaddingValues(
-                    start = XyTheme.dimens.outerHorizontalPadding,
-                    end = XyTheme.dimens.outerHorizontalPadding,
-                    top = XyTheme.dimens.outerVerticalPadding * 2,
-                    bottom = XyTheme.dimens.outerVerticalPadding * 6,
-                ),
+                // 内容内边距复用设置类页面的统一默认值。
+                contentPadding = JvmSettingPageContentPadding,
             ) {
                 item(key = "general") {
                     JvmSettingGroupGrid { groupWidth ->

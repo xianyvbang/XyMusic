@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -124,12 +123,8 @@ fun JvmConnectionConfigInfoScreen(
         Unit
     }
 
-    JvmSettingPageScaffold(
-        contentPadding = PaddingValues(
-            horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
-            vertical = XyTheme.dimens.outerVerticalPadding * 3
-        )
-    ) {
+    // 与设置页、连接管理页保持一致：内容内边距使用 JvmSettingPageScaffold 的统一默认值。
+    JvmSettingPageScaffold {
         // 顶部统一页头：标题在左侧，右侧是服务端版本与服务类型读数。
         JvmPageHeader(
             title = pageTitle,
