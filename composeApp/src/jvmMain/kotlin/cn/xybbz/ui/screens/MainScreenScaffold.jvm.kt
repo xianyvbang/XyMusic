@@ -176,8 +176,8 @@ actual fun MainScreenScaffold(
                             .fillMaxHeight()
                             // 与顶部标题栏留出间距，避免侧边栏紧贴标题栏
                             .padding(
-                                top = XyTheme.dimens.contentPadding,
-                                end = XyTheme.dimens.contentPadding
+//                                top = XyTheme.dimens.contentPadding,
+//                                end = XyTheme.dimens.contentPadding
                             )
                     ) {
                         LazyColumnNotComponent(
