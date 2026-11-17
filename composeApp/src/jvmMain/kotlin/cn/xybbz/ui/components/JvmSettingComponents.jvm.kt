@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
@@ -501,62 +502,70 @@ internal fun JvmSettingPageHeader(
     }
 }
 
-/** 紧凑标题字号，对应设计稿设置页顶部大标题。 */
-private val JvmSettingHeadlineTitleSize = 32.sp
+/** 页面头部大标题字号，对应设计稿顶部大标题。 */
+private val JvmPageHeaderTitleSize = 32.sp
 
-/** 紧凑标题行高。 */
-private val JvmSettingHeadlineTitleLineHeight = 36.sp
+/** 页面头部大标题行高。 */
+private val JvmPageHeaderTitleLineHeight = 36.sp
 
-/** 紧凑标题字距。 */
-private val JvmSettingHeadlineTitleLetterSpacing = (-1.1).sp
+/** 页面头部大标题字距。 */
+private val JvmPageHeaderTitleLetterSpacing = (-1.1).sp
 
-/** 标题与右侧读数之间的间距。 */
-private val JvmSettingHeadlineGap = 16.dp
+/** 标题与右侧读数区域之间的间距。 */
+private val JvmPageHeaderGap = 16.dp
 
-/** 顶部读数文本字号。 */
-private val JvmSettingHeadlineMetaSize = 10.5.sp
+/** 右侧单行读数文案字号。 */
+private val JvmPageHeaderMetaSize = 10.5.sp
 
 /**
- * JVM 设置页紧凑头部。
+ * JVM 页面统一头部。
  *
- * 排版对齐设计稿：左侧是加粗大标题，右侧是等宽小字的当前数据源读数。
+ * 排版对齐设计稿：左侧是加粗大标题，右侧是页面读数区域。
+ * 读数区域既可以传 [meta] 展示单行等宽文案，也可以通过 [trailing] 传入自定义内容
+ * （例如连接管理页的多个读数单元格）。
  *
  * @param title 页面标题。
- * @param meta 标题右侧的等宽读数文案。
  * @param modifier 外层修饰符。
+ * @param meta 标题右侧的等宽单行读数文案，与 [trailing] 二选一。
+ * @param trailing 标题右侧的自定义读数区域，优先级高于 [meta]。
  */
 @Composable
-internal fun JvmSettingHeadline(
+internal fun JvmPageHeader(
     title: String,
-    meta: String,
     modifier: Modifier = Modifier,
+    meta: String? = null,
+    trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(JvmSettingHeadlineGap),
+        horizontalArrangement = Arrangement.spacedBy(JvmPageHeaderGap),
         verticalAlignment = Alignment.Bottom,
     ) {
         XyTextLarge(
+            modifier = Modifier.weight(1f),
             text = title,
             fontWeight = FontWeight.ExtraBold,
             style = MaterialTheme.typography.headlineLarge.copy(
-                fontSize = JvmSettingHeadlineTitleSize,
-                lineHeight = JvmSettingHeadlineTitleLineHeight,
-                letterSpacing = JvmSettingHeadlineTitleLetterSpacing,
+                fontSize = JvmPageHeaderTitleSize,
+                lineHeight = JvmPageHeaderTitleLineHeight,
+                letterSpacing = JvmPageHeaderTitleLetterSpacing,
             ),
             color = MaterialTheme.colorScheme.onSurface,
         )
-        XyTextSub(
-            modifier = Modifier.weight(1f, fill = false),
-            text = meta,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontFamily = FontFamily.Monospace,
-                fontSize = JvmSettingHeadlineMetaSize,
-                letterSpacing = 0.9.sp,
-            ),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-        )
+        when {
+            // 自定义读数区域优先，便于不同页面自由组合读数单元格。
+            trailing != null -> trailing()
+            meta != null -> XyTextSub(
+                text = meta,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = JvmPageHeaderMetaSize,
+                    letterSpacing = 0.9.sp,
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
     }
 }
 

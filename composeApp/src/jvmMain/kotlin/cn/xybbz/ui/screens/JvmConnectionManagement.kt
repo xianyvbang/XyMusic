@@ -80,6 +80,7 @@ import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.XyDialogTone
+import cn.xybbz.ui.components.JvmPageHeader
 import cn.xybbz.ui.components.JvmSettingConnectionCardMinWidth
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.show
@@ -89,7 +90,6 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.ConnectionManagementViewModel
@@ -118,12 +118,6 @@ import xymusic.composeapp.generated.resources.modify_connection
 import xymusic.composeapp.generated.resources.music_library
 import xymusic.composeapp.generated.resources.unknown
 import xymusic.composeapp.generated.resources.warning
-
-/** 页面大标题字距。 */
-private val JvmConnectionTitleLetterSpacing = (-1).sp
-
-/** 页面大标题行高。 */
-private val JvmConnectionTitleLineHeight = 42.sp
 
 /** 卡片左侧强调条宽度。 */
 private val JvmConnectionCardAccentWidth = 2.dp
@@ -209,10 +203,31 @@ fun JvmConnectionManagement(
             bottom = XyTheme.dimens.outerVerticalPadding * 6,
         )
     ) {
-        JvmConnectionPageHeader(
-            currentName = currentDisplayItem?.aliasText ?: disconnectedText,
-            connectionCount = connections.size,
-            typeTitle = currentDisplayItem?.config?.type?.title ?: disconnectedText,
+        // 统一页面头部：左侧大标题，右侧当前连接读数
+        JvmPageHeader(
+            title = stringResource(Res.string.connection_management),
+            trailing = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    JvmConnectionReadout(
+                        label = stringResource(Res.string.jvm_connection_config_info_screen_text_08),
+                        value = currentDisplayItem?.aliasText ?: disconnectedText,
+                        emphasized = true,
+                    )
+                    JvmConnectionReadoutDivider()
+                    JvmConnectionReadout(
+                        label = stringResource(Res.string.jvm_connection_management_text_19),
+                        value = connections.size.toString(),
+                    )
+                    JvmConnectionReadoutDivider()
+                    JvmConnectionReadout(
+                        label = stringResource(Res.string.jvm_connection_management_text_20),
+                        value = currentDisplayItem?.config?.type?.title ?: disconnectedText,
+                    )
+                }
+            },
         )
 
         JvmConnectionListSection(
@@ -244,61 +259,6 @@ fun JvmConnectionManagement(
                 )
             },
         )
-    }
-}
-
-/**
- * 页面头部：大标题，右侧是当前连接读数。
- *
- * @param currentName 当前连接别名。
- * @param connectionCount 已保存连接数量。
- * @param typeTitle 当前连接的服务类型名称。
- */
-@Composable
-private fun JvmConnectionPageHeader(
-    currentName: String,
-    connectionCount: Int,
-    typeTitle: String,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding * 2),
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        Column(
-            modifier = Modifier.weight(1f),
-        ) {
-            XyTextLarge(
-                text = stringResource(Res.string.connection_management),
-                fontWeight = FontWeight.ExtraBold,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    letterSpacing = JvmConnectionTitleLetterSpacing,
-                    lineHeight = JvmConnectionTitleLineHeight,
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        }
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            JvmConnectionReadout(
-                label = stringResource(Res.string.jvm_connection_config_info_screen_text_08),
-                value = currentName,
-                emphasized = true,
-            )
-            JvmConnectionReadoutDivider()
-            JvmConnectionReadout(
-                label = stringResource(Res.string.jvm_connection_management_text_19),
-                value = connectionCount.toString(),
-            )
-            JvmConnectionReadoutDivider()
-            JvmConnectionReadout(
-                label = stringResource(Res.string.jvm_connection_management_text_20),
-                value = typeTitle,
-            )
-        }
     }
 }
 

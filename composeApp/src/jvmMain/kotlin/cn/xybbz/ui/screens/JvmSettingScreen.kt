@@ -49,11 +49,11 @@ import cn.xybbz.config.setting.JvmAutoStartManager
 import cn.xybbz.download.core.DownloadDirectoryIssue
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.music.cacheUpperLimitOptions
+import cn.xybbz.ui.components.JvmPageHeader
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingDownloadRow
 import cn.xybbz.ui.components.JvmSettingGroup
 import cn.xybbz.ui.components.JvmSettingGroupGrid
-import cn.xybbz.ui.components.JvmSettingHeadline
 import cn.xybbz.ui.components.JvmSettingLazyColumn
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPickRow
@@ -246,7 +246,7 @@ fun JvmSettingScreen(
                     ),
                 verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
             ) {
-                JvmSettingHeadline(
+                JvmPageHeader(
                     title = stringResource(Res.string.settings),
                     meta = stringResource(
                         Res.string.jvm_setting_screen_text_43,
