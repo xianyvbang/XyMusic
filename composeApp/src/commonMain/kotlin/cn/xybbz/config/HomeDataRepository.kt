@@ -18,21 +18,37 @@
 
 package cn.xybbz.config
 
-import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
+@OptIn(ExperimentalAtomicApi::class, FlowPreview::class)
 class HomeDataRepository(
     private val db: LocalDatabaseClient
-) {
+) : IoScoped() {
+
+    init {
+        createScope()
+    }
+
+    /** 首页数据监听只启动一次，避免 ViewModel 重建后重复订阅。 */
+    private val observerStarted = AtomicBoolean(false)
+
+    /** 串行刷新首页快照，保证同一时刻只占用一个读连接。 */
+    private val refreshMutex = Mutex()
 
     private val _mostPlayedMusic = MutableStateFlow<List<XyMusic>>(emptyList())
     private val _newestAlbums = MutableStateFlow<List<XyAlbum>>(emptyList())
@@ -65,13 +81,33 @@ class HomeDataRepository(
     }
 
     /**
-     * 执行登录状态数据监听
+     * 启动首页数据监听。
+     *
+     * 用一条表失效流汇总所有首页相关表的变更，再串行刷新快照，
+     * 避免写库后多条重查询同时占满 Room 的读连接，拖慢其他页面。
      */
-    suspend fun startObservers() {
-        observeFlows()
+    fun startObservers() {
+        if (!observerStarted.compareAndSet(expectedValue = false, newValue = true)) {
+            return
+        }
+        scope.launch {
+            db.invalidationTracker
+                .createFlow(*HOME_DATA_TABLES)
+                // 首页刷新会连续写多张表，先合并短时间内的多次失效。
+                .debounce(OBSERVE_DEBOUNCE_MS)
+                .conflate()
+                .collect {
+                    // 收集期间产生的新信号会被合并，不会并发发起多组查询。
+                    refreshMutex.withLock { refreshSnapshot() }
+                }
+        }
     }
 
 
+    /**
+     * 首屏并发加载首页快照，用最短时间填满首页。
+     * 运行期刷新走 [refreshSnapshot] 的串行版本，避免抢占读连接。
+     */
     private suspend fun loadOnce() = coroutineScope {
         launch {
             _mostPlayedMusic.value = db.musicDao.selectMaximumPlayMusicExtendList(20)
@@ -104,69 +140,41 @@ class HomeDataRepository(
         }
     }
 
-    private suspend fun observeFlows() = coroutineScope {
-        launch {
-            db.musicDao
-                .selectLimitMusicListFlow(MusicDataTypeEnum.MAXIMUM_PLAY, 20)
-                .distinctUntilChanged()
-                .collect {
-                    _mostPlayedMusic.value = it
-                }
-        }
+    /**
+     * 按当前数据库内容刷新首页各区块的快照。
+     */
+    private suspend fun refreshSnapshot() {
+        _mostPlayedMusic.value = db.musicDao.selectMaximumPlayMusicExtendList(HOME_LIMIT)
+        _newestAlbums.value = db.albumDao.selectNewestList(HOME_LIMIT)
+        _recentMusic.value = db.musicDao.selectPlayHistoryMusicExtendList(HOME_LIMIT)
+        _recentAlbums.value = db.albumDao.selectPlayHistoryAlbumList(HOME_LIMIT)
+        _mostPlayedAlbums.value = db.albumDao.selectMaximumPlayAlbumList(HOME_LIMIT)
+        _recommendedMusic.value = db.musicDao.selectRecommendedMusicExtendList(HOME_LIMIT)
+        _playlists.value = db.albumDao.selectPlaylist()
+        _dataCount.value = db.dataCountDao.selectOne()
+    }
 
-        launch {
-            db.albumDao
-                .selectNewestListFlow(20)
-                .distinctUntilChanged()
-                .collect { _newestAlbums.value = it }
-        }
+    private companion object {
+        /** 首页各区块展示条数。 */
+        const val HOME_LIMIT = 20
 
-        launch {
-            db.musicDao
-                .selectLimitMusicListFlow(MusicDataTypeEnum.PLAY_HISTORY, 20)
-                .distinctUntilChanged()
-                .collect {
-                    _recentMusic.value = it
-                }
-        }
+        /** 表变更合并窗口，避免一次刷新内的连续写入触发多轮查询。 */
+        const val OBSERVE_DEBOUNCE_MS = 120L
 
-        launch {
-            db.albumDao
-                .selectPlayHistoryAlbumListFlow(20)
-                .distinctUntilChanged()
-                .collect { _recentAlbums.value = it }
-        }
-
-        launch {
-            db.albumDao
-                .selectMaximumPlayAlbumListFlow(20)
-                .distinctUntilChanged()
-                .collect {
-                    _mostPlayedAlbums.value = it
-                }
-        }
-
-        launch {
-            db.musicDao
-                .selectRecommendedMusicExtendListFlow(20)
-                .distinctUntilChanged()
-                .collect {
-                    _recommendedMusic.value = it
-                }
-        }
-
-        launch {
-            db.albumDao
-                .selectPlaylistFlow()
-                .distinctUntilChanged()
-                .collect { _playlists.value = it }
-        }
-
-        launch {
-            db.dataCountDao
-                .selectOneFlow()
-                .distinctUntilChanged()
-                .collect { _dataCount.value = it }
-        }
+        /** 影响首页各区块的数据表，任一表变化都会触发一次统一刷新。 */
+        val HOME_DATA_TABLES = arrayOf(
+            "xy_music",
+            "xy_album",
+            "xy_settings",
+            "xy_connection_config",
+            "xy_data_count",
+            "xy_daily_recommend_history",
+            "PlayHistoryMusic",
+            "MaximumPlayMusic",
+            "PlayHistoryAlbum",
+            "MaximumPlayAlbum",
+            "FavoriteMusic",
+            "PlaylistMusic",
+        )
     }
 }

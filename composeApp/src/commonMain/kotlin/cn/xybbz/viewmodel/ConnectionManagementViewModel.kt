@@ -26,30 +26,46 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.DatabaseUtils
+import cn.xybbz.common.utils.Log
 import cn.xybbz.config.security.ConnectionCredentialManager
 import cn.xybbz.config.music.MusicCommonController
-import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.KoinViewModel
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 @KoinViewModel
 class ConnectionManagementViewModel (
     val dataSourceManager: DataSourceManager,
     private val db: LocalDatabaseClient,
-    private val downloadDb: DownloadDatabaseClient,
-    private val downloaderManager: DownloaderManager,
-    private val musicController: MusicCommonController,
-    private val musicPlayContext: MusicPlayContext,
     private val settingsManager: SettingsManager,
     private val credentialManager: ConnectionCredentialManager,
     private val sessionCoordinator: SessionCoordinator,
-) : ViewModel() {
+) : ViewModel(), KoinComponent {
+
+    /**
+     * 下载库只在删除连接时使用，改为懒解析，避免进入页面就打开第二个数据库。
+     */
+    private val downloadDb: DownloadDatabaseClient by lazy { get() }
+
+    /**
+     * 下载管理器只在删除连接时使用，改为懒解析，避免进入页面就初始化下载调度与通知。
+     */
+    private val downloaderManager: DownloaderManager by lazy { get() }
+
+    /**
+     * 播放控制器只在切换或删除连接时使用，改为懒解析，避免进入页面就创建播放器。
+     */
+    private val musicController: MusicCommonController by lazy { get() }
 
     //获得所有链接信息
     var connectionList by mutableStateOf<List<ConnectionConfig>>(emptyList())
@@ -68,6 +84,7 @@ class ConnectionManagementViewModel (
     private fun getConnectionListData() {
         viewModelScope.launch {
             db.connectionConfigDao.selectAllDataExtFlow().collect {
+                Log.e("=====","加载链接数据")
                 connectionList = it
                 libraryNameMap = it.associate { connectionConfig ->
                     connectionConfig.id to db.libraryDao.selectListByConnectionId(connectionConfig.id)
@@ -107,13 +124,17 @@ class ConnectionManagementViewModel (
     }
 
     private suspend fun clearDownloadDataByConnectionId(connectionId: Long) {
-        val mediaLibraryId = connectionId.toString()
-        val downloadTasks = downloadDb.downloadDao.getAllTasksSuspend(mediaLibraryId = mediaLibraryId)
-        val downloadIds = downloadTasks.map { it.id }.toLongArray()
+        // 懒解析下载库和下载器会创建较重对象，统一放到 IO 线程，避免点击删除时阻塞主线程。
+        withContext(Dispatchers.IO) {
+            val mediaLibraryId = connectionId.toString()
+            val downloadTasks =
+                downloadDb.downloadDao.getAllTasksSuspend(mediaLibraryId = mediaLibraryId)
+            val downloadIds = downloadTasks.map { it.id }.toLongArray()
 
-        if (downloadIds.isNotEmpty()) {
-            // 删除连接前等待该连接的下载任务和本地文件清理完成，避免后续清库时丢失路径。
-            downloaderManager.deleteAndAwait(*downloadIds)
+            if (downloadIds.isNotEmpty()) {
+                // 删除连接前等待该连接的下载任务和本地文件清理完成，避免后续清库时丢失路径。
+                downloaderManager.deleteAndAwait(*downloadIds)
+            }
         }
     }
 

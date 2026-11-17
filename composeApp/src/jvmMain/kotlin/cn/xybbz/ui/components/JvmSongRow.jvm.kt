@@ -59,6 +59,7 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.rememberSquareRequestSize
 import cn.xybbz.viewmodel.SidebarPlaylistViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -630,6 +631,9 @@ private fun SongCover(
     fallbackCoverUrl: String?,
     accent: Color,
 ) {
+    // 行内封面按固定展示尺寸解码，避免按服务端原图解码拖慢列表渲染。
+    val coverRequestSize = rememberSquareRequestSize(SongTableDefaults.coverSize)
+
     Box(
         modifier = Modifier
             .size(SongTableDefaults.coverSize)
@@ -648,6 +652,7 @@ private fun SongCover(
                 modifier = Modifier.matchParentSize(),
                 model = coverUrl,
                 backModel = fallbackCoverUrl,
+                requestSize = coverRequestSize,
                 contentDescription = null,
             )
         }
