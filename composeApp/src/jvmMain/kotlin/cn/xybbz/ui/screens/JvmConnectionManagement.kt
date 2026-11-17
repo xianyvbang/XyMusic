@@ -81,7 +81,6 @@ import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.JvmSettingConnectionCardMinWidth
-import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPageScaffold
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.composeClick
@@ -107,7 +106,6 @@ import xymusic.composeapp.generated.resources.check_24px
 import xymusic.composeapp.generated.resources.confirm_delete_connection
 import xymusic.composeapp.generated.resources.connection_management
 import xymusic.composeapp.generated.resources.connection_permission_read_only
-import xymusic.composeapp.generated.resources.connection_settings_list
 import xymusic.composeapp.generated.resources.current_connection
 import xymusic.composeapp.generated.resources.delete_24px
 import xymusic.composeapp.generated.resources.delete_connection
@@ -120,12 +118,6 @@ import xymusic.composeapp.generated.resources.modify_connection
 import xymusic.composeapp.generated.resources.music_library
 import xymusic.composeapp.generated.resources.unknown
 import xymusic.composeapp.generated.resources.warning
-
-/** 页面顶部强调短条的宽度。 */
-private val JvmConnectionHeaderRuleWidth = 34.dp
-
-/** 页面顶部强调短条的高度。 */
-private val JvmConnectionHeaderRuleHeight = 3.dp
 
 /** 页面大标题字距。 */
 private val JvmConnectionTitleLetterSpacing = (-1).sp
@@ -209,9 +201,12 @@ fun JvmConnectionManagement(
     val currentDisplayItem = displayItems.firstOrNull { it.selected } ?: displayItems.firstOrNull()
 
     JvmSettingPageScaffold(
+        // 与设置页保持一致：左右使用标准外边距，顶部留出标题间距，底部留出滚动余量。
         contentPadding = PaddingValues(
-            horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
-            vertical = XyTheme.dimens.outerVerticalPadding * 3
+            start = XyTheme.dimens.outerHorizontalPadding,
+            end = XyTheme.dimens.outerHorizontalPadding,
+            top = XyTheme.dimens.outerVerticalPadding * 2,
+            bottom = XyTheme.dimens.outerVerticalPadding * 6,
         )
     ) {
         JvmConnectionPageHeader(
@@ -222,7 +217,6 @@ fun JvmConnectionManagement(
 
         JvmConnectionListSection(
             displayItems = displayItems,
-            connectionCount = connections.size,
             onAddConnection = {
                 navigator.navigate(Connection(connectionUiType = ConnectionUiType.ADD_CONNECTION))
             },
@@ -254,7 +248,7 @@ fun JvmConnectionManagement(
 }
 
 /**
- * 页面头部：强调短条、等宽 kicker、大标题，右侧是当前连接读数。
+ * 页面头部：大标题，右侧是当前连接读数。
  *
  * @param currentName 当前连接别名。
  * @param connectionCount 已保存连接数量。
@@ -273,27 +267,7 @@ private fun JvmConnectionPageHeader(
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // 标题上方的强调短条，与设置页头部保持同一设计语言。
-            Box(
-                modifier = Modifier
-                    .width(JvmConnectionHeaderRuleWidth)
-                    .height(JvmConnectionHeaderRuleHeight)
-                    .background(
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(JvmConnectionHeaderRuleHeight),
-                    )
-            )
-            XyTextSub(
-                text = stringResource(Res.string.jvm_connection_management_text_18),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontFamily = FontFamily.Monospace,
-                    letterSpacing = 2.sp,
-                ),
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1,
-            )
             XyTextLarge(
                 text = stringResource(Res.string.connection_management),
                 fontWeight = FontWeight.ExtraBold,
@@ -384,7 +358,6 @@ private fun JvmConnectionReadoutDivider() {
  * 连接设置列表分区。
  *
  * @param displayItems 连接展示项列表。
- * @param connectionCount 连接数量。
  * @param onAddConnection 添加连接回调。
  * @param onSelectConnection 切换连接回调。
  * @param onEditConnection 编辑连接回调。
@@ -394,7 +367,6 @@ private fun JvmConnectionReadoutDivider() {
 @Composable
 private fun JvmConnectionListSection(
     displayItems: List<JvmConnectionDisplayItem>,
-    connectionCount: Int,
     onAddConnection: () -> Unit,
     onSelectConnection: (ConnectionConfig) -> Unit,
     onEditConnection: (ConnectionConfig) -> Unit,
@@ -403,14 +375,7 @@ private fun JvmConnectionListSection(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding * 1.5f),
     ) {
-        JvmConnectionSectionHeader(
-            index = "01",
-            title = stringResource(Res.string.connection_settings_list),
-            subtitle = null,
-            badge = stringResource(Res.string.jvm_connection_management_text_04, connectionCount),
-        )
         if (displayItems.isEmpty()) {
             JvmConnectionEmptyState()
         } else {
@@ -423,111 +388,6 @@ private fun JvmConnectionListSection(
                 onDeleteConnection = onDeleteConnection,
             )
         }
-        JvmSettingNote(text = stringResource(Res.string.jvm_connection_management_text_29))
-    }
-}
-
-/**
- * 分区标题：编号、标题、说明、右侧徽标与下方细分隔线。
- *
- * @param index 分区编号。
- * @param title 分区标题。
- * @param subtitle 分区说明，为空时不显示。
- * @param badge 右侧徽标文案，为空时不显示。
- */
-@Composable
-private fun JvmConnectionSectionHeader(
-    index: String,
-    title: String,
-    subtitle: String?,
-    badge: String?,
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            XyText(
-                text = index,
-                style = MaterialTheme.typography.labelMedium.copy(
-                    fontFamily = FontFamily.Monospace,
-                    letterSpacing = 0.4.sp,
-                ),
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1,
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                XyText(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                )
-                if (!subtitle.isNullOrBlank()) {
-                    XyTextSub(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                    )
-                }
-            }
-            if (badge != null) {
-                JvmConnectionSectionBadge(text = badge)
-            }
-        }
-        // 细分隔线：整体为低对比度线条，左侧叠一段主色，呼应设置页分区。
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(84.dp)
-                    .height(1.dp)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.75f))
-            )
-        }
-    }
-}
-
-/**
- * 分区右侧徽标。
- *
- * @param text 徽标文案。
- */
-@Composable
-private fun JvmConnectionSectionBadge(text: String) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(4.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(1.dp),
-                )
-        )
-        XyTextSub(
-            text = text,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontFamily = FontFamily.Monospace,
-                letterSpacing = 1.sp,
-            ),
-            color = MaterialTheme.colorScheme.primary,
-            maxLines = 1,
-        )
     }
 }
 
