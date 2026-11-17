@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 
 /**
  * iOS 平台列表实现。
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
  * @param contentPadding 列表内容内边距。
  * @param verticalArrangement 列表项的垂直排列方式。
  * @param horizontalAlignment 列表项的水平对齐方式。
+ * @param scrollbarBottomPadding 仅桌面端滚动条使用，iOS 端忽略。
  * @param content LazyColumn 的列表内容。
  */
 @Composable
@@ -46,6 +48,7 @@ internal actual fun PlatformLazyColumn(
     contentPadding: PaddingValues,
     verticalArrangement: Arrangement.Vertical,
     horizontalAlignment: Alignment.Horizontal,
+    scrollbarBottomPadding: Dp,
     content: LazyListScope.() -> Unit
 ) {
     // iOS 保持原始 LazyColumn 行为，避免改变移动端 bottomSheet 视觉和手势体验。

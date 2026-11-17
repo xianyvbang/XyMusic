@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -60,6 +62,7 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipBox
+import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.ModalSideSheetExtendComponent
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyIconButton
@@ -146,7 +149,9 @@ actual fun MainScreenScaffold(
         MainScreenBackgroundLayer(modifier = Modifier.fillMaxSize())
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            snackbarHost = snackbarHost,
+            // 播放栏改到右侧内容区内渲染（见下方右侧内容的 Box），Scaffold 不再承载全宽 SnackBarHost，
+            // 避免播放栏横跨整个窗口并盖住左侧边栏。
+            snackbarHost = {},
             containerColor = if (XyTheme.brash.backgroundImageUri.isNullOrBlank()) {
                 MaterialTheme.colorScheme.background
             } else {
@@ -162,6 +167,9 @@ actual fun MainScreenScaffold(
                         .padding(paddingValues),
                     verticalAlignment = Alignment.Top,
                 ) {
+                    // 侧边栏列表状态：交给平台化 LazyColumn，JVM 下自动带悬停显示的桌面滚动条
+                    val sidebarListState = rememberLazyListState()
+
                     Box(
                         modifier = Modifier
                             .width(jvmRouterMenuWidth)
@@ -172,17 +180,27 @@ actual fun MainScreenScaffold(
                                 end = XyTheme.dimens.contentPadding
                             )
                     ) {
-                        Column(
+                        LazyColumnNotComponent(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(sidebarPanelShape)
-                                .background(sidebarColors.sidebarBackground)
-                                .padding(bottom = DesktopLoginStatusActionHeight)
-                                .verticalScroll(rememberScrollState()),
+                                .background(sidebarColors.sidebarBackground),
+                            state = sidebarListState,
+                            // 播放栏只占右侧内容区，侧边栏底部不再被遮挡，无需预留播放栏高度
+                            contentPadding = PaddingValues(
+                                bottom = XyTheme.dimens.outerVerticalPadding
+                            ),
+                            // 默认 bottomItem 会再补一段播放栏高度的留白，侧边栏不需要
+                            bottomItem = null,
+                            // 侧边栏不会被播放栏遮挡，滚动条一直延伸到面板底部
+                            scrollbarBottomPadding = 0.dp,
                         ) {
                             // 一级导航：图标与文字横排，选中项左侧带细指示条并填充背景
                             // 链接管理与设置在 jvmTopRouterDataList 末尾，与这里同列排列
-                            jvmTopRouterDataList.forEach { item ->
+                            items(
+                                items = jvmTopRouterDataList,
+                                key = { it.route }
+                            ) { item ->
                                 DesktopSidebarNavigationItem(
                                     item = item,
                                     selected = currentRoute == item.route,
@@ -198,65 +216,72 @@ actual fun MainScreenScaffold(
                             }
 
                             // 歌单分组标题
-                            XyRow(
-                                modifier = Modifier.padding(
-                                    start = 12.dp,
-                                    top = XyTheme.dimens.contentPadding,
-                                    bottom = XyTheme.dimens.innerVerticalPadding,
-                                ),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                XyTextSubSmall(
-                                    text = playlistTitle,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                XyIconButton(
-                                    onClick = {
-                                        playlistName = newPlaylist + playlists.size
-                                        AlertDialogObject(
-                                            title = createPlaylist,
-                                            content = {
-                                                XyEdit(
-                                                    text = playlistName,
-                                                    onChange = { playlistName = it },
-                                                    modifier = Modifier.fillMaxWidth()
-                                                )
-                                            },
-                                            icon = XyDialogIcon.Edit,
-                                            kicker = Res.string.dialog_kicker_create,
-                                            onDismissRequest = {},
-                                            onConfirmation = {
-                                                coroutineScope.launch {
-                                                    sidebarPlaylistViewModel.savePlaylist(
-                                                        playlistName
-                                                    )
-                                                }
-                                            }
-                                        ).show()
-                                    }
+                            item(key = "sidebar_playlist_header") {
+                                XyRow(
+                                    modifier = Modifier.padding(
+                                        start = 12.dp,
+                                        top = XyTheme.dimens.contentPadding,
+                                        bottom = XyTheme.dimens.innerVerticalPadding,
+                                    ),
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.add_24px),
-                                        contentDescription = createPlaylist,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    XyTextSubSmall(
+                                        text = playlistTitle,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.weight(1f),
                                     )
+                                    XyIconButton(
+                                        onClick = {
+                                            playlistName = newPlaylist + playlists.size
+                                            AlertDialogObject(
+                                                title = createPlaylist,
+                                                content = {
+                                                    XyEdit(
+                                                        text = playlistName,
+                                                        onChange = { playlistName = it },
+                                                        modifier = Modifier.fillMaxWidth()
+                                                    )
+                                                },
+                                                icon = XyDialogIcon.Edit,
+                                                kicker = Res.string.dialog_kicker_create,
+                                                onDismissRequest = {},
+                                                onConfirmation = {
+                                                    coroutineScope.launch {
+                                                        sidebarPlaylistViewModel.savePlaylist(
+                                                            playlistName
+                                                        )
+                                                    }
+                                                }
+                                            ).show()
+                                        }
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(Res.drawable.add_24px),
+                                            contentDescription = createPlaylist,
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
                                 }
                             }
 
                             if (playlists.isEmpty()) {
-                                XyRow(
-                                    modifier = Modifier.padding(
-                                        start = 12.dp
-                                    ),
-                                ) {
-                                    XyTextSubSmall(
-                                        text = noPlaylistsText,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
+                                item(key = "sidebar_playlist_empty") {
+                                    XyRow(
+                                        modifier = Modifier.padding(
+                                            start = 12.dp
+                                        ),
+                                    ) {
+                                        XyTextSubSmall(
+                                            text = noPlaylistsText,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
                                 }
                             } else {
-                                playlists.forEach { playlist ->
+                                items(
+                                    items = playlists,
+                                    key = { it.itemId }
+                                ) { playlist ->
                                     val selectedPlaylist = currentRoute is AlbumInfo &&
                                             currentRoute.itemId == playlist.itemId &&
                                             currentRoute.dataType == MusicDataTypeEnum.PLAYLIST
@@ -293,8 +318,8 @@ actual fun MainScreenScaffold(
                                 .padding(
                                     start = XyTheme.dimens.outerVerticalPadding,
                                     end = XyTheme.dimens.outerVerticalPadding,
-                                    bottom = XyTheme.dimens.snackBarPlayerHeight +
-                                            XyTheme.dimens.outerVerticalPadding
+                                    // 播放栏已改为只占右侧内容区，不再遮挡侧边栏，因此无需为它预留高度
+                                    bottom = XyTheme.dimens.outerVerticalPadding
                             ),
                             loginLoading = loginLoading,
                             loginFailed = loginFailed && !loginStatusDismissed,
@@ -316,6 +341,15 @@ actual fun MainScreenScaffold(
                             .fillMaxHeight()
                     ) {
                         content(PaddingValues())
+                        // 播放栏只占右侧内容区宽度：约束直接来自这个 Box，
+                        // 窗口缩放或侧边栏宽度变化时都会自动贴合右侧区域，不会遮挡左侧边栏。
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                        ) {
+                            snackbarHost()
+                        }
                     }
                 }
             }
