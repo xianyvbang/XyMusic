@@ -600,6 +600,7 @@
     <string name="jvm_connection_config_info_screen_text_47">加密</string>
     <string name="jvm_connection_config_info_screen_text_48">别名只影响本地列表和页面标题展示。</string>
     <string name="jvm_connection_config_info_screen_text_49">等待填写服务地址</string>
+    <string name="jvm_connection_config_info_screen_text_53">示例 %1$s192.168.1.2:8096</string>
     <string name="jvm_connection_management_text_01">全部</string>
     <string name="jvm_connection_management_text_02">集中管理桌面端音乐服务连接：查看当前数据源、切换连接、编辑账号地址，并为每个连接维护可见媒体库范围。</string>
     <string name="jvm_connection_management_text_03">卡片承载连接身份与状态，右侧保留当前连接的详细信息和常用操作。</string>
