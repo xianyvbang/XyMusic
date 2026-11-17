@@ -75,6 +75,8 @@ import org.koin.compose.getKoin
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.add_24px
+import xymusic.composeapp.generated.resources.close
+import xymusic.composeapp.generated.resources.close_24px
 import xymusic.composeapp.generated.resources.create_playlist
 import xymusic.composeapp.generated.resources.dialog_kicker_create
 import xymusic.composeapp.generated.resources.empty_info
@@ -119,6 +121,8 @@ actual fun MainScreenScaffold(
     val loginErrorMessage = loginFailedState?.errorMessage.orEmpty()
     var playlistName by remember { mutableStateOf("") }
     var showLoginErrorSheet by remember { mutableStateOf(false) }
+    // 用户主动关闭登录失败提示后置为 true，避免同一次失败重复弹出
+    var loginStatusDismissed by remember { mutableStateOf(false) }
     val loginLoading = sessionState is AppSessionState.Restoring || sessionState is AppSessionState.LoggingIn
     val loginFailed = loginFailedState != null
     val sidebarColors = XyTheme.extendedColors
@@ -131,6 +135,10 @@ actual fun MainScreenScaffold(
     LaunchedEffect(loginLoading, loginFailed) {
         if (loginLoading || !loginFailed) {
             showLoginErrorSheet = false
+        }
+        // 登录失败状态结束后重置关闭标记，用户下次手动登录失败时仍能收到提示
+        if (!loginFailed) {
+            loginStatusDismissed = false
         }
     }
 
@@ -289,10 +297,15 @@ actual fun MainScreenScaffold(
                                             XyTheme.dimens.outerVerticalPadding
                             ),
                             loginLoading = loginLoading,
-                            loginFailed = loginFailed,
+                            loginFailed = loginFailed && !loginStatusDismissed,
                             errorHint = loginErrorHint,
                             onErrorClick = {
                                 showLoginErrorSheet = true
+                            },
+                            onDismiss = {
+                                // 关闭提示并收起详情弹层，页面继续展示本地缓存内容
+                                showLoginErrorSheet = false
+                                loginStatusDismissed = true
                             }
                         )
                     }
@@ -324,6 +337,8 @@ private fun DesktopLoginStatusFloatingAction(
     loginFailed: Boolean,
     errorHint: String,
     onErrorClick: () -> Unit,
+    /** 点击关闭按钮时回调，由调用方记录关闭状态并隐藏提示。 */
+    onDismiss: () -> Unit,
 ) {
     if (!loginLoading && !loginFailed) {
         return
@@ -406,6 +421,17 @@ private fun DesktopLoginStatusFloatingAction(
                             )
                         }
                     }
+                    // 关闭按钮：只隐藏提示，不影响本地缓存浏览与后续手动重试
+                    XyIconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(DesktopLoginStatusErrorButtonSize),
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.close_24px),
+                            contentDescription = stringResource(Res.string.close),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
@@ -430,7 +456,15 @@ private fun DesktopLoginErrorSideSheet(
         onClose = { onClose() },
         titleText = stringResource(Res.string.login_exception_info),
         titleSub = null,
-        titleTailContent = null,
+        // 详情弹层标题栏显式关闭按钮，点击遮罩同样可以关闭
+        titleTailContent = {
+            XyIconButton(onClick = onClose) {
+                Icon(
+                    painter = painterResource(Res.drawable.close_24px),
+                    contentDescription = stringResource(Res.string.close),
+                )
+            }
+        },
     ) {
         Column(
             modifier = Modifier
