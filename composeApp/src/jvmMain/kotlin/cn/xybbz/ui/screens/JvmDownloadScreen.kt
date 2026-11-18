@@ -205,6 +205,8 @@ internal fun JvmLocalDownloadScreen(
                             onConfirmation = {
                                 downloadViewModel.deleteDownloads(activeDownloadTasks)
                             },
+                            // 危险操作必须提供取消回调，动作区才会同时出现「取消」与「确定」
+                            onDismissRequest = {},
                         ).show()
                     }
                 },

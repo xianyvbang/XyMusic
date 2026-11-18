@@ -26,9 +26,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -99,6 +101,9 @@ private val JvmSelectLibraryMaxContentWidth = 820.dp
 
 /** 媒体库列表行的最小高度。 */
 private val JvmSelectLibraryRowMinHeight = 62.dp
+
+/** 媒体库列表改为两两一行的最小内容宽度。 */
+private val JvmSelectLibraryTwoColumnBreakpoint = 520.dp
 
 /** 媒体库列表行左侧选择指示器尺寸。 */
 private val JvmSelectLibrarySelectorSize = 15.dp
@@ -354,20 +359,45 @@ private fun JvmSelectLibraryList(
         return
     }
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = XyTheme.dimens.outerVerticalPadding),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
     ) {
-        libraries.forEach { library ->
-            JvmSelectLibraryRow(
-                library = library,
-                selected = selectedLibraryIds.contains(library.id),
-                allLibraryName = allLibraryName,
-                multiSelection = multiSelection,
-                onClick = { onLibraryClick(library) },
-            )
+        val gap = XyTheme.dimens.outerVerticalPadding
+        // 宽窗口下两两一行，窄窗口自动退化为单列，避免单个条目横向过长。
+        val columns = if (maxWidth >= JvmSelectLibraryTwoColumnBreakpoint) 2 else 1
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(gap),
+        ) {
+            var start = 0
+            while (start < libraries.size) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(gap),
+                ) {
+                    for (offset in 0 until columns) {
+                        val index = start + offset
+                        if (index < libraries.size) {
+                            val library = libraries[index]
+                            JvmSelectLibraryRow(
+                                modifier = Modifier.weight(1f),
+                                library = library,
+                                selected = selectedLibraryIds.contains(library.id),
+                                allLibraryName = allLibraryName,
+                                multiSelection = multiSelection,
+                                onClick = { onLibraryClick(library) },
+                            )
+                        } else {
+                            // 单数条目时补一个空占位，保持两列等宽。
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+                start += columns
+            }
         }
     }
 }
@@ -378,6 +408,7 @@ private fun JvmSelectLibraryList(
  * 左侧是单选/多选指示器，中间是媒体库名称与类型标签，右侧是选中确认圆点；
  * 选中行使用主色描边、浅色底和左侧强调条，悬停时提升描边与底色对比。
  *
+ * @param modifier 外层布局修饰符。
  * @param library 当前媒体库。
  * @param selected 当前行是否选中。
  * @param allLibraryName 全部媒体库本地化名称。
@@ -386,6 +417,7 @@ private fun JvmSelectLibraryList(
  */
 @Composable
 private fun JvmSelectLibraryRow(
+    modifier: Modifier = Modifier,
     library: XyLibrary,
     selected: Boolean,
     allLibraryName: String,
@@ -411,7 +443,7 @@ private fun JvmSelectLibraryRow(
     val selectorRole = if (multiSelection) Role.Checkbox else Role.RadioButton
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .heightIn(min = JvmSelectLibraryRowMinHeight)
             .clip(shape)
@@ -426,6 +458,8 @@ private fun JvmSelectLibraryRow(
                 role = selectorRole,
                 onClick = onClick,
             ),
+        // 条目内容在最小行高内保持上下居中。
+        contentAlignment = Alignment.CenterStart,
     ) {
         // 选中行左侧的强调竖条，上下留出内缩避免贴合圆角。
         if (selected) {

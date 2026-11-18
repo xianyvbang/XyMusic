@@ -960,6 +960,8 @@ private fun JvmConnectionDeleteDialog(
         icon = XyDialogIcon.Trash,
         kicker = Res.string.dialog_kicker_danger,
         onConfirmation = onDelete,
+        // 危险操作必须提供取消回调，动作区才会同时出现「取消」与「确定」
+        onDismissRequest = {},
     ).show()
 }
 
