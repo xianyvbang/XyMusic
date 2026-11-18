@@ -18,8 +18,11 @@
 
 package cn.xybbz.ui.xy
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
@@ -30,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +55,10 @@ fun XyButton(
     text: String,
     color: Color = Color.Unspecified,
     backgroundColor: Color = MaterialTheme.colorScheme.primary,
+    // 悬停背景色：显式指定时鼠标悬停切换为该颜色，未指定则保持 backgroundColor 不变。
+    hoverBackgroundColor: Color = Color.Unspecified,
+    // 描边：次操作按钮可传入描边，主操作按钮默认无描边。
+    border: BorderStroke? = null,
     enabled: Boolean = true,
     paddingValues: PaddingValues = PaddingValues(),
     textStyle: TextStyle = MaterialTheme.typography.labelLarge,
@@ -59,13 +67,15 @@ fun XyButton(
     val shape = RoundedCornerShape(XyTheme.dimens.corner)
     // hover 源只负责桌面端小手光标，避免 Material 默认状态层叠加半透明背景。
     val hoverInteractionSource = remember { MutableInteractionSource() }
+    // 桌面端悬停状态：仅在传入 hoverBackgroundColor 时用于切换背景色。
+    val hovered by hoverInteractionSource.collectIsHoveredAsState()
     // 点击源只负责防抖点击，不绘制默认 ripple/hover 状态层。
     val clickInteractionSource = remember { MutableInteractionSource() }
-    // 禁用背景沿用 Material3 FilledButton 的弱化颜色。
-    val containerColor = if (enabled) {
-        backgroundColor
-    } else {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+    // 禁用背景沿用 Material3 FilledButton 的弱化颜色；悬停背景优先于常态背景。
+    val containerColor = when {
+        !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+        hovered && hoverBackgroundColor.isSpecified -> hoverBackgroundColor
+        else -> backgroundColor
     }
     // 未显式传入文字色时沿用 FilledButton 默认前景色。
     val contentColor = when {
@@ -85,6 +95,8 @@ fun XyButton(
             .minimumInteractiveComponentSize()
             .clip(shape)
             .background(containerColor)
+            // 背景之后绘制描边，避免背景色覆盖边框。
+            .then(if (border != null) Modifier.border(border, shape) else Modifier)
             .debounceClickable(
                 interactionSource = clickInteractionSource,
                 indication = null,

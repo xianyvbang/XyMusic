@@ -56,7 +56,6 @@ private val jvmDesktopEntryProvider2 = entryProvider {
         JvmSelectLibraryScreen(
             connectionId = it.connectionId,
             thisLibraryId = it.libraryIds,
-            showBackButton = false
         )
     }
     desktopNode<DailyRecommend> { JvmDailyRecommendScreen() }

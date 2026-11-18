@@ -883,6 +883,10 @@
     <string name="jvm_select_library_screen_text_28">不过滤任何音乐库 · 服务端全部内容</string>
     <string name="jvm_select_library_screen_text_29">未标记类型</string>
     <string name="jvm_select_library_screen_text_30">%1$s · 连接 #%2$s · ID %3$s</string>
+    <string name="jvm_select_library_screen_text_31">可见媒体库</string>
+    <string name="jvm_select_library_screen_text_32">聚合范围</string>
+    <string name="jvm_select_library_screen_text_33">当前生效范围：%1$s</string>
+    <string name="jvm_select_library_screen_text_34">可见媒体库 / %1$s</string>
     <string name="jvm_set_background_image_screen_text_01">未选择背景图片</string>
     <string name="jvm_set_background_image_screen_text_02">将背景图选择、清除和裁剪预览放在同一个桌面工作区，保存前即可看到它与侧栏、内容区和播放栏叠加后的状态。</string>
     <string name="jvm_set_background_image_screen_text_03">当前状态</string>

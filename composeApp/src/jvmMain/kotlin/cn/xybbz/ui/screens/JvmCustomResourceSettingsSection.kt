@@ -19,8 +19,6 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -29,14 +27,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
@@ -57,8 +50,8 @@ import cn.xybbz.ui.components.JvmSettingContentGridTwoColumnBreakpoint
 import cn.xybbz.ui.components.JvmSettingGroupVerticalGap
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingWideGroup
-import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.CustomLyricsViewModel
@@ -83,9 +76,6 @@ import xymusic.composeapp.generated.resources.settings_24px
 
 /** 接口地址与令牌输入框的最小高度，与设置页其它输入控件保持一致的行高观感。 */
 private val JvmCustomResourceInputMinHeight = 40.dp
-
-/** 自定义资源操作按钮的最小高度。 */
-private val JvmCustomResourceButtonHeight = 32.dp
 
 /** 字段小标题字号，对齐设计稿的紧凑小标签排版。 */
 private val JvmCustomResourceFieldLabelSize = 10.sp
@@ -210,14 +200,20 @@ internal fun JvmCustomResourceSettingsSection(
             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            JvmCustomResourceActionButton(
+            XyButton(
                 text = stringResource(Res.string.save),
-                primary = true,
                 onClick = customLyricsViewModel::saveSettings,
             )
-            JvmCustomResourceActionButton(
+            XyButton(
                 text = stringResource(Res.string.restore_default),
-                primary = false,
+                // 恢复默认按钮为次操作：浅底 + 描边，悬停时加深底色。
+                backgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+                hoverBackgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                ),
+                color = MaterialTheme.colorScheme.onSurface,
                 onClick = {
                     // 恢复默认：清空两个接口地址与共用令牌，并立即写回本地设置。
                     customLyricsViewModel.updateCustomLrcSingleApi("")
@@ -309,67 +305,6 @@ private fun JvmCustomResourceInput(
         textContentAlignment = Alignment.CenterStart,
         singleLine = true,
     )
-}
-
-/**
- * 自定义资源的操作按钮。
- *
- * @param text 按钮文案。
- * @param primary 是否为主操作（实心主色）；false 为描边次操作。
- * @param onClick 点击回调。
- */
-@Composable
-private fun JvmCustomResourceActionButton(
-    text: String,
-    primary: Boolean,
-    onClick: () -> Unit,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
-    val shape = RoundedCornerShape(6.dp)
-    val containerColor = if (primary) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = if (hovered) 0.12f else 0.06f)
-    }
-    val contentColor = if (primary) {
-        MaterialTheme.colorScheme.onPrimary
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
-    val border = if (primary) {
-        null
-    } else {
-        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
-    }
-
-    Surface(
-        modifier = Modifier.jvmHoverDebounceClickable(
-            interactionSource = interactionSource,
-            onClick = onClick,
-        ),
-        shape = shape,
-        color = containerColor,
-        contentColor = contentColor,
-        border = border,
-    ) {
-        Box(
-            modifier = Modifier
-                .heightIn(min = JvmCustomResourceButtonHeight)
-                .padding(
-                    horizontal = XyTheme.dimens.contentPadding,
-                    vertical = XyTheme.dimens.outerVerticalPadding / 2,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
 }
 
 /**
