@@ -547,6 +547,7 @@ private val JvmPageHeaderMetaSize = 10.5.sp
  * @param modifier 外层修饰符。
  * @param meta 标题右侧的等宽单行读数文案，与 [trailing] 二选一。
  * @param trailing 标题右侧的自定义读数区域，优先级高于 [meta]。
+ * @param trailingMaxHeight 右侧区域的限高；传入后右侧内容高度不会撑高标题行。
  */
 @Composable
 internal fun JvmPageHeader(
@@ -554,6 +555,7 @@ internal fun JvmPageHeader(
     modifier: Modifier = Modifier,
     meta: String? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
+    trailingMaxHeight: Dp? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -573,7 +575,19 @@ internal fun JvmPageHeader(
         )
         when {
             // 自定义读数区域优先，便于不同页面自由组合读数单元格。
-            trailing != null -> trailing()
+            trailing != null -> {
+                if (trailingMaxHeight != null) {
+                    // 限高后右侧内容与标题底部对齐，标题行的顶部位置不受按钮高度影响
+                    Row(
+                        modifier = Modifier.height(trailingMaxHeight),
+                        verticalAlignment = Alignment.Bottom,
+                        content = trailing,
+                    )
+                } else {
+                    trailing()
+                }
+            }
+
             meta != null -> XyTextSub(
                 text = meta,
                 style = MaterialTheme.typography.labelSmall.copy(
@@ -586,6 +600,35 @@ internal fun JvmPageHeader(
             )
         }
     }
+}
+
+/**
+ * JVM 一级内容页面的统一页头。
+ *
+ * 复用设置页与连接管理页的 [JvmPageHeader]，并套用设置类页面的页头内边距，
+ * 让首页、音乐、专辑、艺术家、收藏、流派、本地和下载等页面的大标题字号、字重、左右边距与顶部间距保持一致。
+ *
+ * @param title 页面标题。
+ * @param modifier 外层修饰符。
+ * @param paddingValues 页头内边距，默认与设置类页面一致。
+ * @param trailing 标题右侧的自定义操作区域，例如排序、筛选与收藏按钮。
+ */
+@Composable
+internal fun JvmPageTitleBar(
+    title: String,
+    modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = JvmSettingPageHeaderPadding,
+    trailing: (@Composable RowScope.() -> Unit)? = null,
+) {
+    // 标题行高固定为大标题行高，右侧操作区高度不超过该行高。
+    // 否则 48dp 的图标按钮会把整行撑高，标题随之下移，各页面标题的顶部间距就会不一致。
+    val titleRowHeight = with(LocalDensity.current) { JvmPageHeaderTitleLineHeight.toDp() }
+    JvmPageHeader(
+        title = title,
+        modifier = modifier.padding(paddingValues),
+        trailing = trailing,
+        trailingMaxHeight = titleRowHeight,
+    )
 }
 
 /**

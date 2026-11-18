@@ -19,7 +19,6 @@
 package cn.xybbz.ui.screens
 
 
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -32,9 +31,8 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.JvmLazyListComponent
+import cn.xybbz.ui.components.JvmPageTitleBar
 import cn.xybbz.ui.components.SongTableColumns
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
@@ -59,7 +57,6 @@ private val JvmFavoriteMusicTableColumns = SongTableColumns(
 /**
  * 收藏界面
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JvmFavoriteScreen(
     favoriteViewModel: FavoriteViewModel = koinViewModel<FavoriteViewModel>(),
@@ -83,12 +80,8 @@ fun JvmFavoriteScreen(
 
 
     XyColumnScreen {
-        TopAppBarComponent(
-            title = {
-                TopAppBarTitle(
-                    title = stringResource(Res.string.my_favorites)
-                )
-            })
+        // 与设置页、连接管理页共用统一页头
+        JvmPageTitleBar(title = stringResource(Res.string.my_favorites))
         JvmLazyListComponent(
             pagingItems = favoriteMusicListPage,
         ) {

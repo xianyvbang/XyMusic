@@ -75,6 +75,7 @@ import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.XyDialogTone
+import cn.xybbz.ui.components.JvmPageTitleBar
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
@@ -86,7 +87,6 @@ import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.DownloadViewModel
 import cn.xybbz.viewmodel.LocalViewModel
@@ -279,16 +279,11 @@ private fun JvmLocalDownloadHeader(
     onPauseAll: () -> Unit,
     onClearAll: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = XyTheme.dimens.outerVerticalPadding),
-    ) {
-        XyTextLarge(
-            text = stringResource(Res.string.local_and_download),
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.headlineMedium.copy(fontSize = 30.sp),
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // 与设置页、连接管理页共用统一页头，左右边距由列表内容内边距提供，这里只补顶部间距
+        JvmPageTitleBar(
+            title = stringResource(Res.string.local_and_download),
+            paddingValues = PaddingValues(top = XyTheme.dimens.outerVerticalPadding * 2),
         )
         Row(
             modifier = Modifier.padding(top = 18.dp),

@@ -18,16 +18,17 @@
 
 package cn.xybbz.ui.screens
 
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import cn.xybbz.compositionLocal.LocalMainViewModel
@@ -38,10 +39,10 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.JvmLazyListComponent
+import cn.xybbz.ui.components.JvmPageTitleBar
+import cn.xybbz.ui.components.JvmSettingPageHeaderPadding
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SongTableColumns
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
@@ -97,7 +98,7 @@ fun JvmMusicScreen(
 
     XyColumnScreen {
         MusicSelectTopBarComponent(
-            modifier = Modifier.statusBarsPadding(),
+            modifier = Modifier,
             title = stringResource(Res.string.music),
             musicViewModel = musicViewModel,
             onIfShowMusicDropdownMenu = { musicViewModel.dataSourceManager.dataSourceType?.ifShowMusicDropdownMenu == true },
@@ -225,7 +226,6 @@ fun JvmMusicScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MusicSelectTopBarComponent(
     modifier: Modifier,
@@ -239,32 +239,35 @@ private fun MusicSelectTopBarComponent(
     selectControl: SelectControl,
     sortOrFilterContent: @Composable () -> Unit
 ) {
-
-    TopAppBarComponent(
-        modifier = modifier,
-        title = {
-            if (ifOpenSelect) {
-
-                XySelectAllComponent(
-                    isSelectAll = isSelectAll,
-                    onSelectAll = onSelectAll
-                )
-            } else {
-                TopAppBarTitle(
-                    title = title
+    if (ifOpenSelect) {
+        // 选择模式下标题区域切换为全选控件，右侧只保留退出选择按钮，
+        // 内边距与统一页头一致，避免切换模式时标题位置发生跳动。
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(JvmSettingPageHeaderPadding),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            XySelectAllComponent(
+                isSelectAll = isSelectAll,
+                onSelectAll = onSelectAll
+            )
+            IconButton(onClick = {
+                selectControl.dismiss()
+            }) {
+                Icon(
+                    painter = painterResource(Res.drawable.close_24px),
+                    contentDescription = stringResource(Res.string.close_selection)
                 )
             }
-        }, actions = {
-            if (ifOpenSelect) {
-                IconButton(onClick = {
-                    selectControl.dismiss()
-                }) {
-                    Icon(
-                        painter = painterResource(Res.drawable.close_24px),
-                        contentDescription = stringResource(Res.string.close_selection)
-                    )
-                }
-            } else {
+        }
+    } else {
+        // 普通模式下与设置页、连接管理页共用统一页头，操作按钮放在标题右侧
+        JvmPageTitleBar(
+            title = title,
+            modifier = modifier,
+            trailing = {
                 IconButton(onClick = composeClick {
                     onRandomPlayerClick()
                 }) {
@@ -282,13 +285,11 @@ private fun MusicSelectTopBarComponent(
                         contentDescription = stringResource(Res.string.open_selection_function)
                     )
                 }
-                if (onIfShowMusicDropdownMenu())
+                if (onIfShowMusicDropdownMenu()) {
                     sortOrFilterContent()
-            }
-
-
-        },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-    )
+                }
+            },
+        )
+    }
 }
 

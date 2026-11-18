@@ -20,7 +20,6 @@ package cn.xybbz.ui.screens
 
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,11 +34,10 @@ import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
+import cn.xybbz.ui.components.JvmPageTitleBar
 import cn.xybbz.ui.components.JvmVerticalGridListComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.AlbumViewModel
 import org.jetbrains.compose.resources.painterResource
@@ -51,7 +49,6 @@ import xymusic.composeapp.generated.resources.arrow_back_24px
 import xymusic.composeapp.generated.resources.return_home
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JvmAlbumScreen(
     albumViewModel: AlbumViewModel = koinViewModel<AlbumViewModel>()
@@ -69,12 +66,10 @@ fun JvmAlbumScreen(
 
 
     XyColumnScreen {
-        TopAppBarComponent(
-            title = {
-                TopAppBarTitle(
-                    title = stringResource(Res.string.album)
-                )
-            }, actions = {
+        // 与设置页、连接管理页共用统一页头，排序筛选入口放在标题右侧
+        JvmPageTitleBar(
+            title = stringResource(Res.string.album),
+            trailing = {
                 SelectSortBottomSheetComponent(
                     onIfSelectOneYear = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumSelectOneYear },
                     onIfStartEndYear = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumSelectStartEndYear },
@@ -120,7 +115,8 @@ fun JvmAlbumScreen(
                 ) {
                     albumViewModel.clearFilterOrSort { albumPageListItems.refresh() }
                 }
-            })
+            },
+        )
         JvmVerticalGridListComponent(
             modifier = Modifier.fillMaxSize(),
             collectAsLazyPagingItems = albumPageListItems

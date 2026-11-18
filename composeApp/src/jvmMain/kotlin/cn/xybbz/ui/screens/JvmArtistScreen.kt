@@ -3,7 +3,6 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -14,10 +13,9 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.JvmIndexBar
+import cn.xybbz.ui.components.JvmPageTitleBar
 import cn.xybbz.ui.components.JvmVerticalGridListComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -35,7 +33,6 @@ import xymusic.composeapp.generated.resources.get_favorite_artists
 /**
  * 艺术家页面
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JvmArtistScreen(
     artistViewModel: ArtistViewModel = koinViewModel<ArtistViewModel>(),
@@ -56,12 +53,10 @@ fun JvmArtistScreen(
     )
 
     XyColumnScreen {
-        TopAppBarComponent(
-            title = {
-                TopAppBarTitle(
-                    title = stringResource(Res.string.artist)
-                )
-            }, actions = {
+        // 与设置页、连接管理页共用统一页头，收藏筛选入口放在标题右侧
+        JvmPageTitleBar(
+            title = stringResource(Res.string.artist),
+            trailing = {
                 val isFavoriteFilter = artistViewModel.ifFavorite == true
                 val favoriteFilterText = if (isFavoriteFilter) {
                     stringResource(Res.string.get_all_artists)
@@ -82,7 +77,8 @@ fun JvmArtistScreen(
                             }
                         }
                     })
-            })
+            },
+        )
 
         JvmIndexBar(
             modifier = Modifier.fillMaxSize(),

@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,11 +31,10 @@ import cn.xybbz.router.Navigator
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.components.JvmHorizontalScrollbarBottomPadding
 import cn.xybbz.ui.components.JvmLazyHorizontalGridComponent
+import cn.xybbz.ui.components.JvmPageTitleBar
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
@@ -124,20 +121,15 @@ fun JvmHomeScreen(
             var hasPreviousSection = false
 
             if (recommendedMusicList.isNotEmpty()) {
+                // 首个分区标题统一使用设置页、连接管理页的页头组件
                 homeMusicSection(
                     sectionKey = "recommended_music",
                     title = dailyRecommendations,
                     musicList = recommendedMusicList,
-                    alignTitleWithTopAppBar = true,
+                    usePageHeader = !hasPreviousSection,
                     headerAction = {
                         TextButton(
-                            modifier = Modifier
-                                // TopAppBar 的 actions 区域自带 4dp 右内边距，这里扣掉，保证按钮距窗口右边仍是 16dp
-                                .padding(
-                                    start = XyTheme.dimens.outerHorizontalPadding,
-                                    end = XyTheme.dimens.outerHorizontalPadding - 4.dp,
-                                )
-                                .jvmHoverDebounceClickable(),
+                            modifier = Modifier.jvmHoverDebounceClickable(),
                             onClick = { navigator.navigate(DailyRecommend) },
                             contentPadding = PaddingValues(0.dp)
                         ) {
@@ -158,6 +150,7 @@ fun JvmHomeScreen(
                     sectionKey = "latest_album",
                     title = latestAlbums,
                     albumList = newestAlbumList,
+                    usePageHeader = !hasPreviousSection,
                     onOpenAlbum = { album ->
                         navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
                     }
@@ -267,13 +260,13 @@ private class HomeMusicSectionScope(
         sectionKey: String,
         title: String,
         musicList: List<XyMusic>,
-        alignTitleWithTopAppBar: Boolean = false,
+        usePageHeader: Boolean = false,
         headerAction: @Composable (() -> Unit)? = null,
     ) {
         // 每个分区先添加独立 header，headerAction 用于推荐歌曲的“查看更多”等差异化按钮。
         item(key = "${sectionKey}_header") {
-            if (alignTitleWithTopAppBar) {
-                JvmHomeTopAppBarSectionHeader(title = title, action = headerAction)
+            if (usePageHeader) {
+                JvmHomePageSectionHeader(title = title, action = headerAction)
             } else {
                 JvmHomeDesktopSectionHeader(title = title, action = headerAction)
             }
@@ -321,6 +314,7 @@ private fun LazyListScope.homeAlbumSection(
     sectionKey: String,
     title: String,
     albumList: List<XyAlbum>,
+    usePageHeader: Boolean = false,
     onOpenAlbum: (XyAlbum) -> Unit,
 ) {
     val albumSnapshot = albumList.toList()
@@ -331,7 +325,11 @@ private fun LazyListScope.homeAlbumSection(
     val rowCount = minOf(HomeAlbumRowCount, albumSnapshot.size)
 
     item(key = "${sectionKey}_header") {
-        JvmHomeDesktopSectionHeader(title = title)
+        if (usePageHeader) {
+            JvmHomePageSectionHeader(title = title)
+        } else {
+            JvmHomeDesktopSectionHeader(title = title)
+        }
     }
     item(key = "${sectionKey}_grid_spacing") {
         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding + XyTheme.dimens.contentPadding))
@@ -370,19 +368,19 @@ private fun LazyListScope.homeAlbumSection(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * 首页首个分区标题。
+ *
+ * 复用设置页、连接管理页的 [JvmPageTitleBar]，让首页首屏标题与其他一级页面保持一致。
+ */
 @Composable
-private fun JvmHomeTopAppBarSectionHeader(
+private fun JvmHomePageSectionHeader(
     title: String,
     action: @Composable (() -> Unit)? = null,
 ) {
-    // 直接复用 Material3 TopAppBar，让首页首屏标题与每日推荐等独立页面使用同一套测量与垂直居中逻辑，
-    // 避免自定义固定 64dp Row 与 M3 顶栏之间出现 1dp 的纵向偏差。
-    TopAppBarComponent(
-        title = {
-            TopAppBarTitle(title = title)
-        },
-        actions = {
+    JvmPageTitleBar(
+        title = title,
+        trailing = {
             if (action != null) {
                 action()
             }
