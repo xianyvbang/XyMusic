@@ -348,7 +348,10 @@ private fun LazyListScope.homeAlbumSection(
                 ),
             rows = GridCells.Fixed(rowCount),
             userScrollEnabled = false,
-            contentPadding = PaddingValues(0.dp),
+            // 专辑网格左右保留与标题一致的页面外边距，纵向间距由外层 item 控制
+            contentPadding = PaddingValues(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+            ),
             horizontalArrangement = Arrangement.spacedBy(gridSpacing),
             verticalArrangement = Arrangement.spacedBy(gridSpacing),
         ) {
@@ -392,7 +395,10 @@ private fun JvmHomeDesktopSectionHeader(
     title: String,
     action: @Composable (() -> Unit)? = null,
 ) {
-    XyRow(paddingValues = PaddingValues(/*vertical = XyTheme.dimens.outerVerticalPadding*/)) {
+    // 分区标题只保留左右外边距，纵向间距由分区之间的 spacing 项控制
+    XyRow(
+        paddingValues = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
+    ) {
         XyTextLarge(text = title)
         if (action != null) {
             action()
