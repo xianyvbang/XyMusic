@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,9 +39,10 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.router.AlbumInfo
+import cn.xybbz.ui.components.JvmCollapsingTitleContainer
 import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.JvmPageTitleBar
-import cn.xybbz.ui.components.JvmSettingPageHeaderPadding
+import cn.xybbz.ui.components.JvmPageTitleBarPadding
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.XySelectAllComponent
@@ -96,9 +98,13 @@ fun JvmMusicScreen(
         }
     }
 
-    XyColumnScreen {
+    val musicListState = rememberLazyListState()
+
+    // 顶部标题普通模式下随列表滚动并做折叠动画，选择模式下则需要固定在页面顶部，
+    // 提取成同一个 Composable 便于两处复用。
+    val musicTopBar: @Composable (Modifier) -> Unit = { topBarModifier ->
         MusicSelectTopBarComponent(
-            modifier = Modifier,
+            modifier = topBarModifier,
             title = stringResource(Res.string.music),
             musicViewModel = musicViewModel,
             onIfShowMusicDropdownMenu = { musicViewModel.dataSourceManager.dataSourceType?.ifShowMusicDropdownMenu == true },
@@ -151,10 +157,26 @@ fun JvmMusicScreen(
                 }
             }
         )
+    }
+
+    XyColumnScreen {
+        if (selectUiState.isOpen) {
+            // 选择模式下标题固定在列表外，滚动时退出选择按钮始终可见
+            musicTopBar(Modifier)
+        }
 
         JvmLazyListComponent(
+            lazyState = musicListState,
             pagingItems = homeMusicPager,
         ) {
+            if (!selectUiState.isOpen) {
+                item(key = "music_screen_title") {
+                    // 标题作为列表首项参与滚动：上滑时缩小淡出，回滑时放大恢复
+                    JvmCollapsingTitleContainer(lazyListState = musicListState) {
+                        musicTopBar(Modifier)
+                    }
+                }
+            }
             songTableItems(
                 tableKey = "music_screen",
                 pagingItems = homeMusicPager,
@@ -220,7 +242,9 @@ fun JvmMusicScreen(
                             )
                         }
                     )
-                }
+                },
+                // 歌曲表头吸附固定在列表顶部，滚动时保持可见
+                stickyTableHeader = true,
             )
         }
     }
@@ -241,11 +265,11 @@ private fun MusicSelectTopBarComponent(
 ) {
     if (ifOpenSelect) {
         // 选择模式下标题区域切换为全选控件，右侧只保留退出选择按钮，
-        // 内边距与统一页头一致，避免切换模式时标题位置发生跳动。
+        // 内边距与统一页头一致（含底部间距），避免切换模式时标题位置发生跳动。
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(JvmSettingPageHeaderPadding),
+                .padding(JvmPageTitleBarPadding),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom,
         ) {

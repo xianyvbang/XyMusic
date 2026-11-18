@@ -63,12 +63,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
@@ -603,6 +608,20 @@ internal fun JvmPageHeader(
 }
 
 /**
+ * 一级内容页面页头的统一内边距。
+ *
+ * 在设置类页头内边距的基础上补充底部间距，
+ * 避免大标题与紧随其后的表格表头/网格内容贴在一起。
+ */
+internal val JvmPageTitleBarPadding: PaddingValues
+    @Composable get() = PaddingValues(
+        start = XyTheme.dimens.outerHorizontalPadding,
+        end = XyTheme.dimens.outerHorizontalPadding,
+        top = XyTheme.dimens.outerVerticalPadding * 2,
+        bottom = XyTheme.dimens.outerVerticalPadding * 2,
+    )
+
+/**
  * JVM 一级内容页面的统一页头。
  *
  * 复用设置页与连接管理页的 [JvmPageHeader]，并套用设置类页面的页头内边距，
@@ -610,14 +629,14 @@ internal fun JvmPageHeader(
  *
  * @param title 页面标题。
  * @param modifier 外层修饰符。
- * @param paddingValues 页头内边距，默认与设置类页面一致。
+ * @param paddingValues 页头内边距，默认与一级内容页面一致（含底部间距）。
  * @param trailing 标题右侧的自定义操作区域，例如排序、筛选与收藏按钮。
  */
 @Composable
 internal fun JvmPageTitleBar(
     title: String,
     modifier: Modifier = Modifier,
-    paddingValues: PaddingValues = JvmSettingPageHeaderPadding,
+    paddingValues: PaddingValues = JvmPageTitleBarPadding,
     trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     // 标题行高固定为大标题行高，右侧操作区高度不超过该行高。
@@ -629,6 +648,56 @@ internal fun JvmPageTitleBar(
         trailing = trailing,
         trailingMaxHeight = titleRowHeight,
     )
+}
+
+/** 折叠标题完全滚出视口时保留的最小缩放比例。 */
+private const val JvmCollapsingTitleMinScale = 0.7f
+
+/**
+ * 随列表滚动缩小并淡出的页面标题容器。
+ *
+ * 标题作为列表首项参与滚动：上滑时按滚动比例缩小到 [JvmCollapsingTitleMinScale] 并淡出，
+ * 回滑到顶部时重新放大显示。
+ *
+ * @param lazyListState 与标题同处一个列表的滚动状态，用于计算折叠比例。
+ * @param modifier 外层修饰符。
+ * @param content 标题内容。
+ */
+@Composable
+internal fun JvmCollapsingTitleContainer(
+    lazyListState: LazyListState,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    // 记录标题实际高度，滚动偏移达到该高度时标题正好完全淡出。
+    val titleHeight = remember { mutableIntStateOf(0) }
+    val collapseFraction = remember(lazyListState) {
+        derivedStateOf {
+            val height = titleHeight.intValue
+            when {
+                height <= 0 -> 0f
+                // 标题已滚出首屏时直接按完全折叠处理，避免回弹时闪现
+                lazyListState.firstVisibleItemIndex > 0 -> 1f
+                else -> (lazyListState.firstVisibleItemScrollOffset.toFloat() / height).coerceIn(0f, 1f)
+            }
+        }
+    }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .onSizeChanged { titleHeight.intValue = it.height }
+            .graphicsLayer {
+                // 在绘制阶段读取折叠比例，滚动过程中只刷新图层，不触发重组。
+                val fraction = collapseFraction.value
+                val scale = 1f - (1f - JvmCollapsingTitleMinScale) * fraction
+                scaleX = scale
+                scaleY = scale
+                alpha = 1f - fraction
+                transformOrigin = TransformOrigin(0f, 0.5f)
+            }
+    ) {
+        content()
+    }
 }
 
 /**

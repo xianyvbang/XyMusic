@@ -18,6 +18,7 @@
 
 package cn.xybbz.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -147,6 +149,7 @@ fun JvmDownloadScreen(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun JvmLocalDownloadScreen(
     initialTab: JvmLocalDownloadTab,
@@ -181,88 +184,96 @@ internal fun JvmLocalDownloadScreen(
         activeDownloadTasks.size
     )
 
-    ScreenLazyColumn(
-        contentPadding = PaddingValues(
-            horizontal = XyTheme.dimens.outerHorizontalPadding,
-        ),
-    ) {
-        item(key = "local_download_header") {
-            JvmLocalDownloadHeader(
-                selectedTab = selectedTab,
-                localCount = localSongs.size,
-                downloadingCount = activeDownloadTasks.size,
-                onSelectTab = { selectedTab = it },
-                onResumeAll = { downloadViewModel.resumeDownloads(activeDownloadTasks) },
-                onPauseAll = { downloadViewModel.pauseDownloads(activeDownloadTasks) },
-                onClearAll = {
-                    if (activeDownloadTasks.isNotEmpty()) {
-                        AlertDialogObject(
-                            title = removeDownloadTitle,
-                            body = confirmClearDownloads,
-                            tone = XyDialogTone.Danger,
-                            icon = XyDialogIcon.Trash,
-                            kicker = Res.string.dialog_kicker_danger,
-                            onConfirmation = {
-                                downloadViewModel.deleteDownloads(activeDownloadTasks)
-                            },
-                            // 危险操作必须提供取消回调，动作区才会同时出现「取消」与「确定」
-                            onDismissRequest = {},
-                        ).show()
-                    }
-                },
-            )
-        }
-
-        when (selectedTab) {
-            JvmLocalDownloadTab.LocalSongs -> {
-                songTableItems(
-                    tableKey = "local_download_local_music",
-                    songs = localSongs,
-                    columns = JvmLocalMusicTableColumns,
-                    ifFavorite = { music -> music.itemId in favoriteSet },
-                    currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
-                    onSongClick = { _, music ->
-                        localViewModel.musicList(
-                            OnMusicPlayParameter(
-                                musicId = music.itemId,
-                                albumId = music.album,
-                            ),
-                            downloadList = localSongs,
-                            playerModeEnum = PlayerModeEnum.SEQUENTIAL_PLAYBACK,
-                        )
-                    },
-                    onOpenArtist = artistClickHandler::openMusicArtists,
-                    onOpenAlbum = { music ->
-                        if (music.album.isNotBlank()) {
-                            navigator.navigate(
-                                AlbumInfo(
-                                    music.album,
-                                    MusicDataTypeEnum.ALBUM,
-                                )
-                            )
-                        }
-                    },
-                    onFavoriteClick = { music ->
-                        localViewModel.musicController.invokingOnFavorite(music.itemId)
-                    },
-                    onDownloadClick = {},
-                    onMoreClick = { music ->
-                        music.show()
-                    },
-                )
-            }
-
-            JvmLocalDownloadTab.Downloading -> {
-                item(key = "download_table_header") {
-                    JvmDownloadTableHeader()
+    Column(modifier = Modifier.fillMaxSize()) {
+        // 标题、标签栏与下载工具栏固定在列表上方，滚动时始终可见
+        JvmLocalDownloadHeader(
+            modifier = Modifier.padding(horizontal = XyTheme.dimens.outerHorizontalPadding),
+            selectedTab = selectedTab,
+            localCount = localSongs.size,
+            downloadingCount = activeDownloadTasks.size,
+            onSelectTab = { selectedTab = it },
+            onResumeAll = { downloadViewModel.resumeDownloads(activeDownloadTasks) },
+            onPauseAll = { downloadViewModel.pauseDownloads(activeDownloadTasks) },
+            onClearAll = {
+                if (activeDownloadTasks.isNotEmpty()) {
+                    AlertDialogObject(
+                        title = removeDownloadTitle,
+                        body = confirmClearDownloads,
+                        tone = XyDialogTone.Danger,
+                        icon = XyDialogIcon.Trash,
+                        kicker = Res.string.dialog_kicker_danger,
+                        onConfirmation = {
+                            downloadViewModel.deleteDownloads(activeDownloadTasks)
+                        },
+                        // 危险操作必须提供取消回调，动作区才会同时出现「取消」与「确定」
+                        onDismissRequest = {},
+                    ).show()
                 }
-                items(activeDownloadTasks, key = { it.id }) { task ->
-                    JvmDownloadTableRow(
-                        task = task,
-                        onPause = { downloadViewModel.pauseDownload(task.id) },
-                        onResume = { downloadViewModel.resumeDownload(task.id) },
-                        onDelete = { downloadViewModel.deleteDownload(task.id) },
+            },
+        )
+
+        ScreenLazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+            ),
+        ) {
+            when (selectedTab) {
+                JvmLocalDownloadTab.LocalSongs -> {
+                    songTableItems(
+                        tableKey = "local_download_local_music",
+                        songs = localSongs,
+                        columns = JvmLocalMusicTableColumns,
+                        ifFavorite = { music -> music.itemId in favoriteSet },
+                        currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
+                        onSongClick = { _, music ->
+                            localViewModel.musicList(
+                                OnMusicPlayParameter(
+                                    musicId = music.itemId,
+                                    albumId = music.album,
+                                ),
+                                downloadList = localSongs,
+                                playerModeEnum = PlayerModeEnum.SEQUENTIAL_PLAYBACK,
+                            )
+                        },
+                        onOpenArtist = artistClickHandler::openMusicArtists,
+                        onOpenAlbum = { music ->
+                            if (music.album.isNotBlank()) {
+                                navigator.navigate(
+                                    AlbumInfo(
+                                        music.album,
+                                        MusicDataTypeEnum.ALBUM,
+                                    )
+                                )
+                            }
+                        },
+                        onFavoriteClick = { music ->
+                            localViewModel.musicController.invokingOnFavorite(music.itemId)
+                        },
+                        onDownloadClick = {},
+                        onMoreClick = { music ->
+                            music.show()
+                        },
+                        // 本地歌曲表头吸附固定在列表顶部
+                        stickyTableHeader = true,
                     )
+                }
+
+                JvmLocalDownloadTab.Downloading -> {
+                    // 下载列表表头同样吸附固定，自带页面背景避免下方行透出
+                    stickyHeader(key = "download_table_header") {
+                        JvmDownloadTableHeader(
+                            modifier = Modifier.background(MaterialTheme.colorScheme.background),
+                        )
+                    }
+                    items(activeDownloadTasks, key = { it.id }) { task ->
+                        JvmDownloadTableRow(
+                            task = task,
+                            onPause = { downloadViewModel.pauseDownload(task.id) },
+                            onResume = { downloadViewModel.resumeDownload(task.id) },
+                            onDelete = { downloadViewModel.deleteDownload(task.id) },
+                        )
+                    }
                 }
             }
         }
@@ -271,6 +282,7 @@ internal fun JvmLocalDownloadScreen(
 
 @Composable
 private fun JvmLocalDownloadHeader(
+    modifier: Modifier = Modifier,
     selectedTab: JvmLocalDownloadTab,
     localCount: Int,
     downloadingCount: Int,
@@ -279,8 +291,8 @@ private fun JvmLocalDownloadHeader(
     onPauseAll: () -> Unit,
     onClearAll: () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // 与设置页、连接管理页共用统一页头，左右边距由列表内容内边距提供，这里只补顶部间距
+    Column(modifier = modifier.fillMaxWidth()) {
+        // 与设置页、连接管理页共用统一页头，左右边距由调用方提供，这里只补顶部间距
         JvmPageTitleBar(
             title = stringResource(Res.string.local_and_download),
             paddingValues = PaddingValues(top = XyTheme.dimens.outerVerticalPadding * 2),
@@ -392,8 +404,8 @@ private fun JvmDownloadToolbarButton(
 }
 
 @Composable
-private fun JvmDownloadTableHeader() {
-    Column(modifier = Modifier.fillMaxWidth()) {
+private fun JvmDownloadTableHeader(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
