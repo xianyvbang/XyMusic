@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import cn.xybbz.ui.components.JvmLazyHorizontalGridComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
+import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
@@ -66,7 +68,6 @@ private val HomeMusicTableColumns = SongTableColumns(
 )
 
 private const val HomeAlbumRowCount = 2
-private val HomeTopAppBarTitleHeight = 64.dp
 
 @Composable
 fun JvmHomeScreen(
@@ -117,7 +118,7 @@ fun JvmHomeScreen(
         state = homeListState,
         contentPadding = PaddingValues(),
     ) {
-        homeTopAnchor()
+//        homeTopAnchor()
         // 让 LazyListScope 同时拥有 HomeMusicSectionScope 的上下文，下面可直接调用统一封装后的 homeMusicSection。
         with(homeMusicSectionScope) {
             var hasPreviousSection = false
@@ -131,7 +132,11 @@ fun JvmHomeScreen(
                     headerAction = {
                         TextButton(
                             modifier = Modifier
-                                .padding(XyTheme.dimens.outerHorizontalPadding)
+                                // TopAppBar 的 actions 区域自带 4dp 右内边距，这里扣掉，保证按钮距窗口右边仍是 16dp
+                                .padding(
+                                    start = XyTheme.dimens.outerHorizontalPadding,
+                                    end = XyTheme.dimens.outerHorizontalPadding - 4.dp,
+                                )
                                 .jvmHoverDebounceClickable(),
                             onClick = { navigator.navigate(DailyRecommend) },
                             contentPadding = PaddingValues(0.dp)
@@ -362,20 +367,24 @@ private fun LazyListScope.homeAlbumSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun JvmHomeTopAppBarSectionHeader(
     title: String,
     action: @Composable (() -> Unit)? = null,
 ) {
-    XyRow(
-        modifier = Modifier.height(HomeTopAppBarTitleHeight),
-        paddingValues = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-    ) {
-        TopAppBarTitle(title = title)
-        if (action != null) {
-            action()
-        }
-    }
+    // 直接复用 Material3 TopAppBar，让首页首屏标题与每日推荐等独立页面使用同一套测量与垂直居中逻辑，
+    // 避免自定义固定 64dp Row 与 M3 顶栏之间出现 1dp 的纵向偏差。
+    TopAppBarComponent(
+        title = {
+            TopAppBarTitle(title = title)
+        },
+        actions = {
+            if (action != null) {
+                action()
+            }
+        },
+    )
 }
 
 @Composable

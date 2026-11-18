@@ -1,7 +1,6 @@
 package cn.xybbz.ui.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -11,10 +10,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,32 +44,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.startup.SessionCoordinator
-import cn.xybbz.router.Album
-import cn.xybbz.router.AlbumInfo
-import cn.xybbz.router.Artist
-import cn.xybbz.router.ArtistInfo
-import cn.xybbz.router.CacheLimit
-import cn.xybbz.router.Connection
-import cn.xybbz.router.ConnectionInfo
-import cn.xybbz.router.ConnectionManagement
-import cn.xybbz.router.DailyRecommend
-import cn.xybbz.router.Download
-import cn.xybbz.router.FavoriteList
-import cn.xybbz.router.GenreInfo
-import cn.xybbz.router.Genres
-import cn.xybbz.router.Home
-import cn.xybbz.router.LanguageConfig
-import cn.xybbz.router.Local
-import cn.xybbz.router.MemoryManagement
-import cn.xybbz.router.Music
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.Search
-import cn.xybbz.router.SelectLibrary
-import cn.xybbz.router.Setting
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
+import cn.xybbz.ui.screens.jvmRouterMenuWidth
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
 import cn.xybbz.ui.windows.DesktopTooltipBox
@@ -78,45 +57,21 @@ import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.getKoin
 import xymusic.composeapp.generated.resources.Res
-import xymusic.composeapp.generated.resources.all_music
-import xymusic.composeapp.generated.resources.album
-import xymusic.composeapp.generated.resources.app_icon_info
 import xymusic.composeapp.generated.resources.app_name
 import xymusic.composeapp.generated.resources.arrow_back_24px
-import xymusic.composeapp.generated.resources.artist
 import xymusic.composeapp.generated.resources.back
-import xymusic.composeapp.generated.resources.background_image_setting
-import xymusic.composeapp.generated.resources.cache_limit
 import xymusic.composeapp.generated.resources.cancel_24px
 import xymusic.composeapp.generated.resources.clear
-import xymusic.composeapp.generated.resources.connection_info
-import xymusic.composeapp.generated.resources.connection_management
-import xymusic.composeapp.generated.resources.daily_recommendations
 import xymusic.composeapp.generated.resources.dark
-import xymusic.composeapp.generated.resources.download
-import xymusic.composeapp.generated.resources.favorite
-import xymusic.composeapp.generated.resources.genres
-import xymusic.composeapp.generated.resources.home
-import xymusic.composeapp.generated.resources.interface_settings
-import xymusic.composeapp.generated.resources.language
 import xymusic.composeapp.generated.resources.light
-import xymusic.composeapp.generated.resources.local_and_download
-import xymusic.composeapp.generated.resources.logo_new
-import xymusic.composeapp.generated.resources.media_library_selection
-import xymusic.composeapp.generated.resources.playlist
 import xymusic.composeapp.generated.resources.refresh_24px
 import xymusic.composeapp.generated.resources.refresh_login
-import xymusic.composeapp.generated.resources.search
 import xymusic.composeapp.generated.resources.search_24px
 import xymusic.composeapp.generated.resources.search_music_album_artist
-import xymusic.composeapp.generated.resources.server_connection
-import xymusic.composeapp.generated.resources.settings
-import xymusic.composeapp.generated.resources.storage_management
 import xymusic.composeapp.generated.resources.system
 import xymusic.composeapp.generated.resources.theme_mode
 import cn.xybbz.ui.windows.DesktopWindowTitleBar as UiDesktopWindowTitleBar
@@ -129,18 +84,15 @@ private val DesktopTitleBarShowSearch: Boolean = false
 
 /**
  * 桌面端主标题栏。
- * 左侧依次为应用图标、应用名称、当前页面面包屑与返回按钮；
+ * 左侧只展示应用名称，中间是固定在内容区左边缘的返回按钮；
  * 右侧依次为刷新登录按钮、主题模式切换按钮与窗口控制按钮。
  */
 @Composable
 fun DesktopWindowTitleBar(navigator: Navigator) {
     UiDesktopWindowTitleBar(
         backgroundColor = DesktopTitleBarColors.current.background,
-        front = { hitTestOwner ->
-            DesktopTitleBrandAndBreadcrumb(
-                navigator = navigator,
-                hitTestOwner = hitTestOwner
-            )
+        front = { _ ->
+            DesktopTitleBrand()
         },
         middle = { hitTestOwner ->
             DesktopTitleCenter(
@@ -158,55 +110,52 @@ fun DesktopWindowTitleBar(navigator: Navigator) {
 
 /**
  * 标题栏左侧品牌区。
- * 图标与名称沿用项目现有的资源设置，后面追加「应用名 / 当前页面」面包屑和返回按钮。
+ * 只展示应用名称，宽度固定为左侧导航栏宽度，
+ * 使其右边缘与下方右侧内容区左边缘对齐。
  */
 @Composable
-private fun DesktopTitleBrandAndBreadcrumb(
+private fun DesktopTitleBrand() {
+    val colors = DesktopTitleBarColors.current
+
+    Row(
+        modifier = Modifier
+            // 宽度与左侧导航栏保持一致，保证中间区域从内容区左边缘开始
+            .width(jvmRouterMenuWidth)
+            .fillMaxHeight()
+            .padding(start = XyTheme.dimens.outerHorizontalPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+    ) {
+        XyText(
+            text = stringResource(Res.string.app_name),
+            color = colors.foreground,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+/**
+ * 标题栏中间操作区。
+ * 返回按钮固定对齐下方右侧内容区左边缘；搜索功能隐藏时只保留返回按钮，
+ * 搜索框完整实现保留在下方 [DesktopSearchField] 中。
+ */
+@Composable
+private fun DesktopTitleCenter(
     navigator: Navigator,
     hitTestOwner: DesktopInteractiveHitTestOwner,
 ) {
-    val colors = DesktopTitleBarColors.current
-    // 当前展示的路由，优先取当前一级路由栈的栈顶页面
-    val currentRoute = navigator.state.backStacks[navigator.state.topLevelRoute]
-        ?.lastOrNull() ?: navigator.state.topLevelRoute
-    val routeTitle = currentRouteTitleRes(currentRoute)
+    // 当前一级路由栈，用于判断是否存在可回退页面
     val currentStack = navigator.state.backStacks[navigator.state.topLevelRoute]
     // 只有存在可回退页面时才允许点击返回
     val canGoBack = navigator.state.topLevelRoute != navigator.state.startRoute ||
             currentStack?.lastOrNull() != navigator.state.topLevelRoute
 
     Row(
-        modifier = Modifier
-            .fillMaxHeight()
-            .padding(start = XyTheme.dimens.outerHorizontalPadding),
+        modifier = Modifier.fillMaxHeight(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
     ) {
-        Image(
-            painter = painterResource(Res.drawable.logo_new),
-            contentDescription = stringResource(Res.string.app_icon_info),
-            modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(XyTheme.dimens.corner))
-        )
-        XyText(
-            text = stringResource(Res.string.app_name),
-            color = colors.foreground,
-            fontWeight = FontWeight.Bold,
-        )
-        if (routeTitle != null) {
-            XyText(
-                text = "/",
-                color = colors.foregroundVariant,
-                fontWeight = FontWeight.Normal,
-            )
-            XyText(
-                text = stringResource(routeTitle),
-                color = colors.foregroundVariant,
-                fontWeight = FontWeight.Normal,
-            )
-        }
-        // 返回按钮保留在面包屑右侧
+        // 返回按钮：品牌区宽度已固定为左侧导航栏宽度，这里天然位于内容区左边缘
         DesktopTitleBarPlainIconButton(
             resource = Res.drawable.arrow_back_24px,
             enabled = canGoBack,
@@ -215,23 +164,28 @@ private fun DesktopTitleBrandAndBreadcrumb(
             onClick = navigator::goBack,
             modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "BackButton"),
         )
+
+        // 搜索区已被产品要求暂时隐藏，开关关闭时直接不渲染，避免占用中间拖拽区域
+        if (DesktopTitleBarShowSearch) {
+            DesktopTitleSearchArea(
+                navigator = navigator,
+                hitTestOwner = hitTestOwner,
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
 
 /**
- * 标题栏中间搜索区。
- * 搜索功能暂时隐藏，但完整实现保留在下方 [DesktopSearchField] 中。
+ * 标题栏搜索区。
+ * 搜索功能暂时隐藏，但完整实现保留在这里，开关打开后即可复用。
  */
 @Composable
-private fun DesktopTitleCenter(
+private fun DesktopTitleSearchArea(
     navigator: Navigator,
     hitTestOwner: DesktopInteractiveHitTestOwner,
+    modifier: Modifier = Modifier,
 ) {
-    // 搜索区已被产品要求暂时隐藏，开关关闭时直接不渲染，避免占用中间拖拽区域
-    if (!DesktopTitleBarShowSearch) {
-        return
-    }
-
     var keyword by remember { mutableStateOf("") }
 
     fun submitSearch() {
@@ -243,9 +197,7 @@ private fun DesktopTitleCenter(
     }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .widthIn(max = 520.dp),
+        modifier = modifier.widthIn(max = 520.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
     ) {
@@ -638,40 +590,6 @@ private fun ThemeTypeEnum.modeLabel(): String = when (this) {
     ThemeTypeEnum.SYSTEM -> stringResource(Res.string.system)
     ThemeTypeEnum.DARK -> stringResource(Res.string.dark)
     ThemeTypeEnum.LIGHT -> stringResource(Res.string.light)
-}
-
-/**
- * 当前路由对应的面包屑标题资源。
- * 入参使用 NavKey，未覆盖到的页面返回 null 时不展示面包屑标题。
- */
-private fun currentRouteTitleRes(route: Any): StringResource? = when (route) {
-    Home -> Res.string.home
-    Music -> Res.string.all_music
-    Local -> Res.string.local_and_download
-    Album -> Res.string.album
-    Artist -> Res.string.artist
-    FavoriteList -> Res.string.favorite
-    Genres -> Res.string.genres
-    ConnectionManagement -> Res.string.connection_management
-    Setting -> Res.string.settings
-    is Search -> Res.string.search
-    is AlbumInfo -> if (route.dataType == MusicDataTypeEnum.PLAYLIST) {
-        Res.string.playlist
-    } else {
-        Res.string.album
-    }
-
-    is ArtistInfo -> Res.string.artist
-    is GenreInfo -> Res.string.genres
-    is Connection -> Res.string.server_connection
-    is ConnectionInfo -> Res.string.connection_info
-    MemoryManagement -> Res.string.storage_management
-    LanguageConfig -> Res.string.language
-    CacheLimit -> Res.string.cache_limit
-    is SelectLibrary -> Res.string.media_library_selection
-    DailyRecommend -> Res.string.daily_recommendations
-    Download -> Res.string.download
-    else -> null
 }
 
 private fun Modifier.desktopTitleBarHitTarget(
