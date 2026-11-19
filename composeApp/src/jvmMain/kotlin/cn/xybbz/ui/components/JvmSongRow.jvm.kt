@@ -22,10 +22,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +57,7 @@ import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.theme.jvmCoverAccentPalette
+import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
@@ -252,10 +256,8 @@ internal fun SongRow(
                 )
             }
             if (columns.showAlbumColumn) {
-                SongTableCell(
+                SongAlbumCell(
                     text = albumText,
-                    width = SongTableDefaults.albumWidth,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     onClick = onOpenAlbum,
                 )
             }
@@ -666,6 +668,56 @@ private fun SongCover(
                 contentDescription = null,
             )
         }
+    }
+}
+
+/**
+ * 专辑单元格。
+ * 专辑名称被截断时，鼠标移入展示完整名称提示。
+ */
+@Composable
+private fun SongAlbumCell(
+    text: String,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    // 仅当专辑名超出列宽时才开启提示，避免出现无意义的重复提示
+    var hasOverflow by remember(text) { mutableStateOf(false) }
+
+    val content: @Composable () -> Unit = {
+        Box(
+            modifier = Modifier.width(SongTableDefaults.albumWidth),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Text(
+                text = text,
+                modifier = Modifier.jvmHoverDebounceClickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick,
+                ),
+                color = if (hovered) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                onTextLayout = { textLayoutResult ->
+                    hasOverflow = textLayoutResult.hasVisualOverflow
+                },
+            )
+        }
+    }
+
+    if (hasOverflow && text.isNotBlank()) {
+        DesktopTooltipBox(tooltip = text) {
+            content()
+        }
+    } else {
+        content()
     }
 }
 
