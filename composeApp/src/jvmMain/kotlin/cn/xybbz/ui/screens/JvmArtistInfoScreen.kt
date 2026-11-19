@@ -414,7 +414,11 @@ fun JvmArtistInfoScreen(
                                     if (isSelecting) {
                                         artistInfoViewModel.selectControl.dismiss()
                                     } else {
-                                        artistInfoViewModel.selectControl.show(true)
+                                        // 本页使用列表内的选择操作栏，底部播放栏不再展示选择操作
+                                        artistInfoViewModel.selectControl.show(
+                                            true,
+                                            useListActionBar = true
+                                        )
                                     }
                                 },
                                 modifier = Modifier.height(32.dp),

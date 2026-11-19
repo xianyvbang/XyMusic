@@ -18,11 +18,19 @@
 
 package cn.xybbz.ui.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -33,11 +41,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.compositionLocal.LocalPlayerChromeState
@@ -48,8 +58,26 @@ import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.add_to_playlist
+import xymusic.composeapp.generated.resources.delete_24px
+import xymusic.composeapp.generated.resources.delete_local_permanently
+import xymusic.composeapp.generated.resources.delete_permanently
+import xymusic.composeapp.generated.resources.download_24px
+import xymusic.composeapp.generated.resources.download_list
+import xymusic.composeapp.generated.resources.heart_broken_24px
+import xymusic.composeapp.generated.resources.music_remove_from_playlist
+import xymusic.composeapp.generated.resources.play_selected
+import xymusic.composeapp.generated.resources.playlist_add_24px
+import xymusic.composeapp.generated.resources.playlist_play_24px
+import xymusic.composeapp.generated.resources.playlist_remove_24px
+import xymusic.composeapp.generated.resources.please_select
+import xymusic.composeapp.generated.resources.unfavorite
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,6 +116,7 @@ fun JvmSnackBarPlayerComponent(
             volumeValue = value
         }
     }
+    val selectUiState by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val musicInfo by snackBarPlayerViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val picByte by snackBarPlayerViewModel.musicController.picByteFlow.collectAsStateWithLifecycle()
     val curOriginIndex by snackBarPlayerViewModel.musicController.curOriginIndexFlow.collectAsStateWithLifecycle()
@@ -107,9 +136,16 @@ fun JvmSnackBarPlayerComponent(
         }
     }
 
+    // 选择模式的批量下载：页面使用内置操作栏时不会走到这里
+    val permissionState = downloadPermission {
+        snackBarPlayerViewModel.downloadMusics()
+    }
+
     val playerSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
+
+    val pleaseSelect = stringResource(Res.string.please_select)
 
     LaunchedEffect(volumeServer) {
         refreshVolume()
@@ -188,31 +224,153 @@ fun JvmSnackBarPlayerComponent(
             .zIndex(Float.MAX_VALUE)
             .background(defaultSnackBarColor)
     ) {
-        // 选择模式的批量操作已迁移到列表内的通用选择操作栏，底栏始终展示播放控制。
-        JvmSnackBarPlaybackBar(
-            modifier = modifier,
-            musicController = snackBarPlayerViewModel.musicController,
-            volume = volumeValue,
-            onVolumeChanged = onVolumeChanged,
-            favoriteSet = favoriteSet,
-            cacheProgress = cacheScheduleData,
-            onSharedCoverBoundsChanged = {
-                sharedCoverSourceBoundsOnScreen = it
-            },
-            sharedCoverRequestSize = sharedCoverRequestSize,
-            onShowPlayer = onClick,
-            onShowPlaylist = {
-                musicListState = true
-            },
-            onToggleFavorite = { playMusic ->
-                snackBarPlayerViewModel.musicController.invokingOnFavorite(playMusic.itemId)
-            },
-            onShowMusicInfo = { playMusic ->
-                snackBarPlayerViewModel.loadMusicInfo(playMusic.itemId)?.let { musicInfo ->
-                    currentMusicInfo = musicInfo
-                    showMusicInfo = true
+        AnimatedContent(
+            // 页面内自带选择操作栏时（useListActionBar=true），底栏保持播放控制；
+            // 其他列表仍沿用底栏的选择批量操作。
+            targetState = selectUiState.isOpen && !selectUiState.useListActionBar,
+            transitionSpec = {
+                (fadeIn() togetherWith fadeOut()).using(
+                    SizeTransform(clip = false)
+                )
+            }, label = "animated content"
+        ) { select ->
+            if (select) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (snackBarPlayerViewModel.dataSourceManager.getCanDelete())
+                        IconButton(onClick = {
+
+                            if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
+                                MessageUtils.sendPopTip(pleaseSelect)
+                            } else {
+                                coroutineScope.launch {
+                                    snackBarPlayerViewModel.selectControl.onRemoveSelectListResource.invoke(
+                                        snackBarPlayerViewModel.dataSourceManager,
+                                        coroutineScope
+                                    )
+                                }
+
+                            }
+                        }, enabled = selectUiState.ifEnableButton) {
+                            Icon(
+                                painter = painterResource(Res.drawable.delete_24px),
+                                contentDescription = if (selectUiState.ifLocal) stringResource(
+                                    Res.string.delete_local_permanently
+                                ) else stringResource(Res.string.delete_permanently)
+                            )
+                        }
+
+                    IconButton(onClick = {
+                        if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
+                            MessageUtils.sendPopTip(pleaseSelect)
+                        } else {
+                            coroutineScope.launch {
+                                snackBarPlayerViewModel.selectControl.onAddPlaySelect(
+                                    snackBarPlayerViewModel.musicPlayContext,
+                                    snackBarPlayerViewModel.db,
+                                    snackBarPlayerViewModel.downloadDb,
+                                    snackBarPlayerViewModel.dataSourceManager
+                                )
+                            }
+                        }
+                    }, enabled = selectUiState.ifEnableButton) {
+                        Icon(
+                            painter = painterResource(Res.drawable.playlist_play_24px),
+                            contentDescription = stringResource(Res.string.play_selected)
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
+                            MessageUtils.sendPopTip(pleaseSelect)
+                        } else {
+                            snackBarPlayerViewModel.selectControl.onAddPlaylistSelect()
+                        }
+                    }, enabled = selectUiState.ifEnableButton) {
+                        Icon(
+                            painter = painterResource(Res.drawable.playlist_add_24px),
+                            contentDescription = stringResource(Res.string.add_to_playlist)
+                        )
+                    }
+                    if (selectUiState.ifPlaylist)
+                        IconButton(onClick = {
+                            if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
+                                MessageUtils.sendPopTip(pleaseSelect)
+                            } else
+                                snackBarPlayerViewModel.selectControl.onRemovePlaylistMusic(
+                                    snackBarPlayerViewModel.dataSourceManager,
+                                    coroutineScope
+                                )
+                        }, enabled = selectUiState.ifEnableButton) {
+                            Icon(
+                                painter = painterResource(Res.drawable.playlist_remove_24px),
+                                contentDescription = stringResource(Res.string.music_remove_from_playlist)
+                            )
+                        }
+
+                    IconButton(onClick = {
+                        if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
+                            MessageUtils.sendPopTip(pleaseSelect)
+                        } else
+                            snackBarPlayerViewModel.selectControl.onRemoveFavorite(
+                                snackBarPlayerViewModel.dataSourceManager,
+                                coroutineScope,
+                                snackBarPlayerViewModel.musicController
+                            )
+                    }, enabled = selectUiState.ifEnableButton) {
+                        Icon(
+                            painter = painterResource(Res.drawable.heart_broken_24px),
+                            contentDescription = stringResource(Res.string.unfavorite)
+                        )
+                    }
+
+                    if (!selectUiState.ifLocal && snackBarPlayerViewModel.dataSourceManager.getCanDownload())
+                        IconButton(onClick = {
+                            if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
+                                MessageUtils.sendPopTip(pleaseSelect)
+                            } else {
+                                permissionState.launchMultiplePermissionRequest()
+                            }
+
+                        }, enabled = selectUiState.ifEnableButton) {
+                            Icon(
+                                painter = painterResource(Res.drawable.download_24px),
+                                contentDescription = stringResource(Res.string.download_list)
+                            )
+                        }
                 }
+            } else {
+                // 悬浮播放条普通态同样复用共享底栏组件，只保留当前页面特有的业务回调。
+                JvmSnackBarPlaybackBar(
+                    modifier = modifier,
+                    musicController = snackBarPlayerViewModel.musicController,
+                    volume = volumeValue,
+                    onVolumeChanged = onVolumeChanged,
+                    favoriteSet = favoriteSet,
+                    cacheProgress = cacheScheduleData,
+                    onSharedCoverBoundsChanged = {
+                        sharedCoverSourceBoundsOnScreen = it
+                    },
+                    sharedCoverRequestSize = sharedCoverRequestSize,
+                    onShowPlayer = onClick,
+                    onShowPlaylist = {
+                        musicListState = true
+                    },
+                    onToggleFavorite = { playMusic ->
+                        snackBarPlayerViewModel.musicController.invokingOnFavorite(playMusic.itemId)
+                    },
+                    onShowMusicInfo = { playMusic ->
+                        snackBarPlayerViewModel.loadMusicInfo(playMusic.itemId)?.let { musicInfo ->
+                            currentMusicInfo = musicInfo
+                            showMusicInfo = true
+                        }
+                    }
+                )
             }
-        )
+        }
     }
 }
