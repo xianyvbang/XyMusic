@@ -215,26 +215,6 @@
   .btn.icon-only{width:34px;padding:0;}
   .btn.sm{height:28px;padding:0 10px;font-size:11px;border-radius:6px;}
   .btn .i{pointer-events:none;}
-  .hero-side{
-    display:flex;align-items:center;padding-left:26px;border-left:1px solid var(--line);
-  }
-  .readout{padding:0 15px;display:flex;flex-direction:column;gap:5px;white-space:nowrap;}
-  .readout:first-child{padding-left:0;}
-  .readout:last-child{padding-right:0;}
-  .readout .lbl{font-family:var(--font-mono);font-size:9px;letter-spacing:.16em;color:var(--ink-mute);}
-  .readout .val{font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:-.01em;}
-  .vr{width:1px;align-self:stretch;background:var(--line);margin:0 0 2px;}
-
-  /* ---------- 概览读数 ---------- */
-  .meter{
-    margin-top:24px;display:flex;border:1px solid var(--line);border-radius:10px;
-    padding:4px 8px;background:color-mix(in srgb, var(--surface-2) 60%, transparent);
-  }
-  /* 概览读数：静态统计卡，不再承担 tab 跳转 */
-  .metric{flex:1;min-width:0;padding:12px 16px;display:flex;flex-direction:column;gap:5px;border-radius:7px;position:relative;}
-  .metric .v{font-size:17px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;}
-  .metric .s{font-size:10.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .metric-sep{width:1px;background:var(--line);margin:12px 0;}
 
   /* ---------- 吸顶标签 ---------- */
   .subtabs{
@@ -258,9 +238,7 @@
 
   /* ---------- 内容主体 ---------- */
   .body-wrap{padding:26px 40px 46px;}
-  .cols{display:grid;grid-template-columns:minmax(0,1fr) 304px;gap:34px;align-items:start;}
   .maincol{min-width:0;}
-  .rail{display:flex;flex-direction:column;gap:18px;position:sticky;top:76px;}
 
   .listbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
   .lst-title{font-size:13px;font-weight:700;letter-spacing:-.01em;}
@@ -346,41 +324,12 @@
   .pulse{animation:pulse 2.4s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 
-  /* ---------- 档案栏 ---------- */
-  .rail-card{
-    border:1px solid var(--line);border-radius:10px;padding:14px 16px 12px;
-    background:color-mix(in srgb, var(--surface-2) 48%, transparent);
-  }
-  .rail-head{display:flex;align-items:center;gap:9px;}
-  .rail-head .idx2{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
-  .rail-head h3{margin:0;font-size:12px;font-weight:700;letter-spacing:-.005em;}
-  .rail-rule{height:1px;background:var(--line);margin:11px 0 4px;position:relative;}
-  .rail-rule::before{content:"";position:absolute;left:0;top:0;width:52px;height:1px;background:var(--accent);opacity:.8;}
-  .kv{margin:0;padding:0;}
-  .kv > div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:6px 0;}
-  .kv dt{font-size:11px;color:var(--ink-mute);white-space:nowrap;}
-  .kv dd{margin:0;font-size:11.5px;color:var(--ink);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .kv dd.mono{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.01em;}
+  /* ---------- 标签 ---------- */
   .chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0 4px;}
   .chip{
     font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;padding:3px 7px;border-radius:5px;
     border:1px solid var(--line);background:var(--wash);color:var(--ink-soft);white-space:nowrap;
   }
-  .note{display:flex;gap:9px;align-items:flex-start;padding:8px 0 2px;font-size:11px;line-height:1.7;color:var(--ink-soft);}
-  .note::before{content:"";width:2px;height:12px;margin-top:3px;flex:none;background:var(--accent);border-radius:1px;}
-
-  .mini-album{display:flex;align-items:center;gap:10px;padding:7px 0;text-decoration:none;color:inherit;border-radius:6px;}
-  .mini-album:hover .mini-main b{color:var(--accent);}
-  .mini-art{width:42px;height:42px;border-radius:6px;flex:none;position:relative;overflow:hidden;box-shadow:0 6px 14px rgba(0,0,0,.3);}
-  .mini-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
-  .mini-main b{font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s;}
-  .mini-main span{font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;color:var(--ink-mute);}
-  .rail-link{
-    display:block;width:100%;margin-top:8px;padding:8px 0 0;border:0;border-top:1px dashed var(--line);
-    background:none;cursor:pointer;text-align:left;
-    font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;color:var(--ink-mute);text-transform:uppercase;
-  }
-  .rail-link:hover{color:var(--accent);}
 
   /* ---------- 封面图案（纯 CSS，占位也具备设计感） ---------- */
   .art{
@@ -413,8 +362,6 @@
     position:absolute;left:12px;top:9px;font-family:var(--font-mono);font-size:7.5px;
     letter-spacing:.18em;color:rgba(255,255,255,.62);
   }
-  .mini-art{position:relative;}
-  .mini-art.art .catalog{display:none;}
 
   /* ---------- 专辑网格 ---------- */
   .panel[hidden]{display:none !important;}
@@ -493,10 +440,8 @@
 
   /* ---------- 响应式 ---------- */
   @media (max-width:1240px){
-    .cols{grid-template-columns:minmax(0,1fr) 280px;}
     .hero{gap:26px;}
     .portrait{width:210px;height:210px;}
-    .hero-side{padding-left:18px;}
   }
   @media (max-width:1080px){
     .sidebar{width:64px;padding:14px 8px;}
@@ -504,9 +449,6 @@
     .nav-item{justify-content:center;}
     .hero-wrap,.body-wrap{padding-left:24px;padding-right:24px;}
     .subtabs{padding-left:24px;padding-right:24px;}
-    .hero-side{width:100%;border-left:0;padding-left:0;margin-top:4px;}
-    .cols{grid-template-columns:1fr;}
-    .rail{position:static;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   }
   @media (max-width:760px){
     body{padding:14px;}
@@ -521,16 +463,11 @@
     .hero{gap:18px;}
     .hero h1{font-size:30px;}
     .bio{font-size:11.5px;}
-    .meter{flex-wrap:wrap;}
-    .metric{flex:1 1 45%;}
-    .metric .v{font-size:14px;}
-    .metric-sep{display:none;}
     .subtabs{padding:0 18px;gap:18px;overflow-x:auto;}
     .subtab{font-size:12px;white-space:nowrap;}
     .sub-actions{display:none;}
     .thead,.trow{grid-template-columns:30px minmax(0,1fr) 52px 30px 26px;}
     .thead span:nth-child(3),.trow .ta{display:none;}
-    .rail{grid-template-columns:1fr;}
     .playbar{height:auto;flex-wrap:wrap;padding:10px 14px;gap:10px;}
     .np{width:auto;flex:1;min-width:0;}
     .pright{display:none;}
@@ -581,7 +518,7 @@
   <div class="proto-title">
     <div class="k">XyMusic · Windows / Artist</div>
     <h1>艺术家详情 · Artist Dossier</h1>
-    <p>桌面重设计：唱片式主视觉、可点击读数；音乐 / 专辑 / 相似艺术家三段结构，右侧常驻档案栏。</p>
+    <p>桌面重设计：唱片式主视觉；音乐 / 专辑 / 相似艺术家三段结构。</p>
   </div>
   <div class="proto-links">
     <a href="album-detail-redesign.html">专辑详情 →</a>
@@ -670,26 +607,9 @@
                   <button class="btn icon-only fav" title="收藏艺术家" aria-pressed="false"><svg class="i"><use href="#i-heart"/></svg></button>
                   <button class="btn icon-only js-more" title="更多操作"><svg class="i"><use href="#i-more"/></svg></button>
                 </div>
-              </div>
-              <div class="hero-side">
-                <div class="readout"><div class="lbl">累计收听</div><div class="val">1 284</div></div>
-                <div class="vr"></div>
-                <div class="readout"><div class="lbl">本月新增</div><div class="val">46 首</div></div>
-                <div class="vr"></div>
-                <div class="readout"><div class="lbl">数据源</div><div class="val">JELLYFIN</div></div>
-              </div>
+                </div>
             </section>
 
-            <!-- 概览读数：与下方章节导航解耦，只展示统计语境，不再重复 tab 计数 -->
-            <div class="meter">
-              <div class="metric"><div class="v">32 小时 18 分</div><div class="s">总时长 · 全部曲目</div></div>
-              <div class="metric-sep"></div>
-              <div class="metric"><div class="v">4 分 32 秒</div><div class="s">平均曲长</div></div>
-              <div class="metric-sep"></div>
-              <div class="metric"><div class="v">1986 — 2024</div><div class="s">专辑跨度</div></div>
-              <div class="metric-sep"></div>
-              <div class="metric"><div class="v">86</div><div class="s">已收藏曲目</div></div>
-            </div>
           </div>
 
           <div class="subtabs" id="subtabs">
@@ -706,8 +626,7 @@
 
             <!-- 音乐 -->
             <section class="panel" id="panel-music">
-              <div class="cols">
-                <div class="maincol">
+              <div class="maincol">
                   <div class="listbar">
                     <span class="lst-title">全部曲目</span>
                     <span class="count">428 首 · 32 小时 18 分</span>
@@ -817,50 +736,6 @@
                   </div>
                   <div class="listfoot"><span class="dot pulse"></span>已加载 10 / 428 · 滚动加载更多</div>
                 </div>
-
-                <aside class="rail">
-                  <section class="rail-card">
-                    <div class="rail-head"><span class="idx2">01</span><h3>艺术家档案</h3></div>
-                    <div class="rail-rule"></div>
-                    <dl class="kv">
-                      <div><dt>地区</dt><dd>日本 · 长野县</dd></div>
-                      <div><dt>活跃</dt><dd class="mono">1974 — 至今</dd></div>
-                      <div><dt>流派</dt><dd>配乐 / 现代古典</dd></div>
-                      <div><dt>厂牌</dt><dd>Wonderland Records</dd></div>
-                      <div><dt>数据源</dt><dd class="mono">Jellyfin · 家庭 NAS</dd></div>
-                      <div><dt>索引于</dt><dd class="mono">2026-11-17 09:41</dd></div>
-                    </dl>
-                  </section>
-                  <section class="rail-card">
-                    <div class="rail-head"><span class="idx2">02</span><h3>常合作</h3></div>
-                    <div class="rail-rule"></div>
-                    <div class="chips">
-                      <span class="chip">宫崎骏</span>
-                      <span class="chip">北野武</span>
-                      <span class="chip">吉卜力工作室</span>
-                      <span class="chip">东京交响乐团</span>
-                    </div>
-                    <div class="note">档案由服务器元数据与本地索引合并生成。</div>
-                  </section>
-                  <section class="rail-card">
-                    <div class="rail-head"><span class="idx2">03</span><h3>热门专辑</h3></div>
-                    <div class="rail-rule"></div>
-                    <a class="mini-album" href="album-detail-redesign.html">
-                      <span class="mini-art art rings" style="--c1:#7C8CA6;--c2:#1D2634"><span class="glyph">鍵</span></span>
-                      <span class="mini-main"><b>Piano Stories</b><span>1988 · 14 首</span></span>
-                    </a>
-                    <a class="mini-album" href="album-detail-redesign.html">
-                      <span class="mini-art art sun" style="--c1:#E0A044;--c2:#7C3A16"><span class="glyph">夏</span></span>
-                      <span class="mini-main"><b>Summer</b><span>1996 · 10 首</span></span>
-                    </a>
-                    <a class="mini-album" href="album-detail-redesign.html">
-                      <span class="mini-art art grid" style="--c1:#B05C48;--c2:#29181A"><span class="glyph">千</span></span>
-                      <span class="mini-main"><b>千と千尋の神隠し</b><span>2001 · 22 首</span></span>
-                    </a>
-                    <button class="rail-link" data-goto-tab="albums">查看全部 38 张专辑 →</button>
-                  </section>
-                </aside>
-              </div>
             </section>
 
             <!-- 专辑 -->
@@ -1147,10 +1022,6 @@ function switchTab(tab){
 }
 
 $$('#subtabs [data-tab]').forEach(btn => btn.onclick = () => switchTab(btn.dataset.tab));
-$$('[data-goto-tab]').forEach(btn => btn.onclick = () => {
-  switchTab(btn.dataset.gotoTab);
-  $('#subtabs').scrollIntoView({ behavior:'smooth', block:'start' });
-});
 
 /* ============================ 简介 ============================ */
 $('#bioBtn').onclick = () => {

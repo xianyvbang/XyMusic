@@ -23,16 +23,20 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -47,12 +51,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +71,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -76,14 +85,13 @@ import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.TabListEnum
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.image.rememberArtistCoverUrls
-import cn.xybbz.config.music.MusicPlayContext
-import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.extension.isSticking
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.JvmLazyListComponent
@@ -100,44 +108,58 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.ext.debounceClickable
-import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.LazyColumnParentComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
-import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.ArtistInfoViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.album
-import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.album_count_format
 import xymusic.composeapp.generated.resources.artist
+import xymusic.composeapp.generated.resources.artist_all_tracks
 import xymusic.composeapp.generated.resources.artist_cover
+import xymusic.composeapp.generated.resources.artist_count_format
 import xymusic.composeapp.generated.resources.artrist_info
 import xymusic.composeapp.generated.resources.close_24px
 import xymusic.composeapp.generated.resources.close_selection
+import xymusic.composeapp.generated.resources.expand_description
 import xymusic.composeapp.generated.resources.no_description
 import xymusic.composeapp.generated.resources.pause_circle_24px
 import xymusic.composeapp.generated.resources.pause_playback
+import xymusic.composeapp.generated.resources.play_all
 import xymusic.composeapp.generated.resources.play_circle_24px
 import xymusic.composeapp.generated.resources.playlist_add_check_24px
+import xymusic.composeapp.generated.resources.random_play
 import xymusic.composeapp.generated.resources.reached_bottom
+import xymusic.composeapp.generated.resources.resemblance_artist
 import xymusic.composeapp.generated.resources.resume_playback
-import xymusic.composeapp.generated.resources.return_home
 import xymusic.composeapp.generated.resources.select
+import xymusic.composeapp.generated.resources.shuffle_24px
 import xymusic.composeapp.generated.resources.songs_count_suffix
-import xymusic.composeapp.generated.resources.start_playback
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-private val JvmArtistInfoDesktopCoverSize = 232.dp
-private val JvmArtistStickyOperationHeight = 72.dp
+/**
+ * 艺术家主视觉整体尺寸（唱片外圈直径）。
+ */
+private val JvmArtistInfoDesktopCoverSize = 236.dp
+
+/**
+ * 唱片内圈艺术家封面直径，与设计稿的 26dp 内缩保持一致。
+ */
+private val JvmArtistInfoDesktopArtSize = 184.dp
+
+/**
+ * 艺术家详情页曲目表列配置。
+ */
 private val JvmArtistMusicTableColumns = SongTableColumns(
     showFavoriteColumn = true,
     showInlineActions = true,
@@ -163,7 +185,6 @@ fun JvmArtistInfoScreen(
         artistInfoViewModel.albumList.collectAsLazyPagingItems()
     val favoriteSet by artistInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val selectUiState by artistInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
-    val musicInfo by artistInfoViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val playDataType by artistInfoViewModel.musicController.playDataTypeFlow.collectAsStateWithLifecycle()
     val playState by artistInfoViewModel.musicController.stateFlow.collectAsStateWithLifecycle()
     val currentPlayingMusicIdFlow = remember(artistInfoViewModel) {
@@ -184,10 +205,74 @@ fun JvmArtistInfoScreen(
     val lazyListState = rememberLazyListState()
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
     var selectedTab by remember { mutableStateOf(TabListEnum.Music) }
-    //是否文本描述超过最大行数
+    // 是否文本描述超过最大行数
     var isOverflow by remember { mutableStateOf(false) }
-    //是否打开描述信息页面
+    // 是否打开描述信息页面
     var ifOpenDescribe by remember { mutableStateOf(false) }
+
+    // 当前播放上下文是否为本艺术家，决定页头播放按钮的状态与文案
+    val currentPlayingArtistId = artistInfoViewModel.musicPlayContext.musicPlayData
+        ?.onMusicPlayParameter
+        ?.artistId
+    val isCurrentArtist =
+        playDataType == MusicPlayTypeEnum.ARTIST && artistId == currentPlayingArtistId
+    val isPlayingCurrentArtist = isCurrentArtist && playState == PlayStateEnum.Playing
+    val artistPlayText = when {
+        isPlayingCurrentArtist -> stringResource(Res.string.pause_playback)
+        isCurrentArtist -> stringResource(Res.string.resume_playback)
+        else -> stringResource(Res.string.play_all)
+    }
+    val artistPlayIcon = if (isPlayingCurrentArtist) {
+        Res.drawable.pause_circle_24px
+    } else {
+        Res.drawable.play_circle_24px
+    }
+    // 艺术家收藏切换，页头与操作区共用同一份逻辑
+    val toggleArtistFavorite: () -> Unit = {
+        coroutineScope.launch {
+            val ifFavorite = artistInfoViewModel.dataSourceManager.setFavoriteData(
+                type = MusicTypeEnum.ARTIST,
+                itemId = artistId,
+                ifFavorite = artistInfoViewModel.ifFavorite
+            )
+            artistInfoViewModel.updateFavorite(ifFavorite)
+        }
+    }
+    // 播放全部：正在播放本艺术家时切换暂停/继续，否则从首曲开始播放
+    val playArtist: () -> Unit = {
+        coroutineScope.launch {
+            if (isCurrentArtist) {
+                if (playState == PlayStateEnum.Pause) {
+                    artistInfoViewModel.musicController.resume()
+                } else {
+                    artistInfoViewModel.musicController.pause()
+                }
+            } else {
+                artistInfoViewModel.musicPlayContext.artist(
+                    OnMusicPlayParameter(
+                        musicId = "",
+                        artistId = artistId,
+                    ),
+                    index = 0,
+                    artistId = artistId,
+                )
+            }
+        }
+    }
+    // 随机播放：先切换为随机模式，再以本艺术家为上下文开始播放
+    val shuffleArtist: () -> Unit = {
+        artistInfoViewModel.musicController.setPlayTypeData(PlayerModeEnum.RANDOM_PLAY)
+        coroutineScope.launch {
+            artistInfoViewModel.musicPlayContext.artist(
+                OnMusicPlayParameter(
+                    musicId = "",
+                    artistId = artistId,
+                ),
+                index = 0,
+                artistId = artistId,
+            )
+        }
+    }
 
     ModalBottomSheetExtendComponent(
         modifier = Modifier.statusBarsPadding(),
@@ -223,6 +308,15 @@ fun JvmArtistInfoScreen(
                 .coerceAtLeast(1)
         }
         val artistCoverUrls = rememberArtistCoverUrls(artistInfoViewModel.artistInfoData)
+        // 各分区数量：优先取艺术家档案，未加载完成时回退到已加载条目数
+        val musicCount = artistInfoViewModel.artistInfoData?.musicCount ?: musicPage.itemCount
+        val albumCount = artistInfoViewModel.artistInfoData?.albumCount ?: albumPageList.itemCount
+        val similarCount = artistInfoViewModel.resemblanceArtistList.size
+        val tabCounts = mapOf(
+            TabListEnum.Music to musicCount,
+            TabListEnum.Album to albumCount,
+            TabListEnum.RESEMBLANCE_ARTIST to similarCount,
+        )
 
         XyColumnScreen {
             TopAppBarComponent(
@@ -241,23 +335,6 @@ fun JvmArtistInfoScreen(
                             modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
                         )
                     }
-                },
-                actions = {
-                    FavoriteIconButton(
-                        isFavorite = artistInfoViewModel.ifFavorite,
-                        onClick = {
-                            coroutineScope.launch {
-                                val ifFavorite =
-                                    artistInfoViewModel.dataSourceManager.setFavoriteData(
-                                        type = MusicTypeEnum.ARTIST,
-                                        itemId = artistId,
-                                        ifFavorite = artistInfoViewModel.ifFavorite
-                                    )
-                                artistInfoViewModel.updateFavorite(ifFavorite)
-                            }
-                        },
-                        normalTint = XyTheme.extendedColors.favorite,
-                    )
                 }
             )
 
@@ -285,14 +362,15 @@ fun JvmArtistInfoScreen(
                     }
                 }
             ) {
-                item {
-                    JvmArtistDesktopHeader(
+                item(key = "artist_hero") {
+                    JvmArtistDesktopHero(
                         artistName = artistName,
                         description = artistInfoViewModel.artistDescribe,
-                        musicCount = artistInfoViewModel.artistInfoData?.musicCount,
-                        albumCount = artistInfoViewModel.artistInfoData?.albumCount,
                         coverUrl = artistCoverUrls.primaryUrl,
                         fallbackCoverUrl = artistCoverUrls.fallbackUrl,
+                        ifFavorite = artistInfoViewModel.ifFavorite,
+                        playText = artistPlayText,
+                        playIcon = artistPlayIcon,
                         descriptionOverflow = isOverflow,
                         onOpenDescription = {
                             ifOpenDescribe = true
@@ -300,70 +378,77 @@ fun JvmArtistInfoScreen(
                         onDescriptionOverflow = { overflow ->
                             isOverflow = overflow
                         },
+                        onPlayAll = playArtist,
+                        onShuffle = shuffleArtist,
+                        onToggleFavorite = toggleArtistFavorite,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
                                 start = XyTheme.dimens.outerHorizontalPadding,
                                 end = XyTheme.dimens.outerHorizontalPadding,
                                 top = XyTheme.dimens.outerVerticalPadding,
-                                bottom = XyTheme.dimens.outerVerticalPadding
+                                bottom = XyTheme.dimens.innerVerticalPadding
                             )
                     )
                 }
+
+                // 吸顶章节导航：下划线选中态 + 当前分区操作
                 stickyHeader(key = 1) {
-                    PrimaryTabRow(
-                        modifier = Modifier.padding(bottom = XyTheme.dimens.innerVerticalPadding),
-                        containerColor = MaterialTheme.colorScheme.background,
-                        selectedTabIndex = TabListEnum.entries.indexOf(selectedTab),
-                        divider = {},
+                    JvmArtistSectionTabs(
+                        selectedTab = selectedTab,
+                        tabCounts = tabCounts,
+                        onSelectTab = { selectedTab = it },
                     ) {
-                        TabListEnum.entries.forEach { tab ->
-                            Tab(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(XyTheme.dimens.corner)),
-                                selected = selectedTab == tab,
-                                onClick = {
-                                    selectedTab = tab
-                                },
-                                text = {
-                                    Text(
-                                        text = stringResource(tab.message),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
+                        if (selectedTab == TabListEnum.Music) {
+                            if (selectUiState.isOpen) {
+                                XySelectAllComponent(
+                                    isSelectAll = selectUiState.isSelectAll,
+                                    onSelectAll = {
+                                        artistInfoViewModel.selectControl.toggleSelectionAll(
+                                            musicPage.itemSnapshotList.items.map { it.itemId })
+                                    }
+                                )
+                                val closeSelectionText = stringResource(Res.string.close_selection)
+                                DesktopTooltipIconButton(
+                                    tooltip = closeSelectionText,
+                                    onClick = {
+                                        artistInfoViewModel.selectControl.dismiss()
+                                    },
+                                ) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.close_24px),
+                                        contentDescription = closeSelectionText
                                     )
                                 }
-                            )
+                            } else {
+                                val selectText = stringResource(Res.string.select)
+                                OutlinedButton(
+                                    onClick = {
+                                        artistInfoViewModel.selectControl.show(true)
+                                    },
+                                    modifier = Modifier.height(32.dp),
+                                    shape = RoundedCornerShape(XyTheme.dimens.corner),
+                                    contentPadding = PaddingValues(horizontal = 10.dp),
+                                ) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.playlist_add_check_24px),
+                                        contentDescription = selectText,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(text = selectText)
+                                }
+                            }
                         }
                     }
                 }
 
                 when (selectedTab) {
                     TabListEnum.Music -> {
-                        item {
-                            JvmArtistMusicListOperation(
-                                artistId = artistId,
-                                musicPlayContext = artistInfoViewModel.musicPlayContext,
-                                currentPlayArtistId = artistInfoViewModel.musicPlayContext
-                                    .musicPlayData
-                                    ?.onMusicPlayParameter
-                                    ?.artistId,
-                                playDataType = playDataType,
-                                playState = playState,
-                                onPlayOrPause = {
-                                    if (playState != PlayStateEnum.Pause) {
-                                        artistInfoViewModel.musicController.pause()
-                                    } else {
-                                        artistInfoViewModel.musicController.resume()
-                                    }
-                                },
-                                selectControl = artistInfoViewModel.selectControl,
-                                onSelectAll = {
-                                    artistInfoViewModel.selectControl.toggleSelectionAll(
-                                        musicPage.itemSnapshotList.items.map { it.itemId })
-                                },
-                                ifOpenSelect = selectUiState.isOpen,
-                                isSelectAll = selectUiState.isSelectAll,
-                                sortContent = {}
+                        item(key = "artist_music_head") {
+                            JvmArtistSectionHead(
+                                title = stringResource(Res.string.artist_all_tracks),
+                                meta = "$musicCount${stringResource(Res.string.songs_count_suffix)}",
                             )
                         }
                         songTableItems(
@@ -436,6 +521,12 @@ fun JvmArtistInfoScreen(
                     }
 
                     TabListEnum.Album -> {
+                        item(key = "artist_album_head") {
+                            JvmArtistSectionHead(
+                                title = stringResource(Res.string.album),
+                                meta = stringResource(Res.string.album_count_format, albumCount),
+                            )
+                        }
                         artistAlbumGridItems(
                             albumPageList = albumPageList,
                             gridColumns = gridColumns,
@@ -451,6 +542,12 @@ fun JvmArtistInfoScreen(
                     }
 
                     TabListEnum.RESEMBLANCE_ARTIST -> {
+                        item(key = "artist_similar_head") {
+                            JvmArtistSectionHead(
+                                title = stringResource(Res.string.resemblance_artist),
+                                meta = stringResource(Res.string.artist_count_format, similarCount),
+                            )
+                        }
                         artistGridItems(
                             artistList = artistInfoViewModel.resemblanceArtistList,
                             gridColumns = gridColumns,
@@ -465,40 +562,162 @@ fun JvmArtistInfoScreen(
     }
 }
 
-
+/**
+ * 艺术家详情页头：唱片式主视觉 + 身份信息 + 简介 + 播放操作。
+ */
 @Composable
-private fun JvmArtistDesktopHeader(
+private fun JvmArtistDesktopHero(
     artistName: String,
     description: String?,
-    musicCount: Int?,
-    albumCount: Int?,
     coverUrl: String?,
     fallbackCoverUrl: String?,
+    ifFavorite: Boolean,
+    playText: String,
+    playIcon: DrawableResource,
     descriptionOverflow: Boolean,
     onOpenDescription: () -> Unit,
     onDescriptionOverflow: (Boolean) -> Unit,
+    onPlayAll: () -> Unit,
+    onShuffle: () -> Unit,
+    onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val songsCountSuffix = stringResource(Res.string.songs_count_suffix)
-    val albumText = stringResource(Res.string.album)
     val descriptionText = description ?: stringResource(Res.string.no_description)
-    val subText = buildList {
-        musicCount?.takeIf { it > 0 }?.let {
-            add("$it$songsCountSuffix")
-        }
-        albumCount?.takeIf { it > 0 }?.let {
-            add("$it$albumText")
-        }
-    }.joinToString(" • ")
 
     Row(
-        modifier = modifier.height(JvmArtistInfoDesktopCoverSize),
-        horizontalArrangement = Arrangement.spacedBy(24.dp),
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(34.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        JvmArtistDiscPortrait(
+            coverUrl = coverUrl,
+            fallbackCoverUrl = fallbackCoverUrl,
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = artistName,
+                modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.displayLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = descriptionText,
+                modifier = Modifier.debounceClickable(enabled = descriptionOverflow) {
+                    onOpenDescription()
+                },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                onTextLayout = { textLayoutResult ->
+                    onDescriptionOverflow(textLayoutResult.hasVisualOverflow)
+                },
+            )
+            if (descriptionOverflow) {
+                TextButton(
+                    onClick = onOpenDescription,
+                    contentPadding = PaddingValues(0.dp),
+                ) {
+                    Text(
+                        text = stringResource(Res.string.expand_description),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+            // 主操作区：播放全部为主按钮，随机播放为次按钮，收藏为图标按钮
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(9.dp),
+            ) {
+                Button(
+                    onClick = onPlayAll,
+                    shape = RoundedCornerShape(XyTheme.dimens.corner),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                ) {
+                    Icon(
+                        painter = painterResource(playIcon),
+                        contentDescription = playText,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(7.dp))
+                    Text(
+                        text = playText,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                OutlinedButton(
+                    onClick = onShuffle,
+                    shape = RoundedCornerShape(XyTheme.dimens.corner),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.shuffle_24px),
+                        contentDescription = stringResource(Res.string.random_play),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(7.dp))
+                    Text(
+                        text = stringResource(Res.string.random_play),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                FavoriteIconButton(
+                    isFavorite = ifFavorite,
+                    onClick = onToggleFavorite,
+                    normalTint = XyTheme.extendedColors.favorite,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 唱片式主视觉：外圈同心纹唱片 + 内圈艺术家封面。
+ */
+@Composable
+private fun JvmArtistDiscPortrait(
+    coverUrl: String?,
+    fallbackCoverUrl: String?,
+) {
+    val discColor = MaterialTheme.colorScheme.surfaceContainerLowest
+    val ringColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
+
+    Box(
+        modifier = Modifier.size(JvmArtistInfoDesktopCoverSize),
+        contentAlignment = Alignment.Center,
+    ) {
+        // 唱片纹路：从封面外缘向外逐圈绘制，保持设计稿的黑胶质感
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val centerRadius = size.minDimension / 2
+            drawCircle(color = discColor, radius = centerRadius)
+            var ringRadius = centerRadius - 1.dp.toPx()
+            val step = 5.dp.toPx()
+            while (ringRadius > JvmArtistInfoDesktopArtSize.toPx() / 2) {
+                drawCircle(
+                    color = ringColor,
+                    radius = ringRadius,
+                    style = Stroke(width = 1f)
+                )
+                ringRadius -= step
+            }
+        }
         XyImage(
             modifier = Modifier
-                .size(JvmArtistInfoDesktopCoverSize)
+                .size(JvmArtistInfoDesktopArtSize)
                 .clip(CircleShape)
                 .background(
                     Brush.linearGradient(
@@ -518,44 +737,145 @@ private fun JvmArtistDesktopHeader(
             fallback = Res.drawable.artrist_info,
             contentDescription = stringResource(Res.string.artist_cover),
         )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = artistName,
-                modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.displayLarge,
-                fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (subText.isNotBlank()) {
-                Text(
-                    text = subText,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-            Text(
-                text = descriptionText,
-                modifier = Modifier.debounceClickable(enabled = descriptionOverflow) {
-                    onOpenDescription()
-                },
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-                onTextLayout = { textLayoutResult ->
-                    onDescriptionOverflow(textLayoutResult.hasVisualOverflow)
-                },
-            )
-        }
     }
 }
 
+/**
+ * 艺术家详情章节导航：下划线选中态 + 分区数量 + 右侧当前分区操作。
+ */
+@Composable
+private fun JvmArtistSectionTabs(
+    selectedTab: TabListEnum,
+    tabCounts: Map<TabListEnum, Int>,
+    onSelectTab: (TabListEnum) -> Unit,
+    trailing: @Composable RowScope.() -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = XyTheme.dimens.outerHorizontalPadding),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(28.dp),
+        ) {
+            TabListEnum.entries.forEach { tab ->
+                JvmArtistSectionTab(
+                    text = stringResource(tab.message),
+                    count = tabCounts[tab] ?: 0,
+                    selected = selectedTab == tab,
+                    onClick = { onSelectTab(tab) },
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            trailing()
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    }
+}
 
+/**
+ * 单个章节标签：名称 + 数量 + 选中下划线。
+ */
+@Composable
+private fun JvmArtistSectionTab(
+    text: String,
+    count: Int,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val contentColor = if (selected) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Column(
+        modifier = Modifier
+            .width(IntrinsicSize.Max)
+            .clip(RoundedCornerShape(XyTheme.dimens.corner / 2))
+            .clickable(onClick = onClick)
+            .padding(top = 15.dp, bottom = 10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = text,
+                color = contentColor,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (count > 0) {
+                Text(
+                    text = count.toString(),
+                    modifier = Modifier.padding(start = 7.dp),
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    letterSpacing = 0.6.sp,
+                    maxLines = 1,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(2.dp)
+                .background(
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        Color.Transparent
+                    },
+                    shape = RoundedCornerShape(2.dp)
+                )
+        )
+    }
+}
+
+/**
+ * 分区标题栏：标题 + 数量说明。
+ */
+@Composable
+private fun JvmArtistSectionHead(
+    title: String,
+    meta: String,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+                vertical = XyTheme.dimens.innerVerticalPadding / 2,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = meta,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+/**
+ * 专辑网格分页数据。
+ */
 private fun LazyListScope.artistAlbumGridItems(
     albumPageList: LazyPagingItems<XyAlbum>,
     gridColumns: Int,
@@ -591,6 +911,9 @@ private fun LazyListScope.artistAlbumGridItems(
     }
 }
 
+/**
+ * 相似艺术家网格数据。
+ */
 private fun LazyListScope.artistGridItems(
     artistList: List<XyArtist>,
     gridColumns: Int,
@@ -630,6 +953,9 @@ private fun LazyListScope.artistGridItems(
     }
 }
 
+/**
+ * 网格行容器：统一的水平内边距与间距。
+ */
 @Composable
 private fun ArtistInfoCardGridRow(
     content: @Composable () -> Unit,
@@ -648,138 +974,5 @@ private fun ArtistInfoCardGridRow(
         verticalAlignment = Alignment.Top,
     ) {
         content()
-    }
-}
-
-
-/**
- * 音乐列表操作栏
- */
-@Composable
-private fun JvmArtistMusicListOperation(
-    artistId: String,
-    musicPlayContext: MusicPlayContext,
-    currentPlayArtistId: String?,
-    playDataType: MusicPlayTypeEnum,
-    playState: PlayStateEnum,
-    onPlayOrPause: () -> Unit,
-    selectControl: SelectControl,
-    ifOpenSelect: Boolean,
-    isSelectAll: Boolean,
-    onSelectAll: () -> Unit,
-    sortContent: @Composable () -> Unit
-) {
-    val coroutineScope = rememberCoroutineScope()
-    val pauseText = stringResource(Res.string.pause_playback)
-    val resumeText = stringResource(Res.string.resume_playback)
-    val startText = stringResource(Res.string.start_playback)
-    val isCurrentArtist = playDataType == MusicPlayTypeEnum.ARTIST &&
-            artistId == currentPlayArtistId
-    val isPlayingCurrentArtist = isCurrentArtist && playState == PlayStateEnum.Playing
-    val playIcon = if (isPlayingCurrentArtist) {
-        Res.drawable.pause_circle_24px
-    } else {
-        Res.drawable.play_circle_24px
-    }
-    val playActionText = when {
-        isPlayingCurrentArtist -> pauseText
-        isCurrentArtist -> resumeText
-        else -> startText
-    }
-
-    XyRow(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.background)
-            .jvmHoverDebounceClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-            ) {
-                if (ifOpenSelect) {
-                    onSelectAll()
-                } else {
-                    coroutineScope.launch {
-                        if (isCurrentArtist) {
-                            onPlayOrPause()
-                        } else {
-                            musicPlayContext.artist(
-                                OnMusicPlayParameter(
-                                    musicId = "",
-                                    artistId = artistId,
-                                ),
-                                index = 0,
-                                artistId = artistId,
-                            )
-                        }
-                    }
-                }
-            }
-            .height(JvmArtistStickyOperationHeight),
-        paddingValues = PaddingValues(
-            horizontal = XyTheme.dimens.outerHorizontalPadding
-        ),
-    ) {
-
-
-        if (ifOpenSelect) {
-            XySelectAllComponent(
-                isSelectAll = isSelectAll,
-                onSelectAll = onSelectAll
-            )
-            val closeSelectionText = stringResource(Res.string.close_selection)
-            DesktopTooltipIconButton(
-                tooltip = closeSelectionText,
-                onClick = {
-                    selectControl.dismiss()
-                },
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.close_24px),
-                    contentDescription = closeSelectionText
-                )
-            }
-        } else {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painter = painterResource(playIcon),
-                        contentDescription = playActionText,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                    )
-                }
-                Text(
-                    text = playActionText,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
-            ) {
-                sortContent()
-
-                val selectText = stringResource(Res.string.select)
-                DesktopTooltipIconButton(
-                    tooltip = selectText,
-                    onClick = {
-                        selectControl.show(true)
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.playlist_add_check_24px),
-                        contentDescription = selectText
-                    )
-                }
-            }
-        }
-
     }
 }

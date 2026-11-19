@@ -86,6 +86,11 @@
     <!--    艺术家详情-->
     <string name="no_description">暂无简介</string>
     <string name="artist_cover">艺术家封面</string>
+    <string name="artist_all_tracks">全部曲目</string>
+    <string name="play_all">播放全部</string>
+    <string name="expand_description">展开简介</string>
+    <string name="album_count_format">%1$d 张</string>
+    <string name="artist_count_format">%1$d 位</string>
     <!--艺术家-->
     <string name="artist">艺术家</string>
     <string name="get_all_artists">获取所有艺术家</string>
