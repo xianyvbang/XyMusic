@@ -298,8 +298,11 @@ fun JvmArtistInfoScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         val gridSpacing = XyTheme.dimens.outerVerticalPadding
-        val gridColumns = remember(maxWidth, gridSpacing) {
-            (maxWidth.value / (MusicCardImageSize + gridSpacing).value)
+        val gridHorizontalPadding = XyTheme.dimens.innerHorizontalPadding
+        val gridColumns = remember(maxWidth, gridSpacing, gridHorizontalPadding) {
+            // 先扣除网格行左右内边距，再按卡片宽度计算列数，避免内容超出可视宽度
+            val availableWidth = (maxWidth - gridHorizontalPadding * 2).value
+            ((availableWidth + gridSpacing.value) / (MusicCardImageSize + gridSpacing).value)
                 .toInt()
                 .coerceAtLeast(1)
         }
@@ -868,7 +871,7 @@ private fun LazyListScope.artistGridItems(
 }
 
 /**
- * 网格行容器：统一的水平内边距与间距。
+ * 网格行容器：与音乐列表行保持一致的左右内边距，卡片从左侧开始排列。
  */
 @Composable
 private fun ArtistInfoCardGridRow(
@@ -878,13 +881,12 @@ private fun ArtistInfoCardGridRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
+                // 复用音乐列表行的内边距，避免专辑/歌手网格内容左右缩进过大
+                horizontal = XyTheme.dimens.innerHorizontalPadding,
                 vertical = XyTheme.dimens.innerVerticalPadding / 2,
             ),
-        horizontalArrangement = Arrangement.spacedBy(
-            XyTheme.dimens.outerVerticalPadding,
-            Alignment.CenterHorizontally
-        ),
+        // 采用左对齐排布，条目较少时不会在两侧留出大块空白
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
         verticalAlignment = Alignment.Top,
     ) {
         content()
