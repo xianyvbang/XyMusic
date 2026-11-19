@@ -36,7 +36,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -2211,15 +2210,6 @@ internal enum class JvmSettingRowDescriptionStyle {
 /** 设置页顶部标签之间的横向间距，对齐设计稿的标签排布。 */
 private val JvmSettingTabSpacing = 26.dp
 
-/** 标签文字与底部下划线之间的间距。 */
-private val JvmSettingTabUnderlineGap = 7.dp
-
-/** 标签底部下划线高度。 */
-private val JvmSettingTabUnderlineHeight = 2.dp
-
-/** 标签底部留白，让下划线贴近标签栏分隔线。 */
-private val JvmSettingTabBottomPadding = 9.dp
-
 /**
  * JVM 设置页顶部标签项数据。
  *
@@ -2260,11 +2250,11 @@ internal fun JvmSettingTabBar(
             verticalAlignment = Alignment.Bottom,
         ) {
             tabs.forEachIndexed { index, tab ->
-                val selected = index == selectedIndex
-                JvmSettingTabItemContent(
-                    selected = selected,
+                // 复用通用下划线标签，与艺术家详情页章节导航保持一致的交互与视觉
+                JvmUnderlineTab(
                     title = tab.title,
-                    onSelected = { onSelected(index) },
+                    selected = index == selectedIndex,
+                    onClick = { onSelected(index) },
                 )
             }
         }
@@ -2275,69 +2265,6 @@ internal fun JvmSettingTabBar(
                 .fillMaxWidth()
                 .height(1.dp)
                 .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-        )
-    }
-}
-
-/**
- * JVM 设置页顶部单个标签项。
- *
- * hover 时文字切换为主题色并显示小手光标，选中态保留高亮下划线。
- *
- * @param selected 是否为当前选中的标签。
- * @param title 标签展示文案。
- * @param onSelected 标签点击回调。
- */
-@Composable
-private fun JvmSettingTabItemContent(
-    selected: Boolean,
-    title: String,
-    onSelected: () -> Unit,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
-    Column(
-        modifier = Modifier
-            // 用文字宽度作为列宽，让下划线与文字等宽而不是撑满整行。
-            .width(IntrinsicSize.Max)
-            .jvmHoverDebounceClickable(
-                interactionSource = interactionSource,
-                indication = null,
-                role = Role.Tab,
-                onClick = onSelected,
-            )
-            .padding(
-                top = XyTheme.dimens.outerVerticalPadding / 2,
-                bottom = JvmSettingTabBottomPadding,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        XyText(
-            text = title,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-            ),
-            color = when {
-                selected -> MaterialTheme.colorScheme.onSurface
-                hovered -> MaterialTheme.colorScheme.primary
-                else -> MaterialTheme.colorScheme.onSurfaceVariant
-            },
-            maxLines = 1,
-        )
-        Spacer(modifier = Modifier.height(JvmSettingTabUnderlineGap))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(JvmSettingTabUnderlineHeight)
-                .background(
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        Color.Transparent
-                    },
-                    shape = RoundedCornerShape(JvmSettingTabUnderlineHeight)
-                )
         )
     }
 }

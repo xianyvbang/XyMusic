@@ -30,12 +30,10 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -74,8 +72,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -99,6 +98,7 @@ import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.JvmMusicSelectionActionBar
+import cn.xybbz.ui.components.JvmUnderlineTab
 import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
@@ -125,12 +125,8 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import xymusic.composeapp.generated.resources.Res
-import xymusic.composeapp.generated.resources.album
-import xymusic.composeapp.generated.resources.album_count_format
 import xymusic.composeapp.generated.resources.artist
-import xymusic.composeapp.generated.resources.artist_all_tracks
 import xymusic.composeapp.generated.resources.artist_cover
-import xymusic.composeapp.generated.resources.artist_count_format
 import xymusic.composeapp.generated.resources.artrist_info
 import xymusic.composeapp.generated.resources.check_24px
 import xymusic.composeapp.generated.resources.expand_description
@@ -142,12 +138,10 @@ import xymusic.composeapp.generated.resources.play_circle_24px
 import xymusic.composeapp.generated.resources.playlist_add_check_24px
 import xymusic.composeapp.generated.resources.random_play
 import xymusic.composeapp.generated.resources.reached_bottom
-import xymusic.composeapp.generated.resources.resemblance_artist
 import xymusic.composeapp.generated.resources.resume_playback
 import xymusic.composeapp.generated.resources.select
 import xymusic.composeapp.generated.resources.selection_done
 import xymusic.composeapp.generated.resources.shuffle_24px
-import xymusic.composeapp.generated.resources.songs_count_suffix
 
 /**
  * 艺术家主视觉整体尺寸（唱片外圈直径）。
@@ -446,13 +440,7 @@ fun JvmArtistInfoScreen(
 
                 when (selectedTab) {
                     TabListEnum.Music -> {
-                        item(key = "artist_music_head") {
-                            JvmArtistSectionHead(
-                                title = stringResource(Res.string.artist_all_tracks),
-                                meta = "$musicCount${stringResource(Res.string.songs_count_suffix)}",
-                            )
-                        }
-                        // 选择模式展开的批量操作栏，紧跟在“全部曲目”标题下方
+                        // 选择模式展开的批量操作栏，紧跟在章节导航下方
                         item(key = "artist_selection_bar") {
                             AnimatedVisibility(
                                 visible = selectUiState.isOpen,
@@ -548,12 +536,6 @@ fun JvmArtistInfoScreen(
                     }
 
                     TabListEnum.Album -> {
-                        item(key = "artist_album_head") {
-                            JvmArtistSectionHead(
-                                title = stringResource(Res.string.album),
-                                meta = stringResource(Res.string.album_count_format, albumCount),
-                            )
-                        }
                         artistAlbumGridItems(
                             albumPageList = albumPageList,
                             gridColumns = gridColumns,
@@ -569,12 +551,6 @@ fun JvmArtistInfoScreen(
                     }
 
                     TabListEnum.RESEMBLANCE_ARTIST -> {
-                        item(key = "artist_similar_head") {
-                            JvmArtistSectionHead(
-                                title = stringResource(Res.string.resemblance_artist),
-                                meta = stringResource(Res.string.artist_count_format, similarCount),
-                            )
-                        }
                         artistGridItems(
                             artistList = artistInfoViewModel.resemblanceArtistList,
                             gridColumns = gridColumns,
@@ -666,6 +642,7 @@ private fun JvmArtistDesktopHero(
             ) {
                 Button(
                     onClick = onPlayAll,
+                    modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
                     shape = RoundedCornerShape(XyTheme.dimens.corner),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -687,6 +664,7 @@ private fun JvmArtistDesktopHero(
                 }
                 OutlinedButton(
                     onClick = onShuffle,
+                    modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
                     shape = RoundedCornerShape(XyTheme.dimens.corner),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                 ) {
@@ -790,113 +768,22 @@ private fun JvmArtistSectionTabs(
             horizontalArrangement = Arrangement.spacedBy(28.dp),
         ) {
             TabListEnum.entries.forEach { tab ->
-                JvmArtistSectionTab(
-                    text = stringResource(tab.message),
-                    count = tabCounts[tab] ?: 0,
+                // 复用通用下划线标签，与设置页顶部标签保持一致的交互与视觉
+                JvmUnderlineTab(
+                    title = stringResource(tab.message),
                     selected = selectedTab == tab,
                     onClick = { onSelectTab(tab) },
+                    count = tabCounts[tab] ?: 0,
+                    titleStyle = MaterialTheme.typography.titleSmall,
+                    topPadding = 15.dp,
+                    bottomPadding = 10.dp,
+                    underlineGap = 8.dp,
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
             trailing()
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-    }
-}
-
-/**
- * 单个章节标签：名称 + 数量 + 选中下划线。
- */
-@Composable
-private fun JvmArtistSectionTab(
-    text: String,
-    count: Int,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val contentColor = if (selected) {
-        MaterialTheme.colorScheme.onSurface
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    Column(
-        modifier = Modifier
-            .width(IntrinsicSize.Max)
-            .clip(RoundedCornerShape(XyTheme.dimens.corner / 2))
-            .clickable(onClick = onClick)
-            .padding(top = 15.dp, bottom = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = text,
-                color = contentColor,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (count > 0) {
-                Text(
-                    text = count.toString(),
-                    modifier = Modifier.padding(start = 7.dp),
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    style = MaterialTheme.typography.labelSmall,
-                    letterSpacing = 0.6.sp,
-                    maxLines = 1,
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(2.dp)
-                .background(
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        Color.Transparent
-                    },
-                    shape = RoundedCornerShape(2.dp)
-                )
-        )
-    }
-}
-
-/**
- * 分区标题栏：标题 + 数量说明。
- */
-@Composable
-private fun JvmArtistSectionHead(
-    title: String,
-    meta: String,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
-                vertical = XyTheme.dimens.innerVerticalPadding / 2,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = title,
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(
-            text = meta,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
-        )
     }
 }
 

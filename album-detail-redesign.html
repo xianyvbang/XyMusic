@@ -7,7 +7,7 @@
 <style>
   /* ============================================================
      设计语言：Signal Deck（信号台）
-     专辑详情 = 一张唱片的工作台：封面 + 曲目 + 资料栏
+     专辑详情 = 一张唱片的工作台：封面 + 曲目
      ============================================================ */
   :root{
     --accent:#F0A03C;
@@ -178,11 +178,6 @@
   }
   .cover-stack .art{border-radius:10px;z-index:1;box-shadow:0 26px 54px rgba(0,0,0,.55);}
   .hero-main{flex:1;min-width:320px;display:flex;flex-direction:column;gap:11px;}
-  .kicker{
-    display:flex;align-items:center;gap:9px;
-    font-family:var(--font-mono);font-size:9.5px;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;
-  }
-  .kicker::before{content:"";width:26px;height:2px;background:var(--accent);border-radius:2px;}
   .hero h1{
     margin:0;font-size:clamp(32px,3.6vw,50px);font-weight:800;letter-spacing:-.04em;line-height:1.02;
     display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
@@ -208,14 +203,6 @@
   .btn.primary:hover{filter:brightness(1.06);background:var(--accent);}
   .btn.icon-only{width:34px;padding:0;}
   .btn.sm{height:28px;padding:0 10px;font-size:11px;border-radius:6px;}
-  .hero-side{display:flex;align-items:center;padding-left:26px;border-left:1px solid var(--line);}
-  .readout{padding:0 15px;display:flex;flex-direction:column;gap:5px;white-space:nowrap;}
-  .readout:first-child{padding-left:0;}
-  .readout:last-child{padding-right:0;}
-  .readout .lbl{font-family:var(--font-mono);font-size:9px;letter-spacing:.16em;color:var(--ink-mute);}
-  .readout .val{font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:-.01em;}
-  .vr{width:1px;align-self:stretch;background:var(--line);margin:0 0 2px;}
-
   /* ---------- 播放历史开关 ---------- */
   .switchrow{display:flex;align-items:center;gap:9px;margin-top:3px;font-size:11.5px;color:var(--ink-soft);flex-wrap:wrap;}
   .switch{
@@ -273,9 +260,8 @@
 
   /* ---------- 内容主体 ---------- */
   .body-wrap{padding:22px 40px 46px;}
-  .cols{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:34px;align-items:start;}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr);gap:34px;align-items:start;}
   .maincol{min-width:0;}
-  .rail{display:flex;flex-direction:column;gap:18px;position:sticky;top:76px;}
 
   .listbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
   .lst-title{font-size:13px;font-weight:700;letter-spacing:-.01em;}
@@ -358,44 +344,10 @@
   .pulse{animation:pulse 2.4s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 
-  /* ---------- 档案栏 ---------- */
-  .rail-card{
-    border:1px solid var(--line);border-radius:10px;padding:14px 16px 12px;
-    background:color-mix(in srgb, var(--surface-2) 48%, transparent);
-  }
-  .rail-head{display:flex;align-items:center;gap:9px;}
-  .rail-head .idx2{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
-  .rail-head h3{margin:0;font-size:12px;font-weight:700;letter-spacing:-.005em;}
-  .rail-rule{height:1px;background:var(--line);margin:11px 0 4px;position:relative;}
-  .rail-rule::before{content:"";position:absolute;left:0;top:0;width:52px;height:1px;background:var(--accent);opacity:.8;}
-  .kv{margin:0;padding:0;}
-  .kv > div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:6px 0;}
-  .kv dt{font-size:11px;color:var(--ink-mute);white-space:nowrap;}
-  .kv dd{margin:0;font-size:11.5px;color:var(--ink);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .kv dd.mono{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.01em;}
-  .kv dd a{color:var(--ink);text-decoration:none;border-bottom:1px solid color-mix(in srgb, var(--accent) 45%, transparent);}
-  .kv dd a:hover{color:var(--accent);}
-  .about-text{font-size:11.5px;line-height:1.8;color:var(--ink-soft);margin:8px 0 0;}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0 4px;}
   .chip{
     font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;padding:3px 7px;border-radius:5px;
     border:1px solid var(--line);background:var(--wash);color:var(--ink-soft);white-space:nowrap;
   }
-  .mini-album{
-    display:flex;align-items:center;gap:10px;padding:7px 0;width:100%;border:0;background:none;
-    cursor:pointer;text-align:left;color:inherit;border-radius:6px;
-  }
-  .mini-album:hover .mini-main b{color:var(--accent);}
-  .mini-art{width:42px;height:42px;border-radius:6px;flex:none;position:relative;overflow:hidden;box-shadow:0 6px 14px rgba(0,0,0,.3);}
-  .mini-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
-  .mini-main b{font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s;}
-  .mini-main span{font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;color:var(--ink-mute);}
-  .rail-link{
-    display:block;width:100%;margin-top:8px;padding:8px 0 0;border:0;border-top:1px dashed var(--line);
-    background:none;cursor:pointer;text-align:left;text-decoration:none;
-    font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;color:var(--ink-mute);text-transform:uppercase;
-  }
-  .rail-link:hover{color:var(--accent);}
   .note{display:flex;gap:9px;align-items:flex-start;padding:8px 0 2px;font-size:11px;line-height:1.7;color:var(--ink-soft);}
   .note::before{content:"";width:2px;height:12px;margin-top:3px;flex:none;background:var(--accent);border-radius:1px;}
 
@@ -430,7 +382,6 @@
     position:absolute;left:12px;top:9px;font-family:var(--font-mono);font-size:7.5px;
     letter-spacing:.18em;color:rgba(255,255,255,.62);
   }
-  .mini-art{position:relative;}
 
   /* ---------- 播放条 ---------- */
   .playbar{
@@ -480,10 +431,8 @@
 
   /* ---------- 响应式 ---------- */
   @media (max-width:1240px){
-    .cols{grid-template-columns:minmax(0,1fr) 290px;}
     .cover-stack{width:200px;height:200px;margin-left:36px;}
     .hero{gap:26px;}
-    .hero-side{padding-left:18px;}
   }
   @media (max-width:1080px){
     .sidebar{width:64px;padding:14px 8px;}
@@ -491,9 +440,7 @@
     .nav-item{justify-content:center;}
     .hero-wrap,.body-wrap{padding-left:24px;padding-right:24px;}
     .opbar{padding-left:24px;padding-right:24px;}
-    .hero-side{width:100%;border-left:0;padding-left:0;margin-top:4px;}
     .cols{grid-template-columns:1fr;}
-    .rail{position:static;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   }
   @media (max-width:760px){
     body{padding:14px;}
@@ -509,13 +456,11 @@
     .hero{gap:18px;}
     .hero h1{font-size:28px;}
     .actions .btn:not(.primary):not(.icon-only){display:none;}
-    .hero-side{display:none;}
     .opbar{padding:10px 18px;gap:8px;}
     .playlabel span{font-size:11.5px;}
     .opbar .seg,.opbar #filterBtn{display:none;}
     .thead,.trow{grid-template-columns:30px minmax(0,1fr) 52px 30px 26px;}
     .thead span:nth-child(3),.trow .fmt{display:none;}
-    .rail{grid-template-columns:1fr;}
     .resume{gap:9px;}
     .resume .rbar{display:none;}
     .playbar{height:auto;flex-wrap:wrap;padding:10px 14px;gap:10px;}
@@ -566,7 +511,7 @@
   <div class="proto-title">
     <div class="k">XyMusic · Windows / Album</div>
     <h1>专辑详情 · Album Dossier</h1>
-    <p>桌面重设计：黑胶出鞘式封面、续播与多选常驻；曲目表与资料栏双栏排布，播放条贯通全窗口。</p>
+    <p>桌面重设计：黑胶出鞘式封面、续播与多选常驻；曲目表通栏排布，播放条贯通全窗口。</p>
   </div>
   <div class="proto-links">
     <a href="artist-detail-redesign.html">艺术家详情 →</a>
@@ -631,8 +576,6 @@
               <a class="icon-btn" href="media-library-redesign.html" title="返回媒体库"><svg class="i"><use href="#i-back"/></svg></a>
               <span class="crumb-mono">资料库 / 专辑</span>
               <div class="spacer"></div>
-              <button class="icon-btn fav" title="收藏专辑" aria-pressed="false"><svg class="i"><use href="#i-heart"/></svg></button>
-              <button class="icon-btn js-more" title="更多操作"><svg class="i"><use href="#i-more"/></svg></button>
             </div>
 
             <section class="hero">
@@ -644,7 +587,6 @@
                 </div>
               </div>
               <div class="hero-main">
-                <div class="kicker">Album / 专辑 · 1996</div>
                 <h1>Piano Stories <span class="name-alt">ピアノ・ストーリーズ</span></h1>
                 <div class="artistline">
                   <a class="artist-link" href="artist-detail-redesign.html">久石譲</a>
@@ -655,7 +597,6 @@
                   <span class="tag">1996-06-21</span>
                   <span class="tag">14 首 · 58:42</span>
                   <span class="tag on">FLAC 24bit / 96kHz</span>
-                  <span class="tag">1.42 GB</span>
                 </div>
                 <div class="actions">
                   <button class="btn primary" id="startAll"><svg class="i"><use href="#i-play"/></svg>播放全部</button>
@@ -669,13 +610,6 @@
                   <span>保存播放记录</span>
                   <span class="hint">开启后下次从断点继续</span>
                 </div>
-              </div>
-              <div class="hero-side">
-                <div class="readout"><div class="lbl">曲目</div><div class="val">14</div></div>
-                <div class="vr"></div>
-                <div class="readout"><div class="lbl">总时长</div><div class="val">58:42</div></div>
-                <div class="vr"></div>
-                <div class="readout"><div class="lbl">播放</div><div class="val">312 次</div></div>
               </div>
             </section>
 
@@ -844,50 +778,6 @@
                 </div>
                 <div class="listfoot"><span class="dot pulse"></span>已加载全部 14 首 · 索引于 2026-11-17</div>
               </div>
-
-              <aside class="rail">
-                <section class="rail-card">
-                  <div class="rail-head"><span class="idx2">01</span><h3>专辑信息</h3></div>
-                  <div class="rail-rule"></div>
-                  <dl class="kv">
-                    <div><dt>艺术家</dt><dd><a href="artist-detail-redesign.html">久石譲</a></dd></div>
-                    <div><dt>发行日期</dt><dd class="mono">1996-06-21</dd></div>
-                    <div><dt>厂牌</dt><dd>ワンダーランド・レコード</dd></div>
-                    <div><dt>流派</dt><dd>配乐 / 现代古典</dd></div>
-                    <div><dt>介质</dt><dd class="mono">CD · 1 碟</dd></div>
-                    <div><dt>格式</dt><dd class="mono">FLAC 24bit / 96kHz</dd></div>
-                    <div><dt>文件大小</dt><dd class="mono">1.42 GB</dd></div>
-                    <div><dt>数据源</dt><dd class="mono">Jellyfin · 家庭 NAS</dd></div>
-                  </dl>
-                </section>
-                <section class="rail-card">
-                  <div class="rail-head"><span class="idx2">02</span><h3>关于专辑</h3></div>
-                  <div class="rail-rule"></div>
-                  <p class="about-text">《Piano Stories》是久石譲于 1996 年发行的钢琴独奏精选集，以宫崎骏动画配乐为主线，重新编配为极简的钢琴语言。专辑共收录 14 首作品，是许多乐迷进入久石譲世界的入口。</p>
-                  <div class="chips">
-                    <span class="chip">钢琴独奏</span>
-                    <span class="chip">精选集</span>
-                    <span class="chip">1996</span>
-                  </div>
-                </section>
-                <section class="rail-card">
-                  <div class="rail-head"><span class="idx2">03</span><h3>同艺术家</h3></div>
-                  <div class="rail-rule"></div>
-                  <button class="mini-album" data-album-link="Summer">
-                    <span class="mini-art art sun" style="--c1:#E0A044;--c2:#7C3A16"><span class="glyph">夏</span></span>
-                    <span class="mini-main"><b>Summer</b><span>1996 · 10 首</span></span>
-                  </button>
-                  <button class="mini-album" data-album-link="千と千尋の神隠し">
-                    <span class="mini-art art grid" style="--c1:#B05C48;--c2:#29181A"><span class="glyph">千</span></span>
-                    <span class="mini-main"><b>千と千尋の神隠し</b><span>2001 · 22 首</span></span>
-                  </button>
-                  <button class="mini-album" data-album-link="ハウルの動く城">
-                    <span class="mini-art art wave" style="--c1:#A08A6A;--c2:#2A2118"><span class="glyph">城</span></span>
-                    <span class="mini-main"><b>ハウルの動く城</b><span>2004 · 20 首</span></span>
-                  </button>
-                  <a class="rail-link" href="artist-detail-redesign.html">查看全部 38 张专辑 →</a>
-                </section>
-              </aside>
             </div>
           </div>
         </div>
@@ -1150,7 +1040,6 @@ $('#shuffleBtn').onclick = () => {
 $('#downloadBtn').onclick = () => toast('已加入下载队列 · Piano Stories · 14 首');
 $('#filterBtn').onclick = () => toast('排序与筛选：年份 / 收藏 / 音质（原型占位）');
 
-$$('[data-album-link]').forEach(btn => btn.onclick = () => toast('打开专辑 · ' + btn.dataset.albumLink));
 $$('[data-nav]').forEach(btn => btn.onclick = () => toast('打开「' + btn.dataset.nav + '」页面'));
 
 $('#themeBtn').onclick = () => {
