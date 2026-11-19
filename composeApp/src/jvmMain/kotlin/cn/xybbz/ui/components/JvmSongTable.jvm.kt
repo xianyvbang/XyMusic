@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
@@ -38,17 +39,28 @@ import xymusic.composeapp.generated.resources.*
 
 
 /**
- * 各歌曲表格的标题列宽度缓存。
+ * 歌曲表格的列宽配置，由表头测量后同步给所有行。
+ *
+ * @property titleWidth 标题列宽度。
+ * @property albumWidth 专辑列宽度。
+ */
+private data class SongTableColumnWidths(
+    val titleWidth: Dp = SongTableDefaults.titleWidth,
+    val albumWidth: Dp = SongTableDefaults.albumWidth,
+)
+
+/**
+ * 各歌曲表格的列宽缓存。
  * 表头测量一次后写入，所有行读取同一个状态，保证列宽与表头严格对齐；
  * 使用 tableKey 区分不同页面/分区的表格，切换筛选或分页加载后自动更新。
  */
-private val songTableTitleWidthStates = mutableMapOf<String, MutableState<Dp>>()
+private val songTableColumnWidthStates = mutableMapOf<String, MutableState<SongTableColumnWidths>>()
 
 /**
- * 获取指定表格的标题列宽度状态，不存在时按默认宽度创建。
+ * 获取指定表格的列宽状态，不存在时按默认宽度创建。
  */
-private fun songTableTitleWidthState(tableKey: String): MutableState<Dp> =
-    songTableTitleWidthStates.getOrPut(tableKey) { mutableStateOf(SongTableDefaults.titleWidth) }
+private fun songTableColumnWidthState(tableKey: String): MutableState<SongTableColumnWidths> =
+    songTableColumnWidthStates.getOrPut(tableKey) { mutableStateOf(SongTableColumnWidths()) }
 
 
 /**
@@ -86,12 +98,13 @@ internal fun LazyListScope.songTableItems(
     showViewAlbumMenuItem: Boolean = true,
     stickyTableHeader: Boolean = false,
 ) {
-    val titleWidthState = songTableTitleWidthState(tableKey)
+    val columnWidths = songTableColumnWidthState(tableKey).value
     songTableHeaderItem(
         tableKey = tableKey,
         columns = columns,
         sticky = stickyTableHeader,
         songsProvider = { songs },
+        albumTextProvider = albumText,
     )
     itemsIndexed(
         items = songs,
@@ -118,7 +131,8 @@ internal fun LazyListScope.songTableItems(
             onSelectionClick = onSelectionClick,
             showViewArtistMenuItem = showViewArtistMenuItem,
             showViewAlbumMenuItem = showViewAlbumMenuItem,
-            titleWidth = titleWidthState.value,
+            titleWidth = columnWidths.titleWidth,
+            albumWidth = columnWidths.albumWidth,
         )
     }
 }
@@ -158,12 +172,13 @@ internal fun LazyListScope.songTableItems(
     showViewAlbumMenuItem: Boolean = true,
     stickyTableHeader: Boolean = false,
 ) {
-    val titleWidthState = songTableTitleWidthState(tableKey)
+    val columnWidths = songTableColumnWidthState(tableKey).value
     songTableHeaderItem(
         tableKey = tableKey,
         columns = columns,
         sticky = stickyTableHeader,
         songsProvider = { pagingItems.itemSnapshotList.items },
+        albumTextProvider = albumText,
     )
     items(
         count = pagingItems.itemCount,
@@ -192,7 +207,8 @@ internal fun LazyListScope.songTableItems(
                 onSelectionClick = onSelectionClick,
                 showViewArtistMenuItem = showViewArtistMenuItem,
                 showViewAlbumMenuItem = showViewAlbumMenuItem,
-                titleWidth = titleWidthState.value,
+                titleWidth = columnWidths.titleWidth,
+                albumWidth = columnWidths.albumWidth,
             )
         }
     }
@@ -208,6 +224,7 @@ internal fun LazyListScope.songTableItems(
  * @param columns 列开关配置。
  * @param sticky 是否吸附在列表顶部。
  * @param songsProvider 提供当前表格已加载的歌曲列表，用于测量标题列宽度。
+ * @param albumTextProvider 提供歌曲对应的专辑文本，用于测量专辑列宽度。
  */
 @OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.songTableHeaderItem(
@@ -215,16 +232,23 @@ internal fun LazyListScope.songTableHeaderItem(
     columns: SongTableColumns,
     sticky: Boolean,
     songsProvider: () -> List<XyMusic>,
+    albumTextProvider: (XyMusic) -> String,
 ) {
-    // 表头负责测量标题列宽度，并同步给同一张表的所有行
+    // 表头负责测量标题列与专辑列宽度，并同步给同一张表的所有行
     val headerContent: @Composable (Modifier) -> Unit = { headerModifier ->
-        val titleWidth = rememberSongTableTitleWidth(songsProvider())
-        LaunchedEffect(titleWidth) {
-            songTableTitleWidthState(tableKey).value = titleWidth
+        val songs = songsProvider()
+        val titleWidth = rememberSongTableTitleWidth(songs)
+        val albumWidth = rememberSongTableAlbumWidth(songs.map(albumTextProvider))
+        LaunchedEffect(titleWidth, albumWidth) {
+            songTableColumnWidthState(tableKey).value = SongTableColumnWidths(
+                titleWidth = titleWidth,
+                albumWidth = albumWidth,
+            )
         }
         SongTableHeader(
             columns = columns,
             titleWidth = titleWidth,
+            albumWidth = albumWidth,
             modifier = headerModifier,
         )
     }
@@ -245,12 +269,14 @@ internal fun LazyListScope.songTableHeaderItem(
  *
  * @param columns 列开关配置。
  * @param titleWidth 标题列宽度，与行内标题列保持一致。
+ * @param albumWidth 专辑列宽度，与行内专辑列保持一致。
  * @param modifier 外层修饰符，吸附场景下用于补充不透明背景。
  */
 @Composable
 internal fun SongTableHeader(
     columns: SongTableColumns = SongTableColumns(),
     titleWidth: Dp = SongTableDefaults.titleWidth,
+    albumWidth: Dp = SongTableDefaults.albumWidth,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -278,15 +304,19 @@ internal fun SongTableHeader(
             if (columns.showFavoriteColumn) {
                 SongTableSpacer(SongTableDefaults.favoriteWidth)
             }
+            // 与行内一致：收藏列之后的弹性空白
+            Spacer(modifier = Modifier.weight(1f))
             if (columns.showInlineActions) {
                 SongTableSpacer(SongTableDefaults.actionsWidth)
             }
+            // 与行内一致：操作列之后的弹性空白，使操作列居中于收藏列与专辑列之间
+            Spacer(modifier = Modifier.weight(1f))
             if (columns.showAlbumColumn) {
-                // 专辑列表头与行内一致，用 weight 吸收剩余宽度
+                // 专辑列表头与行内一致，使用测量后的固定宽度
                 SongTableCell(
                     text = stringResource(Res.string.album),
+                    width = albumWidth,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f),
                 )
             }
             if (columns.showMetaColumn) {

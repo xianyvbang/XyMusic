@@ -136,6 +136,15 @@ internal object SongTableDefaults {
     // 标题列最大宽度，避免极长歌名把整张表撑开
     val titleMaxWidth = 480.dp
 
+    // 专辑列默认宽度，未测量完成时使用
+    val albumWidth = 180.dp
+
+    // 专辑列最小宽度，保证少量专辑名可读
+    val albumMinWidth = 140.dp
+
+    // 专辑列最大宽度，避免专辑名过长时挤占悬浮操作列
+    val albumMaxWidth = 240.dp
+
     val favoriteWidth = 40.dp
     val actionsWidth = 100.dp
     val metaWidth = 120.dp
@@ -192,6 +201,8 @@ internal fun SongRow(
     onSelectionClick: (String) -> Unit = {},
     // 标题列宽度，由表头按当前列表最长歌名测量后传入，保证各行与表头对齐
     titleWidth: Dp = SongTableDefaults.titleWidth,
+    // 专辑列宽度，同样由表头按当前列表最长专辑名测量后传入
+    albumWidth: Dp = SongTableDefaults.albumWidth,
     showViewArtistMenuItem: Boolean = true,
     showViewAlbumMenuItem: Boolean = true,
 ) {
@@ -260,6 +271,8 @@ internal fun SongRow(
                     onClick = onFavoriteClick,
                 )
             }
+            // 收藏列之后的弹性空白
+            Spacer(modifier = Modifier.weight(1f))
             if (columns.showInlineActions) {
                 SongInlineActions(
                     hovered = hovered,
@@ -269,12 +282,14 @@ internal fun SongRow(
                     onMoreClick = onMoreClick,
                 )
             }
+            // 操作列之后的弹性空白：与前一处分摊剩余空间，使操作列居中于收藏列与专辑列之间
+            Spacer(modifier = Modifier.weight(1f))
             if (columns.showAlbumColumn) {
                 SongAlbumCell(
                     text = albumText,
                     onClick = onOpenAlbum,
-                    // 专辑列吸收表格剩余宽度，避免标题列被撑开后留下大片空白
-                    modifier = Modifier.weight(1f),
+                    // 专辑列使用测量后的固定宽度
+                    modifier = Modifier.width(albumWidth),
                 )
             }
             if (columns.showMetaColumn) {
@@ -819,6 +834,41 @@ internal fun rememberSongTableTitleWidth(songs: List<XyMusic>): Dp {
                 coverSpacing +
                 SongTableDefaults.titleExtraPadding
             width.coerceIn(SongTableDefaults.titleMinWidth, SongTableDefaults.titleMaxWidth)
+        }
+    }
+}
+
+/**
+ * 按当前歌曲列表中最长的专辑名称计算专辑列宽度。
+ *
+ * 同样只测量前 200 首，并在 [SongTableDefaults.albumMinWidth] 与
+ * [SongTableDefaults.albumMaxWidth] 之间夹紧，避免专辑名过长时挤占悬浮操作列；
+ * 超出列宽的专辑名仍可通过鼠标悬停提示查看完整内容。
+ *
+ * @param albumNames 当前表格已加载歌曲的专辑名称列表。
+ */
+@Composable
+internal fun rememberSongTableAlbumWidth(albumNames: List<String>): Dp {
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    // 与专辑单元格文本保持一致的字号
+    val albumTextStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)
+    // 用最长专辑名做缓存 key，列表变化但最长专辑名不变时无需重复测量
+    val longestAlbumName = remember(albumNames) {
+        albumNames.take(200).maxByOrNull { name -> name.length }.orEmpty()
+    }
+    return remember(longestAlbumName, textMeasurer, density, albumTextStyle) {
+        if (longestAlbumName.isBlank()) {
+            return@remember SongTableDefaults.albumWidth
+        }
+        val textWidth = textMeasurer.measure(
+            text = longestAlbumName,
+            style = albumTextStyle,
+            maxLines = 1,
+        ).size.width
+        with(density) {
+            val width = textWidth.toDp() + SongTableDefaults.titleExtraPadding
+            width.coerceIn(SongTableDefaults.albumMinWidth, SongTableDefaults.albumMaxWidth)
         }
     }
 }
