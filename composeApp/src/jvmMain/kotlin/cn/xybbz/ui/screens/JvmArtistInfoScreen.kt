@@ -19,9 +19,12 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -95,12 +98,12 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.JvmLazyListComponent
+import cn.xybbz.ui.components.JvmMusicSelectionActionBar
 import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.jvmLazyColumnBottomComponent
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
@@ -109,7 +112,6 @@ import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.LazyColumnParentComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -130,8 +132,7 @@ import xymusic.composeapp.generated.resources.artist_all_tracks
 import xymusic.composeapp.generated.resources.artist_cover
 import xymusic.composeapp.generated.resources.artist_count_format
 import xymusic.composeapp.generated.resources.artrist_info
-import xymusic.composeapp.generated.resources.close_24px
-import xymusic.composeapp.generated.resources.close_selection
+import xymusic.composeapp.generated.resources.check_24px
 import xymusic.composeapp.generated.resources.expand_description
 import xymusic.composeapp.generated.resources.no_description
 import xymusic.composeapp.generated.resources.pause_circle_24px
@@ -144,6 +145,7 @@ import xymusic.composeapp.generated.resources.reached_bottom
 import xymusic.composeapp.generated.resources.resemblance_artist
 import xymusic.composeapp.generated.resources.resume_playback
 import xymusic.composeapp.generated.resources.select
+import xymusic.composeapp.generated.resources.selection_done
 import xymusic.composeapp.generated.resources.shuffle_24px
 import xymusic.composeapp.generated.resources.songs_count_suffix
 
@@ -399,45 +401,40 @@ fun JvmArtistInfoScreen(
                         tabCounts = tabCounts,
                         onSelectTab = { selectedTab = it },
                     ) {
+                        // 选择模式下列表内操作栏承载全选与批量操作，这里只保留入口/完成按钮
                         if (selectedTab == TabListEnum.Music) {
-                            if (selectUiState.isOpen) {
-                                XySelectAllComponent(
-                                    isSelectAll = selectUiState.isSelectAll,
-                                    onSelectAll = {
-                                        artistInfoViewModel.selectControl.toggleSelectionAll(
-                                            musicPage.itemSnapshotList.items.map { it.itemId })
-                                    }
-                                )
-                                val closeSelectionText = stringResource(Res.string.close_selection)
-                                DesktopTooltipIconButton(
-                                    tooltip = closeSelectionText,
-                                    onClick = {
-                                        artistInfoViewModel.selectControl.dismiss()
-                                    },
-                                ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.close_24px),
-                                        contentDescription = closeSelectionText
-                                    )
-                                }
+                            val isSelecting = selectUiState.isOpen
+                            val actionText = if (isSelecting) {
+                                stringResource(Res.string.selection_done)
                             } else {
-                                val selectText = stringResource(Res.string.select)
-                                OutlinedButton(
-                                    onClick = {
+                                stringResource(Res.string.select)
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    if (isSelecting) {
+                                        artistInfoViewModel.selectControl.dismiss()
+                                    } else {
                                         artistInfoViewModel.selectControl.show(true)
-                                    },
-                                    modifier = Modifier.height(32.dp),
-                                    shape = RoundedCornerShape(XyTheme.dimens.corner),
-                                    contentPadding = PaddingValues(horizontal = 10.dp),
-                                ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.playlist_add_check_24px),
-                                        contentDescription = selectText,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(text = selectText)
-                                }
+                                    }
+                                },
+                                modifier = Modifier.height(32.dp),
+                                shape = RoundedCornerShape(XyTheme.dimens.corner),
+                                contentPadding = PaddingValues(horizontal = 10.dp),
+                            ) {
+                                Icon(
+                                    // 选择态切换为完成图标，明确当前点击会退出选择模式
+                                    painter = painterResource(
+                                        if (isSelecting) {
+                                            Res.drawable.check_24px
+                                        } else {
+                                            Res.drawable.playlist_add_check_24px
+                                        }
+                                    ),
+                                    contentDescription = actionText,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(text = actionText)
                             }
                         }
                     }
@@ -450,6 +447,32 @@ fun JvmArtistInfoScreen(
                                 title = stringResource(Res.string.artist_all_tracks),
                                 meta = "$musicCount${stringResource(Res.string.songs_count_suffix)}",
                             )
+                        }
+                        // 选择模式展开的批量操作栏，紧跟在“全部曲目”标题下方
+                        item(key = "artist_selection_bar") {
+                            AnimatedVisibility(
+                                visible = selectUiState.isOpen,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut(),
+                            ) {
+                                JvmMusicSelectionActionBar(
+                                    selectControl = artistInfoViewModel.selectControl,
+                                    allMusicIds = {
+                                        musicPage.itemSnapshotList.items.map { it.itemId }
+                                    },
+                                    dataSourceManager = artistInfoViewModel.dataSourceManager,
+                                    musicPlayContext = artistInfoViewModel.musicPlayContext,
+                                    db = artistInfoViewModel.db,
+                                    downloadDb = artistInfoViewModel.downloadDb,
+                                    musicController = artistInfoViewModel.musicController,
+                                    downloaderManager = artistInfoViewModel.downloaderManager,
+                                    modifier = Modifier.padding(
+                                        start = XyTheme.dimens.outerHorizontalPadding,
+                                        end = XyTheme.dimens.outerHorizontalPadding,
+                                        bottom = XyTheme.dimens.innerVerticalPadding,
+                                    ),
+                                )
+                            }
                         }
                         songTableItems(
                             tableKey = "artist_info_music",
