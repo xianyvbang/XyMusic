@@ -7,16 +7,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
@@ -29,6 +35,20 @@ import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.*
+
+
+/**
+ * 各歌曲表格的标题列宽度缓存。
+ * 表头测量一次后写入，所有行读取同一个状态，保证列宽与表头严格对齐；
+ * 使用 tableKey 区分不同页面/分区的表格，切换筛选或分页加载后自动更新。
+ */
+private val songTableTitleWidthStates = mutableMapOf<String, MutableState<Dp>>()
+
+/**
+ * 获取指定表格的标题列宽度状态，不存在时按默认宽度创建。
+ */
+private fun songTableTitleWidthState(tableKey: String): MutableState<Dp> =
+    songTableTitleWidthStates.getOrPut(tableKey) { mutableStateOf(SongTableDefaults.titleWidth) }
 
 
 /**
@@ -66,7 +86,13 @@ internal fun LazyListScope.songTableItems(
     showViewAlbumMenuItem: Boolean = true,
     stickyTableHeader: Boolean = false,
 ) {
-    songTableHeaderItem(tableKey = tableKey, columns = columns, sticky = stickyTableHeader)
+    val titleWidthState = songTableTitleWidthState(tableKey)
+    songTableHeaderItem(
+        tableKey = tableKey,
+        columns = columns,
+        sticky = stickyTableHeader,
+        songsProvider = { songs },
+    )
     itemsIndexed(
         items = songs,
         key = { index, music -> "${tableKey}_${music.itemId}_$index" }
@@ -92,6 +118,7 @@ internal fun LazyListScope.songTableItems(
             onSelectionClick = onSelectionClick,
             showViewArtistMenuItem = showViewArtistMenuItem,
             showViewAlbumMenuItem = showViewAlbumMenuItem,
+            titleWidth = titleWidthState.value,
         )
     }
 }
@@ -131,7 +158,13 @@ internal fun LazyListScope.songTableItems(
     showViewAlbumMenuItem: Boolean = true,
     stickyTableHeader: Boolean = false,
 ) {
-    songTableHeaderItem(tableKey = tableKey, columns = columns, sticky = stickyTableHeader)
+    val titleWidthState = songTableTitleWidthState(tableKey)
+    songTableHeaderItem(
+        tableKey = tableKey,
+        columns = columns,
+        sticky = stickyTableHeader,
+        songsProvider = { pagingItems.itemSnapshotList.items },
+    )
     items(
         count = pagingItems.itemCount,
         key = pagingItems.itemKey { music -> "${tableKey}_${music.itemId}" },
@@ -159,6 +192,7 @@ internal fun LazyListScope.songTableItems(
                 onSelectionClick = onSelectionClick,
                 showViewArtistMenuItem = showViewArtistMenuItem,
                 showViewAlbumMenuItem = showViewAlbumMenuItem,
+                titleWidth = titleWidthState.value,
             )
         }
     }
@@ -173,23 +207,34 @@ internal fun LazyListScope.songTableItems(
  * @param tableKey 表格标识，用于生成稳定的 key。
  * @param columns 列开关配置。
  * @param sticky 是否吸附在列表顶部。
+ * @param songsProvider 提供当前表格已加载的歌曲列表，用于测量标题列宽度。
  */
 @OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.songTableHeaderItem(
     tableKey: String,
     columns: SongTableColumns,
     sticky: Boolean,
+    songsProvider: () -> List<XyMusic>,
 ) {
+    // 表头负责测量标题列宽度，并同步给同一张表的所有行
+    val headerContent: @Composable (Modifier) -> Unit = { headerModifier ->
+        val titleWidth = rememberSongTableTitleWidth(songsProvider())
+        LaunchedEffect(titleWidth) {
+            songTableTitleWidthState(tableKey).value = titleWidth
+        }
+        SongTableHeader(
+            columns = columns,
+            titleWidth = titleWidth,
+            modifier = headerModifier,
+        )
+    }
     if (sticky) {
         stickyHeader(key = "${tableKey}_table_header") {
-            SongTableHeader(
-                columns = columns,
-                modifier = Modifier.background(MaterialTheme.colorScheme.background),
-            )
+            headerContent(Modifier.background(MaterialTheme.colorScheme.background))
         }
     } else {
         item(key = "${tableKey}_table_header") {
-            SongTableHeader(columns = columns)
+            headerContent(Modifier)
         }
     }
 }
@@ -199,11 +244,13 @@ internal fun LazyListScope.songTableHeaderItem(
  * 根据列配置决定显示哪些标题，以及哪些列只保留占位。
  *
  * @param columns 列开关配置。
+ * @param titleWidth 标题列宽度，与行内标题列保持一致。
  * @param modifier 外层修饰符，吸附场景下用于补充不透明背景。
  */
 @Composable
 internal fun SongTableHeader(
     columns: SongTableColumns = SongTableColumns(),
+    titleWidth: Dp = SongTableDefaults.titleWidth,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -214,9 +261,9 @@ internal fun SongTableHeader(
             ),
             horizontalArrangement = Arrangement.spacedBy(SongTableDefaults.columnSpacing),
         ) {
-            // 标题列表头与行内标题一致，按剩余空间自适应，保证歌名尽量完整显示
+            // 标题列表头与行内标题一致，使用测量出的固定宽度
             Box(
-                modifier = Modifier.weight(SongTableDefaults.titleWeight),
+                modifier = Modifier.width(titleWidth),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 XyText(
@@ -235,7 +282,12 @@ internal fun SongTableHeader(
                 SongTableSpacer(SongTableDefaults.actionsWidth)
             }
             if (columns.showAlbumColumn) {
-                SongTableCell(stringResource(Res.string.album), SongTableDefaults.albumWidth, MaterialTheme.colorScheme.onSurfaceVariant)
+                // 专辑列表头与行内一致，用 weight 吸收剩余宽度
+                SongTableCell(
+                    text = stringResource(Res.string.album),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
             }
             if (columns.showMetaColumn) {
                 SongTableCell(stringResource(Res.string.add_time), SongTableDefaults.metaWidth, MaterialTheme.colorScheme.onSurfaceVariant)

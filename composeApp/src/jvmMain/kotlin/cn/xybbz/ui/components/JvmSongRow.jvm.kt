@@ -34,7 +34,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -121,14 +123,21 @@ internal data class SongTableColumns(
 /**
  * 歌曲表格使用的固定宽度常量。
  * 统一放在这里，避免表头和行内容出现对不齐。
- * 标题列改为按剩余空间自适应，优先保证歌名完整显示；
- * 其余固定列在保证内容可读的前提下尽量收窄。
+ * 标题列宽度按当前列表最长歌名测量后与所有行共享，不再用 weight 强占剩余空间；
+ * 剩余空间交给专辑列吸收，其余固定列在保证内容可读的前提下尽量收窄。
  */
 internal object SongTableDefaults {
-    val titleWeight = 1f
+    // 列表为空或尚未测量完成时的标题列默认宽度
+    val titleWidth = 400.dp
+
+    // 标题列最小宽度，保证封面和少量歌名可读
+    val titleMinWidth = 220.dp
+
+    // 标题列最大宽度，避免极长歌名把整张表撑开
+    val titleMaxWidth = 480.dp
+
     val favoriteWidth = 40.dp
     val actionsWidth = 100.dp
-    val albumWidth = 180.dp
     val metaWidth = 120.dp
     val durationWidth = 60.dp
     val selectionWidth = 48.dp
@@ -137,6 +146,9 @@ internal object SongTableDefaults {
     val actionIconSize = 22.dp
     val actionButtonSpacing = 6.dp
     val columnSpacing = 12.dp
+
+    // 标题列测量时额外预留的余量，避免歌名刚好压线被省略号截断
+    val titleExtraPadding = 8.dp
 }
 
 /**
@@ -178,6 +190,8 @@ internal fun SongRow(
         music.show()
     },
     onSelectionClick: (String) -> Unit = {},
+    // 标题列宽度，由表头按当前列表最长歌名测量后传入，保证各行与表头对齐
+    titleWidth: Dp = SongTableDefaults.titleWidth,
     showViewArtistMenuItem: Boolean = true,
     showViewAlbumMenuItem: Boolean = true,
 ) {
@@ -237,8 +251,8 @@ internal fun SongRow(
                 fallbackCoverUrl = coverUrls.fallbackUrl,
                 ifPlay = rowIfPlay,
                 onOpenArtist = onOpenArtist,
-                // 标题列占据剩余空间，保证歌名尽量完整显示
-                modifier = Modifier.weight(SongTableDefaults.titleWeight),
+                // 标题列按测量出的内容宽度固定，不再强占剩余空间
+                modifier = Modifier.width(titleWidth),
             )
             if (columns.showFavoriteColumn) {
                 SongFavoriteCell(
@@ -259,6 +273,8 @@ internal fun SongRow(
                 SongAlbumCell(
                     text = albumText,
                     onClick = onOpenAlbum,
+                    // 专辑列吸收表格剩余宽度，避免标题列被撑开后留下大片空白
+                    modifier = Modifier.weight(1f),
                 )
             }
             if (columns.showMetaColumn) {
@@ -673,12 +689,14 @@ private fun SongCover(
 
 /**
  * 专辑单元格。
+ * 宽度由外部传入，用于吸收表格剩余空间；
  * 专辑名称被截断时，鼠标移入展示完整名称提示。
  */
 @Composable
 private fun SongAlbumCell(
     text: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
@@ -687,7 +705,7 @@ private fun SongAlbumCell(
 
     val content: @Composable () -> Unit = {
         Box(
-            modifier = Modifier.width(SongTableDefaults.albumWidth),
+            modifier = modifier,
             contentAlignment = Alignment.CenterStart,
         ) {
             Text(
@@ -722,18 +740,22 @@ private fun SongAlbumCell(
 }
 
 /**
- * 表格中的固定宽度文本单元格。
+ * 表格中的文本单元格。
+ * width 为空时不限制宽度，由调用方通过 modifier（例如 weight）决定尺寸。
  */
 @Composable
 internal fun SongTableCell(
     text: String,
-    width: Dp,
+    width: Dp? = null,
     color: Color,
     textAlign: TextAlign = TextAlign.Start,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
-    Box(modifier = modifier.width(width), contentAlignment = Alignment.CenterStart) {
+    Box(
+        modifier = modifier.then(if (width == null) Modifier else Modifier.width(width)),
+        contentAlignment = Alignment.CenterStart,
+    ) {
         XyText(
             text = text,
             color = color,
@@ -757,6 +779,48 @@ internal fun SongTableCell(
 @Composable
 internal fun SongTableSpacer(width: Dp) {
     Spacer(modifier = Modifier.width(width))
+}
+
+/**
+ * 按当前歌曲列表中最长的歌名计算标题列宽度。
+ *
+ * 只用列表前 200 首做测量，避免超长分页列表每次刷新都全量测量；
+ * 宽度限制在 [SongTableDefaults.titleMinWidth] 与 [SongTableDefaults.titleMaxWidth] 之间，
+ * 既保证歌名尽量完整显示，又不会因为个别超长歌名把整张表撑开。
+ *
+ * @param songs 当前表格已加载的歌曲列表。
+ */
+@Composable
+internal fun rememberSongTableTitleWidth(songs: List<XyMusic>): Dp {
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    // 与标题文本保持一致的字号和字重，避免测量结果偏窄导致省略号截断
+    val titleTextStyle = MaterialTheme.typography.bodyMedium.copy(
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Medium,
+    )
+    val coverSpacing = XyTheme.dimens.innerVerticalPadding
+    // 用最长歌名的文本做缓存 key，列表变化但最长歌名不变时无需重复测量
+    val longestName = remember(songs) {
+        songs.take(200).maxByOrNull { music -> music.name.length }?.name.orEmpty()
+    }
+    return remember(longestName, textMeasurer, density, titleTextStyle, coverSpacing) {
+        if (longestName.isBlank()) {
+            return@remember SongTableDefaults.titleWidth
+        }
+        val textWidth = textMeasurer.measure(
+            text = longestName,
+            style = titleTextStyle,
+            maxLines = 1,
+        ).size.width
+        with(density) {
+            val width = textWidth.toDp() +
+                SongTableDefaults.coverSize +
+                coverSpacing +
+                SongTableDefaults.titleExtraPadding
+            width.coerceIn(SongTableDefaults.titleMinWidth, SongTableDefaults.titleMaxWidth)
+        }
+    }
 }
 
 internal fun defaultSongAccentColor(
