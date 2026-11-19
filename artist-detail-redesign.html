@@ -225,19 +225,13 @@
   .readout .val{font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:-.01em;}
   .vr{width:1px;align-self:stretch;background:var(--line);margin:0 0 2px;}
 
-  /* ---------- 可点击读数 ---------- */
+  /* ---------- 概览读数 ---------- */
   .meter{
     margin-top:24px;display:flex;border:1px solid var(--line);border-radius:10px;
     padding:4px 8px;background:color-mix(in srgb, var(--surface-2) 60%, transparent);
   }
-  .metric{flex:1;min-width:0;padding:12px 16px;display:flex;flex-direction:column;gap:5px;border-radius:7px;position:relative;transition:.18s ease;}
-  .metric.clickable{cursor:pointer;}
-  .metric.clickable:hover{background:var(--wash);}
-  .metric.clickable::after{
-    content:"";position:absolute;left:16px;bottom:6px;height:2px;width:18px;background:var(--accent);
-    border-radius:2px;transition:width .25s ease;
-  }
-  .metric.clickable:hover::after{width:calc(100% - 32px);}
+  /* 概览读数：静态统计卡，不再承担 tab 跳转 */
+  .metric{flex:1;min-width:0;padding:12px 16px;display:flex;flex-direction:column;gap:5px;border-radius:7px;position:relative;}
   .metric .v{font-size:17px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;}
   .metric .s{font-size:10.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .metric-sep{width:1px;background:var(--line);margin:12px 0;}
@@ -529,6 +523,7 @@
     .bio{font-size:11.5px;}
     .meter{flex-wrap:wrap;}
     .metric{flex:1 1 45%;}
+    .metric .v{font-size:14px;}
     .metric-sep{display:none;}
     .subtabs{padding:0 18px;gap:18px;overflow-x:auto;}
     .subtab{font-size:12px;white-space:nowrap;}
@@ -685,12 +680,13 @@
               </div>
             </section>
 
+            <!-- 概览读数：与下方章节导航解耦，只展示统计语境，不再重复 tab 计数 -->
             <div class="meter">
-              <div class="metric clickable" data-tab="music"><div class="v">428</div><div class="s">曲目 · 32 小时 18 分</div></div>
+              <div class="metric"><div class="v">32 小时 18 分</div><div class="s">总时长 · 全部曲目</div></div>
               <div class="metric-sep"></div>
-              <div class="metric clickable" data-tab="albums"><div class="v">38</div><div class="s">专辑 · 1986 — 2024</div></div>
+              <div class="metric"><div class="v">4 分 32 秒</div><div class="s">平均曲长</div></div>
               <div class="metric-sep"></div>
-              <div class="metric clickable" data-tab="similar"><div class="v">12</div><div class="s">相似艺术家</div></div>
+              <div class="metric"><div class="v">1986 — 2024</div><div class="s">专辑跨度</div></div>
               <div class="metric-sep"></div>
               <div class="metric"><div class="v">86</div><div class="s">已收藏曲目</div></div>
             </div>
@@ -1151,10 +1147,6 @@ function switchTab(tab){
 }
 
 $$('#subtabs [data-tab]').forEach(btn => btn.onclick = () => switchTab(btn.dataset.tab));
-$$('.meter [data-tab]').forEach(btn => btn.onclick = () => {
-  switchTab(btn.dataset.tab);
-  $('#subtabs').scrollIntoView({ behavior:'smooth', block:'start' });
-});
 $$('[data-goto-tab]').forEach(btn => btn.onclick = () => {
   switchTab(btn.dataset.gotoTab);
   $('#subtabs').scrollIntoView({ behavior:'smooth', block:'start' });
