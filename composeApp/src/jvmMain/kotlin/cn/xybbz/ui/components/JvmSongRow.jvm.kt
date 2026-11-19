@@ -117,19 +117,22 @@ internal data class SongTableColumns(
 /**
  * 歌曲表格使用的固定宽度常量。
  * 统一放在这里，避免表头和行内容出现对不齐。
+ * 标题列改为按剩余空间自适应，优先保证歌名完整显示；
+ * 其余固定列在保证内容可读的前提下尽量收窄。
  */
 internal object SongTableDefaults {
-    val titleWidth = 320.dp
-    val favoriteWidth = 52.dp
-    val actionsWidth = 120.dp
-    val albumWidth = 240.dp
-    val metaWidth = 140.dp
-    val durationWidth = 72.dp
-    val selectionWidth = 52.dp
+    val titleWeight = 1f
+    val favoriteWidth = 40.dp
+    val actionsWidth = 100.dp
+    val albumWidth = 180.dp
+    val metaWidth = 120.dp
+    val durationWidth = 60.dp
+    val selectionWidth = 48.dp
     val coverSize = 40.dp
-    val actionButtonSize = 32.dp
-    val actionIconSize = 24.dp
-    val actionButtonSpacing = 8.dp
+    val actionButtonSize = 28.dp
+    val actionIconSize = 22.dp
+    val actionButtonSpacing = 6.dp
+    val columnSpacing = 12.dp
 }
 
 /**
@@ -220,6 +223,7 @@ internal fun SongRow(
                 horizontal = XyTheme.dimens.innerHorizontalPadding,
                 vertical = XyTheme.dimens.outerVerticalPadding + XyTheme.dimens.outerVerticalPadding / 2
             ),
+            horizontalArrangement = Arrangement.spacedBy(SongTableDefaults.columnSpacing),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SongTitleCell(
@@ -228,7 +232,9 @@ internal fun SongRow(
                 coverUrl = coverUrls.primaryUrl,
                 fallbackCoverUrl = coverUrls.fallbackUrl,
                 ifPlay = rowIfPlay,
-                onOpenArtist = onOpenArtist
+                onOpenArtist = onOpenArtist,
+                // 标题列占据剩余空间，保证歌名尽量完整显示
+                modifier = Modifier.weight(SongTableDefaults.titleWeight),
             )
             if (columns.showFavoriteColumn) {
                 SongFavoriteCell(
@@ -466,12 +472,13 @@ private fun SongTitleCell(
     fallbackCoverUrl: String?,
     ifPlay: Boolean,
     onOpenArtist: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val artistsText = music.artists?.joinToString().orEmpty()
     val mediaText = getMusicMedia(music.codec, music.bitRate)
 
     Row(
-        modifier = Modifier.width(SongTableDefaults.titleWidth),
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
     ) {
@@ -480,7 +487,10 @@ private fun SongTitleCell(
             fallbackCoverUrl = fallbackCoverUrl,
             accent = accentColor,
         )
-        Column(verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center,
+        ) {
             XyText(
                 text = music.name,
                 color = if (ifPlay) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,

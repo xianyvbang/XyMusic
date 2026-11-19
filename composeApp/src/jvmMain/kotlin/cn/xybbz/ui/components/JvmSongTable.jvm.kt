@@ -2,6 +2,8 @@ package cn.xybbz.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,8 +12,12 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
@@ -19,6 +25,7 @@ import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.*
@@ -204,9 +211,23 @@ internal fun SongTableHeader(
             paddingValues = PaddingValues(
                 horizontal = XyTheme.dimens.innerHorizontalPadding,
                 vertical = XyTheme.dimens.outerVerticalPadding
-            )
+            ),
+            horizontalArrangement = Arrangement.spacedBy(SongTableDefaults.columnSpacing),
         ) {
-            SongTableCell(stringResource(Res.string.title), SongTableDefaults.titleWidth, MaterialTheme.colorScheme.onSurfaceVariant)
+            // 标题列表头与行内标题一致，按剩余空间自适应，保证歌名尽量完整显示
+            Box(
+                modifier = Modifier.weight(SongTableDefaults.titleWeight),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                XyText(
+                    text = stringResource(Res.string.title),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.Normal,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                )
+            }
             if (columns.showFavoriteColumn) {
                 SongTableSpacer(SongTableDefaults.favoriteWidth)
             }
