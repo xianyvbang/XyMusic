@@ -38,6 +38,7 @@ import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.platform.ContextWrapper
+import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
@@ -57,6 +58,10 @@ class MemoryManagementViewModel(
      * 下载管理器用于清库前同步删除下载任务对应的磁盘文件。
      */
     private val downloaderManager: DownloaderManager,
+    /**
+     * 会话协调器用于清库后重置会话状态，保证重新登录时能触发页面数据刷新。
+     */
+    private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {
 
     var cacheSize by mutableStateOf("0B")
@@ -160,6 +165,9 @@ class MemoryManagementViewModel(
             musicController.clearPlayerList()
             withContext(Dispatchers.IO) {
                 dataSourceManager.release()
+                // 清库后同步重置会话状态，避免会话里仍保留已删除的旧连接，
+                // 重新登录时 Ready 状态不发生变化，导致首页等页面不刷新数据。
+                sessionCoordinator.clear()
                 DatabaseUtils.clearAllDatabaseData(db, downloadDb, downloaderManager)
                 settingsManager.initSet()
             }
