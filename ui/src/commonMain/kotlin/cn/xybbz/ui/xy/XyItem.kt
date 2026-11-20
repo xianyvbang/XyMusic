@@ -94,6 +94,13 @@ import xymusic.ui.generated.resources.image_suffix
 import xymusic.ui.generated.resources.selected
 
 /**
+ * ui 模块内的「已下载」图标资源。
+ * 生成的 Res 对象只在 ui 模块内可见，这里以公开的 DrawableResource 暴露，
+ * 供 composeApp 等依赖模块复用同一份矢量资源，避免各模块重复维护同一图标。
+ */
+val downloadDoneIcon: DrawableResource = Res.drawable.download_done_24px
+
+/**
  * 列表单项
  * @param [modifier] 修饰符
  * @param [name] 名称

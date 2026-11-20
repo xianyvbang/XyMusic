@@ -55,6 +55,7 @@ import cn.xybbz.config.select.SelectControl
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.core.DownloadRequest
 import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -66,6 +67,7 @@ import xymusic.composeapp.generated.resources.delete_local_permanently
 import xymusic.composeapp.generated.resources.delete_permanently
 import xymusic.composeapp.generated.resources.deselect_all
 import xymusic.composeapp.generated.resources.download
+import xymusic.composeapp.generated.resources.downloaded
 import xymusic.composeapp.generated.resources.music_remove_from_playlist
 import xymusic.composeapp.generated.resources.play_selected
 import xymusic.composeapp.generated.resources.please_select
@@ -112,7 +114,17 @@ fun JvmMusicSelectionActionBar(
         coroutineScope.launch {
             val downloadTypes = getDownloadType(dataSourceManager.dataSourceType)
             val itemIds = selectControl.selectMusicIdList.toList()
-            val musicList = db.musicDao.selectByIds(itemIds)
+            val mediaLibraryId = dataSourceManager.getConnectionId().toString()
+            // 已下载完成的歌曲不再重复入队，只有从本地歌曲中删除后才允许重新下载
+            val downloadedIds = downloadDb.downloadDao
+                .getDataByUids(
+                    musicIds = itemIds,
+                    status = DownloadStatus.COMPLETED,
+                    mediaLibraryId = mediaLibraryId,
+                )
+                .map { it.uid }
+                .toSet()
+            val musicList = db.musicDao.selectByIds(itemIds).filterNot { it.itemId in downloadedIds }
             val requests = musicList.map { musicData ->
                 DownloadRequest(
                     url = musicData.downloadUrl,
@@ -123,13 +135,16 @@ fun JvmMusicSelectionActionBar(
                     type = downloadTypes.toString(),
                     cover = musicData.pic,
                     duration = musicData.runTimeTicks,
-                    mediaLibraryId = dataSourceManager.getConnectionId().toString(),
+                    mediaLibraryId = mediaLibraryId,
                     data = jsonSerializer.encodeToString(musicData)
                 )
             }
             if (requests.isNotEmpty()) {
                 downloaderManager.enqueue(*requests.toTypedArray())
                 MessageUtils.sendPopTip(Res.string.add_download_list)
+            } else if (itemIds.isNotEmpty()) {
+                // 选中歌曲全部已下载时给出提示，避免用户误以为点击无效
+                MessageUtils.sendPopTip(Res.string.downloaded)
             }
         }.invokeOnCompletion { selectControl.dismiss() }
     }

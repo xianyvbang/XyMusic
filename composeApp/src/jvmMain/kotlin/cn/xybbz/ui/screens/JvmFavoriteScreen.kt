@@ -72,6 +72,8 @@ fun JvmFavoriteScreen(
         onLoadArtistInfos = artistInfoLoader.loadArtistInfos,
     )
     val favoriteList by favoriteViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    // 已下载完成的音乐 ID 集合，用于行内展示已下载图标并禁止重复下载
+    val downloadMusicIds by favoriteViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
     val currentPlayingMusicIdFlow = remember(favoriteViewModel) {
         favoriteViewModel.musicController.musicInfoFlow.map { musicInfo ->
             musicInfo?.itemId
@@ -90,6 +92,7 @@ fun JvmFavoriteScreen(
                 pagingItems = favoriteMusicListPage,
                 columns = JvmFavoriteMusicTableColumns,
                 ifFavorite = { music -> favoriteList.contains(music.itemId) },
+                ifDownloaded = { music -> music.itemId in downloadMusicIds },
                 currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
                 onSongClick = { index, music ->
                     favoriteViewModel.musicPlayContext.favorite(

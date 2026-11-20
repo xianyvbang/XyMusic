@@ -79,6 +79,8 @@ internal fun LazyListScope.songTableItems(
     durationText: (XyMusic) -> String = { DateUtil.millisecondsToTime(it.runTimeTicks) },
     accentColor: (Int, XyMusic) -> androidx.compose.ui.graphics.Color = ::defaultSongAccentColor,
     ifFavorite: (XyMusic) -> Boolean = { it.ifFavoriteStatus },
+    // 已下载完成判断，用于行内展示已下载图标并禁止重复下载
+    ifDownloaded: (XyMusic) -> Boolean = { false },
     currentPlayingMusicIdFlow: Flow<String?>,
     isSelected: (XyMusic) -> Boolean = { false },
     onSongClick: (Int, XyMusic) -> Unit,
@@ -118,6 +120,7 @@ internal fun LazyListScope.songTableItems(
             index = index,
             columns = columns,
             ifFavorite = ifFavorite(music),
+            isDownloaded = ifDownloaded(music),
             currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
             albumText = albumText(music),
             metaText = metaText(music),
@@ -163,6 +166,8 @@ internal fun LazyListScope.songTableItems(
     durationText: (XyMusic) -> String = { DateUtil.millisecondsToTime(it.runTimeTicks) },
     accentColor: (Int, XyMusic) -> androidx.compose.ui.graphics.Color = ::defaultSongAccentColor,
     ifFavorite: (XyMusic) -> Boolean = { it.ifFavoriteStatus },
+    // 已下载完成判断，用于行内展示已下载图标并禁止重复下载
+    ifDownloaded: (XyMusic) -> Boolean = { false },
     currentPlayingMusicIdFlow: Flow<String?>,
     isSelected: (XyMusic) -> Boolean = { false },
     onSongClick: (Int, XyMusic) -> Unit,
@@ -201,6 +206,7 @@ internal fun LazyListScope.songTableItems(
                 index = index,
                 columns = columns,
                 ifFavorite = ifFavorite(music),
+                isDownloaded = ifDownloaded(music),
                 currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
                 albumText = albumText(music),
                 metaText = metaText(music),

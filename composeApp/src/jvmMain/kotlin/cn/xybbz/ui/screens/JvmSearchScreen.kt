@@ -89,6 +89,8 @@ fun JvmSearchScreen(
     dataSourceManager: DataSourceManager = koinInject(),
 ) {
     val favoriteList by searchViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    // 已下载完成的音乐 ID 集合，用于行内展示已下载图标并禁止重复下载
+    val downloadMusicIds by searchViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
     val routeSearchQuery = searchQuery.trim()
     val artistInfoLoader = rememberMusicArtistInfoLoader(dataSourceManager)
     val currentPlayingMusicIdFlow = remember(searchViewModel) {
@@ -140,6 +142,7 @@ fun JvmSearchScreen(
                 searchViewModel.isSearchLoad
             },
             onFavoriteList = { favoriteList },
+            downloadedMusicIds = downloadMusicIds,
             currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
             musicController = searchViewModel.musicController,
             onDownloadMusic = searchViewModel::downloadMusic,
@@ -161,6 +164,8 @@ fun JvmSearchResultScreen(
     onLoadArtistInfos: (List<String>) -> Unit,
     onLoadingState: () -> Boolean,
     onFavoriteList: () -> List<String>,
+    // 已下载完成的音乐 ID 列表，用于标记搜索结果中的已下载歌曲
+    downloadedMusicIds: List<String>,
     currentPlayingMusicIdFlow: Flow<String?>,
     musicController: MusicCommonController,
     onDownloadMusic: (XyMusic) -> Unit,
@@ -242,6 +247,7 @@ fun JvmSearchResultScreen(
                 songs = musicList,
                 columns = SearchMusicTableColumns,
                 ifFavorite = { music -> music.itemId in onFavoriteList() },
+                ifDownloaded = { music -> music.itemId in downloadedMusicIds },
                 currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
                 onSongClick = { _, music -> onAddMusic(music) },
                 onOpenAlbum = { music ->

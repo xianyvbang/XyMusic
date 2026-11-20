@@ -237,6 +237,8 @@ fun JvmAlbumInfoScreen(
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
 
     val favoriteSet by albumInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    // 已下载完成的音乐 ID 集合，用于行内展示已下载图标并禁止重复下载
+    val downloadMusicIds by albumInfoViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
     val selectUiState by albumInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val musicInfo by albumInfoViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val playState by albumInfoViewModel.musicController.stateFlow.collectAsStateWithLifecycle()
@@ -623,6 +625,7 @@ fun JvmAlbumInfoScreen(
                     showSelectionColumn = selectUiState.isOpen,
                 ),
                 ifFavorite = { music -> music.itemId in favoriteSet },
+                ifDownloaded = { music -> music.itemId in downloadMusicIds },
                 currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
                 isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
                 onSongClick = { _, music ->

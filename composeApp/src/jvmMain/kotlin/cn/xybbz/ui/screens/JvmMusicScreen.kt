@@ -90,6 +90,8 @@ fun JvmMusicScreen(
     )
     val homeMusicPager = musicViewModel.listPage.collectAsLazyPagingItems()
     val favoriteSet by musicViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    // 已下载完成的音乐 ID 集合，用于行内展示已下载图标并禁止重复下载
+    val downloadMusicIds by musicViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
     val sortBy by musicViewModel.sortBy.collectAsStateWithLifecycle()
     val selectUiState by musicViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val currentPlayingMusicIdFlow = remember(musicViewModel) {
@@ -185,6 +187,7 @@ fun JvmMusicScreen(
                     showSelectionColumn = selectUiState.isOpen,
                 ),
                 ifFavorite = { music -> music.itemId in favoriteSet },
+                ifDownloaded = { music -> music.itemId in downloadMusicIds },
                 currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
                 isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
                 onSongClick = { index, music ->

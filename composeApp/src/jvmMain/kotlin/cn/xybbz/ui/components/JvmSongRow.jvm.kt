@@ -65,6 +65,7 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.downloadDoneIcon
 import cn.xybbz.ui.xy.rememberSquareRequestSize
 import cn.xybbz.viewmodel.SidebarPlaylistViewModel
 import kotlinx.coroutines.flow.Flow
@@ -88,6 +89,7 @@ import xymusic.composeapp.generated.resources.chevron_right_24px
 import xymusic.composeapp.generated.resources.double_speed
 import xymusic.composeapp.generated.resources.download
 import xymusic.composeapp.generated.resources.download_24px
+import xymusic.composeapp.generated.resources.downloaded
 import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.keyboard_arrow_right_24px
 import xymusic.composeapp.generated.resources.more_horiz_24px
@@ -177,6 +179,8 @@ internal fun SongRow(
     index: Int,
     columns: SongTableColumns,
     ifFavorite: Boolean,
+    // 当前歌曲是否已下载完成，用于展示已下载图标并禁止重复下载
+    isDownloaded: Boolean = false,
     currentPlayingMusicIdFlow: Flow<String?>,
     modifier: Modifier = Modifier,
     albumText: String = defaultSongAlbumText(music),
@@ -261,6 +265,7 @@ internal fun SongRow(
                 coverUrl = coverUrls.primaryUrl,
                 fallbackCoverUrl = coverUrls.fallbackUrl,
                 ifPlay = rowIfPlay,
+                isDownloaded = isDownloaded,
                 onOpenArtist = onOpenArtist,
                 // 标题列按测量出的内容宽度固定，不再强占剩余空间
                 modifier = Modifier.width(titleWidth),
@@ -277,6 +282,7 @@ internal fun SongRow(
                 SongInlineActions(
                     hovered = hovered,
                     showDownloadButton = columns.showInlineDownloadButton,
+                    isDownloaded = isDownloaded,
                     onDownloadClick = onDownloadClick,
                     onAddToPlaylistClick = onAddToPlaylistClick,
                     onMoreClick = onMoreClick,
@@ -504,6 +510,7 @@ private fun SongTitleCell(
     coverUrl: String?,
     fallbackCoverUrl: String?,
     ifPlay: Boolean,
+    isDownloaded: Boolean,
     onOpenArtist: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -533,13 +540,29 @@ private fun SongTitleCell(
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
             )
 
-            XyTextSub(
-                text = "$mediaText $artistsText",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                onClick = onOpenArtist,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                // 已下载完成时在副标题前展示下载完成图标，与移动端列表保持一致
+                if (isDownloaded) {
+                    Icon(
+                        painter = painterResource(downloadDoneIcon),
+                        contentDescription = stringResource(Res.string.downloaded),
+                        modifier = Modifier.size(14.dp),
+                        tint = XyTheme.extendedColors.success,
+                    )
+                }
+                XyTextSub(
+                    text = "$mediaText $artistsText",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                    onClick = onOpenArtist,
+                    // 文本占满剩余宽度，超长时在图标右侧省略
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+            }
         }
     }
 }
@@ -594,6 +617,7 @@ private fun SongSelectionCell(
 private fun SongInlineActions(
     hovered: Boolean,
     showDownloadButton: Boolean,
+    isDownloaded: Boolean,
     onDownloadClick: () -> Unit,
     onAddToPlaylistClick: () -> Unit,
     onMoreClick: () -> Unit,
@@ -616,11 +640,22 @@ private fun SongInlineActions(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (showDownloadButton) {
-                    HoverActionIcon(
-                        iconRes = Res.drawable.download_24px,
-                        tooltip = stringResource(Res.string.download),
-                        onClick = onDownloadClick,
-                    )
+                    if (isDownloaded) {
+                        // 已下载完成：仅展示下载完成图标并禁用点击，避免重复下载
+                        HoverActionIcon(
+                            iconRes = downloadDoneIcon,
+                            tooltip = stringResource(Res.string.downloaded),
+                            enabled = false,
+                            contentColor = XyTheme.extendedColors.success,
+                            onClick = {},
+                        )
+                    } else {
+                        HoverActionIcon(
+                            iconRes = Res.drawable.download_24px,
+                            tooltip = stringResource(Res.string.download),
+                            onClick = onDownloadClick,
+                        )
+                    }
                 }
                 HoverActionIcon(
                     iconRes = Res.drawable.playlist_add_24px,
@@ -645,6 +680,8 @@ private fun HoverActionIcon(
     iconRes: DrawableResource,
     tooltip: String,
     enabled: Boolean = true,
+    // 自定义图标颜色，为空时按启用状态使用默认的次要文本色
+    contentColor: Color? = null,
     onClick: () -> Unit,
 ) {
     DesktopTooltipIconButton(
@@ -657,7 +694,7 @@ private fun HoverActionIcon(
             painter = painterResource(iconRes),
             contentDescription = null,
             modifier = Modifier.size(SongTableDefaults.actionIconSize),
-            tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(
+            tint = contentColor ?: if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(
                 alpha = 0.38f
             ),
         )
