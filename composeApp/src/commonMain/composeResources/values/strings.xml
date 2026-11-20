@@ -281,6 +281,8 @@
     <string name="song_info">歌曲信息</string>
     <string name="delete_permanently">永久删除</string>
     <string name="delete_local_permanently">删除本地文件</string>
+    <string name="delete_local_music_title">删除本地歌曲</string>
+    <string name="confirm_delete_local_music">注意! 删除本地歌曲会同时删除已下载的音乐文件, 确定要删除这%1$d首歌曲吗?</string>
     <string name="volume_value_setting">调节音量</string>
     <string name="play_settings">播放过度设置-淡入淡出</string>
     <string name="play_settings_time">播放过度设置-淡入淡出时长</string>

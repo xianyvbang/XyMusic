@@ -94,6 +94,9 @@ internal fun LazyListScope.songTableItems(
     },
     onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
     onSelectionClick: (String) -> Unit = {},
+    // 行级选择回调：同一首歌存在多行（如多条下载记录）时，用行下标区分具体行
+    isSelectedAt: ((Int, XyMusic) -> Boolean)? = null,
+    onSelectionClickAt: ((Int, XyMusic) -> Unit)? = null,
     showViewArtistMenuItem: Boolean = true,
     showViewAlbumMenuItem: Boolean = true,
     stickyTableHeader: Boolean = false,
@@ -120,7 +123,7 @@ internal fun LazyListScope.songTableItems(
             metaText = metaText(music),
             durationText = durationText(music),
             accentColor = accentColor(index, music),
-            isSelected = isSelected(music),
+            isSelected = isSelectedAt?.invoke(index, music) ?: isSelected(music),
             onClick = { onSongClick(index, music) },
             onOpenAlbum = { onOpenAlbum(music) },
             onOpenArtist = { onOpenArtist(music) },
@@ -128,7 +131,14 @@ internal fun LazyListScope.songTableItems(
             onDownloadClick = { onDownloadClick(music) },
             onAddToPlaylistClick = { onAddToPlaylistClick(music) },
             onMoreClick = { onMoreClick(music) },
-            onSelectionClick = onSelectionClick,
+            onSelectionClick = { musicId ->
+                val rowSelectionClick = onSelectionClickAt
+                if (rowSelectionClick != null) {
+                    rowSelectionClick(index, music)
+                } else {
+                    onSelectionClick(musicId)
+                }
+            },
             showViewArtistMenuItem = showViewArtistMenuItem,
             showViewAlbumMenuItem = showViewAlbumMenuItem,
             titleWidth = columnWidths.titleWidth,

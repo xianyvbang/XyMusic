@@ -26,6 +26,7 @@ import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.download.enums.DownloadStatus
@@ -47,12 +48,20 @@ class LocalViewModel(
     val downloadDb: DownloadDatabaseClient,
     private val dataSourceManager: DataSourceManager,
     val musicController: MusicCommonController,
-    val musicPlayContext: MusicPlayContext
+    val musicPlayContext: MusicPlayContext,
+    // 本地歌曲删除需要借助下载管理器同步清理下载记录和磁盘文件
+    private val downloaderManager: DownloaderManager
 ) : ViewModel() {
 
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
-    private val downloadMusicTasks: StateFlow<List<XyDownload>> =
+    /**
+     * 本地已下载歌曲对应的下载任务列表。
+     *
+     * 列表页需要按下载记录 id 做选择与删除，因此对外暴露原始任务，
+     * 由页面自己映射音乐信息，避免同名歌曲或重复下载记录串选。
+     */
+    val downloadMusicTasks: StateFlow<List<XyDownload>> =
         downloadDb.downloadDao.getAllMusicTasksFlow(
             notTypeData = DownloadTypes.APK.toString(),
             status = DownloadStatus.COMPLETED,
@@ -102,6 +111,21 @@ class LocalViewModel(
     private fun XyDownload.toLocalMusic(): XyMusic? {
         return data?.let {
             jsonSerializer.decodeFromString<XyMusic>(it)
+        }
+    }
+
+    /**
+     * 按下载记录 id 删除本地已下载歌曲，同时清理下载记录与磁盘上的音乐文件。
+     *
+     * @param downloadIds 需要删除的下载任务 id 列表，支持批量删除。
+     */
+    fun deleteLocalMusicByIds(downloadIds: List<Long>) {
+        if (downloadIds.isEmpty()) {
+            return
+        }
+        viewModelScope.launch {
+            // 直接按下载记录 id 删除，文件与记录由下载调度器同步清理
+            downloaderManager.deleteAndAwait(*downloadIds.toLongArray(), deleteFile = true)
         }
     }
 }
