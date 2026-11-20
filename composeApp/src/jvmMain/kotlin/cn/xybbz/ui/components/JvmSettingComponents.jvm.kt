@@ -1132,7 +1132,7 @@ internal fun JvmSettingSwitchRow(
             }
         },
         trailing = {
-            JvmSettingSwitch(
+            JvmCompactSwitch(
                 checked = checked,
                 enabled = enabled,
                 onCheckedChange = {
@@ -1149,13 +1149,14 @@ internal fun JvmSettingSwitchRow(
  * 设计稿样式的开关控件。
  *
  * 使用 36×20 的胶囊轨道与 14dp 圆形滑块，替代 Material 默认的大尺寸开关。
+ * 供设置页与专辑详情等需要紧凑开关行的桌面页面复用。
  *
  * @param checked 当前开关状态。
  * @param enabled 是否允许交互。
  * @param onCheckedChange 状态变化回调。
  */
 @Composable
-private fun JvmSettingSwitch(
+internal fun JvmCompactSwitch(
     checked: Boolean,
     enabled: Boolean,
     onCheckedChange: (Boolean) -> Unit,

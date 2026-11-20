@@ -1026,4 +1026,6 @@
     <string name="custom_api_screen_text_01">验证信息作为请求头传入,使用%1$s作为Key为验证信息,更多信息请参考</string>
     <string name="custom_api_screen_text_02">验证信息</string>
     <string name="transcode_audio_bit_rate_type_text_01">不转码</string>
+    <string name="jvm_album_info_text_02">保存播放记录</string>
+    <string name="jvm_album_info_text_03">开启后下次从断点继续</string>
 </resources>
