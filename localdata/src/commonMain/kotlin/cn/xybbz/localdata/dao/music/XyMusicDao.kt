@@ -89,6 +89,8 @@ interface XyMusicDao {
                         musicId = it.itemId,
                         pic = it.pic,
                         name = it.name,
+                        // 首页缓存单独保存下载地址，避免后续还原时丢失
+                        downloadUrl = it.downloadUrl,
                         artists = it.artists,
                         album = it.album,
                         albumName = it.albumName,

@@ -33,6 +33,11 @@ class HttpClientDownloadCore : IDownloadCore {
         statusChange: suspend () -> DownloadStatus?,
         xyDownload: XyDownload,
     ): Flow<DownloadState> = flow {
+        // 空地址会被数据源默认基址兜底成服务器首页，必须直接失败，避免把网页当成音频保存
+        if (xyDownload.url.isBlank()) {
+            emit(DownloadState.Error("下载地址为空，无法下载"))
+            return@flow
+        }
         // 通过临时文件长度实现断点续传，commonMain 不直接接触平台文件类。
         val downloadedBytes = DownloadPlatformFiles.fileLength(xyDownload.tempFilePath)
         val request = client.prepareGet(xyDownload.url) {

@@ -9,11 +9,17 @@ import cn.xybbz.download.core.DownloadRequest
 import cn.xybbz.localdata.data.music.XyMusic
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.add_download_list
+import xymusic.composeapp.generated.resources.download_url_empty
 
 suspend fun DownloaderManager.enqueueMusicDownload(
     musicData: XyMusic,
     dataSourceManager: DataSourceManager,
 ) {
+    // 下载地址为空时直接拒绝入队，避免请求落到数据源默认基址上下载到非音频内容
+    if (musicData.downloadUrl.isBlank()) {
+        MessageUtils.sendPopTipError(Res.string.download_url_empty)
+        return
+    }
     val downloadTypes = getDownloadType(dataSourceManager.dataSourceType)
     enqueue(
         DownloadRequest(

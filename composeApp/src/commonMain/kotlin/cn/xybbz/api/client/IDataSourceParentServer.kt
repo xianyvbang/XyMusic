@@ -971,8 +971,20 @@ abstract class IDataSourceParentServer(
         playlistId: String? = null
     ) {
         if (items.isNotEmpty()) {
+            // 首页缓存需要单独保存下载地址；网络转换缺失时按歌曲 id 现补，避免缓存后无法下载
+            val saveItems = if (dataType == MusicDataTypeEnum.HOME) {
+                items.map { music ->
+                    if (music.downloadUrl.isBlank()) {
+                        music.copy(downloadUrl = createDownloadUrl(music.itemId))
+                    } else {
+                        music
+                    }
+                }
+            } else {
+                items
+            }
             db.musicDao.saveBatch(
-                data = items,
+                data = saveItems,
                 dataType = dataType,
                 connectionId = getConnectionId(),
                 artistId = artistId,
