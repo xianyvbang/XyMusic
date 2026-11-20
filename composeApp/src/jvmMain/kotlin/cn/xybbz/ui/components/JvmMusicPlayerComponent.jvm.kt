@@ -53,17 +53,12 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -100,7 +95,6 @@ import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose
-import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
@@ -124,9 +118,7 @@ import xymusic.composeapp.generated.resources.confirm
 import xymusic.composeapp.generated.resources.forward_offset
 import xymusic.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic.composeapp.generated.resources.offset
-import xymusic.composeapp.generated.resources.recommend
 import xymusic.composeapp.generated.resources.reset
-import xymusic.composeapp.generated.resources.song_tab
 import kotlin.math.min
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -169,9 +161,6 @@ fun JvmMusicPlayerComponent(
     val isPlayerSheetVisible by playerChromeState.isPlayerSheetVisibleFlow.collectAsStateWithLifecycle()
     val playerHitTestOwner = remember { DesktopInteractiveHitTestOwner() }
     val coroutineScope = rememberCoroutineScope()
-    val desktopTabs = remember {
-        listOf(Res.string.song_tab, Res.string.recommend)
-    }
     val overlayVisibleState = remember {
         MutableTransitionState(false)
     }
@@ -184,12 +173,7 @@ fun JvmMusicPlayerComponent(
         ),
         label = "JvmMusicPlayerSharedCoverProgress"
     )
-    val horPagerState =
-        rememberPagerState {
-            desktopTabs.size
-        }
     val listState = rememberLazyListState()
-    val similarPopularListState = rememberLazyListState()
     // 桌面 Dialog 通过过渡状态保留退场动画，不直接在隐藏时移除节点。
     LaunchedEffect(isPlayerSheetVisible) {
         overlayVisibleState.targetState = isPlayerSheetVisible
@@ -251,9 +235,7 @@ fun JvmMusicPlayerComponent(
                                 }
                             },
                             onSetState = onSetState,
-                            lrcListState = listState,
-                            similarPopularListState = similarPopularListState,
-                            horPagerState = horPagerState
+                            lrcListState = listState
                         )
                     }
                 }
@@ -282,9 +264,7 @@ fun JvmMusicPlayerScreen(
     onRefreshVolume: () -> Unit,
     onCloseSheet: () -> Unit,
     onSetState: (Boolean) -> Unit,
-    lrcListState: LazyListState = rememberLazyListState(),
-    similarPopularListState: LazyListState = rememberLazyListState(),
-    horPagerState: PagerState
+    lrcListState: LazyListState = rememberLazyListState()
 ) {
 
     val decorators = LocalDesktopWindowDecorators.current
@@ -300,7 +280,6 @@ fun JvmMusicPlayerScreen(
         coverRefreshVersion
     )
     val coverModels = resolvePlayerCoverModels(coverUrls, picByte)
-    val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
     val sharedCoverRequestSize = remember(density) {
         with(density) {
@@ -315,9 +294,6 @@ fun JvmMusicPlayerScreen(
     }
     var sharedCoverTargetBoundsOnScreen by remember {
         mutableStateOf<Rect?>(null)
-    }
-    val desktopTabs = remember {
-        listOf(Res.string.song_tab, Res.string.recommend)
     }
     val forwardOffsetText = stringResource(Res.string.forward_offset)
     val backwardOffsetText = stringResource(Res.string.backward_offset)
@@ -436,43 +412,6 @@ fun JvmMusicPlayerScreen(
                             )
                         }
                     },
-                    middle = { hitTestOwner ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            desktopTabs.forEachIndexed { index, item ->
-                                TextButton(
-                                    modifier = Modifier
-                                        .jvmPlayerTitleBarHitTarget(
-                                            hitTestOwner,
-                                            JvmMusicPlayerTitleBarHitTarget.Tab(index)
-                                        )
-                                        .jvmHoverDebounceClickable(),
-                                    onClick = {
-                                        coroutineScope
-                                            .launch {
-                                                horPagerState.animateScrollToPage(index)
-                                            }
-                                    }
-                                ) {
-                                    XyText(
-                                        text = stringResource(item),
-                                        fontWeight = null,
-                                        maxLines = 2,
-                                        style = LocalTextStyle.current,
-                                        color = if (horPagerState.currentPage == index) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        },
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-                        }
-                    }
                 )
 
                 Column(
@@ -482,191 +421,168 @@ fun JvmMusicPlayerScreen(
                     verticalArrangement = Arrangement.SpaceBetween,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    HorizontalPager(
+                    // 顶部 Tab 已移除，播放页仅保留歌曲页内容
+                    BoxWithConstraints(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f),
-                        state = horPagerState,
-                        // 在底部弹窗里关闭 Pager 的边缘回弹，避免翻页落位后再次左右抖动
-                        overscrollEffect = null
-                    ) { page ->
-                        when (page) {
-                            0 -> {
-                                BoxWithConstraints(
+                            .weight(1f)
+                            .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
+                    ) {
+                        val coverColumnWidth =
+                            maxWidth * (1f / (2f + JvmMusicPlayerPrimaryPageGapWeight))
+                        val coverSize =
+                            minOf(
+                                coverColumnWidth * JvmMusicPlayerCoverWidthRatio,
+                                maxHeight * JvmMusicPlayerCoverHeightRatio
+                            )
+                                .coerceAtMost(JvmMusicPlayerSharedCoverDisplayMaxSize)
+                        val primaryPageSideInset =
+                            (coverColumnWidth - coverSize).coerceAtLeast(0.dp)
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(coverSize),
+                                contentAlignment = Alignment.TopEnd
+                            ) {
+                                Box(
                                     modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
-//                                    .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
+                                        .requiredSize(coverSize)
+                                        .onGloballyPositioned { coordinates ->
+                                            sharedCoverTargetBoundsOnScreen = Rect(
+                                                offset = coordinates.positionOnScreen(),
+                                                size = Size(
+                                                    width = coordinates.size.width.toFloat(),
+                                                    height = coordinates.size.height.toFloat()
+                                                )
+                                            )
+                                        }
                                 ) {
-                                    val coverColumnWidth =
-                                        maxWidth * (1f / (2f + JvmMusicPlayerPrimaryPageGapWeight))
-                                    val coverSize =
-                                        minOf(
-                                            coverColumnWidth * JvmMusicPlayerCoverWidthRatio,
-                                            maxHeight * JvmMusicPlayerCoverHeightRatio
-                                        )
-                                            .coerceAtMost(JvmMusicPlayerSharedCoverDisplayMaxSize)
-                                    val primaryPageSideInset =
-                                        (coverColumnWidth - coverSize).coerceAtLeast(0.dp)
-
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(coverSize),
-                                            contentAlignment = Alignment.TopEnd
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .requiredSize(coverSize)
-                                                    .onGloballyPositioned { coordinates ->
-                                                        sharedCoverTargetBoundsOnScreen = Rect(
-                                                            offset = coordinates.positionOnScreen(),
-                                                            size = Size(
-                                                                width = coordinates.size.width.toFloat(),
-                                                                height = coordinates.size.height.toFloat()
-                                                            )
-                                                        )
-                                                    }
-                                            ) {
-                                                PlayerCoverImage(
-                                                    modifier = Modifier
-                                                        .fillMaxSize()
-                                                        .graphicsLayer {
-                                                            rotationZ = coverRotation.value
-                                                        }
-                                                        .clip(CircleShape),
-                                                    model = coverModels.model,
-                                                    backModel = coverModels.backModel,
-                                                    requestSize = sharedCoverRequestSize,
-                                                    alpha = if (showSharedCoverOverlay) 0f else 1f,
-                                                    contentDescription = stringResource(Res.string.album_cover),
-                                                )
+                                    PlayerCoverImage(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .graphicsLayer {
+                                                rotationZ = coverRotation.value
                                             }
-                                        }
-
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(JvmMusicPlayerPrimaryPageGapWeight)
-                                        )
-
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(coverSize)
-                                                .padding(end = primaryPageSideInset),
-                                            contentAlignment = Alignment.TopStart
-                                        ) {
-                                            Column(
-                                                modifier = Modifier
-                                                    .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
-                                                    .fillMaxHeight()
-                                                    // 桌面端用右键菜单承载歌词偏移预览和确认，避免修改通用歌词组件。
-                                                    .jvmRightClickDropdownMenu(
-                                                        dismissOnItemClick = false,
-                                                        onShowRequest = {
-                                                            musicPlayerViewModel.resetLyricsPreviewOffset(
-                                                                musicDetail.itemId
-                                                            )
-                                                        },
-                                                        onCloseRequest = {
-                                                            musicPlayerViewModel.resetLyricsPreviewOffset(
-                                                                musicDetail.itemId
-                                                            )
-                                                        },
-                                                        itemDataList = {
-                                                            listOf(
-                                                                // 顶部只读展示当前预览偏移，右键菜单保持打开时会随预览值实时刷新。
-                                                                MenuItemDefaultData(
-                                                                    title = "$offsetText: ${
-                                                                        formatJvmLyricsOffsetSeconds(
-                                                                            musicPlayerViewModel.lyricsPreviewOffsetMs
-                                                                        )
-                                                                    }",
-                                                                    enabled = false,
-                                                                    dismissOnClick = false,
-                                                                    onClick = {}
-                                                                ),
-                                                                MenuItemDefaultData(
-                                                                    title = forwardOffsetText,
-                                                                    onClick = {
-                                                                        musicPlayerViewModel.adjustLyricsPreviewOffset(
-                                                                            500L
-                                                                        )
-                                                                    }
-                                                                ),
-                                                                MenuItemDefaultData(
-                                                                    title = backwardOffsetText,
-                                                                    onClick = {
-                                                                        musicPlayerViewModel.adjustLyricsPreviewOffset(
-                                                                            -500L
-                                                                        )
-                                                                    }
-                                                                ),
-                                                                MenuItemDefaultData(
-                                                                    title = resetText,
-                                                                    onClick = {
-                                                                        musicPlayerViewModel.resetLyricsPreviewOffsetToZero()
-                                                                    }
-                                                                ),
-                                                                MenuItemDefaultData(
-                                                                    title = confirmText,
-                                                                    onClick = {
-                                                                        // 只有确认后才把预览偏移写回歌词配置。
-                                                                        musicPlayerViewModel.confirmLyricsPreviewOffset(
-                                                                            musicDetail.itemId
-                                                                        )
-                                                                        dismissJvmRightClickDropdownMenus()
-                                                                    }
-                                                                )
-                                                            )
-                                                        }
-                                                    ),
-                                                verticalArrangement = Arrangement.Top
-                                            ) {
-                                                JvmMusicPlayerLyricsHeader(
-                                                    title = musicDetail.name,
-                                                    artist = artistLabel
-                                                )
-//                                        Spacer(modifier = Modifier.height(JvmMusicPlayerLyricsHeaderBottomGap))
-                                                Box(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .weight(1f)
-                                                        .jvmPlayerInteractiveHitTarget(
-                                                            titleBarHitTestOwner,
-                                                            JvmMusicPlayerHitTarget.Lyrics
-                                                        )
-                                                ) {
-                                                    LrcViewNewCompose(
-                                                        modifier = Modifier.fillMaxSize(),
-                                                        listState = lrcListState,
-                                                        // 不再传入 mock 数据，歌词组件按自身逻辑读取真实 LrcServer 数据。
-                                                        externalOffsetMillis = musicPlayerViewModel.lyricsPreviewOffsetMs,
-                                                        currentLineTopInset = JvmMusicPlayerLyricsItemHeight,
-                                                        highlightScaleEnabled = false,
-                                                        showConfigButton = false,
-                                                        primaryFontSize = JvmMusicPlayerLyricsFontSize
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
+                                            .clip(CircleShape),
+                                        model = coverModels.model,
+                                        backModel = coverModels.backModel,
+                                        requestSize = sharedCoverRequestSize,
+                                        alpha = if (showSharedCoverOverlay) 0f else 1f,
+                                        contentDescription = stringResource(Res.string.album_cover),
+                                    )
                                 }
                             }
 
-                            else -> {
-                                MusicPlayerSimilarPopularComponent(
-                                    listState = similarPopularListState,
-                                    onFavoriteSet = { emptySet() },
-                                    onDownloadMusicIds = { emptyList() },
-                                    playMusicList = originMusicList,
-                                    onAddPlayMusic = { musicPlayerViewModel.addNextPlayer(it) }
-                                )
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .weight(JvmMusicPlayerPrimaryPageGapWeight)
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(coverSize)
+                                    .padding(end = primaryPageSideInset),
+                                contentAlignment = Alignment.TopStart
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
+                                        .fillMaxHeight()
+                                        // 桌面端用右键菜单承载歌词偏移预览和确认，避免修改通用歌词组件。
+                                        .jvmRightClickDropdownMenu(
+                                            dismissOnItemClick = false,
+                                            onShowRequest = {
+                                                musicPlayerViewModel.resetLyricsPreviewOffset(
+                                                    musicDetail.itemId
+                                                )
+                                            },
+                                            onCloseRequest = {
+                                                musicPlayerViewModel.resetLyricsPreviewOffset(
+                                                    musicDetail.itemId
+                                                )
+                                            },
+                                            itemDataList = {
+                                                listOf(
+                                                    // 顶部只读展示当前预览偏移，右键菜单保持打开时会随预览值实时刷新。
+                                                    MenuItemDefaultData(
+                                                        title = "$offsetText: ${
+                                                            formatJvmLyricsOffsetSeconds(
+                                                                musicPlayerViewModel.lyricsPreviewOffsetMs
+                                                            )
+                                                        }",
+                                                        enabled = false,
+                                                        dismissOnClick = false,
+                                                        onClick = {}
+                                                    ),
+                                                    MenuItemDefaultData(
+                                                        title = forwardOffsetText,
+                                                        onClick = {
+                                                            musicPlayerViewModel.adjustLyricsPreviewOffset(
+                                                                500L
+                                                            )
+                                                        }
+                                                    ),
+                                                    MenuItemDefaultData(
+                                                        title = backwardOffsetText,
+                                                        onClick = {
+                                                            musicPlayerViewModel.adjustLyricsPreviewOffset(
+                                                                -500L
+                                                            )
+                                                        }
+                                                    ),
+                                                    MenuItemDefaultData(
+                                                        title = resetText,
+                                                        onClick = {
+                                                            musicPlayerViewModel.resetLyricsPreviewOffsetToZero()
+                                                        }
+                                                    ),
+                                                    MenuItemDefaultData(
+                                                        title = confirmText,
+                                                        onClick = {
+                                                            // 只有确认后才把预览偏移写回歌词配置。
+                                                            musicPlayerViewModel.confirmLyricsPreviewOffset(
+                                                                musicDetail.itemId
+                                                            )
+                                                            dismissJvmRightClickDropdownMenus()
+                                                        }
+                                                    )
+                                                )
+                                            }
+                                        ),
+                                    verticalArrangement = Arrangement.Top
+                                ) {
+                                    JvmMusicPlayerLyricsHeader(
+                                        title = musicDetail.name,
+                                        artist = artistLabel
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .weight(1f)
+                                            .jvmPlayerInteractiveHitTarget(
+                                                titleBarHitTestOwner,
+                                                JvmMusicPlayerHitTarget.Lyrics
+                                            )
+                                    ) {
+                                        LrcViewNewCompose(
+                                            modifier = Modifier.fillMaxSize(),
+                                            listState = lrcListState,
+                                            // 不再传入 mock 数据，歌词组件按自身逻辑读取真实 LrcServer 数据。
+                                            externalOffsetMillis = musicPlayerViewModel.lyricsPreviewOffsetMs,
+                                            currentLineTopInset = JvmMusicPlayerLyricsItemHeight,
+                                            highlightScaleEnabled = false,
+                                            showConfigButton = false,
+                                            primaryFontSize = JvmMusicPlayerLyricsFontSize
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -756,8 +672,6 @@ private fun JvmMusicPlayerLyricsHeader(
 // 播放器顶部栏中需要保留 Compose 点击能力的控件标识。
 private sealed class JvmMusicPlayerTitleBarHitTarget(val id: String) {
     data object CloseButton : JvmMusicPlayerTitleBarHitTarget("CloseButton")
-
-    data class Tab(private val index: Int) : JvmMusicPlayerTitleBarHitTarget("Tab$index")
 }
 
 private sealed class JvmMusicPlayerHitTarget(val id: String) {
