@@ -19,8 +19,6 @@
 package cn.xybbz.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -34,8 +32,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.rememberXyTextHoverColor
 
 /**
  * 下划线标签的下划线高度，艺术家详情章节导航与设置页顶部标签保持一致。
@@ -85,15 +82,16 @@ internal fun JvmUnderlineTab(
     bottomPadding: Dp = 9.dp,
     underlineGap: Dp = 7.dp,
 ) {
-    // 悬停交互源：移入时仅改变文字颜色，不出现背景高亮
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
+    // 悬停交互源与文字颜色统一由通用文字按钮状态维护，移入时仅文字换色
+    val colorState = rememberXyTextHoverColor(
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     Column(
         modifier = modifier
             // 以文字宽度作为列宽，让下划线与文字内容等宽而不是撑满整行
             .width(IntrinsicSize.Max)
             .jvmHoverDebounceClickable(
-                interactionSource = interactionSource,
+                interactionSource = colorState.interactionSource,
                 indication = null,
                 role = Role.Tab,
                 onClick = onClick,
@@ -104,10 +102,10 @@ internal fun JvmUnderlineTab(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = title,
-                color = when {
-                    selected -> MaterialTheme.colorScheme.onSurface
-                    hovered -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (selected) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    colorState.color
                 },
                 style = titleStyle,
                 fontWeight = fontWeight,
@@ -118,7 +116,7 @@ internal fun JvmUnderlineTab(
                 Text(
                     text = count.toString(),
                     modifier = Modifier.padding(start = 7.dp),
-                    color = if (selected || hovered) {
+                    color = if (selected || colorState.hovered) {
                         MaterialTheme.colorScheme.primary
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant

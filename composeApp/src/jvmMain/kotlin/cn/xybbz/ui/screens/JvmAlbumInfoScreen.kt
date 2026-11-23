@@ -122,7 +122,7 @@ import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyImage
-import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyTextButton
 import cn.xybbz.viewmodel.AlbumInfoViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -763,7 +763,7 @@ private fun JvmAlbumDesktopHero(
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (albumArtistsText.isNotBlank()) {
-                    XyTextSub(
+                    XyTextButton(
                         text = albumArtistsText,
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface,

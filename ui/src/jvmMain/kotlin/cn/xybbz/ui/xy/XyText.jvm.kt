@@ -1,11 +1,7 @@
 package cn.xybbz.ui.xy
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -29,12 +25,12 @@ fun XyText(
     textAlign: TextAlign? = null,
     onClick: (() -> Unit)?,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
+    // 悬停变色统一交给通用文字按钮状态，避免每个可点击文本重复维护交互源
+    val colorState = rememberXyTextHoverColor(color = color)
 
     XyText(
         modifier = modifier.jvmHoverDebounceClickable(
-            interactionSource = interactionSource,
+            interactionSource = colorState.interactionSource,
             onClick = onClick,
         ),
         text = text,
@@ -42,7 +38,7 @@ fun XyText(
         maxLines = maxLines,
         style = style.copy(textAlign = textAlign ?: style.textAlign),
         overflow = overflow,
-        color = if (hovered) MaterialTheme.colorScheme.primary else color,
+        color = colorState.color,
     )
 }
 
@@ -60,12 +56,12 @@ fun XyTextSub(
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     onClick: (() -> Unit)?,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
+    // 悬停变色统一交给通用文字按钮状态，避免每个可点击文本重复维护交互源
+    val colorState = rememberXyTextHoverColor(color = color)
 
     XyTextSub(
         modifier = modifier.jvmHoverDebounceClickable(
-            interactionSource = interactionSource,
+            interactionSource = colorState.interactionSource,
             onClick = onClick,
         ),
         text = text,
@@ -73,6 +69,6 @@ fun XyTextSub(
         overflow = overflow,
         textAlign = textAlign,
         maxLines = maxLines,
-        color = if (hovered) MaterialTheme.colorScheme.primary else color,
+        color = colorState.color,
     )
 }

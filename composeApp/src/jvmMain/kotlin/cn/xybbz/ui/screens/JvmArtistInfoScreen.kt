@@ -60,7 +60,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -116,6 +115,7 @@ import cn.xybbz.ui.xy.LazyColumnParentComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
+import cn.xybbz.ui.xy.XyTextButton
 import cn.xybbz.viewmodel.ArtistInfoViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -629,17 +629,13 @@ private fun JvmArtistDesktopHero(
                 },
             )
             if (descriptionOverflow) {
-                TextButton(
+                XyTextButton(
+                    text = stringResource(Res.string.expand_description),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
                     onClick = onOpenDescription,
-                    contentPadding = PaddingValues(0.dp),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.expand_description),
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
+                )
             }
             // 主操作区：播放全部为主按钮，随机播放为次按钮，收藏为图标按钮
             Row(

@@ -39,6 +39,7 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextButton
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.rememberSquareRequestSize
 import org.jetbrains.compose.resources.DrawableResource
@@ -168,17 +169,19 @@ private fun JvmMusicCardText(
         horizontalAlignment = Alignment.Start,
     ) {
         if (enabled) {
-            XyText(
+            XyTextButton(
                 modifier = textMarqueeModifier,
                 text = name,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyLarge,
                 onClick = onClick,
             )
-            XyTextSub(
+            XyTextButton(
                 modifier = textMarqueeModifier,
                 text = artistName,
                 maxLines = 1,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 onClick = onClick,
             )
         } else {

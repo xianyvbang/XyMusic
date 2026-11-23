@@ -68,7 +68,7 @@ import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyTextButton
 import cn.xybbz.ui.xy.downloadDoneIcon
 import cn.xybbz.ui.xy.rememberSquareRequestSize
 import cn.xybbz.viewmodel.SidebarPlaylistViewModel
@@ -673,7 +673,7 @@ private fun SongTitleCell(
                         tint = XyTheme.extendedColors.success,
                     )
                 }
-                XyTextSub(
+                XyTextButton(
                     text = "$mediaText $artistsText",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -870,8 +870,6 @@ private fun SongAlbumCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
     // 仅当专辑名超出列宽时才开启提示，避免出现无意义的重复提示
     var hasOverflow by remember(text) { mutableStateOf(false) }
 
@@ -880,21 +878,13 @@ private fun SongAlbumCell(
             modifier = modifier,
             contentAlignment = Alignment.CenterStart,
         ) {
-            Text(
+            XyTextButton(
                 text = text,
-                modifier = Modifier.jvmHoverDebounceClickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClick,
-                ),
-                color = if (hovered) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                onClick = onClick,
                 onTextLayout = { textLayoutResult ->
                     hasOverflow = textLayoutResult.hasVisualOverflow
                 },
