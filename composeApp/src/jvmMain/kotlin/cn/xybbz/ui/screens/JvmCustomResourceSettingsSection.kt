@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.ui.components.JvmSettingContentGridTwoColumnBreakpoint
 import cn.xybbz.ui.components.JvmSettingGroupVerticalGap
+import cn.xybbz.ui.components.JvmSettingItemFlow
 import cn.xybbz.ui.components.JvmSettingSwitchRow
 import cn.xybbz.ui.components.JvmSettingWideGroup
 import cn.xybbz.ui.theme.XyTheme
@@ -158,16 +159,19 @@ internal fun JvmCustomResourceSettingsSection(
         modifier = modifier.fillMaxWidth(),
     ) {
         // 请求策略：迁移原自定义 API 设置页的优先级开关，开关即时写入设置。
-        JvmSettingSwitchRow(
-            icon = Res.drawable.settings_24px,
-            title = stringResource(Res.string.prioritize_music_service_api),
-            description = stringResource(Res.string.jvm_custom_api_screen_text_24),
-            checked = customLyricsViewModel.ifPriorityMusicApi,
-            onCheckedChange = { checked ->
-                customLyricsViewModel.updateIfPriorityMusicApi(checked)
-                customLyricsViewModel.saveIfPriorityMusicApiSetting()
-            },
-        )
+        // 复用通用设置项排列容器，开关行按每行三个设置项的标准宽度生成，避免横向铺满整行。
+        JvmSettingItemFlow {
+            JvmSettingSwitchRow(
+                icon = Res.drawable.settings_24px,
+                title = stringResource(Res.string.prioritize_music_service_api),
+                description = stringResource(Res.string.jvm_custom_api_screen_text_24),
+                checked = customLyricsViewModel.ifPriorityMusicApi,
+                onCheckedChange = { checked ->
+                    customLyricsViewModel.updateIfPriorityMusicApi(checked)
+                    customLyricsViewModel.saveIfPriorityMusicApiSetting()
+                },
+            )
+        }
 
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
             // 宽窗口下三个输入框等宽并排，窄窗口改为纵向堆叠保证输入宽度。

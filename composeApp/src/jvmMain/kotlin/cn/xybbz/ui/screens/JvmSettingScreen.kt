@@ -39,7 +39,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
@@ -54,6 +53,7 @@ import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingDownloadRow
 import cn.xybbz.ui.components.JvmSettingGroup
 import cn.xybbz.ui.components.JvmSettingGroupGrid
+import cn.xybbz.ui.components.JvmSettingItemFlow
 import cn.xybbz.ui.components.JvmSettingLazyColumn
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPageContentPadding
@@ -475,42 +475,45 @@ fun JvmSettingScreen(
                                     )
                                 }
 
-                                // 歌曲下载位置：整行展示生效目录，行尾提供切换与恢复默认操作。
+                                // 歌曲下载位置：展示生效目录，行尾提供切换与恢复默认操作。
+                                // 复用通用设置项排列容器，按每行三个设置项的标准宽度生成，避免横向铺满整行。
                                 // 已下载文件不做搬运，旧记录仍保留原路径，因此这里只提示新任务生效。
-                                JvmDownloadLocationRow(
-                                    path = songStoragePath,
-                                    isDefaultPath = settingsViewModel.isDefaultDownloadPath,
-                                    isFallback = settingsViewModel.isDownloadDirectoryFallback,
-                                    onChangeDirectory = {
-                                        coroutineScope.launch {
-                                            chooseJvmStorageDirectory(
-                                                currentPath = songStoragePath,
-                                                dialogSettings = downloadDirectoryDialogSettings,
-                                            )?.let { selectedPath ->
-                                                val issue = settingsViewModel.changeDownloadDirectory(
-                                                    selectedPath
-                                                )
-                                                if (issue == null) {
-                                                    MessageUtils.sendPopTipSuccess(
-                                                        Res.string.song_download_location_changed
+                                JvmSettingItemFlow {
+                                    JvmDownloadLocationRow(
+                                        path = songStoragePath,
+                                        isDefaultPath = settingsViewModel.isDefaultDownloadPath,
+                                        isFallback = settingsViewModel.isDownloadDirectoryFallback,
+                                        onChangeDirectory = {
+                                            coroutineScope.launch {
+                                                chooseJvmStorageDirectory(
+                                                    currentPath = songStoragePath,
+                                                    dialogSettings = downloadDirectoryDialogSettings,
+                                                )?.let { selectedPath ->
+                                                    val issue = settingsViewModel.changeDownloadDirectory(
+                                                        selectedPath
                                                     )
-                                                } else {
-                                                    MessageUtils.sendPopTipError(
-                                                        issue.toDirectoryIssueText()
-                                                    )
+                                                    if (issue == null) {
+                                                        MessageUtils.sendPopTipSuccess(
+                                                            Res.string.song_download_location_changed
+                                                        )
+                                                    } else {
+                                                        MessageUtils.sendPopTipError(
+                                                            issue.toDirectoryIssueText()
+                                                        )
+                                                    }
                                                 }
                                             }
-                                        }
-                                    },
-                                    onRestoreDefault = {
-                                        coroutineScope.launch {
-                                            settingsViewModel.restoreDefaultDownloadDirectory()
-                                            MessageUtils.sendPopTipSuccess(
-                                                Res.string.song_download_location_restored
-                                            )
-                                        }
-                                    },
-                                )
+                                        },
+                                        onRestoreDefault = {
+                                            coroutineScope.launch {
+                                                settingsViewModel.restoreDefaultDownloadDirectory()
+                                                MessageUtils.sendPopTipSuccess(
+                                                    Res.string.song_download_location_restored
+                                                )
+                                            }
+                                        },
+                                    )
+                                }
 
                                 JvmSettingNote(
                                     text = stringResource(Res.string.song_download_location_note)
@@ -579,7 +582,6 @@ fun JvmSettingScreen(
                                         description = backgroundImagePath?.takeIf { it.isNotBlank() }
                                             ?: stringResource(Res.string.jvm_set_background_image_screen_text_20),
                                         descriptionStyle = JvmSettingRowDescriptionStyle.Path,
-                                        descriptionMaxLines = 2,
                                         iconSelected = backgroundImageConfigured,
                                         onClick = if (backgroundImageConfigured) {
                                             {
@@ -760,8 +762,6 @@ private fun JvmDownloadLocationRow(
             else -> path
         },
         descriptionStyle = JvmSettingRowDescriptionStyle.Path,
-        descriptionMaxLines = 2,
-        descriptionOverflow = TextOverflow.Visible,
         onClick = {
             // 点击整行复制当前路径，保留原有「点击复制」习惯。
             if (path.isNotBlank()) {

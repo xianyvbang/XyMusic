@@ -1345,8 +1345,9 @@ internal fun JvmSettingPickRow(
                     lineHeight = 16.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                // 说明文案完整换行展示，超长时不再省略，与通用设置行保持一致。
+                maxLines = Int.MAX_VALUE,
+                overflow = TextOverflow.Visible
             )
         }
         if (!tag.isNullOrBlank()) {
@@ -1740,8 +1741,8 @@ internal fun JvmSettingActionGrid(
  * @param title 设置项标题。
  * @param description 设置项说明。
  * @param descriptionStyle 说明文本样式。
- * @param descriptionMaxLines 说明文本最大行数。
- * @param descriptionOverflow 说明文本超出时的处理方式，可按场景选择换行展示或缩略点。
+ * @param descriptionMaxLines 说明文本最大行数，默认不限制，超长说明换行完整展示。
+ * @param descriptionOverflow 说明文本超出时的处理方式，默认完整换行展示而非省略。
  * @param enabled 是否启用点击和正常内容透明度。
  * @param minHeight 行最小高度。
  * @param horizontalPadding 行横向内边距。
@@ -1758,8 +1759,9 @@ internal fun JvmSettingBaseRow(
     title: String,
     description: String,
     descriptionStyle: JvmSettingRowDescriptionStyle = JvmSettingRowDescriptionStyle.Normal,
-    descriptionMaxLines: Int = 1,
-    descriptionOverflow: TextOverflow = TextOverflow.Ellipsis,
+    // 说明文案默认不限制行数并完整换行展示，避免超长描述被省略号截断。
+    descriptionMaxLines: Int = Int.MAX_VALUE,
+    descriptionOverflow: TextOverflow = TextOverflow.Visible,
     enabled: Boolean = true,
     minHeight: Dp = XyTheme.dimens.itemHeight,
     horizontalPadding: Dp = XyTheme.dimens.contentPadding,

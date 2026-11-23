@@ -212,15 +212,13 @@ private fun JvmStorageUsageGroup(
         }
         // 分类项与其它设置分组保持一致，一行最多三个横向排列，不绘制分割线。
         // 每个分类的清理入口直接跟在对应条目尾部，避免再单独占用一块快速清理区域。
-        // 分类说明文案较长，必须完整换行展示，因此取消行数限制并允许内容超出省略处理。
+        // 分类说明文案较长，通用设置行已默认完整换行展示，这里无需再单独限制行数。
         JvmSettingItemFlow {
             storageItems.forEach { item ->
                 JvmSettingBaseRow(
                     icon = item.icon,
                     title = item.title,
                     description = item.description,
-                    descriptionMaxLines = Int.MAX_VALUE,
-                    descriptionOverflow = TextOverflow.Visible,
                     minHeight = 64.dp,
                     horizontalPadding = XyTheme.dimens.contentPadding,
                     verticalPadding = XyTheme.dimens.outerVerticalPadding,
@@ -284,8 +282,6 @@ private fun JvmStorageLocationGroup(
                 stringResource(Res.string.jvm_memory_management_screen_text_29)
             },
             descriptionStyle = JvmSettingRowDescriptionStyle.Path,
-            descriptionMaxLines = 2,
-            descriptionOverflow = TextOverflow.Visible,
             minHeight = 72.dp,
             horizontalPadding = XyTheme.dimens.contentPadding,
             verticalPadding = XyTheme.dimens.outerVerticalPadding,
