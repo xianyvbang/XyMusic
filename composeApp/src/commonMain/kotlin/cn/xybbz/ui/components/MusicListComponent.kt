@@ -40,7 +40,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,6 +58,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
@@ -147,19 +148,27 @@ fun MusicListComponent(
                         fontWeight = FontWeight.W900,
                         fontSize = 19.sp
                     )
-                    TextButton(
-                        modifier = Modifier.platformHoverClickable(
-                            interactionSource = clearHoverSource,
-                        ),
-                        onClick = {
-                            //删除数据库内容
-                            onClearPlayerList()
-                        }) {
-                        XyTextSubSmall(
-                            text = stringResource(Res.string.clear),
-                            color = clearTextColorState.color,
-                        )
-                    }
+                    // 清空按钮使用轻量文字点击：无水波纹、点击区域贴合文字，并保留桌面端移入变色与小手
+                    XyTextSubSmall(
+                        modifier = Modifier
+                            // 保留 Material 最小 48dp 触控热区，避免移动端点击面积过小
+                            .minimumInteractiveComponentSize()
+                            .platformHoverClickable(
+                                interactionSource = clearHoverSource,
+                            )
+                            .debounceClickable(
+                                interactionSource = clearHoverSource,
+                                indication = null,
+                                role = Role.Button,
+                            ) {
+                                //删除数据库内容
+                                onClearPlayerList()
+                            }
+                            // 内边距放在点击区域内，保证移动端也有足够的点击热区
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
+                        text = stringResource(Res.string.clear),
+                        color = clearTextColorState.color,
+                    )
 
                 }
                 HorizontalDivider(
@@ -251,11 +260,23 @@ fun MusicListItem(
     } else {
         MaterialTheme.colorScheme.onSurface
     }
+    // 整行点击切歌的悬停交互源：桌面端移入时文字变色并显示小手光标
+    val itemInteractionSource = remember { MutableInteractionSource() }
+    val itemTextColorState = rememberXyTextHoverColor(
+        interactionSource = itemInteractionSource,
+        color = itemTextColor,
+    )
+    // 行尾删除图标的悬停交互源：移入时图标高亮并显示小手光标
+    val removeInteractionSource = remember { MutableInteractionSource() }
+    val removeColorState = rememberXyTextHoverColor(
+        interactionSource = removeInteractionSource,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     val text = buildAnnotatedString {
         withStyle(
             style = SpanStyle(
                 fontSize = currentTextStyle.fontSize,
-                color = itemTextColor
+                color = itemTextColorState.color
             ), block = {
                 append(xyMusic.name)
             })
@@ -263,7 +284,7 @@ fun MusicListItem(
             withStyle(
                 style = SpanStyle(
                     fontSize = currentTextStyle.fontSize,
-                    color = itemTextColor
+                    color = itemTextColorState.color
                 ), block = {
                     append("  - ")
                     append(xyMusic.artists?.joinToString())
@@ -274,8 +295,11 @@ fun MusicListItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .platformHoverClickable(
+                interactionSource = itemInteractionSource,
+            )
             .debounceClickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = itemInteractionSource,
                 indication = null
             ) {
                 onSeekToIndex(index)
@@ -318,10 +342,15 @@ fun MusicListItem(
                 contentDescription = stringResource(Res.string.remove_from_playlist),
                 modifier = Modifier
                     .size(16.dp)
+                    // 桌面端悬停时显示小手光标并让图标高亮，移出后恢复
+                    .platformHoverClickable(
+                        interactionSource = removeInteractionSource,
+                    )
+                    // 保留平台默认水波纹反馈，维持移动端原有点击手感
                     .debounceClickable {
                         onRemovePlayerMusicItem(index)
                     },
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = removeColorState.color
             )
         }
     }
