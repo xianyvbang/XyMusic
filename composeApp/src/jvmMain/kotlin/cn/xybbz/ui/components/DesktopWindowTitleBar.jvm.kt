@@ -2,32 +2,24 @@ package cn.xybbz.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,19 +33,16 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.router.Navigator
-import cn.xybbz.router.Search
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.screens.jvmRouterMenuWidth
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
 import cn.xybbz.ui.windows.DesktopTooltipBox
-import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
@@ -64,23 +53,13 @@ import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.app_name
 import xymusic.composeapp.generated.resources.arrow_back_24px
 import xymusic.composeapp.generated.resources.back
-import xymusic.composeapp.generated.resources.cancel_24px
-import xymusic.composeapp.generated.resources.clear
 import xymusic.composeapp.generated.resources.dark
 import xymusic.composeapp.generated.resources.light
 import xymusic.composeapp.generated.resources.refresh_24px
 import xymusic.composeapp.generated.resources.refresh_login
-import xymusic.composeapp.generated.resources.search_24px
-import xymusic.composeapp.generated.resources.search_music_album_artist
 import xymusic.composeapp.generated.resources.system
 import xymusic.composeapp.generated.resources.theme_mode
 import cn.xybbz.ui.windows.DesktopWindowTitleBar as UiDesktopWindowTitleBar
-
-/**
- * 标题栏搜索区是否可见。
- * 需求要求暂时隐藏搜索功能但保留搜索框实现，需要恢复时把这里改回 true 即可。
- */
-private val DesktopTitleBarShowSearch: Boolean = false
 
 /**
  * 桌面端主标题栏。
@@ -136,8 +115,7 @@ private fun DesktopTitleBrand() {
 
 /**
  * 标题栏中间操作区。
- * 返回按钮固定对齐下方右侧内容区左边缘；搜索功能隐藏时只保留返回按钮，
- * 搜索框完整实现保留在下方 [DesktopSearchField] 中。
+ * 搜索框已移动到左侧边栏顶部，这里只保留固定在内容区左边缘的返回按钮。
  */
 @Composable
 private fun DesktopTitleCenter(
@@ -164,116 +142,7 @@ private fun DesktopTitleCenter(
             onClick = navigator::goBack,
             modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "BackButton"),
         )
-
-        // 搜索区已被产品要求暂时隐藏，开关关闭时直接不渲染，避免占用中间拖拽区域
-        if (DesktopTitleBarShowSearch) {
-            DesktopTitleSearchArea(
-                navigator = navigator,
-                hitTestOwner = hitTestOwner,
-                modifier = Modifier.weight(1f),
-            )
-        }
     }
-}
-
-/**
- * 标题栏搜索区。
- * 搜索功能暂时隐藏，但完整实现保留在这里，开关打开后即可复用。
- */
-@Composable
-private fun DesktopTitleSearchArea(
-    navigator: Navigator,
-    hitTestOwner: DesktopInteractiveHitTestOwner,
-    modifier: Modifier = Modifier,
-) {
-    var keyword by remember { mutableStateOf("") }
-
-    fun submitSearch() {
-        val searchQuery = keyword.trim()
-        if (searchQuery.isNotEmpty()) {
-            keyword = searchQuery
-            navigator.navigate(Search(searchQuery = searchQuery))
-        }
-    }
-
-    Row(
-        modifier = modifier.widthIn(max = 520.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-    ) {
-        DesktopSearchField(
-            value = keyword,
-            onValueChange = { keyword = it },
-            onSearch = ::submitSearch,
-            modifier = Modifier
-                .weight(1f)
-                .desktopTitleBarHitTarget(hitTestOwner, "SearchField")
-        )
-    }
-}
-
-/**
- * 标题栏搜索框。
- * 目前沿用桌面原型交互，只维护本地输入态。
- */
-@Composable
-private fun DesktopSearchField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val colors = DesktopTitleBarColors.current
-
-    XyEdit(
-        text = value,
-        onChange = onValueChange,
-        modifier = modifier
-            .height(XyTheme.dimens.itemHeight * 0.8f)
-            .border(
-                width = 1.dp,
-                color = colors.outline,
-                shape = RoundedCornerShape(XyTheme.dimens.corner)
-            )
-            .clip(RoundedCornerShape(XyTheme.dimens.corner)),
-        backgroundColor = colors.searchBackground,
-        hint = stringResource(Res.string.search_music_album_artist),
-        hintColor = colors.foregroundVariant,
-        showHintWhenFocused = false,
-        paddingValues = PaddingValues(),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = {
-            onSearch()
-        }),
-        singleLine = true,
-        leadingContent = {
-            Icon(
-                painter = painterResource(Res.drawable.search_24px),
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-        },
-        actionContent = if (value.isNotEmpty()) {
-            {
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                        .jvmHoverDebounceClickable { onValueChange("") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.cancel_24px),
-                        contentDescription = stringResource(Res.string.clear),
-                        tint = colors.foregroundVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-        } else {
-            null
-        }
-    )
 }
 
 /**
@@ -553,22 +422,16 @@ private fun DesktopTitleBarPlainIconButton(
  */
 private data class DesktopTitleBarColors(
     val background: Color,
-    val searchBackground: Color,
     val iconButtonBackground: Color,
     val foreground: Color,
-    val foregroundVariant: Color,
-    val outline: Color,
 ) {
     companion object {
         val current: DesktopTitleBarColors
             @Composable
             get() = DesktopTitleBarColors(
                 background = MaterialTheme.colorScheme.background,
-                searchBackground = MaterialTheme.colorScheme.surfaceContainerLowest,
                 iconButtonBackground = MaterialTheme.colorScheme.surfaceContainerLowest,
                 foreground = MaterialTheme.colorScheme.onSurface,
-                foregroundVariant = MaterialTheme.colorScheme.onSurfaceVariant,
-                outline = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f),
             )
     }
 }

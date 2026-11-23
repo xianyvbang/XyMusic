@@ -1,6 +1,9 @@
 package cn.xybbz.ui.screens
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +25,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -37,10 +44,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,6 +60,7 @@ import cn.xybbz.router.JvmTopRouterData
 import cn.xybbz.router.NavigationState
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.PlatformNavigationConfig
+import cn.xybbz.router.Search
 import cn.xybbz.router.jvmTopRouterDataList
 import cn.xybbz.startup.AppSessionState
 import cn.xybbz.startup.SessionCoordinator
@@ -77,6 +88,8 @@ import org.koin.compose.getKoin
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.add_24px
+import xymusic.composeapp.generated.resources.cancel_24px
+import xymusic.composeapp.generated.resources.clear
 import xymusic.composeapp.generated.resources.close
 import xymusic.composeapp.generated.resources.close_24px
 import xymusic.composeapp.generated.resources.create_playlist
@@ -88,10 +101,15 @@ import xymusic.composeapp.generated.resources.login_failed
 import xymusic.composeapp.generated.resources.new_playlist
 import xymusic.composeapp.generated.resources.no_playlists
 import xymusic.composeapp.generated.resources.playlist
+import xymusic.composeapp.generated.resources.search_24px
+import xymusic.composeapp.generated.resources.search_music_album_artist
 import xymusic.composeapp.generated.resources.songs_count_suffix
 import xymusic.composeapp.generated.resources.warning_24px
 
 val jvmRouterMenuWidth = 220.dp
+
+/** 侧边栏顶部搜索框高度 */
+private val DesktopSidebarSearchHeight = 34.dp
 
 private val DesktopLoginStatusActionHeight = 72.dp
 private val DesktopLoginStatusErrorButtonSize = 44.dp
@@ -175,130 +193,150 @@ actual fun MainScreenScaffold(
                             .width(jvmRouterMenuWidth)
                             .fillMaxHeight()
                     ) {
-                        LazyColumnNotComponent(
+                        // 面板背景与裁切统一提到外层，便于在列表上方固定放置搜索框
+                        Column(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(sidebarPanelShape)
                                 .background(sidebarColors.sidebarBackground),
-                            state = sidebarListState,
-                            // 播放栏只占右侧内容区，侧边栏底部不再被遮挡，无需预留播放栏高度
-                            contentPadding = PaddingValues(
-                                bottom = XyTheme.dimens.outerVerticalPadding
-                            ),
-                            // 默认 bottomItem 会再补一段播放栏高度的留白，侧边栏不需要
-                            bottomItem = null,
-                            // 侧边栏不会被播放栏遮挡，滚动条一直延伸到面板底部
-                            scrollbarBottomPadding = 0.dp,
                         ) {
-                            // 一级导航：图标与文字横排，选中项左侧带细指示条并填充背景
-                            // 链接管理与设置在 jvmTopRouterDataList 末尾，与这里同列排列
-                            items(
-                                items = jvmTopRouterDataList,
-                                key = { it.route }
-                            ) { item ->
-                                DesktopSidebarNavigationItem(
-                                    item = item,
-                                    selected = currentRoute == item.route,
-                                    selectedBackground = sidebarColors.sidebarNavigationSelectedBackground,
-                                    onClick = {
-                                        if (item.route == navigationConfig.startRoute) {
-                                            navigator.navigateToRoot(item.route)
-                                        } else {
-                                            navigator.navigate(route = item.route)
-                                        }
-                                    },
-                                )
-                            }
-
-                            // 歌单分组标题
-                            item(key = "sidebar_playlist_header") {
-                                XyRow(
-                                    paddingValues = PaddingValues(horizontal = XyTheme.dimens.innerVerticalPadding)
-                                ) {
-                                    XyTextSubSmall(
-                                        text = playlistTitle,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.weight(1f),
-                                    )
-                                    XyIconButton(
-                                        modifier = Modifier.size(28.dp),
-                                        onClick = {
-                                            playlistName = newPlaylist + playlists.size
-                                            AlertDialogObject(
-                                                title = createPlaylist,
-                                                content = {
-                                                    XyEdit(
-                                                        text = playlistName,
-                                                        onChange = { playlistName = it },
-                                                        modifier = Modifier.fillMaxWidth()
-                                                    )
-                                                },
-                                                icon = XyDialogIcon.Edit,
-                                                kicker = Res.string.dialog_kicker_create,
-                                                onDismissRequest = {},
-                                                onConfirmation = {
-                                                    coroutineScope.launch {
-                                                        sidebarPlaylistViewModel.savePlaylist(
-                                                            playlistName
-                                                        )
-                                                    }
-                                                }
-                                            ).show()
-                                        }
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(Res.drawable.add_24px),
-                                            contentDescription = createPlaylist,
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
+                            // 侧边栏顶部搜索框：固定在列表上方，不随歌单列表滚动
+                            DesktopSidebarSearchField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = XyTheme.dimens.innerVerticalPadding,
+                                        top = XyTheme.dimens.outerVerticalPadding,
+                                        end = XyTheme.dimens.innerVerticalPadding,
+                                        bottom = XyTheme.dimens.outerVerticalPadding,
+                                    ),
+                                onSearch = { searchQuery ->
+                                    navigator.navigate(Search(searchQuery = searchQuery))
                                 }
-                            }
+                            )
 
-                            if (playlists.isEmpty()) {
-                                item(key = "sidebar_playlist_empty") {
+                            LazyColumnNotComponent(
+                                modifier = Modifier.weight(1f),
+                                state = sidebarListState,
+                                // 播放栏只占右侧内容区，侧边栏底部不再被遮挡，无需预留播放栏高度
+                                contentPadding = PaddingValues(
+                                    bottom = XyTheme.dimens.outerVerticalPadding
+                                ),
+                                // 默认 bottomItem 会再补一段播放栏高度的留白，侧边栏不需要
+                                bottomItem = null,
+                                // 侧边栏不会被播放栏遮挡，滚动条一直延伸到面板底部
+                                scrollbarBottomPadding = 0.dp,
+                            ) {
+                                // 一级导航：图标与文字横排，选中项左侧带细指示条并填充背景
+                                // 链接管理与设置在 jvmTopRouterDataList 末尾，与这里同列排列
+                                items(
+                                    items = jvmTopRouterDataList,
+                                    key = { it.route }
+                                ) { item ->
+                                    DesktopSidebarNavigationItem(
+                                        item = item,
+                                        selected = currentRoute == item.route,
+                                        selectedBackground = sidebarColors.sidebarNavigationSelectedBackground,
+                                        onClick = {
+                                            if (item.route == navigationConfig.startRoute) {
+                                                navigator.navigateToRoot(item.route)
+                                            } else {
+                                                navigator.navigate(route = item.route)
+                                            }
+                                        },
+                                    )
+                                }
+
+                                // 歌单分组标题
+                                item(key = "sidebar_playlist_header") {
                                     XyRow(
-                                        modifier = Modifier.padding(
-//                                            start = 12.dp
-                                        ),
+                                        paddingValues = PaddingValues(horizontal = XyTheme.dimens.innerVerticalPadding)
                                     ) {
                                         XyTextSubSmall(
-                                            text = noPlaylistsText,
+                                            text = playlistTitle,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.weight(1f),
                                         )
-                                    }
-                                }
-                            } else {
-                                items(
-                                    items = playlists,
-                                    key = { it.itemId }
-                                ) { playlist ->
-                                    val selectedPlaylist = currentRoute is AlbumInfo &&
-                                            currentRoute.itemId == playlist.itemId &&
-                                            currentRoute.dataType == MusicDataTypeEnum.PLAYLIST
-                                    MusicPlaylistItemComponent(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-//                                            .padding(horizontal = XyTheme.dimens.innerVerticalPadding)
-                                            .pointerHoverIcon(PointerIcon.Hand),
-                                        name = playlist.name,
-                                        subordination = "${playlist.musicCount}${songsCountSuffix}",
-                                        imgUrl = playlist.pic,
-                                        backgroundColor = if (selectedPlaylist) {
-                                            sidebarColors.sidebarPlaylistSelectedBackground
-                                        } else {
-                                            Color.Transparent
-                                        },
-                                        brush = null,
-                                        onClick = {
-                                            navigator.navigate(
-                                                route = AlbumInfo(
-                                                    itemId = playlist.itemId,
-                                                    dataType = MusicDataTypeEnum.PLAYLIST
-                                                )
+                                        XyIconButton(
+                                            modifier = Modifier.size(28.dp),
+                                            onClick = {
+                                                playlistName = newPlaylist + playlists.size
+                                                AlertDialogObject(
+                                                    title = createPlaylist,
+                                                    content = {
+                                                        XyEdit(
+                                                            text = playlistName,
+                                                            onChange = { playlistName = it },
+                                                            modifier = Modifier.fillMaxWidth()
+                                                        )
+                                                    },
+                                                    icon = XyDialogIcon.Edit,
+                                                    kicker = Res.string.dialog_kicker_create,
+                                                    onDismissRequest = {},
+                                                    onConfirmation = {
+                                                        coroutineScope.launch {
+                                                            sidebarPlaylistViewModel.savePlaylist(
+                                                                playlistName
+                                                            )
+                                                        }
+                                                    }
+                                                ).show()
+                                            }
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(Res.drawable.add_24px),
+                                                contentDescription = createPlaylist,
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
                                         }
-                                    )
+                                    }
+                                }
+
+                                if (playlists.isEmpty()) {
+                                    item(key = "sidebar_playlist_empty") {
+                                        XyRow(
+                                            modifier = Modifier.padding(
+//                                            start = 12.dp
+                                            ),
+                                        ) {
+                                            XyTextSubSmall(
+                                                text = noPlaylistsText,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    items(
+                                        items = playlists,
+                                        key = { it.itemId }
+                                    ) { playlist ->
+                                        val selectedPlaylist = currentRoute is AlbumInfo &&
+                                                currentRoute.itemId == playlist.itemId &&
+                                                currentRoute.dataType == MusicDataTypeEnum.PLAYLIST
+                                        MusicPlaylistItemComponent(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+//                                            .padding(horizontal = XyTheme.dimens.innerVerticalPadding)
+                                                .pointerHoverIcon(PointerIcon.Hand),
+                                            name = playlist.name,
+                                            subordination = "${playlist.musicCount}${songsCountSuffix}",
+                                            imgUrl = playlist.pic,
+                                            backgroundColor = if (selectedPlaylist) {
+                                                sidebarColors.sidebarPlaylistSelectedBackground
+                                            } else {
+                                                Color.Transparent
+                                            },
+                                            brush = null,
+                                            onClick = {
+                                                navigator.navigate(
+                                                    route = AlbumInfo(
+                                                        itemId = playlist.itemId,
+                                                        dataType = MusicDataTypeEnum.PLAYLIST
+                                                    )
+                                                )
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -515,6 +553,132 @@ private fun DesktopLoginErrorSideSheet(
             }
         }
     }
+}
+
+/**
+ * JVM 左侧栏顶部搜索框。
+ *
+ * 采用四角圆角的填充样式，与侧边栏导航项的圆角、悬停底色保持一致的视觉语言；
+ * 输入关键字后回车跳转到搜索页。
+ */
+@Composable
+private fun DesktopSidebarSearchField(
+    onSearch: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // 搜索关键字，仅在侧边栏内部维护
+    var keyword by remember { mutableStateOf("") }
+    // 是否处于聚焦态，用于驱动描边与图标强调色
+    var isFocused by remember { mutableStateOf(false) }
+    // 鼠标悬停态，用于微调填充底色
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    // 四角圆角，与侧边栏导航项保持同一圆角尺寸
+    val fieldShape = RoundedCornerShape(XyTheme.dimens.corner)
+
+    // 提交搜索：去除首尾空格后跳转搜索页
+    fun submitSearch() {
+        val searchQuery = keyword.trim()
+        if (searchQuery.isNotEmpty()) {
+            keyword = searchQuery
+            onSearch(searchQuery)
+        }
+    }
+
+    // 填充底色：默认弱填充，悬停与聚焦时加深，颜色取 onSurface 低透明度以适配深浅主题
+    val containerColor by animateColorAsState(
+        targetValue = when {
+            isFocused || hovered -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+            else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+        },
+        label = "SidebarSearchContainer"
+    )
+    // 描边颜色：默认几乎不可见，聚焦时切换为主色
+    val borderColor by animateColorAsState(
+        targetValue = if (isFocused) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+        } else {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+        },
+        label = "SidebarSearchBorder"
+    )
+    // 搜索图标颜色：聚焦时跟随主色
+    val iconTint by animateColorAsState(
+        targetValue = if (isFocused) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        label = "SidebarSearchIcon"
+    )
+
+    BasicTextField(
+        value = keyword,
+        onValueChange = { keyword = it },
+        modifier = modifier
+            .height(DesktopSidebarSearchHeight)
+            .onFocusChanged { isFocused = it.isFocused },
+        textStyle = MaterialTheme.typography.bodyMedium.copy(
+            color = MaterialTheme.colorScheme.onSurface
+        ),
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { submitSearch() }),
+        decorationBox = { innerTextField ->
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(fieldShape)
+                    .background(containerColor)
+                    .border(width = 1.dp, color = borderColor, shape = fieldShape)
+                    // 悬停检测挂在外层，整块输入区域都能响应
+                    .hoverable(interactionSource),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Spacer(modifier = Modifier.width(10.dp))
+                Icon(
+                    painter = painterResource(Res.drawable.search_24px),
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(15.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    innerTextField()
+                    // 空输入时展示提示文案
+                    if (keyword.isEmpty()) {
+                        XyTextSubSmall(
+                            text = stringResource(Res.string.search_music_album_artist),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
+                        )
+                    }
+                }
+                // 有输入内容时展示清除按钮
+                if (keyword.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                            .jvmHoverDebounceClickable { keyword = "" },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.cancel_24px),
+                            contentDescription = stringResource(Res.string.clear),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+        }
+    )
 }
 
 /**
