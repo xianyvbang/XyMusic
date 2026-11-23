@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.components
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -88,6 +87,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XySwitch
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.ui.xy.XyTextSub
@@ -178,18 +178,6 @@ private val JvmSettingGroupMarkerWidth = 3.dp
 
 /** 设置分组标题左侧强调条高度。 */
 private val JvmSettingGroupMarkerHeight = 11.dp
-
-/** 设计稿开关宽度。 */
-private val JvmSettingSwitchWidth = 36.dp
-
-/** 设计稿开关高度。 */
-private val JvmSettingSwitchHeight = 20.dp
-
-/** 设计稿开关滑块尺寸。 */
-private val JvmSettingSwitchThumbSize = 14.dp
-
-/** 开关滑块开启态的最大横向位移。 */
-private val JvmSettingSwitchThumbOffset = 18.dp
 
 /** 设置行悬停时左侧强调条宽度。 */
 private val JvmSettingRowMarkerWidth = 2.dp
@@ -1133,7 +1121,8 @@ internal fun JvmSettingSwitchRow(
             }
         },
         trailing = {
-            JvmCompactSwitch(
+            // 复用通用 ui 模块的跨端紧凑开关
+            XySwitch(
                 checked = checked,
                 enabled = enabled,
                 onCheckedChange = {
@@ -1144,82 +1133,6 @@ internal fun JvmSettingSwitchRow(
             )
         }
     )
-}
-
-/**
- * 设计稿样式的开关控件。
- *
- * 使用 36×20 的胶囊轨道与 14dp 圆形滑块，替代 Material 默认的大尺寸开关。
- * 供设置页与专辑详情等需要紧凑开关行的桌面页面复用。
- *
- * @param checked 当前开关状态。
- * @param enabled 是否允许交互。
- * @param onCheckedChange 状态变化回调。
- */
-@Composable
-internal fun JvmCompactSwitch(
-    checked: Boolean,
-    enabled: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    val trackColor by animateColorAsState(
-        targetValue = if (checked) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-        },
-        animationSpec = tween(durationMillis = 220),
-        label = "jvm_setting_switch_track",
-    )
-    val borderColor by animateColorAsState(
-        targetValue = if (checked) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f)
-        },
-        animationSpec = tween(durationMillis = 220),
-        label = "jvm_setting_switch_border",
-    )
-    val thumbColor by animateColorAsState(
-        targetValue = if (checked) {
-            MaterialTheme.colorScheme.onPrimary
-        } else {
-            MaterialTheme.colorScheme.onSurface
-        },
-        animationSpec = tween(durationMillis = 220),
-        label = "jvm_setting_switch_thumb",
-    )
-    val thumbOffset by animateDpAsState(
-        targetValue = if (checked) JvmSettingSwitchThumbOffset else 0.dp,
-        animationSpec = tween(durationMillis = 220),
-        label = "jvm_setting_switch_offset",
-    )
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Box(
-        modifier = Modifier
-            .size(width = JvmSettingSwitchWidth, height = JvmSettingSwitchHeight)
-            .clip(CircleShape)
-            .background(trackColor)
-            .border(BorderStroke(1.dp, borderColor), CircleShape)
-            // 悬停时显示小手光标，无波纹背景。
-            .jvmHoverDebounceClickable(
-                interactionSource = interactionSource,
-                enabled = enabled,
-                indication = null,
-                role = Role.Switch,
-                onClick = { onCheckedChange(!checked) },
-            )
-            .padding(horizontal = 2.dp, vertical = 2.dp),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Box(
-            modifier = Modifier
-                .offset(x = thumbOffset)
-                .size(JvmSettingSwitchThumbSize)
-                .background(thumbColor, CircleShape)
-        )
-    }
 }
 
 /**

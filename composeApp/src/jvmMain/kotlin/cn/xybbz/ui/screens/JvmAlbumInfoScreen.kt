@@ -101,7 +101,6 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.FavoriteIconButton
-import cn.xybbz.ui.components.JvmCompactSwitch
 import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.JvmMusicSelectionActionBar
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
@@ -123,6 +122,7 @@ import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyImage
+import cn.xybbz.ui.xy.XySwitch
 import cn.xybbz.ui.xy.XyTextButton
 import cn.xybbz.ui.xy.rememberXyTextHoverColor
 import cn.xybbz.viewmodel.AlbumInfoViewModel
@@ -876,7 +876,8 @@ private fun JvmAlbumPlaybackHistorySwitch(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        JvmCompactSwitch(
+        // 复用通用 ui 模块的跨端紧凑开关
+        XySwitch(
             checked = checked,
             enabled = true,
             onCheckedChange = onCheckedChange,

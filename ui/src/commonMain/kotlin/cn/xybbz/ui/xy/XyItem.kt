@@ -49,8 +49,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -602,12 +600,11 @@ fun XyItemSwitcher(
             text = text,
             color = textColorState.color,
         )
-        Switch(
-            checked = state, onCheckedChange = onChange, enabled = enabled,
-            colors = SwitchDefaults.colors(
-                uncheckedBorderColor = Color.Transparent,
-                checkedThumbColor = MaterialTheme.colorScheme.surface
-            )
+        // 统一使用跨端的紧凑开关，保持各端开关视觉一致
+        XySwitch(
+            checked = state,
+            onCheckedChange = onChange,
+            enabled = enabled,
         )
     }
 }
