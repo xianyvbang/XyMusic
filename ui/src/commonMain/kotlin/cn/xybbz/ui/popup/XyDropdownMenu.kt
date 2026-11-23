@@ -1,7 +1,12 @@
 package cn.xybbz.ui.popup
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.verticalDrag
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -13,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
@@ -29,7 +35,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,12 +70,21 @@ fun XyDropdownMenu(
     properties: PopupProperties = PopupProperties(focusable = true),
 ) {
     val shape = RoundedCornerShape(XyTheme.dimens.corner)
+    // 菜单自身持有滚动状态，桌面端才能在其右缘叠加可拖拽滚动条
+    val scrollState = rememberScrollState()
+    val scrollbarModifier = if (signalStyle) {
+        rememberMenuScrollbar(scrollState = scrollState)
+    } else {
+        Modifier
+    }
     DropdownMenu(
         offset = offset,
         expanded = onIfShowMenu(),
         onDismissRequest = { onSetIfShowMenu(false) },
+        scrollState = scrollState,
         shape = shape,
         modifier = modifier
+            .then(scrollbarModifier)
             .then(
                 // 桌面端补一圈 1dp 细描边，深色背景下菜单与页面内容才能分层
                 if (signalStyle) {
@@ -271,6 +293,87 @@ private fun XyMenuReadout(
             maxLines = 1,
         )
     }
+}
+
+/**
+ * 菜单滚动条。
+ *
+ * 以覆盖方式绘制在菜单右缘，与 [scrollState] 联动：
+ * 内容未溢出时不显示；悬停或拖拽时加深；拖拽拇指可连续滚动。
+ * 通过 PointerEventPass.Initial 优先捕获右缘手势，避免误触菜单条目。
+ *
+ * @param scrollState 菜单内容共用的滚动状态
+ */
+@Composable
+private fun rememberMenuScrollbar(scrollState: ScrollState): Modifier {
+    val density = LocalDensity.current
+    val hoverSource = remember { MutableInteractionSource() }
+    val hovered by hoverSource.collectIsHoveredAsState()
+    var dragging by remember { mutableStateOf(false) }
+    // 悬停或拖拽时加深，平时保持弱化
+    val thumbAlpha by animateFloatAsState(
+        targetValue = if (hovered || dragging) 0.5f else 0.16f,
+        label = "menuScrollbarAlpha",
+    )
+    val thumbColor = MaterialTheme.colorScheme.onSurface
+    val thumbWidth = with(density) { 3.dp.toPx() }
+    val edgeInset = with(density) { 3.dp.toPx() }
+    val verticalInset = with(density) { 3.dp.toPx() }
+    // 右缘 12dp 内都视为滚动条命中区，便于拖拽
+    val hitWidth = with(density) { 12.dp.toPx() }
+    val minThumbHeight = with(density) { 24.dp.toPx() }
+
+    return Modifier
+        .hoverable(hoverSource)
+        .drawWithContent {
+            drawContent()
+            // 没有可滚动内容时不画滚动条
+            if (scrollState.maxValue <= 0) return@drawWithContent
+            val total = scrollState.viewportSize + scrollState.maxValue
+            val thumbHeight = (size.height * scrollState.viewportSize.toFloat() / total)
+                .coerceAtLeast(minThumbHeight)
+            val travel = (size.height - thumbHeight).coerceAtLeast(0f)
+            val fraction = scrollState.value.toFloat() / scrollState.maxValue
+            drawRoundRect(
+                color = thumbColor.copy(alpha = thumbAlpha),
+                topLeft = Offset(
+                    x = size.width - edgeInset - thumbWidth,
+                    y = travel * fraction + verticalInset,
+                ),
+                size = Size(
+                    width = thumbWidth,
+                    height = (thumbHeight - verticalInset * 2).coerceAtLeast(minThumbHeight / 2),
+                ),
+                cornerRadius = CornerRadius(thumbWidth / 2, thumbWidth / 2),
+            )
+        }
+        .pointerInput(scrollState) {
+            awaitEachGesture {
+                val down = awaitFirstDown(
+                    requireUnconsumed = false,
+                    pass = PointerEventPass.Initial,
+                )
+                // 只接管右缘区域，其它位置的按下保持原有点击行为
+                if (scrollState.maxValue <= 0 || down.position.x < size.width - hitWidth) {
+                    return@awaitEachGesture
+                }
+                dragging = true
+                down.consume()
+                var lastY = down.position.y
+                verticalDrag(down.id) { change ->
+                    val dy = change.position.y - lastY
+                    lastY = change.position.y
+                    val total = scrollState.viewportSize + scrollState.maxValue
+                    val thumbHeight = (size.height * scrollState.viewportSize.toFloat() / total)
+                        .coerceAtLeast(minThumbHeight)
+                    val travel = (size.height - thumbHeight).coerceAtLeast(1f)
+                    // 把拇指位移换算成内容位移，拖拽方向与滚动方向一致
+                    scrollState.dispatchRawDelta(dy / travel * scrollState.maxValue)
+                    change.consume()
+                }
+                dragging = false
+            }
+        }
 }
 
 /**

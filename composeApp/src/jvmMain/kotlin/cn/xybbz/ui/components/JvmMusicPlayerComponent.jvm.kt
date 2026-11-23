@@ -588,8 +588,6 @@ fun JvmMusicPlayerScreen(
                                                         leadingIcon = {
                                                             LyricsOffsetMenuIcon(Res.drawable.check_24px)
                                                         },
-                                                        // 提交类动作使用主色，权重高于普通条目
-                                                        emphasis = MenuItemEmphasis.Primary,
                                                         dismissOnClick = false,
                                                         onClick = {
                                                             // 只有确认后才把预览偏移写回歌词配置。
