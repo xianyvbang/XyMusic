@@ -737,6 +737,8 @@
     <string name="jvm_download_screen_text_06">歌名/歌手</string>
     <string name="jvm_download_screen_text_07">进度</string>
     <string name="jvm_download_screen_text_08">下载中</string>
+    <string name="jvm_download_screen_text_09">打开文件所在位置</string>
+    <string name="jvm_download_screen_text_10">无法打开所在文件夹，请确认路径是否存在</string>
     <string name="jvm_interface_setting_screen_text_01">已设置</string>
     <string name="jvm_interface_setting_screen_text_02">未设置</string>
     <string name="jvm_interface_setting_screen_text_03">把主题、背景和桌面显示偏好放进同一张可预览的控制台，保持紧凑，同时能快速看到当前视觉结果。</string>

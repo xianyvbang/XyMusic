@@ -59,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,8 +71,10 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.formatBytes
+import cn.xybbz.common.utils.openFolderInSystemFileManager
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.image.rememberRawCoverUrls
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -91,6 +94,7 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
+import cn.xybbz.ui.icons.folder_open_24px
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
@@ -162,6 +166,7 @@ internal fun JvmLocalDownloadScreen(
     downloadViewModel: DownloadViewModel = koinViewModel<DownloadViewModel>(),
     localViewModel: LocalViewModel = koinViewModel<LocalViewModel>(),
     dataSourceManager: DataSourceManager = koinInject(),
+    downloaderManager: DownloaderManager = koinInject(),
 ) {
     val navigator = LocalNavigator.current
     val artistInfoLoader = rememberMusicArtistInfoLoader(dataSourceManager)
@@ -243,6 +248,15 @@ internal fun JvmLocalDownloadScreen(
         ).show()
     }
 
+    // 打开文件所在位置：点击时再取实际生效的歌曲下载目录，保证设置变更后立即生效
+    val openFolderFailedText = stringResource(Res.string.jvm_download_screen_text_10)
+    val openDownloadFolder = {
+        val folderPath = downloaderManager.config.usableFinalDirectory()
+        if (!openFolderInSystemFileManager(folderPath)) {
+            MessageUtils.sendPopTip(openFolderFailedText)
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         // 标题、标签栏与下载工具栏固定在列表上方，滚动时始终可见
         JvmLocalDownloadHeader(
@@ -252,6 +266,7 @@ internal fun JvmLocalDownloadScreen(
             downloadingCount = activeDownloadTasks.size,
             isSelectingLocal = isSelectingLocal,
             onSelectTab = { selectedTab = it },
+            onOpenFolder = openDownloadFolder,
             onToggleLocalSelection = {
                 if (isSelectingLocal) {
                     isSelectingLocal = false
@@ -410,6 +425,8 @@ private fun JvmLocalDownloadHeader(
     downloadingCount: Int,
     isSelectingLocal: Boolean,
     onSelectTab: (JvmLocalDownloadTab) -> Unit,
+    // 打开歌曲下载目录，本地歌曲与下载列表共用
+    onOpenFolder: () -> Unit,
     onToggleLocalSelection: () -> Unit,
     onResumeAll: () -> Unit,
     onPauseAll: () -> Unit,
@@ -438,9 +455,15 @@ private fun JvmLocalDownloadHeader(
                 selected = selectedTab == JvmLocalDownloadTab.Downloading,
                 onClick = { onSelectTab(JvmLocalDownloadTab.Downloading) },
             )
+            Spacer(modifier = Modifier.weight(1f))
+            // 打开文件所在位置：两个标签页都直接定位到当前歌曲下载目录
+            JvmDownloadToolbarButton(
+                text = stringResource(Res.string.jvm_download_screen_text_09),
+                onClick = onOpenFolder,
+                imageVector = folder_open_24px,
+            )
             // 本地歌曲标签提供选择入口，选择态切换为完成按钮
             if (selectedTab == JvmLocalDownloadTab.LocalSongs) {
-                Spacer(modifier = Modifier.weight(1f))
                 OutlinedButton(
                     onClick = onToggleLocalSelection,
                     modifier = Modifier.height(32.dp),
@@ -545,9 +568,11 @@ private fun JvmLocalDownloadTabButton(
 
 @Composable
 private fun JvmDownloadToolbarButton(
-    icon: DrawableResource,
     text: String,
     onClick: () -> Unit,
+    icon: DrawableResource? = null,
+    // 资源图标不便复用时（如 ui 模块里的 ImageVector 图标）可直接传入矢量图标
+    imageVector: ImageVector? = null,
 ) {
     Row(
         modifier = Modifier
@@ -559,12 +584,21 @@ private fun JvmDownloadToolbarButton(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = text,
-            tint = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.size(18.dp),
-        )
+        when {
+            icon != null -> Icon(
+                painter = painterResource(icon),
+                contentDescription = text,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(18.dp),
+            )
+
+            imageVector != null -> Icon(
+                imageVector = imageVector,
+                contentDescription = text,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(18.dp),
+            )
+        }
         Text(
             text = text,
             color = MaterialTheme.colorScheme.onSurface,
