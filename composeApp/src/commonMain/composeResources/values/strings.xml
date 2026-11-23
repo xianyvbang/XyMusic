@@ -1032,4 +1032,10 @@
     <string name="transcode_audio_bit_rate_type_text_01">不转码</string>
     <string name="jvm_album_info_text_02">保存播放记录</string>
     <string name="jvm_album_info_text_03">开启后下次从断点继续</string>
+    <!--桌面端右键菜单与歌词偏移菜单-->
+    <string name="jvm_menu_now">NOW</string>
+    <string name="jvm_lyrics_offset_readout">歌词偏移 / 无上限</string>
+    <string name="jvm_lyrics_offset_step_back">−0.5s</string>
+    <string name="jvm_lyrics_offset_step_forward">+0.5s</string>
+    <string name="jvm_lyrics_offset_confirm">确认偏移</string>
 </resources>

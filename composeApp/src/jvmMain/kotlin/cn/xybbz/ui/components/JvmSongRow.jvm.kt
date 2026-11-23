@@ -16,10 +16,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -35,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
@@ -91,6 +95,7 @@ import xymusic.composeapp.generated.resources.download
 import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.downloaded
 import xymusic.composeapp.generated.resources.info_24px
+import xymusic.composeapp.generated.resources.jvm_menu_now
 import xymusic.composeapp.generated.resources.keyboard_arrow_right_24px
 import xymusic.composeapp.generated.resources.more_horiz_24px
 import xymusic.composeapp.generated.resources.music_note_24px
@@ -240,7 +245,18 @@ internal fun SongRow(
     JvmRightClickDropdownMenuBox(
         modifier = modifier
             .clip(RoundedCornerShape(XyTheme.dimens.outerVerticalPadding / 2)),
-        menuModifier = Modifier.width(220.dp),
+        // 菜单宽度与设计稿一致，子菜单收窄一档
+        menuModifier = Modifier.width(248.dp),
+        // 曲目轨道：让菜单说明「在对谁操作」
+        header = {
+            SongContextMenuHeader(
+                music = music,
+                coverUrl = coverUrls.primaryUrl,
+                fallbackCoverUrl = coverUrls.fallbackUrl,
+                accentColor = accentColor,
+                nowPlaying = rowIfPlay,
+            )
+        },
         itemDataList = { menuItems },
     ) {
         XyRow(
@@ -420,8 +436,8 @@ private fun rememberSongRowContextMenuItems(
                     },
                 )
             },
-            subMenuModifier = Modifier.width(220.dp),
-            subMenuOffset = DpOffset(220.dp, 0.dp),
+            subMenuModifier = Modifier.width(196.dp),
+            subMenuOffset = DpOffset(248.dp, 0.dp),
             onClick = {
                 AddPlaylistBottomData(
                     ifShow = true,
@@ -442,7 +458,7 @@ private fun rememberSongRowContextMenuItems(
                 dismissOnClick = false,
                 subItems = viewSubItems,
                 subMenuModifier = Modifier.width(180.dp),
-                subMenuOffset = DpOffset(220.dp, 0.dp),
+                subMenuOffset = DpOffset(248.dp, 0.dp),
                 onClick = {},
             )
         } else {
@@ -495,9 +511,113 @@ private fun SongContextMenuIcon(iconRes: DrawableResource) {
     Icon(
         painter = painterResource(iconRes),
         contentDescription = null,
-        modifier = Modifier.size(20.dp),
-        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.size(16.dp),
+        // 跟随菜单条目内容色，悬停与强调态由菜单统一着色
+        tint = LocalContentColor.current,
     )
+}
+
+/**
+ * 歌曲右键菜单的曲目轨道：34dp 封面 + 歌名 + 等宽元数据，播放中额外显示 NOW。
+ *
+ * @param music 当前歌曲
+ * @param coverUrl 主封面地址
+ * @param fallbackCoverUrl 备用封面地址
+ * @param accentColor 无封面时的渐变底色
+ * @param nowPlaying 是否为当前播放歌曲
+ */
+@Composable
+private fun SongContextMenuHeader(
+    music: XyMusic,
+    coverUrl: String?,
+    fallbackCoverUrl: String?,
+    accentColor: Color,
+    nowPlaying: Boolean,
+) {
+    val artistsText = music.artists?.joinToString().orEmpty()
+    val mediaText = getMusicMedia(music.codec, music.bitRate)
+    // 元数据行：编码信息 + 艺术家，两者为空时自动省略
+    val metaText = listOf(mediaText, artistsText)
+        .filter { it.isNotBlank() }
+        .joinToString(" · ")
+    // 菜单封面按 34dp 解码，避免按原图尺寸浪费内存
+    val coverRequestSize = rememberSquareRequestSize(34.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 6.dp)
+            .padding(top = 4.dp, bottom = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(XyTheme.dimens.outerVerticalPadding))
+                .background(
+                    Brush.linearGradient(listOf(accentColor, accentColor.copy(alpha = 0.55f)))
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (coverUrl.isNullOrBlank() && fallbackCoverUrl.isNullOrBlank()) {
+                Icon(
+                    painter = painterResource(Res.drawable.music_note_24px),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            } else {
+                XyImage(
+                    modifier = Modifier.matchParentSize(),
+                    model = coverUrl,
+                    backModel = fallbackCoverUrl,
+                    requestSize = coverRequestSize,
+                    contentDescription = null,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            XyText(
+                text = music.name,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.5.sp),
+            )
+            Text(
+                text = metaText,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.5.sp,
+                letterSpacing = 0.3.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (nowPlaying) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(5.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                )
+                Text(
+                    text = stringResource(Res.string.jvm_menu_now),
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 8.5.sp,
+                    letterSpacing = 1.4.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+    }
 }
 
 /**

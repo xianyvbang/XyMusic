@@ -49,7 +49,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -57,6 +59,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import androidx.compose.runtime.Composable
@@ -96,6 +99,7 @@ import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose
 import cn.xybbz.ui.popup.MenuItemDefaultData
+import cn.xybbz.ui.popup.MenuItemEmphasis
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
 import cn.xybbz.ui.windows.DesktopWindowTitleCenterBar
@@ -107,18 +111,25 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.MusicPlayerViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.album_cover
+import xymusic.composeapp.generated.resources.arrow_back_24px
 import xymusic.composeapp.generated.resources.backward_offset
+import xymusic.composeapp.generated.resources.check_24px
 import xymusic.composeapp.generated.resources.close_player_screen
-import xymusic.composeapp.generated.resources.confirm
 import xymusic.composeapp.generated.resources.forward_offset
+import xymusic.composeapp.generated.resources.jvm_lyrics_offset_confirm
+import xymusic.composeapp.generated.resources.jvm_lyrics_offset_readout
+import xymusic.composeapp.generated.resources.jvm_lyrics_offset_step_back
+import xymusic.composeapp.generated.resources.jvm_lyrics_offset_step_forward
 import xymusic.composeapp.generated.resources.keyboard_arrow_down_24px
-import xymusic.composeapp.generated.resources.offset
+import xymusic.composeapp.generated.resources.keyboard_arrow_right_24px
 import xymusic.composeapp.generated.resources.reset
+import xymusic.composeapp.generated.resources.restart_alt_24px
 import kotlin.math.min
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -297,9 +308,12 @@ fun JvmMusicPlayerScreen(
     }
     val forwardOffsetText = stringResource(Res.string.forward_offset)
     val backwardOffsetText = stringResource(Res.string.backward_offset)
-    val offsetText = stringResource(Res.string.offset)
     val resetText = stringResource(Res.string.reset)
-    val confirmText = stringResource(Res.string.confirm)
+    // 歌词偏移菜单的读数与步进文案
+    val lyricsOffsetReadoutText = stringResource(Res.string.jvm_lyrics_offset_readout)
+    val lyricsOffsetStepBackText = stringResource(Res.string.jvm_lyrics_offset_step_back)
+    val lyricsOffsetStepForwardText = stringResource(Res.string.jvm_lyrics_offset_step_forward)
+    val lyricsOffsetConfirmText = stringResource(Res.string.jvm_lyrics_offset_confirm)
     val artistLabel = remember(musicDetail.artists) {
         musicDetail.artistLabel()
     }
@@ -498,6 +512,8 @@ fun JvmMusicPlayerScreen(
                                         // 桌面端用右键菜单承载歌词偏移预览和确认，避免修改通用歌词组件。
                                         .jvmRightClickDropdownMenu(
                                             dismissOnItemClick = false,
+                                            // 与歌曲菜单同宽，读数条与条目共用同一套外壳
+                                            menuModifier = Modifier.width(248.dp),
                                             onShowRequest = {
                                                 musicPlayerViewModel.resetLyricsPreviewOffset(
                                                     musicDetail.itemId
@@ -509,28 +525,33 @@ fun JvmMusicPlayerScreen(
                                                 )
                                             },
                                             itemDataList = {
+                                                // 每次重建条目时读取最新预览值，菜单保持打开时读数会实时刷新
+                                                val previewOffsetMs =
+                                                    musicPlayerViewModel.lyricsPreviewOffsetMs
                                                 listOf(
-                                                    // 顶部只读展示当前预览偏移，右键菜单保持打开时会随预览值实时刷新。
+                                                    // 只读读数条：标题说明 + 等宽数值，非零点用主色强调
                                                     MenuItemDefaultData(
-                                                        title = "$offsetText: ${
-                                                            formatJvmLyricsOffsetSeconds(
-                                                                musicPlayerViewModel.lyricsPreviewOffsetMs
-                                                            )
-                                                        }",
+                                                        title = lyricsOffsetReadoutText,
+                                                        trailingText = formatJvmLyricsOffsetSeconds(
+                                                            previewOffsetMs
+                                                        ),
+                                                        emphasis = if (previewOffsetMs != 0L) {
+                                                            MenuItemEmphasis.Primary
+                                                        } else {
+                                                            MenuItemEmphasis.Normal
+                                                        },
+                                                        isReadout = true,
                                                         enabled = false,
                                                         dismissOnClick = false,
                                                         onClick = {}
                                                     ),
                                                     MenuItemDefaultData(
-                                                        title = forwardOffsetText,
-                                                        onClick = {
-                                                            musicPlayerViewModel.adjustLyricsPreviewOffset(
-                                                                500L
-                                                            )
-                                                        }
-                                                    ),
-                                                    MenuItemDefaultData(
                                                         title = backwardOffsetText,
+                                                        trailingText = lyricsOffsetStepBackText,
+                                                        leadingIcon = {
+                                                            LyricsOffsetMenuIcon(Res.drawable.arrow_back_24px)
+                                                        },
+                                                        dismissOnClick = false,
                                                         onClick = {
                                                             musicPlayerViewModel.adjustLyricsPreviewOffset(
                                                                 -500L
@@ -538,13 +559,38 @@ fun JvmMusicPlayerScreen(
                                                         }
                                                     ),
                                                     MenuItemDefaultData(
+                                                        title = forwardOffsetText,
+                                                        trailingText = lyricsOffsetStepForwardText,
+                                                        leadingIcon = {
+                                                            LyricsOffsetMenuIcon(Res.drawable.keyboard_arrow_right_24px)
+                                                        },
+                                                        dismissOnClick = false,
+                                                        onClick = {
+                                                            musicPlayerViewModel.adjustLyricsPreviewOffset(
+                                                                500L
+                                                            )
+                                                        }
+                                                    ),
+                                                    MenuItemDefaultData(
                                                         title = resetText,
+                                                        leadingIcon = {
+                                                            LyricsOffsetMenuIcon(Res.drawable.restart_alt_24px)
+                                                        },
+                                                        // 已经在零点时重置没有意义，按设计禁用
+                                                        enabled = previewOffsetMs != 0L,
+                                                        dismissOnClick = false,
                                                         onClick = {
                                                             musicPlayerViewModel.resetLyricsPreviewOffsetToZero()
                                                         }
                                                     ),
                                                     MenuItemDefaultData(
-                                                        title = confirmText,
+                                                        title = lyricsOffsetConfirmText,
+                                                        leadingIcon = {
+                                                            LyricsOffsetMenuIcon(Res.drawable.check_24px)
+                                                        },
+                                                        // 提交类动作使用主色，权重高于普通条目
+                                                        emphasis = MenuItemEmphasis.Primary,
+                                                        dismissOnClick = false,
                                                         onClick = {
                                                             // 只有确认后才把预览偏移写回歌词配置。
                                                             musicPlayerViewModel.confirmLyricsPreviewOffset(
@@ -705,6 +751,21 @@ private fun formatJvmLyricsOffsetSeconds(offsetMs: Long): String {
     val secondsText = offsetMs.toSecondMs().toString()
     val sign = if (offsetMs > 0) "+" else ""
     return "${sign}${secondsText}s"
+}
+
+/**
+ * 歌词偏移菜单条目的线性图标，颜色跟随菜单条目内容色，悬停与强调态由菜单统一着色。
+ *
+ * @param iconRes 图标资源
+ */
+@Composable
+private fun LyricsOffsetMenuIcon(iconRes: DrawableResource) {
+    Icon(
+        painter = painterResource(iconRes),
+        contentDescription = null,
+        modifier = Modifier.size(16.dp),
+        tint = LocalContentColor.current,
+    )
 }
 
 @Composable

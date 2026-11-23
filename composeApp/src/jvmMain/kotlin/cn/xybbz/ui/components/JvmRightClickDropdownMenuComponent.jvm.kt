@@ -32,7 +32,7 @@ import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
 import kotlinx.coroutines.launch
 
-private val jvmRightClickDropdownMenuItemHeight = 32.dp
+private val jvmRightClickDropdownMenuItemHeight = 34.dp
 
 val jvmRightClickDropdownMenuObjectList = mutableStateListOf<JvmRightClickDropdownMenuObject>()
 
@@ -46,6 +46,8 @@ data class JvmRightClickDropdownMenuObject(
     val containerColor: Color = Color.Transparent,
     val dismissOnItemClick: Boolean = true,
     val itemHeight: Dp? = jvmRightClickDropdownMenuItemHeight,
+    // 菜单头部插槽，歌曲菜单用它展示曲目轨道
+    val header: (@Composable () -> Unit)? = null,
     val onCloseRequest: (() -> Unit)? = null,
     // 菜单打开后仍按最新状态生成条目，用于歌词偏移预览这类需要即时刷新的菜单内容。
     val itemDataList: () -> List<MenuItemDefaultData>,
@@ -72,9 +74,14 @@ fun JvmRightClickDropdownMenuComponent(modifier: Modifier = Modifier) {
                         item.withDismissBehavior(menuObject)
                     },
                     contentPadding = PaddingValues(
-                        start = XyTheme.dimens.innerHorizontalPadding,
+                        // 与设计稿条目左右内距一致
+                        start = 9.dp,
+                        end = 9.dp,
                     ),
                     itemHeight = menuObject.itemHeight,
+                    // 桌面端统一走信号台样式：描边、悬停导轨与读数条
+                    signalStyle = true,
+                    header = menuObject.header,
                 )
             }
         }
@@ -109,6 +116,7 @@ fun JvmRightClickDropdownMenuBox(
     containerColor: Color = Color.Transparent,
     dismissOnItemClick: Boolean = true,
     itemHeight: Dp? = jvmRightClickDropdownMenuItemHeight,
+    header: (@Composable () -> Unit)? = null,
     onShowRequest: (() -> Unit)? = null,
     onCloseRequest: (() -> Unit)? = null,
     itemDataList: () -> List<MenuItemDefaultData>,
@@ -121,6 +129,7 @@ fun JvmRightClickDropdownMenuBox(
             containerColor = containerColor,
             dismissOnItemClick = dismissOnItemClick,
             itemHeight = itemHeight,
+            header = header,
             onShowRequest = onShowRequest,
             onCloseRequest = onCloseRequest,
             itemDataList = itemDataList,
@@ -138,6 +147,7 @@ fun Modifier.jvmRightClickDropdownMenu(
     containerColor: Color = Color.Transparent,
     dismissOnItemClick: Boolean = true,
     itemHeight: Dp? = jvmRightClickDropdownMenuItemHeight,
+    header: (@Composable () -> Unit)? = null,
     onShowRequest: (() -> Unit)? = null,
     onCloseRequest: (() -> Unit)? = null,
     itemDataList: () -> List<MenuItemDefaultData>,
@@ -149,6 +159,7 @@ fun Modifier.jvmRightClickDropdownMenu(
     val currentContainerColor by rememberUpdatedState(containerColor)
     val currentDismissOnItemClick by rememberUpdatedState(dismissOnItemClick)
     val currentItemHeight by rememberUpdatedState(itemHeight)
+    val currentHeader by rememberUpdatedState(header)
     val currentOnShowRequest by rememberUpdatedState(onShowRequest)
     val currentOnCloseRequest by rememberUpdatedState(onCloseRequest)
     val currentItemDataList by rememberUpdatedState(itemDataList)
@@ -178,6 +189,7 @@ fun Modifier.jvmRightClickDropdownMenu(
                         containerColor = currentContainerColor,
                         dismissOnItemClick = currentDismissOnItemClick,
                         itemHeight = currentItemHeight,
+                        header = currentHeader,
                         onCloseRequest = currentOnCloseRequest,
                         itemDataList = { currentItemDataList() },
                     ).show()
