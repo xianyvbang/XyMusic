@@ -12,3 +12,9 @@ expect fun shareMusicResource(
     contextWrapper: ContextWrapper,
     resource: String?
 )
+
+/**
+ * 当前平台是否展示「分享歌曲」入口。
+ * 桌面端暂无合适的系统分享能力，默认隐藏该入口。
+ */
+internal expect val platformSupportsSongShare: Boolean

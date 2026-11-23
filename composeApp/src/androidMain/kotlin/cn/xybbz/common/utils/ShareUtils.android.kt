@@ -7,6 +7,11 @@ import android.webkit.URLUtil
 import cn.xybbz.platform.ContextWrapper
 import java.io.File
 
+/**
+ * 移动端支持通过系统分享面板分享歌曲。
+ */
+internal actual val platformSupportsSongShare: Boolean = true
+
 actual fun shareMusicResource(
     contextWrapper: ContextWrapper,
     resource: String?

@@ -58,6 +58,7 @@ import cn.xybbz.common.utils.DateUtil.toSecondMsString
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.shareMusicResource
+import cn.xybbz.common.utils.platformSupportsSongShare
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.compositionLocal.LocalPlayerChromeState
 import cn.xybbz.entity.data.ext.joinToString
@@ -495,23 +496,26 @@ fun MusicBottomMenuComponent(
                         })
                 }
 
-                item {
-                    XyItemIcon(
-                        painter = painterResource(Res.drawable.share_24px),
-                        text = stringResource(Res.string.share_song),
-                        onClick = {
-                            shareMusicResource(
-                                contextWrapper = contextWrapper,
-                                resource = music.downloadUrl
-                            )
-                            coroutineScope.launch {
-                                sheetState.hide()
-                            }.invokeOnCompletion {
-                                ifShowBottom = false
-                                music.dismiss()
-                            }
+                // 桌面端不支持系统分享，隐藏「分享歌曲」入口；移动端保持原有行为
+                if (platformSupportsSongShare) {
+                    item {
+                        XyItemIcon(
+                            painter = painterResource(Res.drawable.share_24px),
+                            text = stringResource(Res.string.share_song),
+                            onClick = {
+                                shareMusicResource(
+                                    contextWrapper = contextWrapper,
+                                    resource = music.downloadUrl
+                                )
+                                coroutineScope.launch {
+                                    sheetState.hide()
+                                }.invokeOnCompletion {
+                                    ifShowBottom = false
+                                    music.dismiss()
+                                }
 
-                        })
+                            })
+                    }
                 }
 
                 item {

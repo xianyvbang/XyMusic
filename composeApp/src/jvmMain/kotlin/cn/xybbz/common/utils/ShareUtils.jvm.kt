@@ -8,6 +8,11 @@ import java.awt.datatransfer.StringSelection
 import java.io.File
 import java.net.URI
 
+/**
+ * 桌面端不展示分享歌曲入口，避免出现无效或体验不佳的分享操作。
+ */
+internal actual val platformSupportsSongShare: Boolean = false
+
 actual fun shareMusicResource(
     contextWrapper: ContextWrapper,
     resource: String?
