@@ -95,6 +95,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.rememberXyTextHoverColor
 import cn.xybbz.viewmodel.DownloadViewModel
 import cn.xybbz.viewmodel.LocalViewModel
 import kotlinx.coroutines.flow.map
@@ -505,16 +506,29 @@ private fun JvmLocalDownloadTabButton(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    // 未选中标签悬停时文字切换为主题色，选中标签保持主题色
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        color = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+    )
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
-            .jvmHoverDebounceClickable(onClick = onClick)
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                onClick = onClick,
+            )
             .padding(horizontal = 2.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = label,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            color = textColorState.color,
             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
             maxLines = 1,
         )

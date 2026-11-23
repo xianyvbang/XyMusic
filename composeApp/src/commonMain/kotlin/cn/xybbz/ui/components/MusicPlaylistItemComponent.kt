@@ -3,6 +3,7 @@ package cn.xybbz.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,10 +29,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.config.image.rememberRawCoverUrls
 import cn.xybbz.ui.ext.composeClick
+import cn.xybbz.ui.ext.platformHoverClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.rememberXyTextHoverColor
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.Res
@@ -78,6 +82,14 @@ fun MusicPlaylistItemComponent(
     editPlaylistClick: (() -> Unit)? = null
 ) {
     val coverUrls = rememberRawCoverUrls(imgUrl)
+    val interactionSource = remember { MutableInteractionSource() }
+    // 悬停时歌单名称切换为主题色，与桌面端其它可点击文字项保持一致的移入反馈
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        enabled = enabled,
+        color = MaterialTheme.colorScheme.onSurface,
+        disabledColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 
     Row(
         modifier = modifier
@@ -91,6 +103,11 @@ fun MusicPlaylistItemComponent(
                 } else {
                     Modifier.background(backgroundColor)
                 }
+            )
+            // 桌面端补充悬停检测与小手光标，悬停状态同时驱动文字变色
+            .platformHoverClickable(
+                interactionSource = interactionSource,
+                enabled = enabled,
             )
             .combinedClickable(enabled = enabled, onClick = composeClick {
                 onClick?.invoke()
@@ -123,7 +140,7 @@ fun MusicPlaylistItemComponent(
                 fontWeight = FontWeight.Normal,
                 maxLines = 1,
                 overflow = TextOverflow.Clip,
-                color = MaterialTheme.colorScheme.onSurface
+                color = textColorState.color
             )
             subordination?.let {
                 XyTextSub(
@@ -131,6 +148,7 @@ fun MusicPlaylistItemComponent(
                     text = it,
                     maxLines = 1,
                     overflow = TextOverflow.Clip,
+                    color = textColorState.color,
                 )
             }
         }

@@ -141,9 +141,11 @@ fun XyDropdownMenu(
                 MenuItemEmphasis.Primary -> MaterialTheme.colorScheme.primary
                 MenuItemEmphasis.Normal -> null
             }
+            // 文字颜色：禁用保持次要色，强调条目常驻强调色，其余条目悬停转主色
             val textColor = when {
                 !data.enabled -> MaterialTheme.colorScheme.onSurfaceVariant
                 emphasisColor != null -> emphasisColor
+                hovered -> MaterialTheme.colorScheme.primary
                 else -> MaterialTheme.colorScheme.onSurface
             }
             // 桌面端按悬停状态重算图标色：悬停转主色，强调条目常驻强调色

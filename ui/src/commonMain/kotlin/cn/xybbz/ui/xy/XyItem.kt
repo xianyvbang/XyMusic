@@ -407,6 +407,13 @@ fun XyItemIcon(
     onClick: (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    // 悬停时文字切换为主题色，与通用文字按钮保持一致的移入反馈
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        enabled = enabled,
+        color = MaterialTheme.colorScheme.onSurface,
+        disabledColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 
     XyRow(
         modifier = modifier
@@ -442,7 +449,7 @@ fun XyItemIcon(
                 text = text,
                 fontWeight = null,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                color = textColorState.color
             )
             middleContent?.invoke()
             sub?.let {
@@ -451,7 +458,7 @@ fun XyItemIcon(
                     text = sub,
                     modifier = Modifier.weight(2f),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = textColorState.color
                 )
             }
         }
@@ -474,6 +481,17 @@ fun XyItemIconSelect(
     onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    // 悬停时未选中项切换为主题色，选中项保持主题色，与通用文字按钮反馈一致
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        enabled = enabled,
+        color = if (onIfSelected()) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        disabledColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 
     XyRow(
         modifier = modifier
@@ -515,7 +533,7 @@ fun XyItemIconSelect(
                 text = text,
                 fontWeight = null,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (enabled) if (!onIfSelected()) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                color = textColorState.color
             )
 
         }
@@ -548,6 +566,13 @@ fun XyItemSwitcher(
     )
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    // 悬停时整行文字切换为主题色，与菜单项、文字按钮保持一致的移入反馈
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        enabled = enabled,
+        color = MaterialTheme.colorScheme.onSurface,
+        disabledColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 
     Row(
         modifier = Modifier
@@ -574,7 +599,8 @@ fun XyItemSwitcher(
 
         XyText(
             modifier = Modifier.weight(1f),
-            text = text
+            text = text,
+            color = textColorState.color,
         )
         Switch(
             checked = state, onCheckedChange = onChange, enabled = enabled,

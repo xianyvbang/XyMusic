@@ -31,6 +31,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -123,6 +124,7 @@ import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyTextButton
+import cn.xybbz.ui.xy.rememberXyTextHoverColor
 import cn.xybbz.viewmodel.AlbumInfoViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -856,11 +858,20 @@ private fun JvmAlbumPlaybackHistorySwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    // 悬停整行时文字切换为主题色，与其它可点击文字项保持一致的移入反馈
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
             // 整行可点击切换，与开关保持同一交互结果
-            .jvmHoverDebounceClickable { onCheckedChange(!checked) }
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                onClick = { onCheckedChange(!checked) },
+            )
             .padding(vertical = 2.dp, horizontal = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -872,14 +883,18 @@ private fun JvmAlbumPlaybackHistorySwitch(
         )
         Text(
             text = stringResource(Res.string.jvm_album_info_text_02),
-            color = MaterialTheme.colorScheme.onSurface,
+            color = textColorState.color,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
         )
         Text(
             text = stringResource(Res.string.jvm_album_info_text_03),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (textColorState.hovered) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
             style = MaterialTheme.typography.labelSmall,
             maxLines = 1,
         )

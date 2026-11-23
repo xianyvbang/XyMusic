@@ -76,10 +76,12 @@ import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.ext.platformHoverClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnParentComponent
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyTextSubSmall
+import cn.xybbz.ui.xy.rememberXyTextHoverColor
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.Res
@@ -104,6 +106,12 @@ fun MusicListComponent(
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
+    )
+    // 清空按钮的悬停交互源与文字变色状态，桌面端移入时文字切换为主题色
+    val clearHoverSource = remember { MutableInteractionSource() }
+    val clearTextColorState = rememberXyTextHoverColor(
+        interactionSource = clearHoverSource,
+        color = MaterialTheme.colorScheme.onSurface,
     )
 
     // 播放列表弹层关闭时恢复迷你播放条标题跑马灯。
@@ -139,12 +147,17 @@ fun MusicListComponent(
                         fontWeight = FontWeight.W900,
                         fontSize = 19.sp
                     )
-                    TextButton(onClick = {
-                        //删除数据库内容
-                        onClearPlayerList()
-                    }) {
+                    TextButton(
+                        modifier = Modifier.platformHoverClickable(
+                            interactionSource = clearHoverSource,
+                        ),
+                        onClick = {
+                            //删除数据库内容
+                            onClearPlayerList()
+                        }) {
                         XyTextSubSmall(
-                            text = stringResource(Res.string.clear)
+                            text = stringResource(Res.string.clear),
+                            color = clearTextColorState.color,
                         )
                     }
 

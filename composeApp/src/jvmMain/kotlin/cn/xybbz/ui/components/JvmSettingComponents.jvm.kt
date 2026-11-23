@@ -91,6 +91,7 @@ import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.rememberXyTextHoverColor
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -1482,6 +1483,11 @@ private fun JvmSettingDownloadSegment(
 ) {
     val shape = RoundedCornerShape(4.dp)
     val interactionSource = remember { MutableInteractionSource() }
+    // 未选中分段悬停时文字切换为主题色，选中态保持反色文字
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     Box(
         modifier = Modifier
             .height(26.dp)
@@ -1514,7 +1520,7 @@ private fun JvmSettingDownloadSegment(
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                textColorState.color
             }
         )
     }
@@ -1584,6 +1590,11 @@ private fun JvmSettingThemeSegment(
 ) {
     val shape = RoundedCornerShape(4.dp)
     val interactionSource = remember { MutableInteractionSource() }
+    // 未选中分段悬停时文字切换为主题色，选中态保持反色文字
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     Box(
         modifier = Modifier
             .height(26.dp)
@@ -1614,7 +1625,7 @@ private fun JvmSettingThemeSegment(
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                textColorState.color
             }
         )
     }
