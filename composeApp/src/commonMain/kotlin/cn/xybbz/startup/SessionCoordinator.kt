@@ -8,9 +8,11 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.emptyFlow
@@ -18,9 +20,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -56,17 +58,29 @@ class SessionCoordinator(
         }
     }
 
-    /** 连接或媒体库发生变化时的上下文流，供分页数据重新建立查询。 */
-    val dataContextChangedFlow = state
-        .mapNotNull { it.connection?.id }
-        .distinctUntilChanged()
-        .flatMapLatest { connectionId ->
-            merge(
-                flowOf(connectionId to null),
-                dataSourceManager.mediaLibraryChangedFlow.map { connectionId to it },
-            )
+    /**
+     * 每次登录成功递增的会话代次。
+     * 清空数据库后重新登录时连接 ID 可能被复用，只比较连接 ID 会漏发刷新，
+     * 导致分页数据一直停留在清库前的空状态，这里用代次兜底。
+     */
+    private val loginGeneration = MutableStateFlow(0L)
+
+    /**
+     * 连接或媒体库发生变化时的上下文流，供分页数据重新建立查询。
+     * 同时携带登录代次，保证相同连接 ID 的重新登录也能重建分页。
+     */
+    val dataContextChangedFlow: Flow<Unit> =
+        combine(state, loginGeneration) { sessionState, generation ->
+            sessionState.connection?.id?.let { it to generation }
         }
-        .distinctUntilChanged()
+            .filterNotNull()
+            .distinctUntilChanged()
+            .flatMapLatest {
+                merge(
+                    flowOf(Unit),
+                    dataSourceManager.mediaLibraryChangedFlow.map { Unit },
+                )
+            }
 
     private val started = AtomicBoolean(false)
     private val sessionMutex = Mutex()
@@ -150,7 +164,7 @@ class SessionCoordinator(
         if (currentConnection != null) {
             prepareSessionServices()
             initializePlayerIfNeeded()
-            _state.value = AppSessionState.Ready(currentConnection)
+            setReady(currentConnection)
         }
     }
 
@@ -193,8 +207,17 @@ class SessionCoordinator(
         } else {
             prepareSessionServices()
             initializePlayerIfNeeded()
-            _state.value = AppSessionState.Ready(connection)
+            setReady(connection)
         }
+    }
+
+    /**
+     * 进入就绪状态。
+     * 先递增登录代次再发布状态，保证相同连接 ID 的重新登录也能触发分页数据重建。
+     */
+    private fun setReady(connection: ConnectionConfig) {
+        loginGeneration.update { it + 1 }
+        _state.value = AppSessionState.Ready(connection)
     }
 
     /** 启动会话级登录事件监听。 */
