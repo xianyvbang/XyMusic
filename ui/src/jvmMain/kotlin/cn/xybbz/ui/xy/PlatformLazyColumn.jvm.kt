@@ -37,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import cn.xybbz.ui.components.SidebarVerticalScrollbar
 
 /**
@@ -50,6 +51,7 @@ import cn.xybbz.ui.components.SidebarVerticalScrollbar
  * @param contentPadding 列表内容内边距。
  * @param verticalArrangement 列表项的垂直排列方式。
  * @param horizontalAlignment 列表项的水平对齐方式。
+ * @param scrollbarBottomPadding 滚动条底部预留高度，默认避开底部播放栏。
  * @param content LazyColumn 的列表内容。
  */
 @Composable
@@ -59,6 +61,7 @@ internal actual fun PlatformLazyColumn(
     contentPadding: PaddingValues,
     verticalArrangement: Arrangement.Vertical,
     horizontalAlignment: Alignment.Horizontal,
+    scrollbarBottomPadding: Dp,
     content: LazyListScope.() -> Unit
 ) {
     // JVM 桌面入口启用后，通用 LazyColumn 会自动补充桌面滚动条。
@@ -97,7 +100,8 @@ internal actual fun PlatformLazyColumn(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .fillMaxHeight(),
-                adapter = rememberScrollbarAdapter(scrollState = lazyListState)
+                adapter = rememberScrollbarAdapter(scrollState = lazyListState),
+                bottomPadding = scrollbarBottomPadding,
             )
         }
     } else {

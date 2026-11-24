@@ -19,7 +19,6 @@
 package cn.xybbz.ui.screens
 
 
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -32,9 +31,10 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.JvmLazyListComponent
+import cn.xybbz.ui.components.JvmMusicSelectionPanel
+import cn.xybbz.ui.components.JvmPageTitleBar
+import cn.xybbz.ui.components.JvmSelectionToggleButton
 import cn.xybbz.ui.components.SongTableColumns
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
@@ -59,7 +59,6 @@ private val JvmFavoriteMusicTableColumns = SongTableColumns(
 /**
  * 收藏界面
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JvmFavoriteScreen(
     favoriteViewModel: FavoriteViewModel = koinViewModel<FavoriteViewModel>(),
@@ -75,6 +74,10 @@ fun JvmFavoriteScreen(
         onLoadArtistInfos = artistInfoLoader.loadArtistInfos,
     )
     val favoriteList by favoriteViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    // 已下载完成的音乐 ID 集合，用于行内展示已下载图标并禁止重复下载
+    val downloadMusicIds by favoriteViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
+    // 批量选择状态：决定选择入口按钮文案与列表行内选择列
+    val selectUiState by favoriteViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val currentPlayingMusicIdFlow = remember(favoriteViewModel) {
         favoriteViewModel.musicController.musicInfoFlow.map { musicInfo ->
             musicInfo?.itemId
@@ -83,29 +86,71 @@ fun JvmFavoriteScreen(
 
 
     XyColumnScreen {
-        TopAppBarComponent(
-            title = {
-                TopAppBarTitle(
-                    title = stringResource(Res.string.my_favorites)
+        // 与设置页、连接管理页共用统一页头，右侧提供批量选择入口
+        JvmPageTitleBar(
+            title = stringResource(Res.string.my_favorites),
+            trailing = {
+                JvmSelectionToggleButton(
+                    isSelecting = selectUiState.isOpen,
+                    onClick = {
+                        if (selectUiState.isOpen) {
+                            favoriteViewModel.selectControl.dismiss()
+                        } else {
+                            // 批量操作由列表内的选择操作栏承载
+                            favoriteViewModel.selectControl.show(ifOpenSelect = true)
+                        }
+                    },
                 )
-            })
+            },
+        )
+        // 选择操作栏固定在页头下方，非选择态不占高度，与音乐列表页保持一致的 UI 结构
+        JvmMusicSelectionPanel(
+            visible = selectUiState.isOpen,
+            selectControl = favoriteViewModel.selectControl,
+            allMusicIds = {
+                favoriteMusicListPage.itemSnapshotList.items.map { it.itemId }
+            },
+            dataSourceManager = favoriteViewModel.dataSourceManager,
+            musicPlayContext = favoriteViewModel.musicPlayContext,
+            db = favoriteViewModel.db,
+            downloadDb = favoriteViewModel.downloadDb,
+            musicController = favoriteViewModel.musicController,
+            downloaderManager = favoriteViewModel.downloaderManager,
+        )
         JvmLazyListComponent(
             pagingItems = favoriteMusicListPage,
         ) {
             songTableItems(
                 tableKey = "favorite_music",
                 pagingItems = favoriteMusicListPage,
-                columns = JvmFavoriteMusicTableColumns,
+                columns = JvmFavoriteMusicTableColumns.copy(
+                    showInlineActions = !selectUiState.isOpen,
+                    showSelectionColumn = selectUiState.isOpen,
+                ),
                 ifFavorite = { music -> favoriteList.contains(music.itemId) },
+                ifDownloaded = { music -> music.itemId in downloadMusicIds },
                 currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
+                isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
                 onSongClick = { index, music ->
-                    favoriteViewModel.musicPlayContext.favorite(
-                        OnMusicPlayParameter(
-                            musicId = music.itemId,
-                            albumId = music.album,
-                        ),
-                        index = index,
-                    )
+                    if (selectUiState.isOpen) {
+                        // 选择模式下点击整行等价于勾选/取消勾选当前歌曲
+                        favoriteViewModel.selectControl.toggleSelection(
+                            music.itemId,
+                            onIsSelectAll = {
+                                selectUiState.selectedMusicIds.containsAll(
+                                    favoriteMusicListPage.itemSnapshotList.items.map { it.itemId }
+                                )
+                            }
+                        )
+                    } else {
+                        favoriteViewModel.musicPlayContext.favorite(
+                            OnMusicPlayParameter(
+                                musicId = music.itemId,
+                                albumId = music.album,
+                            ),
+                            index = index,
+                        )
+                    }
                 },
                 onOpenArtist = artistClickHandler::openMusicArtists,
                 onOpenAlbum = { music ->
@@ -129,11 +174,18 @@ fun JvmFavoriteScreen(
                         favoriteViewModel.getMusicInfo(music.itemId)?.show()
                     }
                 },
+                // 点击行尾勾选框同样切换选中状态
+                onSelectionClick = { musicId ->
+                    favoriteViewModel.selectControl.toggleSelection(
+                        musicId,
+                        onIsSelectAll = {
+                            selectUiState.selectedMusicIds.containsAll(
+                                favoriteMusicListPage.itemSnapshotList.items.map { it.itemId }
+                            )
+                        }
+                    )
+                },
             )
         }
     }
 }
-
-
-
-

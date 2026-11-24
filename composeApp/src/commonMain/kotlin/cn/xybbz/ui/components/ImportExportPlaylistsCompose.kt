@@ -243,6 +243,8 @@ fun getExportPlaylistsAlertDialogObject(
         // 弹窗只负责选择导出格式,真正的保存路径由 FileKit 保存器继续处理。
         AlertDialogObject(
             title = exportPlaylist,
+            icon = XyDialogIcon.List,
+            kicker = Res.string.dialog_kicker_export,
             content = {
                 ExportPlaylistsCompose(
                     onClose = { it.dismiss() },

@@ -26,6 +26,7 @@ import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
@@ -38,12 +39,14 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class FavoriteViewModel(
-    private val dataSourceManager: DataSourceManager,
-    db: LocalDatabaseClient,
-    downloadDb: DownloadDatabaseClient,
+    val dataSourceManager: DataSourceManager,
+    val db: LocalDatabaseClient,
+    val downloadDb: DownloadDatabaseClient,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,
-    private val downloaderManager: DownloaderManager,
+    val downloaderManager: DownloaderManager,
+    // 批量选择状态控制器：收藏页与其它音乐列表页共用同一套选择逻辑
+    val selectControl: SelectControl,
     /** 提供当前连接与媒体库变化，驱动分页数据重建。 */
     private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {

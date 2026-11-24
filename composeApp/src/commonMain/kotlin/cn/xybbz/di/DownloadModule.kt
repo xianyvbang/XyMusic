@@ -46,8 +46,11 @@ class DownloadModule {
             DownloaderManager(
                 contextWrapper,
                 db,
+                // 自定义下载目录为空时沿用平台默认目录；目录不可用的情况由下载引擎在执行时回落到默认目录。
                 config = DownloaderConfig.Builder(contextWrapper)
-                    .setMaxConcurrentDownloads(settings.maxConcurrentDownloads).build(),
+                    .setMaxConcurrentDownloads(settings.maxConcurrentDownloads)
+                    .setFinalDirectory(settings.downloadFilePath)
+                    .build(),
                 httpClientFactory = object : HttpClientFactory {
                     override fun createHttpClient(): HttpClient {
                         return dataSourceManager.getHttpClient()

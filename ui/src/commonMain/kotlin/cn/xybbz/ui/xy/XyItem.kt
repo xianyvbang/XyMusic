@@ -49,8 +49,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -92,6 +90,13 @@ import xymusic.ui.generated.resources.favorite_border_24px
 import xymusic.ui.generated.resources.favorited
 import xymusic.ui.generated.resources.image_suffix
 import xymusic.ui.generated.resources.selected
+
+/**
+ * ui 模块内的「已下载」图标资源。
+ * 生成的 Res 对象只在 ui 模块内可见，这里以公开的 DrawableResource 暴露，
+ * 供 composeApp 等依赖模块复用同一份矢量资源，避免各模块重复维护同一图标。
+ */
+val downloadDoneIcon: DrawableResource = Res.drawable.download_done_24px
 
 /**
  * 列表单项
@@ -400,6 +405,13 @@ fun XyItemIcon(
     onClick: (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    // 悬停时文字切换为主题色，与通用文字按钮保持一致的移入反馈
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        enabled = enabled,
+        color = MaterialTheme.colorScheme.onSurface,
+        disabledColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 
     XyRow(
         modifier = modifier
@@ -435,7 +447,7 @@ fun XyItemIcon(
                 text = text,
                 fontWeight = null,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                color = textColorState.color
             )
             middleContent?.invoke()
             sub?.let {
@@ -444,7 +456,7 @@ fun XyItemIcon(
                     text = sub,
                     modifier = Modifier.weight(2f),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = textColorState.color
                 )
             }
         }
@@ -467,6 +479,17 @@ fun XyItemIconSelect(
     onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    // 悬停时未选中项切换为主题色，选中项保持主题色，与通用文字按钮反馈一致
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        enabled = enabled,
+        color = if (onIfSelected()) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        disabledColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 
     XyRow(
         modifier = modifier
@@ -508,7 +531,7 @@ fun XyItemIconSelect(
                 text = text,
                 fontWeight = null,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (enabled) if (!onIfSelected()) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                color = textColorState.color
             )
 
         }
@@ -541,6 +564,13 @@ fun XyItemSwitcher(
     )
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    // 悬停时整行文字切换为主题色，与菜单项、文字按钮保持一致的移入反馈
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        enabled = enabled,
+        color = MaterialTheme.colorScheme.onSurface,
+        disabledColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 
     Row(
         modifier = Modifier
@@ -567,14 +597,14 @@ fun XyItemSwitcher(
 
         XyText(
             modifier = Modifier.weight(1f),
-            text = text
+            text = text,
+            color = textColorState.color,
         )
-        Switch(
-            checked = state, onCheckedChange = onChange, enabled = enabled,
-            colors = SwitchDefaults.colors(
-                uncheckedBorderColor = Color.Transparent,
-                checkedThumbColor = MaterialTheme.colorScheme.surface
-            )
+        // 统一使用跨端的紧凑开关，保持各端开关视觉一致
+        XySwitch(
+            checked = state,
+            onCheckedChange = onChange,
+            enabled = enabled,
         )
     }
 }

@@ -72,6 +72,8 @@ fun LazyColumnNotComponent(
             )
         }
     },
+    // 桌面端滚动条底部预留高度，默认避开底部播放栏；不会被播放栏遮挡的列表可传 0.dp
+    scrollbarBottomPadding: Dp = XyTheme.dimens.snackBarPlayerHeight,
     items: LazyListScope.() -> Unit
 ) {
     LazyColumnParentComponent(
@@ -81,6 +83,7 @@ fun LazyColumnNotComponent(
         contentPadding = contentPadding,
         verticalArrangement = verticalArrangement,
         horizontalAlignment = horizontalAlignment,
+        scrollbarBottomPadding = scrollbarBottomPadding,
         content = {
             items()
             bottomItem?.invoke(this)
@@ -103,6 +106,8 @@ fun LazyColumnParentComponent(
     verticalArrangement: Arrangement.Vertical =
         Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2),
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    // 桌面端滚动条底部预留高度，默认避开底部播放栏
+    scrollbarBottomPadding: Dp = XyTheme.dimens.snackBarPlayerHeight,
     content: LazyListScope.() -> Unit
 ) {
     bindPauseLoadWhenScrolling(lazyListState)
@@ -113,6 +118,7 @@ fun LazyColumnParentComponent(
         contentPadding = contentPadding,
         verticalArrangement = verticalArrangement,
         horizontalAlignment = horizontalAlignment,
+        scrollbarBottomPadding = scrollbarBottomPadding,
         content = content
     )
 }

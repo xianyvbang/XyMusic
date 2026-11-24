@@ -81,9 +81,10 @@ class DownloadImpl(
             var finalFilePath: String? = null
             try {
                 // 最终文件路径在 commonMain 里只做解析，真正的临时文件创建交给平台 actual。
+                // 自定义目录不可用时回落到平台默认目录，保证下载任务仍能创建。
                 val resolved = FileNameResolver.resolve(
                     request = request,
-                    globalFinalDir = downloadDispatcher.config.finalDirectory,
+                    globalFinalDir = downloadDispatcher.config.usableFinalDirectory(),
                 )
                 finalFilePath = resolved.finalPath
                 tempFilePath = withContext(Dispatchers.IO) {

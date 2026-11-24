@@ -60,6 +60,7 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyItem
+import cn.xybbz.ui.xy.rememberSquareRequestSize
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.Res
@@ -93,8 +94,12 @@ fun MusicCardComponent(
     fallback: DrawableResource? = Res.drawable.music_xy_placeholder_foreground,
     onRouter: (String) -> Unit,
 ) {
+    // 卡片封面按实际展示尺寸解码，避免未传请求尺寸时按服务端原图解码。
+    val coverSize = imageSize ?: MusicCardImageSize
+    val coverRequestSize = rememberSquareRequestSize(coverSize)
+
     Column(
-        modifier = modifier.width(imageSize ?: MusicCardImageSize),
+        modifier = modifier.width(coverSize),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Center
     ) {
@@ -117,6 +122,7 @@ fun MusicCardComponent(
                         ),
                     model = model,
                     backModel = backModel,
+                    requestSize = coverRequestSize,
                     placeholder = placeholder,
                     error = error,
                     fallback = fallback,

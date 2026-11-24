@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.ui.ext.composeClick
+import cn.xybbz.ui.icons.filter_alt
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
@@ -64,7 +65,6 @@ import xymusic.composeapp.generated.resources.confirm
 import xymusic.composeapp.generated.resources.favorite_24px
 import xymusic.composeapp.generated.resources.favorite_border_24px
 import xymusic.composeapp.generated.resources.get_favorite_music
-import xymusic.composeapp.generated.resources.menu_open_24px
 import xymusic.composeapp.generated.resources.open_sort_and_filter_menu
 import xymusic.composeapp.generated.resources.select_sort_method
 import xymusic.composeapp.generated.resources.sort_24px
@@ -178,7 +178,7 @@ fun SelectSortBottomSheetComponent(
             ifShowSortOrFilterMenu = true
         }) {
             Icon(
-                painter = painterResource(Res.drawable.menu_open_24px),
+                imageVector = filter_alt,
                 contentDescription = stringResource(Res.string.open_sort_and_filter_menu)
             )
         }

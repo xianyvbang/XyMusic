@@ -102,7 +102,7 @@ class DownloadCacheController(
         upstreamDataSourceFactory = XyDefaultDataSourceFactory(
             factory,
             baseUrlProvider = { settingsManager.baseUrl.value },
-            downloadDirectoryProvider = { xyDownloaderManager.config.finalDirectory }
+            downloadDirectoryProvider = { xyDownloaderManager.config.usableFinalDirectory() }
         )
         cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(cache)

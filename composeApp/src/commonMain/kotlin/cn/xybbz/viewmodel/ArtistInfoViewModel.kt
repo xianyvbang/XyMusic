@@ -56,7 +56,8 @@ class ArtistInfoViewModel(
     val db: LocalDatabaseClient,
     val downloadDb: DownloadDatabaseClient,
     val selectControl: SelectControl,
-    private val downloaderManager: DownloaderManager,
+    // 下载管理器：列表选择模式批量下载时复用
+    val downloaderManager: DownloaderManager,
     /** 提供当前连接与媒体库变化，驱动艺人详情分页重建。 */
     private val sessionCoordinator: SessionCoordinator,
 ) : ViewModel() {

@@ -1387,6 +1387,40 @@ val Migration_9_10 = object : Migration(9, 10) {
 }
 
 /**
+ * v13 到 v14 的首页音乐迁移：新增下载地址字段，并从完整音乐表回填已有缓存。
+ */
+val Migration_13_14 = object : Migration(13, 14) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE HomeMusic ADD COLUMN downloadUrl TEXT NOT NULL DEFAULT ''")
+        // 旧缓存没有下载地址，升级时统一从 xy_music 回填，避免首页歌曲下载失败
+        connection.execSQL(
+            """
+            UPDATE HomeMusic
+            SET downloadUrl = COALESCE(
+                (
+                    SELECT mi.downloadUrl
+                    FROM xy_music mi
+                    WHERE mi.itemId = HomeMusic.musicId
+                    AND mi.connectionId = HomeMusic.connectionId
+                    LIMIT 1
+                ),
+                ''
+            )
+            """.trimIndent()
+        )
+    }
+}
+
+/**
+ * v12 到 v13 的设置迁移：新增自定义歌曲下载目录字段。
+ */
+val Migration_12_13 = object : Migration(12, 13) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE xy_settings ADD COLUMN downloadFilePath TEXT NOT NULL DEFAULT ''")
+    }
+}
+
+/**
  * v11 到 v12 的设置迁移：新增桌面端启动选项字段。
  */
 val Migration_11_12 = object : Migration(11, 12) {

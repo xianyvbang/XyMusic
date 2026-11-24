@@ -70,6 +70,49 @@ class DownloadCoreUtilitiesTest {
     }
 
     /**
+     * 自定义下载目录可用时优先使用，不可用时回落到平台默认目录。
+     */
+    @Test
+    fun downloaderConfigResolvesCustomDirectoryAndFallsBack() {
+        val root = createTempDirectory()
+        val contextWrapper = createTestContextWrapper(root)
+        val customDirectory = File(root, "custom-download").apply { mkdirs() }
+        // 父路径是普通文件时无法创建目录，用于验证自定义目录不可用时的回落逻辑。
+        val blockingFile = File(root, "blocking-file").apply { writeText("x") }
+        val invalidDirectory = File(blockingFile, "child")
+
+        try {
+            val customConfig = DownloaderConfig.Builder(contextWrapper = contextWrapper)
+                .setFinalDirectory(customDirectory.absolutePath)
+                .build()
+            assertEquals(customDirectory.absolutePath, customConfig.usableFinalDirectory())
+
+            val fallbackConfig = DownloaderConfig.Builder(contextWrapper = contextWrapper)
+                .setFinalDirectory(invalidDirectory.absolutePath)
+                .build()
+            assertEquals(
+                contextWrapper.downloadDirectory.absolutePath,
+                fallbackConfig.usableFinalDirectory(),
+            )
+
+            // 空路径表示使用平台默认目录，不应把空串写进配置。
+            val defaultConfig = DownloaderConfig.Builder(contextWrapper = contextWrapper)
+                .setFinalDirectory("")
+                .build()
+            assertEquals(
+                contextWrapper.downloadDirectory.absolutePath,
+                defaultConfig.finalDirectory,
+            )
+            assertEquals(
+                contextWrapper.downloadDirectory.absolutePath,
+                defaultConfig.usableFinalDirectory(),
+            )
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
      * 下载状态对象应保留进度、错误原因和枚举顺序。
      */
     @Test

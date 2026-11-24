@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.components
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -36,9 +35,9 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
@@ -62,12 +61,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
@@ -83,9 +87,11 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XySwitch
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.rememberXyTextHoverColor
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -173,18 +179,6 @@ private val JvmSettingGroupMarkerWidth = 3.dp
 /** 设置分组标题左侧强调条高度。 */
 private val JvmSettingGroupMarkerHeight = 11.dp
 
-/** 设计稿开关宽度。 */
-private val JvmSettingSwitchWidth = 36.dp
-
-/** 设计稿开关高度。 */
-private val JvmSettingSwitchHeight = 20.dp
-
-/** 设计稿开关滑块尺寸。 */
-private val JvmSettingSwitchThumbSize = 14.dp
-
-/** 开关滑块开启态的最大横向位移。 */
-private val JvmSettingSwitchThumbOffset = 18.dp
-
 /** 设置行悬停时左侧强调条宽度。 */
 private val JvmSettingRowMarkerWidth = 2.dp
 
@@ -257,10 +251,31 @@ internal fun JvmSettingFlowRow(
 }
 
 /**
+ * 设置类页面固定头部的统一内边距：左右对齐窗口边距，顶部预留与内容区一致的页头间距。
+ */
+internal val JvmSettingPageHeaderPadding: PaddingValues
+    @Composable get() = PaddingValues(
+        start = XyTheme.dimens.outerHorizontalPadding,
+        end = XyTheme.dimens.outerHorizontalPadding,
+        top = XyTheme.dimens.outerVerticalPadding * 2,
+    )
+
+/**
+ * 设置类页面内容的统一内边距：左右对齐窗口边距，顶部预留页头间距，底部留出滚动余量。
+ */
+internal val JvmSettingPageContentPadding: PaddingValues
+    @Composable get() = PaddingValues(
+        start = XyTheme.dimens.outerHorizontalPadding,
+        end = XyTheme.dimens.outerHorizontalPadding,
+        top = XyTheme.dimens.outerVerticalPadding * 2,
+        bottom = XyTheme.dimens.outerVerticalPadding * 6,
+    )
+
+/**
  * JVM 设置类页面的通用列表外壳。
  *
  * @param modifier 传给内部列表的修饰符。
- * @param contentPadding 列表内容内边距。
+ * @param contentPadding 列表内容内边距，默认使用设置类页面的统一内边距。
  * @param verticalArrangement 列表条目之间的纵向间距。
  * @param topBar 页面顶部栏；为空时不显示。
  * @param content 页面主体内容，默认按设置页统一纵向间距排列。
@@ -268,9 +283,7 @@ internal fun JvmSettingFlowRow(
 @Composable
 internal fun JvmSettingPageScaffold(
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(
-        horizontal = XyTheme.dimens.outerHorizontalPadding,
-    ),
+    contentPadding: PaddingValues = JvmSettingPageContentPadding,
     verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(
         XyTheme.dimens.outerVerticalPadding * 2
     ),
@@ -501,62 +514,177 @@ internal fun JvmSettingPageHeader(
     }
 }
 
-/** 紧凑标题字号，对应设计稿设置页顶部大标题。 */
-private val JvmSettingHeadlineTitleSize = 32.sp
+/** 页面头部大标题字号，对应设计稿顶部大标题。 */
+private val JvmPageHeaderTitleSize = 32.sp
 
-/** 紧凑标题行高。 */
-private val JvmSettingHeadlineTitleLineHeight = 36.sp
+/** 页面头部大标题行高。 */
+private val JvmPageHeaderTitleLineHeight = 36.sp
 
-/** 紧凑标题字距。 */
-private val JvmSettingHeadlineTitleLetterSpacing = (-1.1).sp
+/** 页面头部大标题字距。 */
+private val JvmPageHeaderTitleLetterSpacing = (-1.1).sp
 
-/** 标题与右侧读数之间的间距。 */
-private val JvmSettingHeadlineGap = 16.dp
+/** 标题与右侧读数区域之间的间距。 */
+private val JvmPageHeaderGap = 16.dp
 
-/** 顶部读数文本字号。 */
-private val JvmSettingHeadlineMetaSize = 10.5.sp
+/** 右侧单行读数文案字号。 */
+private val JvmPageHeaderMetaSize = 10.5.sp
 
 /**
- * JVM 设置页紧凑头部。
+ * JVM 页面统一头部。
  *
- * 排版对齐设计稿：左侧是加粗大标题，右侧是等宽小字的当前数据源读数。
+ * 排版对齐设计稿：左侧是加粗大标题，右侧是页面读数区域。
+ * 读数区域既可以传 [meta] 展示单行等宽文案，也可以通过 [trailing] 传入自定义内容
+ * （例如连接管理页的多个读数单元格）。
  *
  * @param title 页面标题。
- * @param meta 标题右侧的等宽读数文案。
  * @param modifier 外层修饰符。
+ * @param meta 标题右侧的等宽单行读数文案，与 [trailing] 二选一。
+ * @param trailing 标题右侧的自定义读数区域，优先级高于 [meta]。
+ * @param trailingMaxHeight 右侧区域的限高；传入后右侧内容高度不会撑高标题行。
  */
 @Composable
-internal fun JvmSettingHeadline(
+internal fun JvmPageHeader(
     title: String,
-    meta: String,
     modifier: Modifier = Modifier,
+    meta: String? = null,
+    trailing: (@Composable RowScope.() -> Unit)? = null,
+    trailingMaxHeight: Dp? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(JvmSettingHeadlineGap),
+        horizontalArrangement = Arrangement.spacedBy(JvmPageHeaderGap),
         verticalAlignment = Alignment.Bottom,
     ) {
         XyTextLarge(
+            modifier = Modifier.weight(1f),
             text = title,
             fontWeight = FontWeight.ExtraBold,
             style = MaterialTheme.typography.headlineLarge.copy(
-                fontSize = JvmSettingHeadlineTitleSize,
-                lineHeight = JvmSettingHeadlineTitleLineHeight,
-                letterSpacing = JvmSettingHeadlineTitleLetterSpacing,
+                fontSize = JvmPageHeaderTitleSize,
+                lineHeight = JvmPageHeaderTitleLineHeight,
+                letterSpacing = JvmPageHeaderTitleLetterSpacing,
             ),
             color = MaterialTheme.colorScheme.onSurface,
         )
-        XyTextSub(
-            modifier = Modifier.weight(1f, fill = false),
-            text = meta,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontFamily = FontFamily.Monospace,
-                fontSize = JvmSettingHeadlineMetaSize,
-                letterSpacing = 0.9.sp,
-            ),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-        )
+        when {
+            // 自定义读数区域优先，便于不同页面自由组合读数单元格。
+            trailing != null -> {
+                if (trailingMaxHeight != null) {
+                    // 限高后右侧内容与标题底部对齐，标题行的顶部位置不受按钮高度影响
+                    Row(
+                        modifier = Modifier.height(trailingMaxHeight),
+                        verticalAlignment = Alignment.Bottom,
+                        content = trailing,
+                    )
+                } else {
+                    trailing()
+                }
+            }
+
+            meta != null -> XyTextSub(
+                text = meta,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = JvmPageHeaderMetaSize,
+                    letterSpacing = 0.9.sp,
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+/**
+ * 一级内容页面页头的统一内边距。
+ *
+ * 在设置类页头内边距的基础上补充底部间距，
+ * 避免大标题与紧随其后的表格表头/网格内容贴在一起。
+ */
+internal val JvmPageTitleBarPadding: PaddingValues
+    @Composable get() = PaddingValues(
+        start = XyTheme.dimens.outerHorizontalPadding,
+        end = XyTheme.dimens.outerHorizontalPadding,
+        top = XyTheme.dimens.outerVerticalPadding * 2,
+        bottom = XyTheme.dimens.outerVerticalPadding * 2,
+    )
+
+/**
+ * JVM 一级内容页面的统一页头。
+ *
+ * 复用设置页与连接管理页的 [JvmPageHeader]，并套用设置类页面的页头内边距，
+ * 让首页、音乐、专辑、艺术家、收藏、流派、本地和下载等页面的大标题字号、字重、左右边距与顶部间距保持一致。
+ *
+ * @param title 页面标题。
+ * @param modifier 外层修饰符。
+ * @param paddingValues 页头内边距，默认与一级内容页面一致（含底部间距）。
+ * @param trailing 标题右侧的自定义操作区域，例如排序、筛选与收藏按钮。
+ */
+@Composable
+internal fun JvmPageTitleBar(
+    title: String,
+    modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = JvmPageTitleBarPadding,
+    trailing: (@Composable RowScope.() -> Unit)? = null,
+) {
+    // 标题行高固定为大标题行高，右侧操作区高度不超过该行高。
+    // 否则 48dp 的图标按钮会把整行撑高，标题随之下移，各页面标题的顶部间距就会不一致。
+    val titleRowHeight = with(LocalDensity.current) { JvmPageHeaderTitleLineHeight.toDp() }
+    JvmPageHeader(
+        title = title,
+        modifier = modifier.padding(paddingValues),
+        trailing = trailing,
+        trailingMaxHeight = titleRowHeight,
+    )
+}
+
+/** 折叠标题完全滚出视口时保留的最小缩放比例。 */
+private const val JvmCollapsingTitleMinScale = 0.7f
+
+/**
+ * 随列表滚动缩小并淡出的页面标题容器。
+ *
+ * 标题作为列表首项参与滚动：上滑时按滚动比例缩小到 [JvmCollapsingTitleMinScale] 并淡出，
+ * 回滑到顶部时重新放大显示。
+ *
+ * @param lazyListState 与标题同处一个列表的滚动状态，用于计算折叠比例。
+ * @param modifier 外层修饰符。
+ * @param content 标题内容。
+ */
+@Composable
+internal fun JvmCollapsingTitleContainer(
+    lazyListState: LazyListState,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    // 记录标题实际高度，滚动偏移达到该高度时标题正好完全淡出。
+    val titleHeight = remember { mutableIntStateOf(0) }
+    val collapseFraction = remember(lazyListState) {
+        derivedStateOf {
+            val height = titleHeight.intValue
+            when {
+                height <= 0 -> 0f
+                // 标题已滚出首屏时直接按完全折叠处理，避免回弹时闪现
+                lazyListState.firstVisibleItemIndex > 0 -> 1f
+                else -> (lazyListState.firstVisibleItemScrollOffset.toFloat() / height).coerceIn(0f, 1f)
+            }
+        }
+    }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .onSizeChanged { titleHeight.intValue = it.height }
+            .graphicsLayer {
+                // 在绘制阶段读取折叠比例，滚动过程中只刷新图层，不触发重组。
+                val fraction = collapseFraction.value
+                val scale = 1f - (1f - JvmCollapsingTitleMinScale) * fraction
+                scaleX = scale
+                scaleY = scale
+                alpha = 1f - fraction
+                transformOrigin = TransformOrigin(0f, 0.5f)
+            }
+    ) {
+        content()
     }
 }
 
@@ -993,7 +1121,8 @@ internal fun JvmSettingSwitchRow(
             }
         },
         trailing = {
-            JvmSettingSwitch(
+            // 复用通用 ui 模块的跨端紧凑开关
+            XySwitch(
                 checked = checked,
                 enabled = enabled,
                 onCheckedChange = {
@@ -1004,81 +1133,6 @@ internal fun JvmSettingSwitchRow(
             )
         }
     )
-}
-
-/**
- * 设计稿样式的开关控件。
- *
- * 使用 36×20 的胶囊轨道与 14dp 圆形滑块，替代 Material 默认的大尺寸开关。
- *
- * @param checked 当前开关状态。
- * @param enabled 是否允许交互。
- * @param onCheckedChange 状态变化回调。
- */
-@Composable
-private fun JvmSettingSwitch(
-    checked: Boolean,
-    enabled: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    val trackColor by animateColorAsState(
-        targetValue = if (checked) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-        },
-        animationSpec = tween(durationMillis = 220),
-        label = "jvm_setting_switch_track",
-    )
-    val borderColor by animateColorAsState(
-        targetValue = if (checked) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f)
-        },
-        animationSpec = tween(durationMillis = 220),
-        label = "jvm_setting_switch_border",
-    )
-    val thumbColor by animateColorAsState(
-        targetValue = if (checked) {
-            MaterialTheme.colorScheme.onPrimary
-        } else {
-            MaterialTheme.colorScheme.onSurface
-        },
-        animationSpec = tween(durationMillis = 220),
-        label = "jvm_setting_switch_thumb",
-    )
-    val thumbOffset by animateDpAsState(
-        targetValue = if (checked) JvmSettingSwitchThumbOffset else 0.dp,
-        animationSpec = tween(durationMillis = 220),
-        label = "jvm_setting_switch_offset",
-    )
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Box(
-        modifier = Modifier
-            .size(width = JvmSettingSwitchWidth, height = JvmSettingSwitchHeight)
-            .clip(CircleShape)
-            .background(trackColor)
-            .border(BorderStroke(1.dp, borderColor), CircleShape)
-            // 悬停时显示小手光标，无波纹背景。
-            .jvmHoverDebounceClickable(
-                interactionSource = interactionSource,
-                enabled = enabled,
-                indication = null,
-                role = Role.Switch,
-                onClick = { onCheckedChange(!checked) },
-            )
-            .padding(horizontal = 2.dp, vertical = 2.dp),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Box(
-            modifier = Modifier
-                .offset(x = thumbOffset)
-                .size(JvmSettingSwitchThumbSize)
-                .background(thumbColor, CircleShape)
-        )
-    }
 }
 
 /**
@@ -1205,8 +1259,9 @@ internal fun JvmSettingPickRow(
                     lineHeight = 16.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                // 说明文案完整换行展示，超长时不再省略，与通用设置行保持一致。
+                maxLines = Int.MAX_VALUE,
+                overflow = TextOverflow.Visible
             )
         }
         if (!tag.isNullOrBlank()) {
@@ -1341,6 +1396,11 @@ private fun JvmSettingDownloadSegment(
 ) {
     val shape = RoundedCornerShape(4.dp)
     val interactionSource = remember { MutableInteractionSource() }
+    // 未选中分段悬停时文字切换为主题色，选中态保持反色文字
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     Box(
         modifier = Modifier
             .height(26.dp)
@@ -1373,7 +1433,7 @@ private fun JvmSettingDownloadSegment(
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                textColorState.color
             }
         )
     }
@@ -1443,6 +1503,11 @@ private fun JvmSettingThemeSegment(
 ) {
     val shape = RoundedCornerShape(4.dp)
     val interactionSource = remember { MutableInteractionSource() }
+    // 未选中分段悬停时文字切换为主题色，选中态保持反色文字
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     Box(
         modifier = Modifier
             .height(26.dp)
@@ -1473,7 +1538,7 @@ private fun JvmSettingThemeSegment(
             color = if (selected) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                textColorState.color
             }
         )
     }
@@ -1600,8 +1665,8 @@ internal fun JvmSettingActionGrid(
  * @param title 设置项标题。
  * @param description 设置项说明。
  * @param descriptionStyle 说明文本样式。
- * @param descriptionMaxLines 说明文本最大行数。
- * @param descriptionOverflow 说明文本超出时的处理方式，可按场景选择换行展示或缩略点。
+ * @param descriptionMaxLines 说明文本最大行数，默认不限制，超长说明换行完整展示。
+ * @param descriptionOverflow 说明文本超出时的处理方式，默认完整换行展示而非省略。
  * @param enabled 是否启用点击和正常内容透明度。
  * @param minHeight 行最小高度。
  * @param horizontalPadding 行横向内边距。
@@ -1618,8 +1683,9 @@ internal fun JvmSettingBaseRow(
     title: String,
     description: String,
     descriptionStyle: JvmSettingRowDescriptionStyle = JvmSettingRowDescriptionStyle.Normal,
-    descriptionMaxLines: Int = 1,
-    descriptionOverflow: TextOverflow = TextOverflow.Ellipsis,
+    // 说明文案默认不限制行数并完整换行展示，避免超长描述被省略号截断。
+    descriptionMaxLines: Int = Int.MAX_VALUE,
+    descriptionOverflow: TextOverflow = TextOverflow.Visible,
     enabled: Boolean = true,
     minHeight: Dp = XyTheme.dimens.itemHeight,
     horizontalPadding: Dp = XyTheme.dimens.contentPadding,
@@ -2071,15 +2137,6 @@ internal enum class JvmSettingRowDescriptionStyle {
 /** 设置页顶部标签之间的横向间距，对齐设计稿的标签排布。 */
 private val JvmSettingTabSpacing = 26.dp
 
-/** 标签文字与底部下划线之间的间距。 */
-private val JvmSettingTabUnderlineGap = 7.dp
-
-/** 标签底部下划线高度。 */
-private val JvmSettingTabUnderlineHeight = 2.dp
-
-/** 标签底部留白，让下划线贴近标签栏分隔线。 */
-private val JvmSettingTabBottomPadding = 9.dp
-
 /**
  * JVM 设置页顶部标签项数据。
  *
@@ -2120,11 +2177,11 @@ internal fun JvmSettingTabBar(
             verticalAlignment = Alignment.Bottom,
         ) {
             tabs.forEachIndexed { index, tab ->
-                val selected = index == selectedIndex
-                JvmSettingTabItemContent(
-                    selected = selected,
+                // 复用通用下划线标签，与艺术家详情页章节导航保持一致的交互与视觉
+                JvmUnderlineTab(
                     title = tab.title,
-                    onSelected = { onSelected(index) },
+                    selected = index == selectedIndex,
+                    onClick = { onSelected(index) },
                 )
             }
         }
@@ -2135,69 +2192,6 @@ internal fun JvmSettingTabBar(
                 .fillMaxWidth()
                 .height(1.dp)
                 .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-        )
-    }
-}
-
-/**
- * JVM 设置页顶部单个标签项。
- *
- * hover 时文字切换为主题色并显示小手光标，选中态保留高亮下划线。
- *
- * @param selected 是否为当前选中的标签。
- * @param title 标签展示文案。
- * @param onSelected 标签点击回调。
- */
-@Composable
-private fun JvmSettingTabItemContent(
-    selected: Boolean,
-    title: String,
-    onSelected: () -> Unit,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
-    Column(
-        modifier = Modifier
-            // 用文字宽度作为列宽，让下划线与文字等宽而不是撑满整行。
-            .width(IntrinsicSize.Max)
-            .jvmHoverDebounceClickable(
-                interactionSource = interactionSource,
-                indication = null,
-                role = Role.Tab,
-                onClick = onSelected,
-            )
-            .padding(
-                top = XyTheme.dimens.outerVerticalPadding / 2,
-                bottom = JvmSettingTabBottomPadding,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        XyText(
-            text = title,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-            ),
-            color = when {
-                selected -> MaterialTheme.colorScheme.onSurface
-                hovered -> MaterialTheme.colorScheme.primary
-                else -> MaterialTheme.colorScheme.onSurfaceVariant
-            },
-            maxLines = 1,
-        )
-        Spacer(modifier = Modifier.height(JvmSettingTabUnderlineGap))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(JvmSettingTabUnderlineHeight)
-                .background(
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        Color.Transparent
-                    },
-                    shape = RoundedCornerShape(JvmSettingTabUnderlineHeight)
-                )
         )
     }
 }

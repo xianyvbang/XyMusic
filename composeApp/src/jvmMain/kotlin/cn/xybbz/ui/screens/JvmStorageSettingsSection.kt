@@ -56,6 +56,8 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.formatStorageLabel
 import cn.xybbz.common.utils.parseStorageBytes
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.JvmSettingBaseRow
 import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingGroup
@@ -118,19 +120,20 @@ internal fun JvmStorageSettingsSection(
     }
     // 数据库清理属于高风险操作，先弹出确认框，再交给 ViewModel 清理数据库与相关状态。
     val warning = stringResource(Res.string.warning)
+    // 弹窗在本地函数里创建，正文必须先在 composable 作用域解析
+    val confirmDeleteDatabaseText = stringResource(Res.string.confirm_delete_database)
     fun confirmClearDatabase() {
         AlertDialogObject(
             title = warning,
-            content = {
-                XyTextSub(
-                    text = stringResource(Res.string.confirm_delete_database),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            },
-            ifWarning = true,
+            body = confirmDeleteDatabaseText,
+            tone = XyDialogTone.Danger,
+            icon = XyDialogIcon.Trash,
+            kicker = Res.string.dialog_kicker_danger,
             onConfirmation = {
                 memoryManagementViewModel.clearDatabaseData()
-            }
+            },
+            // 提供取消回调，动作区才会同时出现「取消」与「确定」
+            onDismissRequest = {}
         ).show()
     }
     val storageItems = jvmStorageSettingsItems(
@@ -209,15 +212,13 @@ private fun JvmStorageUsageGroup(
         }
         // 分类项与其它设置分组保持一致，一行最多三个横向排列，不绘制分割线。
         // 每个分类的清理入口直接跟在对应条目尾部，避免再单独占用一块快速清理区域。
-        // 分类说明文案较长，必须完整换行展示，因此取消行数限制并允许内容超出省略处理。
+        // 分类说明文案较长，通用设置行已默认完整换行展示，这里无需再单独限制行数。
         JvmSettingItemFlow {
             storageItems.forEach { item ->
                 JvmSettingBaseRow(
                     icon = item.icon,
                     title = item.title,
                     description = item.description,
-                    descriptionMaxLines = Int.MAX_VALUE,
-                    descriptionOverflow = TextOverflow.Visible,
                     minHeight = 64.dp,
                     horizontalPadding = XyTheme.dimens.contentPadding,
                     verticalPadding = XyTheme.dimens.outerVerticalPadding,
@@ -281,8 +282,6 @@ private fun JvmStorageLocationGroup(
                 stringResource(Res.string.jvm_memory_management_screen_text_29)
             },
             descriptionStyle = JvmSettingRowDescriptionStyle.Path,
-            descriptionMaxLines = 2,
-            descriptionOverflow = TextOverflow.Visible,
             minHeight = 72.dp,
             horizontalPadding = XyTheme.dimens.contentPadding,
             verticalPadding = XyTheme.dimens.outerVerticalPadding,
@@ -500,7 +499,7 @@ private fun JvmStorageValuePill(text: String) {
  * @param onClick 点击回调，调用方负责数据库等高风险操作的二次确认。
  */
 @Composable
-private fun JvmStorageActionPill(
+internal fun JvmStorageActionPill(
     text: String,
     enabled: Boolean = true,
     onClick: () -> Unit,
@@ -634,7 +633,7 @@ private fun jvmStorageSettingsItems(
  * @param dialogSettings FileKit 弹窗配置，包含标题和主窗口 parent。
  * @return 用户选择的目录绝对路径；取消或打开失败时返回 null。
  */
-private suspend fun chooseJvmStorageDirectory(
+internal suspend fun chooseJvmStorageDirectory(
     currentPath: String,
     dialogSettings: io.github.vinceglb.filekit.dialogs.FileKitDialogSettings,
 ): String? {

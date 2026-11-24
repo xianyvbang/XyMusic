@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.DefaultAlpha
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -82,6 +83,19 @@ fun XySmallImage(
         onLoading = onLoading,
         onError = onError
     )
+}
+
+/**
+ * 把正方形展示尺寸换算成像素尺寸，供网络图片按需解码。
+ * 不指定请求尺寸时 Sketch 会按服务端原图解码，列表里大量封面会占用过多 CPU 和内存。
+ */
+@Composable
+fun rememberSquareRequestSize(size: Dp): IntSize {
+    val density = LocalDensity.current
+    return remember(size, density.density) {
+        val px = with(density) { size.roundToPx() }
+        IntSize(px, px)
+    }
 }
 
 @Composable

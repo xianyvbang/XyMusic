@@ -1,6 +1,8 @@
 package cn.xybbz.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -14,22 +16,31 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -52,11 +63,14 @@ import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.theme.jvmCoverAccentPalette
+import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyTextButton
+import cn.xybbz.ui.xy.downloadDoneIcon
+import cn.xybbz.ui.xy.rememberSquareRequestSize
 import cn.xybbz.viewmodel.SidebarPlaylistViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -79,7 +93,9 @@ import xymusic.composeapp.generated.resources.chevron_right_24px
 import xymusic.composeapp.generated.resources.double_speed
 import xymusic.composeapp.generated.resources.download
 import xymusic.composeapp.generated.resources.download_24px
+import xymusic.composeapp.generated.resources.downloaded
 import xymusic.composeapp.generated.resources.info_24px
+import xymusic.composeapp.generated.resources.jvm_menu_now
 import xymusic.composeapp.generated.resources.keyboard_arrow_right_24px
 import xymusic.composeapp.generated.resources.more_horiz_24px
 import xymusic.composeapp.generated.resources.music_note_24px
@@ -114,19 +130,41 @@ internal data class SongTableColumns(
 /**
  * 歌曲表格使用的固定宽度常量。
  * 统一放在这里，避免表头和行内容出现对不齐。
+ * 标题列宽度按当前列表最长歌名测量后与所有行共享，不再用 weight 强占剩余空间；
+ * 剩余空间交给专辑列吸收，其余固定列在保证内容可读的前提下尽量收窄。
  */
 internal object SongTableDefaults {
-    val titleWidth = 320.dp
-    val favoriteWidth = 52.dp
-    val actionsWidth = 120.dp
-    val albumWidth = 240.dp
-    val metaWidth = 140.dp
-    val durationWidth = 72.dp
-    val selectionWidth = 52.dp
+    // 列表为空或尚未测量完成时的标题列默认宽度
+    val titleWidth = 400.dp
+
+    // 标题列最小宽度，保证封面和少量歌名可读
+    val titleMinWidth = 220.dp
+
+    // 标题列最大宽度，避免极长歌名把整张表撑开
+    val titleMaxWidth = 480.dp
+
+    // 专辑列默认宽度，未测量完成时使用
+    val albumWidth = 180.dp
+
+    // 专辑列最小宽度，保证少量专辑名可读
+    val albumMinWidth = 140.dp
+
+    // 专辑列最大宽度，避免专辑名过长时挤占悬浮操作列
+    val albumMaxWidth = 240.dp
+
+    val favoriteWidth = 40.dp
+    val actionsWidth = 100.dp
+    val metaWidth = 120.dp
+    val durationWidth = 60.dp
+    val selectionWidth = 48.dp
     val coverSize = 40.dp
-    val actionButtonSize = 32.dp
-    val actionIconSize = 24.dp
-    val actionButtonSpacing = 8.dp
+    val actionButtonSize = 28.dp
+    val actionIconSize = 22.dp
+    val actionButtonSpacing = 6.dp
+    val columnSpacing = 12.dp
+
+    // 标题列测量时额外预留的余量，避免歌名刚好压线被省略号截断
+    val titleExtraPadding = 8.dp
 }
 
 /**
@@ -146,6 +184,8 @@ internal fun SongRow(
     index: Int,
     columns: SongTableColumns,
     ifFavorite: Boolean,
+    // 当前歌曲是否已下载完成，用于展示已下载图标并禁止重复下载
+    isDownloaded: Boolean = false,
     currentPlayingMusicIdFlow: Flow<String?>,
     modifier: Modifier = Modifier,
     albumText: String = defaultSongAlbumText(music),
@@ -168,6 +208,10 @@ internal fun SongRow(
         music.show()
     },
     onSelectionClick: (String) -> Unit = {},
+    // 标题列宽度，由表头按当前列表最长歌名测量后传入，保证各行与表头对齐
+    titleWidth: Dp = SongTableDefaults.titleWidth,
+    // 专辑列宽度，同样由表头按当前列表最长专辑名测量后传入
+    albumWidth: Dp = SongTableDefaults.albumWidth,
     showViewArtistMenuItem: Boolean = true,
     showViewAlbumMenuItem: Boolean = true,
 ) {
@@ -178,7 +222,17 @@ internal fun SongRow(
         musicId = music.itemId,
         currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
     )
-    val rowBackgroundColor = if (rowIfPlay) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent
+    // 背景色层级：选中 > 正在播放 > 悬停 > 透明，高优先级状态不会被悬停覆盖
+    val rowBackgroundColor by animateColorAsState(
+        targetValue = when {
+            isSelected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+            rowIfPlay -> MaterialTheme.colorScheme.surfaceContainerHighest
+            hovered -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+            else -> Color.Transparent
+        },
+        animationSpec = tween(durationMillis = 120),
+        label = "songRowBackground",
+    )
     val menuItems = rememberSongRowContextMenuItems(
         music = music,
         onPlay = onClick,
@@ -191,7 +245,18 @@ internal fun SongRow(
     JvmRightClickDropdownMenuBox(
         modifier = modifier
             .clip(RoundedCornerShape(XyTheme.dimens.outerVerticalPadding / 2)),
-        menuModifier = Modifier.width(220.dp),
+        // 菜单宽度与设计稿一致，子菜单收窄一档
+        menuModifier = Modifier.width(248.dp),
+        // 曲目轨道：让菜单说明「在对谁操作」
+        header = {
+            SongContextMenuHeader(
+                music = music,
+                coverUrl = coverUrls.primaryUrl,
+                fallbackCoverUrl = coverUrls.fallbackUrl,
+                accentColor = accentColor,
+                nowPlaying = rowIfPlay,
+            )
+        },
         itemDataList = { menuItems },
     ) {
         XyRow(
@@ -207,6 +272,7 @@ internal fun SongRow(
                 horizontal = XyTheme.dimens.innerHorizontalPadding,
                 vertical = XyTheme.dimens.outerVerticalPadding + XyTheme.dimens.outerVerticalPadding / 2
             ),
+            horizontalArrangement = Arrangement.spacedBy(SongTableDefaults.columnSpacing),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SongTitleCell(
@@ -215,7 +281,10 @@ internal fun SongRow(
                 coverUrl = coverUrls.primaryUrl,
                 fallbackCoverUrl = coverUrls.fallbackUrl,
                 ifPlay = rowIfPlay,
-                onOpenArtist = onOpenArtist
+                isDownloaded = isDownloaded,
+                onOpenArtist = onOpenArtist,
+                // 标题列按测量出的内容宽度固定，不再强占剩余空间
+                modifier = Modifier.width(titleWidth),
             )
             if (columns.showFavoriteColumn) {
                 SongFavoriteCell(
@@ -223,21 +292,26 @@ internal fun SongRow(
                     onClick = onFavoriteClick,
                 )
             }
+            // 收藏列之后的弹性空白
+            Spacer(modifier = Modifier.weight(1f))
             if (columns.showInlineActions) {
                 SongInlineActions(
                     hovered = hovered,
                     showDownloadButton = columns.showInlineDownloadButton,
+                    isDownloaded = isDownloaded,
                     onDownloadClick = onDownloadClick,
                     onAddToPlaylistClick = onAddToPlaylistClick,
                     onMoreClick = onMoreClick,
                 )
             }
+            // 操作列之后的弹性空白：与前一处分摊剩余空间，使操作列居中于收藏列与专辑列之间
+            Spacer(modifier = Modifier.weight(1f))
             if (columns.showAlbumColumn) {
-                SongTableCell(
+                SongAlbumCell(
                     text = albumText,
-                    width = SongTableDefaults.albumWidth,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     onClick = onOpenAlbum,
+                    // 专辑列使用测量后的固定宽度
+                    modifier = Modifier.width(albumWidth),
                 )
             }
             if (columns.showMetaColumn) {
@@ -362,8 +436,8 @@ private fun rememberSongRowContextMenuItems(
                     },
                 )
             },
-            subMenuModifier = Modifier.width(220.dp),
-            subMenuOffset = DpOffset(220.dp, 0.dp),
+            subMenuModifier = Modifier.width(196.dp),
+            subMenuOffset = DpOffset(248.dp, 0.dp),
             onClick = {
                 AddPlaylistBottomData(
                     ifShow = true,
@@ -384,7 +458,7 @@ private fun rememberSongRowContextMenuItems(
                 dismissOnClick = false,
                 subItems = viewSubItems,
                 subMenuModifier = Modifier.width(180.dp),
-                subMenuOffset = DpOffset(220.dp, 0.dp),
+                subMenuOffset = DpOffset(248.dp, 0.dp),
                 onClick = {},
             )
         } else {
@@ -437,9 +511,113 @@ private fun SongContextMenuIcon(iconRes: DrawableResource) {
     Icon(
         painter = painterResource(iconRes),
         contentDescription = null,
-        modifier = Modifier.size(20.dp),
-        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.size(16.dp),
+        // 跟随菜单条目内容色，悬停与强调态由菜单统一着色
+        tint = LocalContentColor.current,
     )
+}
+
+/**
+ * 歌曲右键菜单的曲目轨道：34dp 封面 + 歌名 + 等宽元数据，播放中额外显示 NOW。
+ *
+ * @param music 当前歌曲
+ * @param coverUrl 主封面地址
+ * @param fallbackCoverUrl 备用封面地址
+ * @param accentColor 无封面时的渐变底色
+ * @param nowPlaying 是否为当前播放歌曲
+ */
+@Composable
+private fun SongContextMenuHeader(
+    music: XyMusic,
+    coverUrl: String?,
+    fallbackCoverUrl: String?,
+    accentColor: Color,
+    nowPlaying: Boolean,
+) {
+    val artistsText = music.artists?.joinToString().orEmpty()
+    val mediaText = getMusicMedia(music.codec, music.bitRate)
+    // 元数据行：编码信息 + 艺术家，两者为空时自动省略
+    val metaText = listOf(mediaText, artistsText)
+        .filter { it.isNotBlank() }
+        .joinToString(" · ")
+    // 菜单封面按 34dp 解码，避免按原图尺寸浪费内存
+    val coverRequestSize = rememberSquareRequestSize(34.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 6.dp)
+            .padding(top = 4.dp, bottom = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(XyTheme.dimens.outerVerticalPadding))
+                .background(
+                    Brush.linearGradient(listOf(accentColor, accentColor.copy(alpha = 0.55f)))
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (coverUrl.isNullOrBlank() && fallbackCoverUrl.isNullOrBlank()) {
+                Icon(
+                    painter = painterResource(Res.drawable.music_note_24px),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            } else {
+                XyImage(
+                    modifier = Modifier.matchParentSize(),
+                    model = coverUrl,
+                    backModel = fallbackCoverUrl,
+                    requestSize = coverRequestSize,
+                    contentDescription = null,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            XyText(
+                text = music.name,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.5.sp),
+            )
+            Text(
+                text = metaText,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.5.sp,
+                letterSpacing = 0.3.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (nowPlaying) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(5.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                )
+                Text(
+                    text = stringResource(Res.string.jvm_menu_now),
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 8.5.sp,
+                    letterSpacing = 1.4.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+    }
 }
 
 /**
@@ -452,13 +630,15 @@ private fun SongTitleCell(
     coverUrl: String?,
     fallbackCoverUrl: String?,
     ifPlay: Boolean,
+    isDownloaded: Boolean,
     onOpenArtist: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val artistsText = music.artists?.joinToString().orEmpty()
     val mediaText = getMusicMedia(music.codec, music.bitRate)
 
     Row(
-        modifier = Modifier.width(SongTableDefaults.titleWidth),
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
     ) {
@@ -467,7 +647,10 @@ private fun SongTitleCell(
             fallbackCoverUrl = fallbackCoverUrl,
             accent = accentColor,
         )
-        Column(verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center,
+        ) {
             XyText(
                 text = music.name,
                 color = if (ifPlay) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
@@ -477,13 +660,29 @@ private fun SongTitleCell(
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
             )
 
-            XyTextSub(
-                text = "$mediaText $artistsText",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                onClick = onOpenArtist,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                // 已下载完成时在副标题前展示下载完成图标，与移动端列表保持一致
+                if (isDownloaded) {
+                    Icon(
+                        painter = painterResource(downloadDoneIcon),
+                        contentDescription = stringResource(Res.string.downloaded),
+                        modifier = Modifier.size(14.dp),
+                        tint = XyTheme.extendedColors.success,
+                    )
+                }
+                XyTextButton(
+                    text = "$mediaText $artistsText",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                    onClick = onOpenArtist,
+                    // 文本占满剩余宽度，超长时在图标右侧省略
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+            }
         }
     }
 }
@@ -538,6 +737,7 @@ private fun SongSelectionCell(
 private fun SongInlineActions(
     hovered: Boolean,
     showDownloadButton: Boolean,
+    isDownloaded: Boolean,
     onDownloadClick: () -> Unit,
     onAddToPlaylistClick: () -> Unit,
     onMoreClick: () -> Unit,
@@ -560,11 +760,22 @@ private fun SongInlineActions(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (showDownloadButton) {
-                    HoverActionIcon(
-                        iconRes = Res.drawable.download_24px,
-                        tooltip = stringResource(Res.string.download),
-                        onClick = onDownloadClick,
-                    )
+                    if (isDownloaded) {
+                        // 已下载完成：仅展示下载完成图标并禁用点击，避免重复下载
+                        HoverActionIcon(
+                            iconRes = downloadDoneIcon,
+                            tooltip = stringResource(Res.string.downloaded),
+                            enabled = false,
+                            contentColor = XyTheme.extendedColors.success,
+                            onClick = {},
+                        )
+                    } else {
+                        HoverActionIcon(
+                            iconRes = Res.drawable.download_24px,
+                            tooltip = stringResource(Res.string.download),
+                            onClick = onDownloadClick,
+                        )
+                    }
                 }
                 HoverActionIcon(
                     iconRes = Res.drawable.playlist_add_24px,
@@ -589,6 +800,8 @@ private fun HoverActionIcon(
     iconRes: DrawableResource,
     tooltip: String,
     enabled: Boolean = true,
+    // 自定义图标颜色，为空时按启用状态使用默认的次要文本色
+    contentColor: Color? = null,
     onClick: () -> Unit,
 ) {
     DesktopTooltipIconButton(
@@ -601,7 +814,7 @@ private fun HoverActionIcon(
             painter = painterResource(iconRes),
             contentDescription = null,
             modifier = Modifier.size(SongTableDefaults.actionIconSize),
-            tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(
+            tint = contentColor ?: if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(
                 alpha = 0.38f
             ),
         )
@@ -618,6 +831,9 @@ private fun SongCover(
     fallbackCoverUrl: String?,
     accent: Color,
 ) {
+    // 行内封面按固定展示尺寸解码，避免按服务端原图解码拖慢列表渲染。
+    val coverRequestSize = rememberSquareRequestSize(SongTableDefaults.coverSize)
+
     Box(
         modifier = Modifier
             .size(SongTableDefaults.coverSize)
@@ -636,6 +852,7 @@ private fun SongCover(
                 modifier = Modifier.matchParentSize(),
                 model = coverUrl,
                 backModel = fallbackCoverUrl,
+                requestSize = coverRequestSize,
                 contentDescription = null,
             )
         }
@@ -643,18 +860,64 @@ private fun SongCover(
 }
 
 /**
- * 表格中的固定宽度文本单元格。
+ * 专辑单元格。
+ * 宽度由外部传入，用于吸收表格剩余空间；
+ * 专辑名称被截断时，鼠标移入展示完整名称提示。
+ */
+@Composable
+private fun SongAlbumCell(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // 仅当专辑名超出列宽时才开启提示，避免出现无意义的重复提示
+    var hasOverflow by remember(text) { mutableStateOf(false) }
+
+    val content: @Composable () -> Unit = {
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            XyTextButton(
+                text = text,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                onClick = onClick,
+                onTextLayout = { textLayoutResult ->
+                    hasOverflow = textLayoutResult.hasVisualOverflow
+                },
+            )
+        }
+    }
+
+    if (hasOverflow && text.isNotBlank()) {
+        DesktopTooltipBox(tooltip = text) {
+            content()
+        }
+    } else {
+        content()
+    }
+}
+
+/**
+ * 表格中的文本单元格。
+ * width 为空时不限制宽度，由调用方通过 modifier（例如 weight）决定尺寸。
  */
 @Composable
 internal fun SongTableCell(
     text: String,
-    width: Dp,
+    width: Dp? = null,
     color: Color,
     textAlign: TextAlign = TextAlign.Start,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
-    Box(modifier = modifier.width(width), contentAlignment = Alignment.CenterStart) {
+    Box(
+        modifier = modifier.then(if (width == null) Modifier else Modifier.width(width)),
+        contentAlignment = Alignment.CenterStart,
+    ) {
         XyText(
             text = text,
             color = color,
@@ -678,6 +941,83 @@ internal fun SongTableCell(
 @Composable
 internal fun SongTableSpacer(width: Dp) {
     Spacer(modifier = Modifier.width(width))
+}
+
+/**
+ * 按当前歌曲列表中最长的歌名计算标题列宽度。
+ *
+ * 只用列表前 200 首做测量，避免超长分页列表每次刷新都全量测量；
+ * 宽度限制在 [SongTableDefaults.titleMinWidth] 与 [SongTableDefaults.titleMaxWidth] 之间，
+ * 既保证歌名尽量完整显示，又不会因为个别超长歌名把整张表撑开。
+ *
+ * @param songs 当前表格已加载的歌曲列表。
+ */
+@Composable
+internal fun rememberSongTableTitleWidth(songs: List<XyMusic>): Dp {
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    // 与标题文本保持一致的字号和字重，避免测量结果偏窄导致省略号截断
+    val titleTextStyle = MaterialTheme.typography.bodyMedium.copy(
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Medium,
+    )
+    val coverSpacing = XyTheme.dimens.innerVerticalPadding
+    // 用最长歌名的文本做缓存 key，列表变化但最长歌名不变时无需重复测量
+    val longestName = remember(songs) {
+        songs.take(200).maxByOrNull { music -> music.name.length }?.name.orEmpty()
+    }
+    return remember(longestName, textMeasurer, density, titleTextStyle, coverSpacing) {
+        if (longestName.isBlank()) {
+            return@remember SongTableDefaults.titleWidth
+        }
+        val textWidth = textMeasurer.measure(
+            text = longestName,
+            style = titleTextStyle,
+            maxLines = 1,
+        ).size.width
+        with(density) {
+            val width = textWidth.toDp() +
+                SongTableDefaults.coverSize +
+                coverSpacing +
+                SongTableDefaults.titleExtraPadding
+            width.coerceIn(SongTableDefaults.titleMinWidth, SongTableDefaults.titleMaxWidth)
+        }
+    }
+}
+
+/**
+ * 按当前歌曲列表中最长的专辑名称计算专辑列宽度。
+ *
+ * 同样只测量前 200 首，并在 [SongTableDefaults.albumMinWidth] 与
+ * [SongTableDefaults.albumMaxWidth] 之间夹紧，避免专辑名过长时挤占悬浮操作列；
+ * 超出列宽的专辑名仍可通过鼠标悬停提示查看完整内容。
+ *
+ * @param albumNames 当前表格已加载歌曲的专辑名称列表。
+ */
+@Composable
+internal fun rememberSongTableAlbumWidth(albumNames: List<String>): Dp {
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    // 与专辑单元格文本保持一致的字号
+    val albumTextStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp)
+    // 用最长专辑名做缓存 key，列表变化但最长专辑名不变时无需重复测量
+    val longestAlbumName = remember(albumNames) {
+        albumNames.take(200).maxByOrNull { name -> name.length }.orEmpty()
+    }
+    return remember(longestAlbumName, textMeasurer, density, albumTextStyle) {
+        if (longestAlbumName.isBlank()) {
+            return@remember SongTableDefaults.albumWidth
+        }
+        val textWidth = textMeasurer.measure(
+            text = longestAlbumName,
+            style = albumTextStyle,
+            maxLines = 1,
+        ).size.width
+        with(density) {
+            val width = textWidth.toDp() + SongTableDefaults.titleExtraPadding
+            width.coerceIn(SongTableDefaults.albumMinWidth, SongTableDefaults.albumMaxWidth)
+        }
+    }
 }
 
 internal fun defaultSongAccentColor(

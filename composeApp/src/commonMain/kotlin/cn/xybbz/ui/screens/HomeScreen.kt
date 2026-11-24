@@ -88,6 +88,8 @@ import cn.xybbz.router.Search
 import cn.xybbz.router.Setting
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.BottomSheetObject
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicMusicCardComponent
@@ -129,6 +131,9 @@ import xymusic.composeapp.generated.resources.connection_link
 import xymusic.composeapp.generated.resources.create_playlist
 import xymusic.composeapp.generated.resources.daily_recommendations
 import xymusic.composeapp.generated.resources.delete_playlist
+import xymusic.composeapp.generated.resources.dialog_kicker_create
+import xymusic.composeapp.generated.resources.dialog_kicker_danger
+import xymusic.composeapp.generated.resources.dialog_kicker_rename
 import xymusic.composeapp.generated.resources.download_24px
 import xymusic.composeapp.generated.resources.download_list
 import xymusic.composeapp.generated.resources.favorite
@@ -736,10 +741,16 @@ internal fun MobileHomeScreen(
                                             AlertDialogObject(
                                                 title = createPlaylist,
                                                 content = {
-                                                    XyEdit(text = playlistName, onChange = {
-                                                        playlistName = it
-                                                    })
+                                                    XyEdit(
+                                                        text = playlistName,
+                                                        onChange = {
+                                                            playlistName = it
+                                                        },
+                                                        modifier = Modifier.fillMaxWidth()
+                                                    )
                                                 },
+                                                icon = XyDialogIcon.Edit,
+                                                kicker = Res.string.dialog_kicker_create,
                                                 onDismissRequest = {
                                                 },
                                                 onConfirmation = {
@@ -798,6 +809,11 @@ internal fun MobileHomeScreen(
                 } else
                     items(playlists, key = { item -> item.itemId }) { item ->
                         //歌单信息
+                        // 删除确认弹窗在菜单回调里创建，正文需要先在 composable 作用域解析
+                        val confirmDeletePlaylistText = stringResource(
+                            Res.string.confirm_delete_playlist,
+                            item.name
+                        )
                         XyRow {
                             MusicPlaylistItemComponent(
                                 name = item.name,
@@ -813,15 +829,10 @@ internal fun MobileHomeScreen(
                                 removePlaylistClick = {
                                     AlertDialogObject(
                                         title = deletePlaylist,
-                                        content = {
-                                            XyTextSubSmall(
-                                                text = stringResource(
-                                                    Res.string.confirm_delete_playlist,
-                                                    item.name
-                                                )
-                                            )
-                                        },
-                                        ifWarning = true,
+                                        body = confirmDeletePlaylistText,
+                                        tone = XyDialogTone.Danger,
+                                        icon = XyDialogIcon.Trash,
+                                        kicker = Res.string.dialog_kicker_danger,
                                         onConfirmation = {
                                             homeViewModel.removePlaylist(
                                                 item.itemId
@@ -837,10 +848,16 @@ internal fun MobileHomeScreen(
                                     AlertDialogObject(
                                         title = modifyPlaylistName,
                                         content = {
-                                            XyEdit(text = playlistName, onChange = {
-                                                playlistName = it
-                                            })
+                                            XyEdit(
+                                                text = playlistName,
+                                                onChange = {
+                                                    playlistName = it
+                                                },
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
                                         },
+                                        icon = XyDialogIcon.Edit,
+                                        kicker = Res.string.dialog_kicker_rename,
                                         onConfirmation = {
                                             homeViewModel.editPlaylistName(
                                                 item.itemId,

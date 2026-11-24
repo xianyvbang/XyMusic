@@ -67,7 +67,8 @@ class AlbumInfoViewModel(
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,
     val selectControl: SelectControl,
-    private val downloaderManager: DownloaderManager,
+    // 下载管理器：列表选择模式批量下载时复用
+    val downloaderManager: DownloaderManager,
     /** 提供当前连接与媒体库变化，驱动分页数据重建。 */
     sessionCoordinator: SessionCoordinator,
 ) : PageListViewModel<XyMusic>(dataSourceManager, sessionCoordinator, SortTypeEnum.MUSIC_NAME_ASC) {

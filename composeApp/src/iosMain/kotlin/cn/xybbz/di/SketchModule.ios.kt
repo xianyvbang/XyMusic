@@ -18,7 +18,8 @@ actual class SketchModule {
     @Single
     actual fun sketch(): Sketch {
         return Sketch.Builder(PlatformContext.INSTANCE).apply {
-            logger(level = Logger.Level.Debug)
+            // 生产环境只保留错误日志，避免每张图片的调试日志刷屏拖慢加载。
+            logger(level = Logger.Level.Error)
             addIgnoreFetcherProvider(KtorHttpUriFetcherProvider::class)
             addComponents {
                 // Sketch 在首页首帧前就可能创建，不能依赖延后恢复的数据源 HttpClient。

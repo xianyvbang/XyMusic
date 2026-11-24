@@ -29,6 +29,8 @@ import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.ui.components.AddPlaylistBottomData
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.xy.XyTextSubSmall
 import kotlinx.coroutines.CoroutineScope
@@ -41,6 +43,7 @@ import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.delete_permanently
 import xymusic.composeapp.generated.resources.delete_warning
+import xymusic.composeapp.generated.resources.dialog_kicker_danger
 
 /**
  * 选择模式下的界面状态。
@@ -48,8 +51,8 @@ import xymusic.composeapp.generated.resources.delete_warning
 data class SelectUiState(
     // 是否打开选择模式
     val isOpen: Boolean = false,
-    // 选中音乐列表 id
-    val selectedMusicIds: Set<String> = emptySet(),
+    // 选中音乐列表 id，按选中先后顺序保存，用于保证播放选中时的入队顺序
+    val selectedMusicIds: List<String> = emptyList(),
     // 是否已经全选
     val isSelectAll: Boolean = false,
     // 是否为本地页面操作
@@ -74,8 +77,8 @@ class SelectControl {
     private val _uiState = MutableStateFlow(SelectUiState())
     val uiState = _uiState.asStateFlow()
 
-    // 当前选中的音乐 id 集合
-    val selectMusicIdList: Set<String>
+    // 当前选中的音乐 id 列表，顺序与选中先后顺序一致
+    val selectMusicIdList: List<String>
         get() = uiState.value.selectedMusicIds
 
     // 当前是否处于全选状态
@@ -108,7 +111,9 @@ class SelectControl {
                         text = stringResource(Res.string.delete_warning)
                     )
                 },
-                ifWarning = true,
+                tone = XyDialogTone.Danger,
+                icon = XyDialogIcon.Trash,
+                kicker = Res.string.dialog_kicker_danger,
                 onConfirmation = {
                     removeSelectListResource(dataSourceManager, viewModelScope)
                 },
@@ -215,7 +220,7 @@ class SelectControl {
         _uiState.update {
             it.copy(
                 isOpen = false,
-                selectedMusicIds = emptySet(),
+                selectedMusicIds = emptyList(),
                 isSelectAll = false,
                 ifEnableButton = false,
                 playlistId = null,
@@ -231,7 +236,8 @@ class SelectControl {
      */
     fun toggleSelection(musicId: String, onIsSelectAll: () -> Boolean) {
         _uiState.update { current ->
-            val nextIds = current.selectedMusicIds.toMutableSet()
+            // 使用列表保存选中结果，保留选中先后顺序
+            val nextIds = current.selectedMusicIds.toMutableList()
             val nextIsSelectAll: Boolean
             if (nextIds.contains(musicId)) {
                 nextIds.remove(musicId)
@@ -279,8 +285,15 @@ class SelectControl {
         downloadDb: DownloadDatabaseClient,
         dataSourceManager: DataSourceManager
     ) {
+        // 选中顺序：数据库查询与播放队列都以它为准
+        val selectedIds = selectMusicIdList
+        // SQLite 的 in 查询不保证返回顺序，先记录每个 id 的选中位置，再按位置重排查询结果
+        val selectedIndexMap = selectedIds
+            .withIndex()
+            .associate { (index, musicId) -> musicId to index }
         val xyMusics = MusicPlayAssembler.attachFilePath(
-            playMusicList = db.musicDao.selectExtendByIds(selectMusicIdList.toList()),
+            playMusicList = db.musicDao.selectExtendByIds(selectedIds)
+                .sortedBy { selectedIndexMap[it.itemId] ?: Int.MAX_VALUE },
             downloadDb = downloadDb,
             mediaLibraryId = dataSourceManager.getConnectionId().toString()
         ) ?: emptyList()
@@ -298,13 +311,14 @@ class SelectControl {
         _uiState.update { current ->
             if (current.isSelectAll) {
                 current.copy(
-                    selectedMusicIds = emptySet(),
+                    selectedMusicIds = emptyList(),
                     isSelectAll = false,
                     ifEnableButton = false
                 )
             } else if (!musicIdList.isNullOrEmpty()) {
                 current.copy(
-                    selectedMusicIds = musicIdList.toSet(),
+                    // 全选沿用列表本身的顺序
+                    selectedMusicIds = musicIdList.toList(),
                     isSelectAll = true,
                     ifEnableButton = true
                 )

@@ -21,13 +21,19 @@ package cn.xybbz.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,22 +42,20 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -59,234 +63,282 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.data.library.XyLibrary
-import cn.xybbz.router.ConnectionManagement
-import cn.xybbz.ui.components.JvmSettingFlowRow
-import cn.xybbz.ui.components.JvmSettingOverviewTile
-import cn.xybbz.ui.components.JvmSettingPageHeader
+import cn.xybbz.ui.components.JvmPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
-import cn.xybbz.ui.components.JvmSettingSection
-import cn.xybbz.ui.components.JvmSettingStatusCard
-import cn.xybbz.ui.components.JvmSettingStatusCardItem
-import cn.xybbz.ui.components.JvmSettingAvatarSize
-import cn.xybbz.ui.components.JvmSettingContentGridTwoColumnBreakpoint
-import cn.xybbz.ui.components.JvmSettingLibraryRowMinHeight
-import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
-import cn.xybbz.ui.components.JvmSettingTwoPaneContent
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextLarge
-import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyIconTextButton
+import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.SelectLibraryViewModel
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import xymusic.composeapp.generated.resources.*
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.all_media_libraries
-import xymusic.composeapp.generated.resources.arrow_back_24px
-import xymusic.composeapp.generated.resources.back_to_connection_info
+import xymusic.composeapp.generated.resources.check_24px
+import xymusic.composeapp.generated.resources.current_connection
 import xymusic.composeapp.generated.resources.folder_managed_24px
-import xymusic.composeapp.generated.resources.media_library_selection
+import xymusic.composeapp.generated.resources.jvm_connection_config_info_screen_text_01
+import xymusic.composeapp.generated.resources.jvm_select_library_screen_text_01
+import xymusic.composeapp.generated.resources.jvm_select_library_screen_text_02
+import xymusic.composeapp.generated.resources.jvm_select_library_screen_text_06
+import xymusic.composeapp.generated.resources.jvm_select_library_screen_text_23
+import xymusic.composeapp.generated.resources.jvm_select_library_screen_text_27
+import xymusic.composeapp.generated.resources.jvm_select_library_screen_text_31
+import xymusic.composeapp.generated.resources.jvm_select_library_screen_text_32
+import xymusic.composeapp.generated.resources.jvm_select_library_screen_text_33
+import xymusic.composeapp.generated.resources.jvm_select_library_screen_text_34
+import xymusic.composeapp.generated.resources.music_library
 import xymusic.composeapp.generated.resources.refresh_24px
 import xymusic.composeapp.generated.resources.restart_alt_24px
-import xymusic.composeapp.generated.resources.settings_24px
-import cn.xybbz.ui.xy.XyIconButton as IconButton
+
+/** 媒体库选择器内容区最大宽度，对齐设计稿的单栏选择器宽度。 */
+private val JvmSelectLibraryMaxContentWidth = 820.dp
+
+/** 媒体库列表行的最小高度。 */
+private val JvmSelectLibraryRowMinHeight = 62.dp
+
+/** 媒体库列表改为两两一行的最小内容宽度。 */
+private val JvmSelectLibraryTwoColumnBreakpoint = 520.dp
+
+/** 媒体库列表行左侧选择指示器尺寸。 */
+private val JvmSelectLibrarySelectorSize = 15.dp
+
+/** 单选指示器内部圆点尺寸。 */
+private val JvmSelectLibrarySelectorDotSize = 7.dp
+
+/** 媒体库列表行右侧确认圆点尺寸。 */
+private val JvmSelectLibraryCheckSize = 20.dp
+
+/** 媒体库列表行选中时左侧强调条的宽度。 */
+private val JvmSelectLibraryAccentWidth = 2.dp
+
+/** 页面头部读数使用的等宽小标签字距。 */
+private val JvmSelectLibraryKickerLetterSpacing = 1.4.sp
 
 /**
  * JVM 桌面端媒体库选择页面。
  *
+ * 排版对齐设计稿：顶部沿用连接管理与设置页的通用标题组件，
+ * 标题右侧展示当前可见媒体库读数与刷新入口，下方是单栏媒体库选择列表。
+ *
  * @param connectionId 当前连接 ID。
  * @param thisLibraryId 当前连接已保存的媒体库 ID 列表，为空表示全部媒体库。
- * @param showBackButton 是否显示独立返回栏，桌面主壳层内默认由外层导航处理。
  * @param selectLibraryViewModel 媒体库选择 ViewModel。
  * @param dataSourceManager 当前数据源管理器，用于读取数据源能力展示文案。
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JvmSelectLibraryScreen(
     connectionId: Long,
     thisLibraryId: List<String>?,
-    showBackButton: Boolean = true,
     selectLibraryViewModel: SelectLibraryViewModel = koinViewModel<SelectLibraryViewModel>() {
         parametersOf(connectionId, thisLibraryId)
     },
     dataSourceManager: DataSourceManager = koinInject(),
 ) {
-    val navigator = LocalNavigator.current
-    val pageTitle = stringResource(Res.string.media_library_selection)
+    val pageTitle = stringResource(Res.string.music_library)
     val allLibraryName = stringResource(Res.string.all_media_libraries)
     val libraryList = selectLibraryViewModel.libraryList
     val selectedLibraryIds = selectLibraryViewModel.libraryIds
     val dataSourceType = dataSourceManager.dataSourceType
-    val dataSourceLabel = dataSourceType?.title ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
-    val selectedLibraries = libraryList.filter { selectedLibraryIds.contains(it.id) }
-    val allLibrarySelected = selectedLibraryIds.contains(Constants.MINUS_ONE_INT.toString())
-    val hasInitialChanges = selectLibraryViewModel.hasInitialLibraryChanges
-    val selectionModeText = if (dataSourceType?.ifMultiMediaLibrary == true) {
+    val dataSourceLabel = dataSourceType?.title
+        ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
+    val multiSelection = dataSourceType?.ifMultiMediaLibrary == true
+    val selectionModeText = if (multiSelection) {
         stringResource(Res.string.jvm_select_library_screen_text_01)
     } else {
         stringResource(Res.string.jvm_select_library_screen_text_02)
     }
+    val allLibrarySelected = selectedLibraryIds.contains(Constants.MINUS_ONE_INT.toString())
+    // 全部媒体库占位项不计入可切换数量，读数与设计稿保持「可见 / 可选」的比例。
+    val selectableLibraryCount = libraryList.count { !it.isAllMediaLibrary() }
+    val visibleLibraryCount = if (allLibrarySelected) {
+        selectableLibraryCount
+    } else {
+        libraryList.count { !it.isAllMediaLibrary() && selectedLibraryIds.contains(it.id) }
+    }
+    val selectedLibraries = libraryList.filter {
+        !it.isAllMediaLibrary() && selectedLibraryIds.contains(it.id)
+    }
+    val selectionSummary = if (allLibrarySelected || selectedLibraries.isEmpty()) {
+        allLibraryName
+    } else {
+        selectedLibraries.joinToString("、") { it.name }
+    }
+    val hasInitialChanges = selectLibraryViewModel.hasInitialLibraryChanges
 
-    JvmSettingPageScaffold(
-        contentPadding = PaddingValues(
-            horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
-            vertical = XyTheme.dimens.outerVerticalPadding * 3
-        ),
-        topBar = if (showBackButton) {
-            {
-                TopAppBarComponent(
-                    title = {
-                        TopAppBarTitle(title = pageTitle)
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.goBack() }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.arrow_back_24px),
-                                contentDescription = stringResource(Res.string.back_to_connection_info)
-                            )
-                        }
-                    }
-                )
-            }
-        } else {
-            null
-        }
-    ) {
-        JvmSettingPageHeader(
+    JvmSettingPageScaffold {
+        JvmPageHeader(
             title = pageTitle,
-            description = stringResource(Res.string.jvm_select_library_screen_text_03),
-        ) {
-            JvmSettingStatusCard(
-                width = JvmSettingSummaryCardWidth,
-                prominentValue = true,
-                items = listOf(
-                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_about_screen_text_11), value = dataSourceLabel),
-                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_connection_config_info_screen_text_20), value = "#$connectionId"),
-                )
-            )
-        }
-
-        JvmSelectLibraryOverview(
-            libraryCount = libraryList.size,
-            selectionModeText = selectionModeText,
-        )
-
-        JvmSettingTwoPaneContent(
-            leftContent = {
-                JvmSettingSection(
-                    title = stringResource(Res.string.jvm_select_library_screen_text_04),
-                    subtitle = stringResource(Res.string.jvm_select_library_screen_text_05),
-                    badge = selectionModeText,
-                    contentContainerEnabled = true,
-                    headerAction = {
-                        XyIconTextButton(
-                            modifier = Modifier.widthIn(min = 96.dp),
-                            onClick = selectLibraryViewModel::restoreInitialLibraryIds,
-                            text = stringResource(Res.string.jvm_select_library_screen_text_06),
-                            icon = Res.drawable.restart_alt_24px,
-                            enabled = hasInitialChanges,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            backgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
-                            borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                        )
-                    },
+            trailing = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                    verticalAlignment = Alignment.Bottom,
                 ) {
-                    JvmSelectLibraryList(
-                        libraries = libraryList,
-                        selectedLibraryIds = selectedLibraryIds,
-                        allLibraryName = allLibraryName,
-                        multiSelection = dataSourceType?.ifMultiMediaLibrary == true,
-                        onLibraryClick = { library ->
-                            selectLibraryViewModel.updateLibraryId(library.id)
-                        }
+                    JvmSelectLibraryReadout(
+                        label = stringResource(Res.string.jvm_select_library_screen_text_31),
+                        value = "$visibleLibraryCount / $selectableLibraryCount",
+                    )
+                    JvmSelectLibraryActionButton(
+                        onClick = selectLibraryViewModel::refreshLibraryList,
+                        text = stringResource(Res.string.jvm_select_library_screen_text_23),
+                        icon = Res.drawable.refresh_24px,
                     )
                 }
             },
-            rightContent = {
-                JvmSettingSection(
-                    title = stringResource(Res.string.jvm_select_library_screen_text_07),
-                    subtitle = stringResource(Res.string.jvm_select_library_screen_text_08),
-                    badge = stringResource(Res.string.jvm_select_library_screen_text_09),
-                    contentContainerEnabled = false,
-                ) {
-                    JvmSelectLibrarySelectionCard(
-                        selectedLibraries = selectedLibraries,
-                        allLibraryName = allLibraryName,
-                        allLibrarySelected = allLibrarySelected,
-                    )
-                }
+        )
 
-                JvmSettingSection(
-                    title = stringResource(Res.string.jvm_select_library_screen_text_10),
-                    subtitle = stringResource(Res.string.jvm_select_library_screen_text_11),
-                    badge = stringResource(Res.string.jvm_select_library_screen_text_12),
-                    contentContainerEnabled = false,
-                ) {
-                    JvmSelectLibraryManagementModule(
-                        onRefresh = selectLibraryViewModel::refreshLibraryList,
-                        onOpenConnectionManagement = {
-                            navigator.navigate(ConnectionManagement)
-                        }
-                    )
-                }
+        // 选择器限制最大宽度并左对齐，宽窗口下保持设计稿的阅读节奏。
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.widthIn(max = JvmSelectLibraryMaxContentWidth),
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
+            ) {
+                JvmSelectLibraryPickerHeader(
+                    countText = stringResource(
+                        Res.string.jvm_select_library_screen_text_34,
+                        selectableLibraryCount,
+                    ),
+                    modeText = "$selectionModeText · $dataSourceLabel",
+                )
+
+                JvmSelectLibraryList(
+                    libraries = libraryList,
+                    selectedLibraryIds = selectedLibraryIds,
+                    allLibraryName = allLibraryName,
+                    multiSelection = multiSelection,
+                    onLibraryClick = { library ->
+                        selectLibraryViewModel.updateLibraryId(library.id)
+                    },
+                )
+
+                JvmSelectLibraryFooter(
+                    summary = stringResource(
+                        Res.string.jvm_select_library_screen_text_33,
+                        selectionSummary,
+                    ),
+                    restoreEnabled = hasInitialChanges,
+                    onRestore = selectLibraryViewModel::restoreInitialLibraryIds,
+                )
             }
+        }
+    }
+}
+
+/**
+ * 页面头部读数单元格：等宽小标签加等宽数值。
+ *
+ * @param label 读数标签。
+ * @param value 读数内容。
+ */
+@Composable
+private fun JvmSelectLibraryReadout(
+    label: String,
+    value: String,
+) {
+    Column(
+        modifier = Modifier.widthIn(max = 180.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp),
+        horizontalAlignment = Alignment.End,
+    ) {
+        XyTextSub(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                letterSpacing = JvmSelectLibraryKickerLetterSpacing,
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+        XyText(
+            text = value,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
         )
     }
 }
 
 /**
- * JVM 媒体库选择页的概览卡片区域。
+ * 页面内紧凑操作按钮，对齐设计稿的小号描边按钮。
  *
- * @param libraryCount 当前可选媒体库数量。
- * @param selectionModeText 当前数据源选择模式文案。
+ * @param onClick 点击回调。
+ * @param text 按钮文案。
+ * @param icon 左侧图标资源。
+ * @param enabled 是否启用按钮。
  */
 @Composable
-private fun JvmSelectLibraryOverview(
-    libraryCount: Int,
-    selectionModeText: String,
+private fun JvmSelectLibraryActionButton(
+    onClick: () -> Unit,
+    text: String,
+    icon: DrawableResource,
+    enabled: Boolean = true,
 ) {
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val gap = XyTheme.dimens.contentPadding
-        val useTwoColumns = maxWidth >= JvmSettingContentGridTwoColumnBreakpoint
-        val tileWidth = if (useTwoColumns) {
-            (maxWidth - gap) / 2
-        } else {
-            maxWidth
-        }
+    XyIconTextButton(
+        modifier = Modifier.height(32.dp),
+        onClick = onClick,
+        text = text,
+        icon = icon,
+        enabled = enabled,
+        color = MaterialTheme.colorScheme.onSurface,
+        backgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+        borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+        paddingValues = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+        textStyle = MaterialTheme.typography.labelSmall,
+    )
+}
 
-        JvmSettingFlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(gap),
-            verticalArrangement = Arrangement.spacedBy(gap),
+/**
+ * 媒体库选择器头部：左侧可见数量，右侧当前选择模式。
+ *
+ * @param countText 可见媒体库数量文案。
+ * @param modeText 当前单选或多选模式文案。
+ */
+@Composable
+private fun JvmSelectLibraryPickerHeader(
+    countText: String,
+    modeText: String,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = XyTheme.dimens.contentPadding),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            JvmSettingOverviewTile(
-                modifier = Modifier.width(tileWidth),
-                icon = Res.drawable.folder_managed_24px,
-                kicker = stringResource(Res.string.jvm_select_library_screen_text_13),
-                value = stringResource(Res.string.jvm_select_library_screen_text_14, libraryCount),
-                sub = stringResource(Res.string.jvm_select_library_screen_text_15),
+            XyTextSub(
+                modifier = Modifier.weight(1f),
+                text = countText,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = JvmSelectLibraryKickerLetterSpacing,
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
             )
-            JvmSettingOverviewTile(
-                modifier = Modifier.width(tileWidth),
-                icon = Res.drawable.refresh_24px,
-                kicker = stringResource(Res.string.jvm_select_library_screen_text_16),
-                value = stringResource(Res.string.jvm_select_library_screen_text_17),
-                sub = stringResource(Res.string.jvm_select_library_screen_text_18, selectionModeText),
-            )
+            JvmSelectLibraryTag(text = modeText)
         }
+        // 头部下边线，与设计稿选择器标题的分隔线保持一致。
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f))
+        )
     }
 }
 
 /**
- * JVM 媒体库列表内容。
+ * 媒体库列表内容。
  *
  * @param libraries 当前可选媒体库列表。
  * @param selectedLibraryIds 当前选中媒体库 ID 集合。
@@ -307,25 +359,56 @@ private fun JvmSelectLibraryList(
         return
     }
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = XyTheme.dimens.outerVerticalPadding),
     ) {
-        libraries.forEach { library ->
-            JvmSelectLibraryRow(
-                library = library,
-                selected = selectedLibraryIds.contains(library.id),
-                allLibraryName = allLibraryName,
-                multiSelection = multiSelection,
-                onClick = { onLibraryClick(library) }
-            )
+        val gap = XyTheme.dimens.outerVerticalPadding
+        // 宽窗口下两两一行，窄窗口自动退化为单列，避免单个条目横向过长。
+        val columns = if (maxWidth >= JvmSelectLibraryTwoColumnBreakpoint) 2 else 1
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(gap),
+        ) {
+            var start = 0
+            while (start < libraries.size) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(gap),
+                ) {
+                    for (offset in 0 until columns) {
+                        val index = start + offset
+                        if (index < libraries.size) {
+                            val library = libraries[index]
+                            JvmSelectLibraryRow(
+                                modifier = Modifier.weight(1f),
+                                library = library,
+                                selected = selectedLibraryIds.contains(library.id),
+                                allLibraryName = allLibraryName,
+                                multiSelection = multiSelection,
+                                onClick = { onLibraryClick(library) },
+                            )
+                        } else {
+                            // 单数条目时补一个空占位，保持两列等宽。
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+                start += columns
+            }
         }
     }
 }
 
 /**
- * JVM 媒体库列表的单行。
+ * 媒体库列表的单行。
  *
+ * 左侧是单选/多选指示器，中间是媒体库名称与类型标签，右侧是选中确认圆点；
+ * 选中行使用主色描边、浅色底和左侧强调条，悬停时提升描边与底色对比。
+ *
+ * @param modifier 外层布局修饰符。
  * @param library 当前媒体库。
  * @param selected 当前行是否选中。
  * @param allLibraryName 全部媒体库本地化名称。
@@ -334,142 +417,108 @@ private fun JvmSelectLibraryList(
  */
 @Composable
 private fun JvmSelectLibraryRow(
+    modifier: Modifier = Modifier,
     library: XyLibrary,
     selected: Boolean,
     allLibraryName: String,
     multiSelection: Boolean,
     onClick: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val colorScheme = MaterialTheme.colorScheme
+    val accentColor = colorScheme.primary
     val isAllLibrary = library.isAllMediaLibrary()
     val shape = RoundedCornerShape(XyTheme.dimens.corner - XyTheme.dimens.outerVerticalPadding / 2)
-    val borderColor = if (selected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.42f)
-    } else {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
+    val borderColor = when {
+        selected -> accentColor.copy(alpha = 0.55f)
+        hovered -> colorScheme.onSurface.copy(alpha = 0.16f)
+        else -> colorScheme.onSurface.copy(alpha = 0.09f)
     }
-    val containerColor = if (selected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = if (XyTheme.configs.isDarkTheme) 0.18f else 0.10f)
-    } else {
-        Color.Transparent
+    val containerColor = when {
+        selected -> accentColor.copy(alpha = if (XyTheme.configs.isDarkTheme) 0.10f else 0.07f)
+        hovered -> colorScheme.onSurface.copy(alpha = 0.05f)
+        else -> Color.Transparent
     }
     val selectorRole = if (multiSelection) Role.Checkbox else Role.RadioButton
-    val selectorDescription = if (isAllLibrary) allLibraryName else library.name
 
-    Surface(
-        modifier = Modifier
+    Box(
+        modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = JvmSettingLibraryRowMinHeight)
+            .heightIn(min = JvmSelectLibraryRowMinHeight)
+            .clip(shape)
+            .background(containerColor)
+            .border(BorderStroke(1.dp, borderColor), shape)
+            .hoverable(interactionSource = interactionSource)
+            .pointerHoverIcon(PointerIcon.Hand)
             .selectable(
                 selected = selected,
+                interactionSource = interactionSource,
+                indication = null,
                 role = selectorRole,
-                onClick = onClick
-            )
-            .semantics {
-                contentDescription = selectorDescription
-            },
-        shape = shape,
-        color = containerColor,
-        border = BorderStroke(width = 1.dp, color = borderColor)
+                onClick = onClick,
+            ),
+        // 条目内容在最小行高内保持上下居中。
+        contentAlignment = Alignment.CenterStart,
     ) {
+        // 选中行左侧的强调竖条，上下留出内缩避免贴合圆角。
+        if (selected) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .fillMaxHeight()
+                    .padding(vertical = 14.dp)
+                    .width(JvmSelectLibraryAccentWidth)
+                    .background(accentColor, RoundedCornerShape(2.dp))
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    horizontal = XyTheme.dimens.contentPadding,
-                    vertical = XyTheme.dimens.outerVerticalPadding
-                ),
+                .padding(horizontal = XyTheme.dimens.outerHorizontalPadding, vertical = 14.dp),
             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            JvmSelectLibraryAvatar(
-                library = library,
-                selected = selected,
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    XyText(
-                        modifier = Modifier.weight(1f, fill = false),
-                        text = library.name,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    JvmSelectLibraryPill(
-                        text = if (isAllLibrary) stringResource(Res.string.jvm_select_library_screen_text_19) else library.collectionType.ifBlank { stringResource(Res.string.music_library) },
-                        selected = selected,
-                        maxWidth = 120.dp,
-                    )
-                }
-                XyTextSub(
-                    text = library.libraryDescription(isAllLibrary = isAllLibrary),
-                    style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
             JvmSelectLibrarySelector(
                 selected = selected,
                 multiSelection = multiSelection,
             )
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                XyText(
+                    modifier = Modifier.weight(1f, fill = false),
+                    text = if (isAllLibrary) allLibraryName else library.name,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                JvmSelectLibraryTag(
+                    text = if (isAllLibrary) {
+                        stringResource(Res.string.jvm_select_library_screen_text_32)
+                    } else {
+                        library.collectionType.ifBlank { stringResource(Res.string.music_library) }
+                    },
+                )
+                if (selected) {
+                    JvmSelectLibraryTag(
+                        text = stringResource(Res.string.current_connection),
+                        accent = true,
+                    )
+                }
+            }
+            JvmSelectLibraryCheckBadge(selected = selected)
         }
     }
 }
 
 /**
- * JVM 媒体库行左侧头像。
+ * 媒体库行首选择指示器。
  *
- * @param library 当前媒体库。
- * @param selected 当前头像是否使用主色强调。
- */
-@Composable
-private fun JvmSelectLibraryAvatar(
-    library: XyLibrary,
-    selected: Boolean,
-) {
-    val isAllLibrary = library.isAllMediaLibrary()
-    val accentColor = when {
-        selected || isAllLibrary -> MaterialTheme.colorScheme.primary
-        library.name.hashCode() % 3 == 0 -> MaterialTheme.colorScheme.tertiary
-        library.name.hashCode() % 3 == 1 -> MaterialTheme.colorScheme.secondary
-        else -> MaterialTheme.colorScheme.primary
-    }
-    val avatarText = if (isAllLibrary) {
-        stringResource(Res.string.jvm_select_library_screen_text_20)
-    } else {
-        library.name.firstOrNull()?.toString().orEmpty().ifBlank { stringResource(Res.string.jvm_select_library_screen_text_21) }
-    }
-
-    Box(
-        modifier = Modifier
-            .size(JvmSettingAvatarSize)
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(accentColor.copy(alpha = if (selected || isAllLibrary) 0.22f else 0.14f))
-            .border(
-                BorderStroke(1.dp, accentColor.copy(alpha = if (selected) 0.42f else 0.22f)),
-                RoundedCornerShape(XyTheme.dimens.corner)
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        XyText(
-            text = avatarText,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = accentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Clip
-        )
-    }
-}
-
-/**
- * JVM 媒体库行尾选择控件。
+ * 单选使用圆形点选样式，多选使用圆角方形勾选样式，尺寸与设计稿一致。
  *
  * @param selected 当前是否选中。
  * @param multiSelection 是否展示多选样式。
@@ -479,227 +528,194 @@ private fun JvmSelectLibrarySelector(
     selected: Boolean,
     multiSelection: Boolean,
 ) {
+    val accentColor = MaterialTheme.colorScheme.primary
+    val strokeColor = if (selected) {
+        accentColor
+    } else {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f)
+    }
+
     if (multiSelection) {
-        Checkbox(
-            checked = selected,
-            onCheckedChange = null,
-            colors = CheckboxDefaults.colors(
-                checkedColor = MaterialTheme.colorScheme.primary,
-                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                checkmarkColor = MaterialTheme.colorScheme.onPrimary
-            )
-        )
-    } else {
-        RadioButton(
-            selected = selected,
-            onClick = null,
-            colors = RadioButtonDefaults.colors(
-                selectedColor = MaterialTheme.colorScheme.primary,
-                unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        )
-    }
-}
-
-/**
- * JVM 媒体库选择页右侧管理模块。
- *
- * @param onRefresh 重新读取本地媒体库列表。
- * @param onOpenConnectionManagement 打开连接管理页面。
- */
-@Composable
-private fun JvmSelectLibraryManagementModule(
-    onRefresh: () -> Unit,
-    onOpenConnectionManagement: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-    ) {
-        XyTextSub(
-            text = stringResource(Res.string.jvm_select_library_screen_text_22),
-            style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        XyIconTextButton(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onRefresh,
-            text = stringResource(Res.string.jvm_select_library_screen_text_23),
-            icon = Res.drawable.refresh_24px,
-            color = MaterialTheme.colorScheme.onSurface,
-            backgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
-            borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
-        )
-        XyIconTextButton(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onOpenConnectionManagement,
-            text = stringResource(Res.string.connection_management),
-            icon = Res.drawable.settings_24px,
-        )
-    }
-}
-
-/**
- * JVM 媒体库当前选择摘要卡片。
- *
- * @param selectedLibraries 当前已选媒体库。
- * @param allLibraryName 全部媒体库本地化名称。
- * @param allLibrarySelected 当前是否选择全部媒体库。
- */
-@Composable
-private fun JvmSelectLibrarySelectionCard(
-    selectedLibraries: List<XyLibrary>,
-    allLibraryName: String,
-    allLibrarySelected: Boolean,
-) {
-    val selectedSummary = selectedLibraries.librarySelectionSummary(
-        allLibrarySelected = allLibrarySelected,
-        allLibraryName = allLibraryName
-    )
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = if (XyTheme.configs.isDarkTheme) 0.15f else 0.08f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
+        val shape = RoundedCornerShape(4.dp)
+        Box(
+            modifier = Modifier
+                .size(JvmSelectLibrarySelectorSize)
+                .clip(shape)
+                .background(if (selected) accentColor else Color.Transparent)
+                .border(BorderStroke(1.dp, strokeColor), shape),
+            contentAlignment = Alignment.Center,
         ) {
-            XyText(
-                text = stringResource(Res.string.jvm_select_library_screen_text_24),
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            XyTextLarge(
-                text = selectedSummary,
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            XyTextSub(
-                text = if (allLibrarySelected) {
-                    stringResource(Res.string.jvm_select_library_screen_text_25)
-                } else {
-                    stringResource(Res.string.jvm_select_library_screen_text_26)
-                },
-                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            JvmSelectLibraryTagList(
-                selectedLibraries = selectedLibraries,
-                allLibraryName = allLibraryName,
-                allLibrarySelected = allLibrarySelected,
-            )
+            if (selected) {
+                Icon(
+                    painter = painterResource(Res.drawable.check_24px),
+                    contentDescription = null,
+                    modifier = Modifier.size(10.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
         }
-    }
-}
-
-/**
- * JVM 媒体库选择摘要标签列表。
- *
- * @param selectedLibraries 当前已选媒体库。
- * @param allLibraryName 全部媒体库本地化名称。
- * @param allLibrarySelected 当前是否选择全部媒体库。
- */
-@Composable
-private fun JvmSelectLibraryTagList(
-    selectedLibraries: List<XyLibrary>,
-    allLibraryName: String,
-    allLibrarySelected: Boolean,
-) {
-    val tagNames = if (allLibrarySelected || selectedLibraries.isEmpty()) {
-        listOf(allLibraryName)
     } else {
-        selectedLibraries.map { it.name }
-    }
-
-    JvmSettingFlowRow(
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-    ) {
-        tagNames.forEach { tagName ->
-            JvmSelectLibraryPill(
-                text = tagName,
-                selected = true,
-                maxWidth = 180.dp,
+        Box(
+            modifier = Modifier
+                .size(JvmSelectLibrarySelectorSize)
+                .clip(CircleShape)
+                .border(BorderStroke(1.dp, strokeColor), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            // 未选中时圆点保持透明，选中时以主色填充形成实心圆。
+            Box(
+                modifier = Modifier
+                    .size(JvmSelectLibrarySelectorDotSize)
+                    .clip(CircleShape)
+                    .background(accentColor.copy(alpha = if (selected) 1f else 0f))
             )
         }
     }
 }
 
 /**
- * JVM 媒体库选择页的空列表状态。
+ * 媒体库行尾的选中确认圆点。
+ *
+ * @param selected 当前是否选中。
  */
 @Composable
-private fun JvmSelectLibraryEmptyState() {
-    Column(
+private fun JvmSelectLibraryCheckBadge(selected: Boolean) {
+    val accentColor = MaterialTheme.colorScheme.primary
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(XyTheme.dimens.outerHorizontalPadding),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+            .size(JvmSelectLibraryCheckSize)
+            .clip(CircleShape)
+            .background(if (selected) accentColor else Color.Transparent)
+            .border(
+                BorderStroke(
+                    width = 1.dp,
+                    color = if (selected) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f)
+                ),
+                CircleShape
+            ),
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
-            painter = painterResource(Res.drawable.folder_managed_24px),
+            painter = painterResource(Res.drawable.check_24px),
             contentDescription = null,
-            modifier = Modifier.size(36.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        XyTextSub(
-            text = stringResource(Res.string.jvm_select_library_screen_text_27),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            modifier = Modifier.size(11.dp),
+            tint = if (selected) MaterialTheme.colorScheme.onPrimary else Color.Transparent,
         )
     }
 }
 
 /**
- * JVM 媒体库选择页的小标签。
+ * 媒体库行内的小标签。
  *
  * @param text 标签文本。
- * @param selected 是否使用主色强调。
+ * @param accent 是否使用主色强调。
  * @param maxWidth 标签最大宽度。
  */
 @Composable
-private fun JvmSelectLibraryPill(
+private fun JvmSelectLibraryTag(
     text: String,
-    selected: Boolean = false,
-    maxWidth: Dp = 128.dp,
+    accent: Boolean = false,
+    maxWidth: Dp = 180.dp,
 ) {
-    val color = if (selected) {
+    val color = if (accent) {
         MaterialTheme.colorScheme.primary
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Surface(
-        shape = CircleShape,
-        color = color.copy(alpha = if (selected) 0.14f else 0.08f),
+        shape = RoundedCornerShape(4.dp),
+        color = if (accent) color.copy(alpha = 0.12f) else Color.Transparent,
         contentColor = color,
         border = BorderStroke(
             width = 1.dp,
-            color = color.copy(alpha = if (selected) 0.28f else 0.12f)
+            color = color.copy(alpha = if (accent) 0.45f else 0.14f)
         )
     ) {
-        XyText(
+        XyTextSub(
             modifier = Modifier
                 .widthIn(max = maxWidth)
-                .padding(
-                    horizontal = XyTheme.dimens.contentPadding,
-                    vertical = XyTheme.dimens.outerVerticalPadding / 2
-                ),
+                .padding(horizontal = 6.dp, vertical = 2.dp),
             text = text,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.sp,
+                letterSpacing = 0.6.sp,
+            ),
             color = color,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
         )
+    }
+}
+
+/**
+ * 媒体库列表底部的范围摘要与恢复操作。
+ *
+ * @param summary 当前生效范围摘要文案。
+ * @param restoreEnabled 是否允许恢复到进入页面时的范围。
+ * @param onRestore 恢复初始范围回调。
+ */
+@Composable
+private fun JvmSelectLibraryFooter(
+    summary: String,
+    restoreEnabled: Boolean,
+    onRestore: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        XyTextSub(
+            modifier = Modifier.weight(1f),
+            text = summary,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
+        )
+        JvmSelectLibraryActionButton(
+            onClick = onRestore,
+            text = stringResource(Res.string.jvm_select_library_screen_text_06),
+            icon = Res.drawable.restart_alt_24px,
+            enabled = restoreEnabled,
+        )
+    }
+}
+
+/**
+ * 媒体库选择页的空列表状态。
+ */
+@Composable
+private fun JvmSelectLibraryEmptyState() {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 180.dp),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.folder_managed_24px),
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            XyTextSub(
+                modifier = Modifier.padding(top = XyTheme.dimens.contentPadding),
+                text = stringResource(Res.string.jvm_select_library_screen_text_27),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -708,35 +724,4 @@ private fun JvmSelectLibraryPill(
  */
 private fun XyLibrary.isAllMediaLibrary(): Boolean {
     return id == Constants.MINUS_ONE_INT.toString()
-}
-
-/**
- * 生成媒体库行说明文本。
- *
- * @param isAllLibrary 当前媒体库是否为全部媒体库占位项。
- */
-@Composable
-private fun XyLibrary.libraryDescription(isAllLibrary: Boolean): String {
-    return if (isAllLibrary) {
-        stringResource(Res.string.jvm_select_library_screen_text_28)
-    } else {
-        val typeText = collectionType.ifBlank { stringResource(Res.string.jvm_select_library_screen_text_29) }
-        stringResource(Res.string.jvm_select_library_screen_text_30, typeText, connectionId, id)
-    }
-}
-
-/**
- * 生成当前媒体库选择摘要。
- *
- * @param allLibrarySelected 当前是否选择全部媒体库。
- * @param allLibraryName 全部媒体库本地化名称。
- */
-private fun List<XyLibrary>.librarySelectionSummary(
-    allLibrarySelected: Boolean,
-    allLibraryName: String,
-): String {
-    if (allLibrarySelected || isEmpty()) {
-        return allLibraryName
-    }
-    return joinToString("、") { it.name }
 }

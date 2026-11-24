@@ -19,6 +19,8 @@ fun getLocalRoomDatabase(contextWrapper: ContextWrapper): LocalDatabaseClient {
         Migration_8_9,
         Migration_9_10,
         Migration_10_11,
-        Migration_11_12
+        Migration_11_12,
+        Migration_12_13,
+        Migration_13_14
     )
 }

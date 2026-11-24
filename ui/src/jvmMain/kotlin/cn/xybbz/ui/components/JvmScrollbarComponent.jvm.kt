@@ -33,6 +33,8 @@ fun SidebarVerticalScrollbar(
     visible: Boolean,
     modifier: Modifier = Modifier,
     adapter: ScrollbarAdapter,
+    // 滚动条底部预留高度：默认避开底部播放栏；左侧栏等不会被播放栏遮挡的区域可传 0.dp
+    bottomPadding: Dp = XyTheme.dimens.snackBarPlayerHeight,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isDragged by interactionSource.collectIsDraggedAsState()
@@ -42,7 +44,7 @@ fun SidebarVerticalScrollbar(
             visible = visible || isDragged,
             enter = fadeIn(),
             exit = fadeOut(),
-            modifier = modifier.padding(bottom = XyTheme.dimens.snackBarPlayerHeight)
+            modifier = modifier.padding(bottom = bottomPadding)
                 .padding(end = XyTheme.dimens.outerVerticalPadding),
         ) {
             VerticalScrollbar(

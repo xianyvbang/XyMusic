@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>XyMusic · Windows 右键菜单重设计（原型）</title>
+<style>
+  /* ============================================================
+     设计语言：Signal Deck（信号台）
+     右键菜单 = 一个紧凑的信号面板：一条曲目轨道 + 若干等宽分组
+     与 settings-redesign.html / dialog-redesign.html 共用同一套令牌
+     ============================================================ */
+  :root{
+    --accent:#4D93CB;
+    --accent-ink:#08131C;
+    --font-ui:"Segoe UI Variable Display","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif;
+    --font-mono:"Cascadia Code","Consolas","JetBrains Mono",ui-monospace,monospace;
+
+    --bg:#0C0C0E;
+    --bg-deep:#08080A;
+    --surface:#1B1D20;
+    --menu:#24272B;
+    --card:#2B2E32;
+    --line:rgba(255,255,255,.09);
+    --line-strong:rgba(255,255,255,.17);
+    --ink:#E8EAED;
+    --ink-soft:#9CA1A8;
+    --ink-mute:#6E7379;
+    --wash:rgba(255,255,255,.05);
+    --shadow:0 22px 54px rgba(0,0,0,.62),0 2px 8px rgba(0,0,0,.42);
+    --scrim:rgba(8,8,10,.72);
+  }
+  html[data-theme="light"]{
+    --accent:#2F70B1;
+    --accent-ink:#FFFFFF;
+    --bg:#EDEAE3;
+    --bg-deep:#E2DED5;
+    --surface:#F4F5F7;
+    --menu:#FFFFFF;
+    --card:#FFFFFF;
+    --line:rgba(23,20,14,.12);
+    --line-strong:rgba(23,20,14,.22);
+    --ink:#1D1F22;
+    --ink-soft:#5A6066;
+    --ink-mute:#8A9096;
+    --wash:rgba(23,20,14,.05);
+    --shadow:0 22px 54px rgba(40,32,20,.22),0 2px 8px rgba(40,32,20,.12);
+    --scrim:rgba(23,20,14,.42);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--font-ui);
+    background:
+      radial-gradient(1100px 560px at 8% -8%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%),
+      radial-gradient(820px 480px at 100% 2%, rgba(207,107,98,.05), transparent 62%),
+      var(--bg-deep);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    padding:26px 26px 60px;
+    min-height:100vh;
+  }
+  /* 纸纹噪点，避免大面积纯色的塑料感 */
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+    opacity:.035;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .wrap{max-width:1440px;margin:0 auto;position:relative;z-index:2;}
+
+  /* ---------- 页头 ---------- */
+  .hero{display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;padding-bottom:26px;border-bottom:1px solid var(--line);}
+  .hero .lead{flex:1;min-width:300px;display:flex;flex-direction:column;gap:12px;}
+  .rule-top{width:34px;height:3px;border-radius:2px;background:var(--accent);}
+  .k{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;}
+  .hero h1{margin:9px 0 0;font-size:clamp(26px,3vw,38px);font-weight:800;letter-spacing:-.035em;line-height:1.05;}
+  .hero p{margin:0;font-size:12.5px;line-height:1.85;color:var(--ink-soft);max-width:64ch;}
+  .readouts{display:flex;align-items:flex-end;flex:none;}
+  .readout{padding:0 16px;display:flex;flex-direction:column;gap:5px;}
+  .readout:first-child{padding-left:0;}
+  .readout:last-child{padding-right:0;}
+  .readout .lbl{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;color:var(--ink-mute);white-space:nowrap;}
+  .readout .val{font-size:15px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;}
+  .vr{width:1px;align-self:stretch;background:var(--line);margin:4px 0 2px;}
+  .theme-btn{
+    width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:transparent;
+    color:var(--ink-soft);display:grid;place-items:center;cursor:pointer;transition:.16s;flex:none;
+  }
+  .theme-btn:hover{color:var(--ink);background:var(--wash);border-color:var(--line-strong);}
+
+  /* ---------- 分区 ---------- */
+  section{margin-top:44px;}
+  .shead{display:flex;align-items:flex-end;gap:14px;}
+  .shead .idx{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--accent);padding-bottom:3px;}
+  .shead .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+  .shead h2{margin:0;font-size:15.5px;font-weight:700;letter-spacing:-.01em;}
+  .shead .sub{font-size:11.5px;color:var(--ink-soft);}
+  .srule{height:1px;margin:13px 0 22px;background:var(--line);position:relative;}
+  .srule::before{content:"";position:absolute;left:0;top:0;width:84px;height:1px;background:var(--accent);opacity:.8;}
+
+  /* ---------- 01 取向 ---------- */
+  .intro{display:grid;grid-template-columns:1.25fr 1fr;gap:40px;align-items:start;}
+  .intro p{margin:0 0 12px;font-size:12.5px;line-height:1.9;color:var(--ink-soft);}
+  .intro p b{color:var(--ink);font-weight:600;}
+  .issues{display:flex;flex-direction:column;gap:8px;}
+  .issue{
+    display:flex;gap:12px;padding:11px 13px;border:1px solid var(--line);border-radius:9px;
+    background:color-mix(in srgb,var(--card) 45%,transparent);
+  }
+  .issue b{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--accent);padding-top:2px;flex:none;}
+  .issue div{display:flex;flex-direction:column;gap:3px;min-width:0;}
+  .issue strong{font-size:12.5px;font-weight:650;}
+  .issue span{font-size:11.5px;color:var(--ink-soft);line-height:1.6;}
+  @media (max-width:980px){ .intro{grid-template-columns:1fr;gap:26px;} }
+
+  /* ============================================================
+     菜单本体
+     ============================================================ */
+  .menu{
+    width:248px;
+    background:var(--menu);
+    border:1px solid var(--line-strong);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    padding:6px;
+    color:var(--ink);
+    font-family:var(--font-ui);
+    position:relative;
+  }
+  /* 01 头部轨道：让菜单知道自己在对谁操作 */
+  .menu-head{
+    display:flex;align-items:center;gap:10px;
+    padding:5px 6px 10px;position:relative;
+  }
+  .menu-head::after{
+    content:"";position:absolute;left:6px;right:6px;bottom:0;height:1px;background:var(--line);
+  }
+  .m-cover{
+    width:34px;height:34px;flex:none;border-radius:8px;display:grid;place-items:center;
+    font-size:13px;font-weight:700;color:#fff;
+    background:linear-gradient(145deg,var(--c1,#4A5BB8),var(--c2,#66518C));
+    box-shadow:0 4px 12px rgba(0,0,0,.32);
+  }
+  .m-titles{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+  .m-name{font-size:12.5px;font-weight:650;letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .m-meta{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.05em;color:var(--ink-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .m-now{
+    flex:none;display:flex;align-items:center;gap:5px;
+    font-family:var(--font-mono);font-size:8.5px;letter-spacing:.16em;color:var(--accent);
+  }
+  .m-now::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+
+  .menu-body{display:flex;flex-direction:column;gap:2px;padding-top:2px;}
+
+  /* 02 分组：细线 + 等宽标签 + 3px 主色短标 */
+  .grp{display:flex;flex-direction:column;gap:1px;min-width:0;}
+  .grp + .grp{margin-top:5px;padding-top:6px;border-top:1px solid var(--line);}
+  .grp-label{
+    display:flex;align-items:center;gap:7px;padding:4px 8px 5px;
+    font-family:var(--font-mono);font-size:9px;letter-spacing:.18em;
+    color:var(--ink-mute);text-transform:uppercase;
+  }
+  .grp-label i{width:3px;height:9px;border-radius:2px;background:var(--accent);opacity:.7;flex:none;}
+  .grp-code{margin-left:auto;letter-spacing:.14em;opacity:.72;}
+
+  /* 03 条目 */
+  .mi{
+    display:flex;align-items:center;gap:10px;width:100%;
+    height:34px;padding:0 9px;border:0;border-radius:7px;
+    background:transparent;color:var(--ink);
+    font-family:var(--font-ui);font-size:12.5px;font-weight:500;letter-spacing:-.005em;
+    text-align:left;cursor:default;position:relative;
+    transition:background .13s ease,color .13s ease;
+  }
+  .mi-ico{
+    width:16px;height:16px;flex:none;display:grid;place-items:center;
+    color:var(--ink-soft);transition:color .13s ease;
+  }
+  .mi-tx{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mi-v{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--ink-mute);}
+  .mi-k{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;color:var(--ink-mute);opacity:0;transition:opacity .13s ease;}
+  .mi-chev{
+    width:13px;height:13px;flex:none;display:grid;place-items:center;
+    color:var(--ink-mute);transition:color .13s ease,transform .13s ease;
+  }
+  .mi:hover,.mi.force-hover{background:var(--wash);}
+  .mi:hover::before,.mi.force-hover::before{
+    content:"";position:absolute;left:0;top:7px;bottom:7px;width:2px;border-radius:2px;background:var(--accent);
+  }
+  .mi:hover .mi-ico,.mi.force-hover .mi-ico{color:var(--accent);}
+  .mi:hover .mi-k,.mi.force-hover .mi-k{opacity:1;}
+  .mi:hover .mi-chev,.mi.force-hover .mi-chev{color:var(--ink);transform:translateX(1px);}
+  .mi:active{background:color-mix(in srgb,var(--accent) 14%,transparent);}
+  /* 当前播放：底色 10% + 主色文字 + 常驻导轨 */
+  .mi.is-current{background:color-mix(in srgb,var(--accent) 10%,transparent);}
+  .mi.is-current .mi-tx{color:var(--accent);font-weight:600;}
+  .mi.is-current .mi-ico{color:var(--accent);}
+  .mi.is-current::before{
+    content:"";position:absolute;left:0;top:7px;bottom:7px;width:2px;border-radius:2px;background:var(--accent);
+  }
+  /* 提交类条目：文字与图标同主色，权重高于普通条目但不抢读数 */
+  .mi.is-primary .mi-tx{color:var(--accent);font-weight:600;}
+  .mi.is-primary .mi-ico{color:var(--accent);}
+  /* 禁用：整体 40%，不换色 */
+  .mi.is-disabled,.mi[disabled]{opacity:.4;pointer-events:none;}
+
+  /* 04 子菜单 */
+  .sub-wrap{position:relative;}
+  .submenu{
+    position:absolute;left:100%;top:-6px;margin-left:6px;z-index:6;
+    width:196px;display:none;
+    background:var(--menu);border:1px solid var(--line-strong);border-radius:10px;
+    box-shadow:var(--shadow);padding:6px;
+    flex-direction:column;gap:1px;
+  }
+  .submenu.is-open,.sub-wrap:hover .submenu{display:flex;}
+  .submenu .mi{height:32px;font-size:12px;}
+  .submenu .mi-ico-empty{display:none;}
+  .submenu-note{
+    padding:5px 9px 3px;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.16em;
+    color:var(--ink-mute);text-transform:uppercase;
+  }
+
+  /* 只读读数条（歌词偏移等无图标菜单） */
+  .m-readout{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    margin:2px 2px 4px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;
+    background:var(--wash);
+    font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;color:var(--ink-mute);text-transform:uppercase;
+  }
+  .m-readout b{font-size:12px;letter-spacing:0;color:var(--accent);font-weight:700;}
+
+  /* 05 底部读数 */
+  .menu-foot{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    margin-top:5px;padding:7px 8px 1px;border-top:1px solid var(--line);
+    font-family:var(--font-mono);font-size:8.5px;letter-spacing:.13em;color:var(--ink-mute);text-transform:uppercase;
+  }
+
+  /* ============================================================
+     06 播放页 · 歌词偏移菜单
+     与歌曲菜单同宽同结构：读数条 + 分组条目，只是读数更醒目
+     ============================================================ */
+  /* 读数条加强版：数值放大到 16，作为菜单里唯一的强调位 */
+  .m-readout.is-strong{padding:9px 9px;margin:2px 2px 6px;}
+  .m-readout.is-strong b{font-size:16px;letter-spacing:-.02em;}
+  /* 数值为 0 时不抢主色，回到正文色 */
+  .m-readout.is-strong.is-zero b{color:var(--ink);}
+
+  /* 无歌词时的说明行 */
+  .tuner-note{
+    display:flex;gap:8px;align-items:flex-start;padding:2px 8px 4px;
+    font-size:11px;line-height:1.6;color:var(--ink-soft);
+  }
+  .tuner-note::before{content:"";width:2px;height:12px;margin-top:3px;flex:none;border-radius:1px;background:var(--accent);}
+
+  /* 变体并排 */
+  .tuner-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;}
+  @media (max-width:1100px){ .tuner-board{grid-template-columns:repeat(2,minmax(0,1fr));} }
+  @media (max-width:640px){ .tuner-board{grid-template-columns:1fr;} }
+  .tuner-cell{display:flex;flex-direction:column;gap:12px;}
+  .tuner-cell .cap{text-align:center;}
+
+  /* ============================================================
+     02 结构解剖
+     ============================================================ */
+  .ano{display:grid;grid-template-columns:auto minmax(240px,1fr);gap:44px;align-items:start;}
+  .ano-stage{display:flex;justify-content:center;padding:8px 0 4px;}
+  .ano .menu [data-region]{transition:outline-color .16s ease,background-color .16s ease;border-radius:6px;}
+  .ano .menu [data-region].hl{
+    outline:1px dashed var(--accent);outline-offset:4px;
+    background-color:color-mix(in srgb,var(--accent) 7%,transparent);
+  }
+  .legend{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;}
+  .legend li{
+    display:flex;gap:12px;padding:9px 10px;border-radius:8px;cursor:default;transition:.15s ease;
+    border:1px solid transparent;
+  }
+  .legend li:hover,.legend li.on{background:var(--wash);border-color:var(--line);}
+  .legend li b{
+    font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--accent);
+    padding-top:3px;width:16px;flex:none;
+  }
+  .legend li div{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .legend li strong{font-size:12.5px;font-weight:600;}
+  .legend li em{font-family:var(--font-mono);font-size:10px;font-style:normal;color:var(--ink-mute);line-height:1.6;letter-spacing:.02em;}
+  @media (max-width:1000px){ .ano{grid-template-columns:1fr;} }
+
+  /* 令牌表 */
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  thead th{
+    text-align:left;font-family:var(--font-mono);font-size:9.5px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-mute);padding:0 0 10px;border-bottom:1px solid var(--line);
+  }
+  tbody td{padding:10px 12px 10px 0;border-bottom:1px solid var(--line);vertical-align:top;}
+  tbody tr:hover{background:var(--wash);}
+  td.nm{font-weight:600;white-space:nowrap;}
+  td.v{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);white-space:nowrap;}
+  td.c{font-family:var(--font-mono);font-size:11px;color:var(--ink-mute);}
+  .swatch{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:middle;margin-right:6px;}
+
+  /* ============================================================
+     03 变体矩阵
+     ============================================================ */
+  .board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px;}
+  @media (max-width:1100px){ .board{grid-template-columns:1fr;} }
+  .case{
+    border:1px solid var(--line);border-radius:12px;padding:18px;cursor:pointer;
+    background:color-mix(in srgb,var(--card) 40%,transparent);
+    display:flex;flex-direction:column;gap:16px;transition:.2s ease;position:relative;
+  }
+  .case.wide{grid-column:1/-1;}
+  .case:hover{border-color:var(--line-strong);transform:translateY(-2px);}
+  .case:hover .case-open{opacity:1;transform:none;}
+  .case-head{display:flex;align-items:baseline;gap:10px;}
+  .case-head .no{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.06em;}
+  .case-head .tt{font-size:12.5px;font-weight:650;}
+  .case-head .ds{font-size:11px;color:var(--ink-mute);margin-left:auto;font-family:var(--font-mono);letter-spacing:.04em;}
+  .case-stage{display:flex;justify-content:center;padding:6px 0 2px;min-height:120px;}
+  .case.wide .case-stage{gap:22px;align-items:flex-start;}
+  .case-stage .menu{box-shadow:0 16px 38px rgba(0,0,0,.46);}
+  .case-open{
+    position:absolute;right:14px;top:12px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;
+    color:var(--accent);opacity:0;transform:translateY(-3px);transition:.18s ease;
+  }
+  .case-hint{
+    font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;color:var(--ink-mute);
+    text-align:center;text-transform:uppercase;
+  }
+
+  /* ============================================================
+     04 状态 & 交互
+     ============================================================ */
+  .pairs{display:grid;grid-template-columns:1fr 1.15fr;gap:36px;align-items:start;}
+  @media (max-width:1000px){ .pairs{grid-template-columns:1fr;} }
+  .st-card{border:1px solid var(--line);border-radius:12px;padding:18px;background:color-mix(in srgb,var(--card) 40%,transparent);}
+  .st-card h4{margin:0 0 14px;font-size:12px;font-weight:700;color:var(--ink-soft);display:flex;align-items:center;gap:8px;}
+  .st-card h4::before{content:"";width:3px;height:11px;border-radius:2px;background:var(--accent);opacity:.75;}
+  .cap{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase;}
+  .rule-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;}
+  .rule-list li{display:flex;gap:10px;font-size:12px;line-height:1.75;color:var(--ink-soft);}
+  .rule-list li::before{content:"";width:2px;height:13px;margin-top:5px;flex:none;background:var(--accent);border-radius:1px;}
+  .rule-list b{color:var(--ink);font-weight:600;}
+  .rule-list code{font-family:var(--font-mono);font-size:10.5px;padding:1px 5px;border-radius:4px;background:var(--wash);border:1px solid var(--line);color:var(--ink);}
+  kbd{
+    font-family:var(--font-mono);font-size:9.5px;line-height:1;padding:3px 5px;border-radius:4px;
+    border:1px solid var(--line-strong);background:var(--wash);color:var(--ink-soft);
+  }
+
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);display:flex;gap:16px;flex-wrap:wrap;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-mute);}
+
+  /* ============================================================
+     遮罩层（真实菜单预览）
+     ============================================================ */
+  .scrim{
+    position:fixed;inset:0;z-index:90;display:none;place-items:center;padding:24px;
+    background:var(--scrim);backdrop-filter:blur(3px);
+    animation:fade .18s ease both;
+  }
+  .scrim.on{display:grid;}
+  .scrim .menu{animation:pop .2s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  @keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms !important;transition-duration:.01ms !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= 页头 ================= -->
+  <header class="hero">
+    <div class="lead">
+      <div class="rule-top"></div>
+      <div>
+        <div class="k">XyMusic · Windows / Context Menu</div>
+        <h1>右键菜单重设计 · Signal Panel</h1>
+      </div>
+      <p>现有歌曲右键菜单把 8 个动作平铺在一张 220px 的卡片里：图标、文字、箭头层级完全一致，打开后也不知道操作的是哪首歌。新方案沿用设置页的 Signal Deck——顶部一条曲目轨道说明「在对谁操作」，中间用等宽分组标签和 1px 细线切成三段，悬停时左侧亮起 2px 主色导轨确认落点。播放页的歌词偏移菜单是另一种形态：它需要连续微调，因此单独设计成一台调校台（见 05）。</p>
+    </div>
+    <div class="readouts">
+      <div class="readout"><div class="lbl">宽度</div><div class="val">248 px</div></div>
+      <div class="vr"></div>
+      <div class="readout"><div class="lbl">行高</div><div class="val">34 px</div></div>
+      <div class="vr"></div>
+      <div class="readout"><div class="lbl">分组</div><div class="val">3 组</div></div>
+      <div class="vr"></div>
+      <div class="readout"><div class="lbl">圆角</div><div class="val">12 px</div></div>
+    </div>
+    <button class="theme-btn" id="themeBtn" title="切换明暗主题" aria-label="切换明暗主题">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.5 6.5 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+  </header>
+
+  <!-- ================= 01 取向 ================= -->
+  <section>
+    <div class="shead">
+      <div class="idx">01</div>
+      <div class="txt"><h2>设计取向</h2><div class="sub">先分组，再排优先级，最后补上下文</div></div>
+    </div>
+    <div class="srule"></div>
+    <div class="intro">
+      <div>
+        <p><b>八项不该等权。</b>旧菜单把「播放」和「定时关闭」放在同一条流水线上，中间没有任何停顿。新方案按使用频率切成 <b>播放 / 信息 / 播放控制</b> 三段，组间用 1px 细线隔开，高频动作永远落在鼠标刚打开的位置。</p>
+        <p><b>分组标签是等宽小字。</b>沿用设置页的 <code>9px / 字距 .18em / 大写</code> 规格，左侧压一条 3px 主色短标。它足够安静，不会和条目标题抢注意力，但扫一眼就知道自己在哪一段。</p>
+        <p><b>补上「在对谁操作」。</b>桌面端右键常常在长列表里发生，菜单顶部加一条 34px 曲目轨道：封面 + 歌名 + <code>FLAC 44.1 kHz</code> 元数据，底部用等宽读数条提示 <kbd>Esc</kbd> 与项数。两处都不占条目的宽度，菜单仍然保持在 248px。</p>
+      </div>
+      <div class="issues">
+        <div class="issue"><b>01</b><div><strong>八项平铺，没有分组</strong><span>播放与定时关闭视觉权重相同，找不到高频动作</span></div></div>
+        <div class="issue"><b>02</b><div><strong>行高 32 / 内距靠全局令牌</strong><span>与列表行节奏不一致，图标与文字间距偏松</span></div></div>
+        <div class="issue"><b>03</b><div><strong>悬停只有默认色块</strong><span>鼠标扫过时缺少明确的落点标记</span></div></div>
+        <div class="issue"><b>04</b><div><strong>子菜单箭头与图标同色同粗细</strong><span>看不出「还有下一层」，只能靠猜</span></div></div>
+        <div class="issue"><b>05</b><div><strong>菜单没有上下文</strong><span>打开后不知道操作的是哪首歌、什么音质</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 02 解剖 ================= -->
+  <section>
+    <div class="shead">
+      <div class="idx">02</div>
+      <div class="txt"><h2>结构解剖</h2><div class="sub">悬停右侧条目，对应区域会亮起</div></div>
+    </div>
+    <div class="srule"></div>
+    <div class="ano">
+      <div class="ano-stage">
+        <div class="menu" id="anoMenu">
+          <div class="menu-head" data-region="head">
+            <div class="m-cover">雨</div>
+            <div class="m-titles">
+              <div class="m-name">雨のち晴れ</div>
+              <div class="m-meta">久石譲 · FLAC 44.1 kHz</div>
+            </div>
+            <span class="m-now">NOW</span>
+          </div>
+          <div class="menu-body">
+            <div class="grp">
+              <div class="grp-label" data-region="label"><i></i><span>播放</span><span class="grp-code">PLAYBACK</span></div>
+              <button class="mi" data-region="item">
+                <span class="mi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M8 5.5 19 12 8 18.5z"/></svg></span>
+                <span class="mi-tx">播放</span>
+                <span class="mi-k">ENTER</span>
+              </button>
+              <button class="mi">
+                <span class="mi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M4 12h9M4 17h6"/><path d="m15 10 4 3-4 3z"/></svg></span>
+                <span class="mi-tx">下一首播放</span>
+              </button>
+              <button class="mi force-hover" data-region="rail">
+                <span class="mi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h10M4 12h10M4 17h6"/><path d="M17 13v6M14 16h6"/></svg></span>
+                <span class="mi-tx">加入歌单</span>
+                <span class="mi-chev" data-region="chev"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></span>
+              </button>
+            </div>
+            <div class="grp">
+              <div class="grp-label"><i></i><span>信息</span><span class="grp-code">INFO</span></div>
+              <button class="mi">
+                <span class="mi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".9" fill="currentColor" stroke="none"/></svg></span>
+                <span class="mi-tx">歌曲信息</span>
+              </button>
+              <button class="mi">
+                <span class="mi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M2.6 12S6.2 6.6 12 6.6 21.4 12 21.4 12 17.8 17.4 12 17.4 2.6 12 2.6 12Z"/><circle cx="12" cy="12" r="2.6"/></svg></span>
+                <span class="mi-tx">查看</span>
+                <span class="mi-chev"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></span>
+              </button>
+            </div>
+            <div class="grp">
+              <div class="grp-label"><i></i><span>播放控制</span><span class="grp-code">CONTROL</span></div>
+              <button class="mi">
+                <span class="mi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 12l3.8-3.2"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                <span class="mi-tx">倍速播放</span>
+              </button>
+              <button class="mi">
+                <span class="mi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5.5v13M18 5.5v13"/><path d="m9.5 9 3 3-3 3M14 9l3 3-3 3"/></svg></span>
+                <span class="mi-tx">跳过头尾</span>
+              </button>
+              <button class="mi">
+                <span class="mi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="13.2" r="7.4"/><path d="M12 13.2V9.6"/><path d="M9.4 3.4h5.2"/></svg></span>
+                <span class="mi-tx">定时关闭</span>
+              </button>
+            </div>
+          </div>
+          <div class="menu-foot" data-region="foot"><span>ESC 关闭</span><span>8 项 / 3 组</span></div>
+        </div>
+      </div>
+      <ul class="legend" id="legend">
+        <li data-target="head"><b>01</b><div><strong>曲目轨道</strong><em>34 封面 r8 · 歌名 12.5/650 · 元数据 9.5 等宽 · 底部 1px 细线</em></div></li>
+        <li data-target="label"><b>02</b><div><strong>分组标签</strong><em>9px 等宽 · 字距 .18em · 左侧 3px 主色短标 · 右侧英文代号</em></div></li>
+        <li data-target="item"><b>03</b><div><strong>条目</strong><em>34 高 · 左右 9 · 圆角 7 · 图标 16 · 图标与文字间距 10</em></div></li>
+        <li data-target="rail"><b>04</b><div><strong>悬停导轨</strong><em>2px 主色 · 上下各留 7 · 同帧图标转为主色</em></div></li>
+        <li data-target="chev"><b>05</b><div><strong>次级箭头</strong><em>13px · 悬停转正文色并右移 1px · 子菜单右展开 6px</em></div></li>
+        <li data-target="foot"><b>06</b><div><strong>底部读数</strong><em>8.5px 等宽 · 字距 .13em · 左侧键位、右侧项数</em></div></li>
+      </ul>
+    </div>
+
+    <h4 style="margin:34px 0 12px;font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--ink-mute);text-transform:uppercase">Token / 设计稿与 Compose 的对应</h4>
+    <table>
+      <thead>
+        <tr><th style="width:22%">项</th><th style="width:24%">设计值</th><th style="width:26%">色 / 样式</th><th>Compose 落点</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="nm">菜单宽度</td><td class="v">248（子菜单 196）</td><td class="c">surfaceContainerLowest</td><td class="c">JvmMenuTokens.width</td></tr>
+        <tr><td class="nm">圆角 / 内距</td><td class="v">12 / 6</td><td class="c">RoundedCornerShape(12.dp)</td><td class="c">XyDropdownMenu.shape</td></tr>
+        <tr><td class="nm">曲目轨道</td><td class="v">34 封面 / 间距 10 / 下内距 10</td><td class="c">封面渐变取 jvmCoverAccentPalette</td><td class="c">JvmMenuTrackHeader</td></tr>
+        <tr><td class="nm">分组标签</td><td class="v">9 / 字距 .18em</td><td class="c">Monospace · onSurfaceVariant</td><td class="c">JvmMenuGroupLabel</td></tr>
+        <tr><td class="nm">条目高度</td><td class="v">34（原 32）</td><td class="c">—</td><td class="c">jvmRightClickDropdownMenuItemHeight</td></tr>
+        <tr><td class="nm">条目内距</td><td class="v">左右 9 / 图标 16 / 间距 10</td><td class="c">—</td><td class="c">XyDropdownMenuItem</td></tr>
+        <tr><td class="nm">条目文字</td><td class="v">12.5 / 500</td><td class="c">onSurface</td><td class="c">XyDropdownMenuItem</td></tr>
+        <tr><td class="nm">悬停</td><td class="v">底 5% + 左导轨 2</td><td class="c"><span class="swatch" style="background:#4D93CB"></span>primary / onSurface 5%</td><td class="c">hoverable + collectIsHoveredAsState</td></tr>
+        <tr><td class="nm">当前播放</td><td class="v">底 10% + 主色文字</td><td class="c">primary 10%</td><td class="c">isCurrent 标记</td></tr>
+        <tr><td class="nm">禁用</td><td class="v">40% 不透明度</td><td class="c">不换色</td><td class="c">Modifier.alpha(.4f)</td></tr>
+        <tr><td class="nm">分隔线</td><td class="v">1 / 组间 5</td><td class="c">onSurface 9%</td><td class="c">HorizontalDivider</td></tr>
+        <tr><td class="nm">子菜单</td><td class="v">右偏移 6 / 宽 196</td><td class="c">贴近右边缘时向左展开</td><td class="c">subMenuOffset</td></tr>
+        <tr><td class="nm">底部读数</td><td class="v">8.5 / 字距 .13em</td><td class="c">Monospace · onSurfaceVariant</td><td class="c">JvmMenuFootReadout</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ================= 03 变体 ================= -->
+  <section>
+    <div class="shead">
+      <div class="idx">03</div>
+      <div class="txt"><h2>变体矩阵</h2><div class="sub">点击任意卡片，在遮罩上查看真实菜单</div></div>
+    </div>
+    <div class="srule"></div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <!-- ================= 04 状态与交互 ================= -->
+  <section>
+    <div class="shead">
+      <div class="idx">04</div>
+      <div class="txt"><h2>状态与交互</h2><div class="sub">四种条目状态、键盘约定与边界处理</div></div>
+    </div>
+    <div class="srule"></div>
+    <div class="pairs">
+      <div class="st-card">
+        <h4>条目四态</h4>
+        <div id="stateMenu"></div>
+        <div class="cap" style="margin-top:14px">DISABLED = 40% 不透明度，不换色</div>
+      </div>
+      <div class="st-card">
+        <h4>交互约定</h4>
+        <ul class="rule-list">
+          <li><span><b>悬停 120ms</b> 打开子菜单，移出 200ms 后关闭，斜向移动到子菜单时不会误关。</span></li>
+          <li><span><b>点击</b>先执行回调、再 <code>dismiss()</code>，与现有 <code>withDismissBehavior</code> 顺序保持一致。</span></li>
+          <li><span><b>定位</b>菜单超出窗口右/下边缘时整体翻转并保留 8px 内边距，子菜单优先向左展开。</span></li>
+          <li><span><b>键盘</b><kbd>Esc</kbd> 关闭整条链路，<kbd>↑</kbd><kbd>↓</kbd> 移动、<kbd>→</kbd> 进入子菜单、<kbd>Enter</kbd> 执行。</span></li>
+          <li><span><b>分组顺序固定</b>播放 → 信息 → 播放控制，位置记忆比数量更重要，不随场景增减而重排。</span></li>
+          <li><span><b>空状态</b>没有歌单时「加入歌单」保留但禁用，右侧显示「无歌单」，避免条目突然消失导致误点。</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 05 播放页歌词偏移 ================= -->
+  <section>
+    <div class="shead">
+      <div class="idx">05</div>
+      <div class="txt"><h2>播放页 · 歌词偏移菜单</h2><div class="sub">与歌曲菜单同一套外壳，只把读数提亮</div></div>
+      <span class="cap">LYRICS SYNC</span>
+    </div>
+    <div class="srule"></div>
+
+    <div class="intro" style="margin-bottom:26px">
+      <div>
+        <p><b>旧实现的问题不是样式，是形态。</b>歌词偏移菜单当前是 5 条纯文字条目：第一条禁用充当「读数」，后四条是动作。用户得先读一行 <code>偏移: 0s</code>，再在下面找到「向前 / 向后」，调整后还要再点「确定」——三次视线跳转才能完成一次微调。</p>
+        <p><b>它应该和歌曲菜单长在一起。</b>右键菜单是同一个组件在不同场景的投影，宽度、行高、分组、悬停反馈都该一致。所以这里不另起一套「调校台」外壳，而是直接复用上面的外壳：<b>加强读数条 + 微调组 + 操作组</b>。区别只有两处——读数条里的数值放大到 16px 主色，「确认偏移」用主色文字标出提交语义。</p>
+        <p><b>偏移没有上限。</b>不设刻度尺也不设边界，连续点击时读数持续累加，视线始终停在同一个数字上。「重置」在 0 点自动禁用，避免无效操作。</p>
+        <p><b>它不应该自动关闭。</b>这是唯一需要连续多次操作的菜单，任何一次点击后菜单消失都会打断调校。底部读数条明确写出「不自动关闭 / Esc 放弃预览」，并把取消语义从「关闭」改成「放弃预览」，与 <code>onCloseRequest</code> 里重置预览值的现有逻辑对齐。</p>
+      </div>
+      <div class="issues">
+        <div class="issue"><b>01</b><div><strong>读数混在动作里</strong><span>禁用的第一行承担读数职责，看起来像坏掉的条目</span></div></div>
+        <div class="issue"><b>02</b><div><strong>读数与动作同字号</strong><span>当前值淹没在四行同权重文字里，扫不到</span></div></div>
+        <div class="issue"><b>03</b><div><strong>两个方向条目等权</strong><span>「向前 / 向后」只有文字差别，容易点反</span></div></div>
+        <div class="issue"><b>04</b><div><strong>重置与确认混排</strong><span>破坏性动作和提交动作距离过近</span></div></div>
+      </div>
+    </div>
+
+    <div class="tuner-board" id="tunerBoard"></div>
+
+    <h4 style="margin:32px 0 12px;font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--ink-mute);text-transform:uppercase">Token / 播放页菜单专属</h4>
+    <table>
+      <thead>
+        <tr><th style="width:22%">项</th><th style="width:24%">设计值</th><th style="width:26%">色 / 样式</th><th>Compose 落点</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="nm">菜单宽度</td><td class="v">248</td><td class="c">与歌曲菜单完全一致</td><td class="c">menuModifier.width(248.dp)</td></tr>
+        <tr><td class="nm">加强读数条</td><td class="v">数值 16 / 700 / 主色</td><td class="c">零点用正文色；0 点不抢主色</td><td class="c">formatJvmLyricsOffsetSeconds</td></tr>
+        <tr><td class="nm">条目行高</td><td class="v">34 / 左右 9</td><td class="c">与歌曲菜单条目同一规格</td><td class="c">jvmRightClickDropdownMenuItemHeight</td></tr>
+        <tr><td class="nm">条目尾读数</td><td class="v">10 等宽 · −0.5s / +0.5s</td><td class="c">onSurfaceVariant</td><td class="c">MenuItemDefaultData.trailing</td></tr>
+        <tr><td class="nm">确认条目</td><td class="v">主色文字 + 主色图标</td><td class="c"><span class="swatch" style="background:#4D93CB"></span>primary</td><td class="c">is-primary 变体</td></tr>
+        <tr><td class="nm">上限</td><td class="v">无</td><td class="c">数值不夹紧，重置仅 0 点禁用</td><td class="c">adjustLyricsPreviewOffset 直接累加</td></tr>
+        <tr><td class="nm">关闭行为</td><td class="v">不自动关闭</td><td class="c">Esc 放弃预览</td><td class="c">dismissOnItemClick = false</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    <span>XYMUSIC · SIGNAL DECK</span>
+    <span>CONTEXT MENU SPEC v1</span>
+    <span>与 settings-redesign.html / dialog-redesign.html 共用令牌</span>
+  </footer>
+</div>
+
+<!-- 遮罩层 -->
+<div class="scrim" id="scrim" role="presentation"></div>
+
+<script>
+/* ============================ 图标 ============================ */
+/** 线性图标集合，统一 24 视图、1.7 描边，与项目内 24px 图标资源观感一致 */
+const ICONS = {
+  play:'<path d="M8 5.5 19 12 8 18.5z"/>',
+  next:'<path d="M4 7h9M4 12h9M4 17h6"/><path d="m15 10 4 3-4 3z"/>',
+  addlist:'<path d="M4 7h10M4 12h10M4 17h6"/><path d="M17 13v6M14 16h6"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".9" fill="currentColor" stroke="none"/>',
+  eye:'<path d="M2.6 12S6.2 6.6 12 6.6 21.4 12 21.4 12 17.8 17.4 12 17.4 2.6 12 2.6 12Z"/><circle cx="12" cy="12" r="2.6"/>',
+  speed:'<circle cx="12" cy="12" r="8.6"/><path d="M12 12l3.8-3.2"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>',
+  skip:'<path d="M6 5.5v13M18 5.5v13"/><path d="m9.5 9 3 3-3 3M14 9l3 3-3 3"/>',
+  timer:'<circle cx="12" cy="13.2" r="7.4"/><path d="M12 13.2V9.6"/><path d="M9.4 3.4h5.2"/>',
+  wave:'<path d="M4 12v2M8 8.5v7M12 5v14M16 9v6M20 11.5v1"/>',
+  back:'<path d="M19 12H5"/><path d="m10 7-5 5 5 5"/>',
+  forward:'<path d="M5 12h14"/><path d="m14 7 5 5-5 5"/>',
+  reset:'<path d="M4.5 9.5A8 8 0 1 1 12 20"/><path d="M4 4v6h6"/>',
+  chev:'<path d="m9 6 6 6-6 6"/>',
+  check:'<path d="m5 13 4.2 4.2L19 7"/>'
+};
+
+/**
+ * 生成一个内联 SVG 图标
+ * @param {string} name 图标名
+ * @param {number} size 尺寸
+ */
+const svg = (name, size = 16) =>
+  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
+
+/* ============================ 组件 ============================ */
+
+/**
+ * 渲染单条菜单项
+ * @param {object} it 条目数据：t 文案 / i 图标 / k 快捷键 / v 读数 / sub 子项 / disabled / current
+ * @param {object} opt 渲染选项：forceHover 强制悬停、openSub 展开子菜单、subLabel 子菜单标题
+ */
+function itemHTML(it, opt = {}) {
+  const cls = ['mi'];
+  if (it.sub) cls.push('has-sub');
+  if (it.disabled) cls.push('is-disabled');
+  if (it.current) cls.push('is-current');
+  if (opt.forceHover) cls.push('force-hover');
+
+  // 无图标条目保留同宽空位，保证纯文字菜单与带图标菜单左对齐一致
+  const ico = it.i
+    ? `<span class="mi-ico">${svg(it.i, 16)}</span>`
+    : `<span class="mi-ico mi-ico-empty"></span>`;
+
+  let tail = '';
+  if (it.sub) tail = `<span class="mi-chev">${svg('chev', 13)}</span>`;
+  else if (it.v) tail = `<span class="mi-v">${it.v}</span>`;
+  else if (it.k) tail = `<span class="mi-k">${it.k}</span>`;
+
+  const btn = `<button class="${cls.join(' ')}"${it.disabled ? ' disabled' : ''}>
+      ${ico}<span class="mi-tx">${it.t}</span>${tail}
+    </button>`;
+
+  if (!it.sub) return btn;
+
+  // 子菜单：与主菜单同一套条目样式，宽度收窄、去掉图标列
+  const subItems = it.sub.map(s =>
+    `<button class="mi">${s.i ? `<span class="mi-ico">${svg(s.i, 16)}</span>` : ''}<span class="mi-tx">${s.t}</span></button>`
+  ).join('');
+  const subNote = opt.subLabel ? `<div class="submenu-note">${opt.subLabel}</div>` : '';
+  return `<div class="sub-wrap">${btn}
+      <div class="submenu${opt.openSub ? ' is-open' : ''}">${subNote}${subItems}</div>
+    </div>`;
+}
+
+/**
+ * 渲染全部分组
+ * @param {Array} groups 分组数组
+ * @param {object} opt 渲染选项，openSubGroup/openSubItem 指定要展开的子菜单位置
+ */
+function groupsHTML(groups, opt = {}) {
+  return groups.map((g, gi) => `
+    <div class="grp">
+      <div class="grp-label"><i></i><span>${g.label}</span><span class="grp-code">${g.code || ''}</span></div>
+      ${g.items.map((it, ii) => itemHTML(it, {
+        openSub: opt.openSub && gi === opt.openSubGroup && ii === opt.openSubItem,
+        forceHover: opt.forceHover && gi === opt.forceHoverGroup && ii === opt.forceHoverItem,
+        subLabel: opt.subLabel
+      })).join('')}
+    </div>`).join('');
+}
+
+/**
+ * 渲染完整菜单
+ * @param {object} v 变体配置：head 曲目轨道 / readout 只读读数 / groups 分组 / foot 底部读数
+ */
+function menuHTML(v) {
+  const head = v.head ? `
+    <div class="menu-head">
+      <div class="m-cover" style="--c1:${v.cover ? v.cover[0] : '#4A5BB8'};--c2:${v.cover ? v.cover[1] : '#66518C'}">${v.coverText || '雨'}</div>
+      <div class="m-titles">
+        <div class="m-name">${v.name || '雨のち晴れ'}</div>
+        <div class="m-meta">${v.meta || '久石譲 · FLAC 44.1 kHz'}</div>
+      </div>
+      ${v.now ? '<span class="m-now">NOW</span>' : ''}
+    </div>` : '';
+
+  const readout = v.readout
+    ? `<div class="m-readout"><span>${v.readout.lbl}</span><b>${v.readout.val}</b></div>`
+    : '';
+
+  const foot = v.foot === false
+    ? ''
+    : `<div class="menu-foot"><span>${v.footLeft || 'ESC 关闭'}</span><span>${v.footRight || '8 项 / 3 组'}</span></div>`;
+
+  return `<div class="menu">${head}<div class="menu-body">${readout}${groupsHTML(v.groups, v)}</div>${foot}</div>`;
+}
+
+/* ============================ 播放页 · 歌词偏移菜单 ============================ */
+
+/** 单次步进（秒） */
+const OFFSET_STEP_SEC = 0.5;
+
+/**
+ * 生成播放页歌词偏移菜单。
+ * 与歌曲右键菜单同构：读数条 + 分组条目 + 底部读数，宽度也保持一致；
+ * 偏移没有上限，因此不设刻度尺与边界，读数持续累加。
+ * @param {object} v 变体配置：offsetSec 偏移秒数 / noLyrics 无歌词
+ */
+function tunerHTML(v) {
+  const sec = v.offsetSec || 0;
+  const isZero = sec === 0;
+  // 偏移读数：显式带符号，与现有 formatJvmLyricsOffsetSeconds 输出一致
+  const numText = isZero ? '0.0s' : (sec > 0 ? '+' : '−') + Math.abs(sec).toFixed(1) + 's';
+
+  const note = v.noLyrics
+    ? `<div class="tuner-note">当前歌曲没有可用歌词，偏移调整会在歌词加载后生效。</div>`
+    : '';
+
+  return `<div class="menu">
+    <div class="menu-body">
+      <div class="m-readout is-strong${isZero ? ' is-zero' : ''}"><span>歌词偏移 / 无上限</span><b>${numText}</b></div>
+      <div class="grp">
+        <div class="grp-label"><i></i><span>微调</span><span class="grp-code">0.5 S</span></div>
+        <button class="mi" data-act="back">
+          <span class="mi-ico">${svg('back', 16)}</span>
+          <span class="mi-tx">向后偏移</span>
+          <span class="mi-v">−0.5s</span>
+        </button>
+        <button class="mi" data-act="forward">
+          <span class="mi-ico">${svg('forward', 16)}</span>
+          <span class="mi-tx">向前偏移</span>
+          <span class="mi-v">+0.5s</span>
+        </button>
+      </div>
+      <div class="grp">
+        <div class="grp-label"><i></i><span>操作</span><span class="grp-code">ACTION</span></div>
+        <button class="mi" data-act="reset"${isZero ? ' disabled' : ''}>
+          <span class="mi-ico">${svg('reset', 16)}</span>
+          <span class="mi-tx">重置</span>
+        </button>
+        <button class="mi is-primary"${v.noLyrics ? ' disabled' : ''}>
+          <span class="mi-ico">${svg('check', 16)}</span>
+          <span class="mi-tx">确认偏移</span>
+        </button>
+      </div>
+      ${note}
+    </div>
+    <div class="menu-foot"><span>ESC 放弃预览</span><span>不自动关闭</span></div>
+  </div>`;
+}
+
+
+/* ============================ 数据 ============================ */
+
+/** 标准歌曲菜单：三组共 8 项，顺序与现有实现保持一致，只增加分组 */
+const SONG_GROUPS = [
+  {
+    label: '播放', code: 'PLAYBACK',
+    items: [
+      { i: 'play', t: '播放', k: 'ENTER' },
+      { i: 'next', t: '下一首播放', k: '⇧ ENTER' },
+      { i: 'addlist', t: '加入歌单', sub: [{ t: '夜间驾驶' }, { t: '工作专注' }, { t: '雨天钢琴' }] }
+    ]
+  },
+  {
+    label: '信息', code: 'INFO',
+    items: [
+      { i: 'info', t: '歌曲信息' },
+      { i: 'eye', t: '查看', sub: [{ t: '艺术家' }, { t: '专辑' }] }
+    ]
+  },
+  {
+    label: '播放控制', code: 'CONTROL',
+    items: [
+      { i: 'speed', t: '倍速播放' },
+      { i: 'skip', t: '跳过头尾' },
+      { i: 'timer', t: '定时关闭' }
+    ]
+  }
+];
+
+/** 变体数据：每个变体对应一种真实使用场景 */
+const CASES = [
+  {
+    key: 'standard', label: '标准歌曲菜单', desc: '248 / 3 组 / 8 项',
+    head: true, now: true, groups: SONG_GROUPS
+  },
+  {
+    key: 'compact', label: '精简菜单 · 无曲目轨道', desc: '2 组 / 5 项',
+    head: false, foot: false,
+    groups: [SONG_GROUPS[0], SONG_GROUPS[2]]
+  },
+  {
+    key: 'submenu', label: '子菜单 · 加入歌单', desc: '右展开 / 宽 196', wide: true,
+    head: true, groups: SONG_GROUPS,
+    openSub: true, openSubGroup: 0, openSubItem: 2, forceHover: true, forceHoverGroup: 0, forceHoverItem: 2,
+    subLabel: '3 个歌单'
+  },
+  {
+    key: 'current', label: '播放中 · 当前曲目', desc: '主色 10% / 常驻导轨',
+    head: true, now: true,
+    groups: [
+      { label: '播放', code: 'PLAYBACK', items: [
+        { i: 'wave', t: '正在播放', current: true, v: 'NOW' },
+        { i: 'next', t: '下一首播放' },
+        { i: 'addlist', t: '加入歌单', sub: [{ t: '夜间驾驶' }] }
+      ]},
+      SONG_GROUPS[1], SONG_GROUPS[2]
+    ]
+  },
+  {
+    // 保留旧形态作为对照，新形态见 05 分区
+    key: 'lyrics', label: '歌词偏移 · 旧形态（对照）', desc: '5 条纯文字 / 已废弃',
+    head: false, footLeft: '不自动关闭', footRight: '4 项 / 1 组',
+    readout: { lbl: '偏移', val: '0s' },
+    groups: [
+      { label: '微调', code: 'OFFSET', items: [
+        { t: '向前偏移' },
+        { t: '向后偏移' },
+        { t: '重置' },
+        { t: '确定' }
+      ]}
+    ]
+  },
+  {
+    key: 'empty', label: '空歌单 · 禁用态', desc: 'DISABLED / 40%',
+    head: true,
+    groups: [
+      { label: '播放', code: 'PLAYBACK', items: [
+        { i: 'play', t: '播放' },
+        { i: 'next', t: '下一首播放' },
+        { i: 'addlist', t: '加入歌单', disabled: true, v: '无歌单' }
+      ]},
+      SONG_GROUPS[1], SONG_GROUPS[2]
+    ]
+  }
+];
+
+/* ============================ 渲染变体矩阵 ============================ */
+const board = document.getElementById('board');
+board.innerHTML = CASES.map((c, i) => `
+  <article class="case${c.wide ? ' wide' : ''}" data-key="${c.key}" tabindex="0" role="button" aria-label="预览 ${c.label}">
+    <span class="case-open">点击预览</span>
+    <div class="case-head">
+      <span class="no">${String(i + 1).padStart(2, '0')}</span>
+      <span class="tt">${c.label}</span>
+      <span class="ds">${c.desc}</span>
+    </div>
+    <div class="case-stage">${menuHTML(c)}</div>
+  </article>
+`).join('');
+
+/* ============================ 渲染播放页调校台 ============================ */
+
+/** 调校台演示变体：零点 / 调整中 / 大偏移 / 无歌词 */
+const TUNER_CASES = [
+  { key: 'zero', offsetSec: 0, cap: '零点 · 重置禁用' },
+  { key: 'mid', offsetSec: 0.5, cap: '调整中 · +0.5s' },
+  { key: 'large', offsetSec: 6, cap: '大偏移 · +6.0s 无上限' },
+  { key: 'none', offsetSec: 0, noLyrics: true, cap: '无歌词 · 确认禁用' }
+];
+
+const tunerBoard = document.getElementById('tunerBoard');
+tunerBoard.innerHTML = TUNER_CASES.map(c => `
+  <div class="tuner-cell">
+    <div class="case-head" style="padding:0 2px">
+      <span class="tt">${c.cap.split(' · ')[0]}</span>
+      <span class="ds">${c.offsetSec >= 0 ? '+' : ''}${c.offsetSec.toFixed(1)}s</span>
+    </div>
+    <div id="tuner-${c.key}">${tunerHTML(c)}</div>
+    <div class="cap">${c.cap}</div>
+  </div>
+`).join('');
+
+/* 调校台演示：点击步进 / 重置按钮实时改数值，验证量程与游标逻辑 */
+const tunerState = { zero: 0, mid: 0.5, large: 6, none: 0 };
+
+/**
+ * 按当前状态重绘某个调校台演示
+ * @param {string} key 演示标识
+ */
+function renderTuner(key) {
+  const host = document.getElementById(`tuner-${key}`);
+  if (!host) return;
+  host.innerHTML = tunerHTML({
+    offsetSec: tunerState[key],
+    noLyrics: key === 'none'
+  });
+  bindTuner(key);
+}
+
+/**
+ * 给某个歌词偏移演示挂上条目交互
+ * @param {string} key 演示标识
+ */
+function bindTuner(key) {
+  const host = document.getElementById(`tuner-${key}`);
+  const back = host.querySelector('[data-act="back"]');
+  const forward = host.querySelector('[data-act="forward"]');
+  const reset = host.querySelector('[data-act="reset"]');
+  // 偏移无上限，不做夹紧，只按 0.5s 累加
+  if (back) back.onclick = () => {
+    tunerState[key] -= OFFSET_STEP_SEC;
+    renderTuner(key);
+  };
+  if (forward) forward.onclick = () => {
+    tunerState[key] += OFFSET_STEP_SEC;
+    renderTuner(key);
+  };
+  if (reset) reset.onclick = () => {
+    tunerState[key] = 0;
+    renderTuner(key);
+  };
+}
+
+TUNER_CASES.forEach(c => bindTuner(c.key));
+
+/* ============================ 状态四态 ============================ */
+document.getElementById('stateMenu').innerHTML = `<div class="menu" style="width:100%;box-shadow:none">
+  <div class="menu-body">
+    <button class="mi"><span class="mi-ico">${svg('play', 16)}</span><span class="mi-tx">默认</span><span class="mi-k" style="opacity:1">12.5 / 500</span></button>
+    <button class="mi force-hover"><span class="mi-ico">${svg('next', 16)}</span><span class="mi-tx">悬停 · 底 5% + 左导轨</span></button>
+    <button class="mi is-current"><span class="mi-ico">${svg('wave', 16)}</span><span class="mi-tx">当前播放 · 底 10% + 主色</span><span class="mi-v">NOW</span></button>
+    <button class="mi is-disabled" disabled><span class="mi-ico">${svg('addlist', 16)}</span><span class="mi-tx">禁用 · 40% 不透明度</span><span class="mi-v">无歌单</span></button>
+  </div>
+</div>`;
+
+/* ============================ 解剖高亮 ============================ */
+const anoMenu = document.getElementById('anoMenu');
+const legend = document.getElementById('legend');
+[...legend.querySelectorAll('li')].forEach(li => {
+  // 悬停图例时高亮菜单中对应区域
+  li.onmouseenter = () => {
+    anoMenu.querySelectorAll('[data-region]').forEach(el => el.classList.remove('hl'));
+    const target = anoMenu.querySelector(`[data-region="${li.dataset.target}"]`);
+    if (target) target.classList.add('hl');
+    legend.querySelectorAll('li').forEach(x => x.classList.remove('on'));
+    li.classList.add('on');
+  };
+});
+legend.onmouseleave = () => {
+  anoMenu.querySelectorAll('[data-region]').forEach(el => el.classList.remove('hl'));
+  legend.querySelectorAll('li').forEach(x => x.classList.remove('on'));
+};
+
+/* ============================ 遮罩预览 ============================ */
+const scrim = document.getElementById('scrim');
+
+/**
+ * 在遮罩层中打开指定变体
+ * @param {string} key 变体标识
+ */
+function openCase(key) {
+  const c = CASES.find(x => x.key === key);
+  if (!c) return;
+  scrim.innerHTML = menuHTML(c);
+  scrim.classList.add('on');
+}
+
+/** 关闭遮罩预览 */
+function closeScrim() {
+  scrim.classList.remove('on');
+  scrim.innerHTML = '';
+}
+
+board.querySelectorAll('.case').forEach(el => {
+  el.onclick = () => openCase(el.dataset.key);
+  // 支持键盘 Enter / Space 打开
+  el.onkeydown = e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openCase(el.dataset.key);
+    }
+  };
+});
+
+scrim.onclick = closeScrim;
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeScrim();
+});
+
+/* ============================ 主题切换 ============================ */
+document.getElementById('themeBtn').onclick = () => {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+};
+</script>
+</body>
+</html>

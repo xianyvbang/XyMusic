@@ -49,12 +49,16 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.startup.AppSessionState
 import cn.xybbz.startup.SessionCoordinator
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -89,6 +93,21 @@ class HomeViewModel(
         private set
 
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
+
+    /** 当前连接下已完成下载的音乐 ID 流，供首页歌曲分区展示已下载状态。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val downloadMusicIdsFlow: Flow<List<String>> =
+        dataSourceManager.connectionIdFlow
+            .flatMapLatest { connectionId ->
+                if (connectionId == 0L) {
+                    flowOf(emptyList())
+                } else {
+                    downloadDb.downloadDao.getAllMusicTaskUidsFlow(
+                        notTypeData = DownloadTypes.APK.toString(),
+                        mediaLibraryId = connectionId.toString()
+                    )
+                }
+            }
 
 
     /**

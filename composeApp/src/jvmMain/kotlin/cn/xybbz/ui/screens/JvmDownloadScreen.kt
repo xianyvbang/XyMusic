@@ -18,7 +18,9 @@
 
 package cn.xybbz.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -29,6 +31,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -38,12 +41,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.ProgressIndicatorDefaults.drawStopIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,9 +69,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.converter.jsonSerializer
+import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.formatBytes
+import cn.xybbz.common.utils.openFolderInSystemFileManager
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.image.rememberRawCoverUrls
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -73,6 +83,11 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
+import cn.xybbz.ui.components.XyDialogTone
+import cn.xybbz.ui.components.JvmPageTitleBar
+import cn.xybbz.ui.components.JvmSelectionAnimatedVisibility
+import cn.xybbz.ui.components.JvmSelectionToggleButton
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
@@ -81,12 +96,12 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
+import cn.xybbz.ui.icons.folder_open_24px
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.ui.xy.XyTextSub
-import cn.xybbz.ui.xy.XyTextSubSmall
+import cn.xybbz.ui.xy.rememberXyTextHoverColor
 import cn.xybbz.viewmodel.DownloadViewModel
 import cn.xybbz.viewmodel.LocalViewModel
 import kotlinx.coroutines.flow.map
@@ -146,12 +161,14 @@ fun JvmDownloadScreen(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun JvmLocalDownloadScreen(
     initialTab: JvmLocalDownloadTab,
     downloadViewModel: DownloadViewModel = koinViewModel<DownloadViewModel>(),
     localViewModel: LocalViewModel = koinViewModel<LocalViewModel>(),
     dataSourceManager: DataSourceManager = koinInject(),
+    downloaderManager: DownloaderManager = koinInject(),
 ) {
     val navigator = LocalNavigator.current
     val artistInfoLoader = rememberMusicArtistInfoLoader(dataSourceManager)
@@ -160,7 +177,6 @@ internal fun JvmLocalDownloadScreen(
         onLoadArtistInfos = artistInfoLoader.loadArtistInfos,
     )
     val allDownloadTasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
-    val localSongs by localViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     val favoriteSet by localViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val activeDownloadTasks = remember(allDownloadTasks) {
         allDownloadTasks.filter(::isActiveDownloadTask)
@@ -173,93 +189,233 @@ internal fun JvmLocalDownloadScreen(
     var selectedTab by remember(initialTab) {
         mutableStateOf(initialTab)
     }
+    // 本地歌曲选择状态：选择与删除都以下载记录 id 为准，避免同名歌曲或重复记录串选
+    var isSelectingLocal by remember { mutableStateOf(false) }
+    var selectedLocalDownloadIds by remember { mutableStateOf(emptySet<Long>()) }
+    // 本地已完成下载任务，按下载记录逐行绑定，同一首歌的多条记录也能单独选中
+    val localDownloadTasks by localViewModel.downloadMusicTasks.collectAsStateWithLifecycle()
+    // 本地歌曲行：下载记录 id 与还原出的歌曲信息一一对应，行下标与列表严格一致
+    val localSongRows = remember(localDownloadTasks) {
+        localDownloadTasks.mapNotNull { task ->
+            task.toMusicOrNull()?.let { music -> LocalDownloadSongRow(task.id, music) }
+        }
+    }
+    val localSongs = remember(localSongRows) { localSongRows.map { it.music } }
+    // 当前本地列表全部下载 id，用于全选与全选状态判断
+    val localDownloadIds = remember(localSongRows) { localSongRows.map { it.downloadId } }
+    // 切换到下载列表时退出本地歌曲选择模式，避免选择状态残留
+    LaunchedEffect(selectedTab) {
+        if (selectedTab != JvmLocalDownloadTab.LocalSongs) {
+            isSelectingLocal = false
+            selectedLocalDownloadIds = emptySet()
+        }
+    }
 
     val removeDownloadTitle = stringResource(Res.string.remove_download_title)
     val confirmClearDownloads = stringResource(
         Res.string.confirm_delete_download,
         activeDownloadTasks.size
     )
+    // 本地歌曲删除确认文案：明确提示会同步删除磁盘上的音乐文件
+    val removeLocalMusicTitle = stringResource(Res.string.delete_local_music_title)
+    val confirmDeleteLocalMusic = stringResource(
+        Res.string.confirm_delete_local_music,
+        selectedLocalDownloadIds.size
+    )
+    // 未选择歌曲时的提示文案，先在本层解析，避免在点击回调里调用组合函数
+    val pleaseSelectText = stringResource(Res.string.please_select)
+    // 按下载记录 id 切换选中状态，重复歌曲的不同记录互不影响
+    val toggleLocalDownloadSelection: (Long) -> Unit = { downloadId ->
+        selectedLocalDownloadIds = if (downloadId in selectedLocalDownloadIds) {
+            selectedLocalDownloadIds - downloadId
+        } else {
+            selectedLocalDownloadIds + downloadId
+        }
+    }
+    val isLocalSelectAll = localDownloadIds.isNotEmpty() &&
+            selectedLocalDownloadIds.containsAll(localDownloadIds)
+    val showDeleteLocalMusicDialog = {
+        AlertDialogObject(
+            title = removeLocalMusicTitle,
+            body = confirmDeleteLocalMusic,
+            tone = XyDialogTone.Danger,
+            icon = XyDialogIcon.Trash,
+            kicker = Res.string.dialog_kicker_danger,
+            onConfirmation = {
+                localViewModel.deleteLocalMusicByIds(selectedLocalDownloadIds.toList())
+                isSelectingLocal = false
+                selectedLocalDownloadIds = emptySet()
+            },
+            onDismissRequest = {},
+        ).show()
+    }
 
-    ScreenLazyColumn(
-        contentPadding = PaddingValues(
-            horizontal = XyTheme.dimens.outerHorizontalPadding,
-        ),
-    ) {
-        item(key = "local_download_header") {
-            JvmLocalDownloadHeader(
-                selectedTab = selectedTab,
-                localCount = localSongs.size,
-                downloadingCount = activeDownloadTasks.size,
-                onSelectTab = { selectedTab = it },
-                onResumeAll = { downloadViewModel.resumeDownloads(activeDownloadTasks) },
-                onPauseAll = { downloadViewModel.pauseDownloads(activeDownloadTasks) },
-                onClearAll = {
-                    if (activeDownloadTasks.isNotEmpty()) {
-                        AlertDialogObject(
-                            title = removeDownloadTitle,
-                            content = {
-                                XyTextSubSmall(text = confirmClearDownloads)
-                            },
-                            onConfirmation = {
-                                downloadViewModel.deleteDownloads(activeDownloadTasks)
-                            },
-                            ifWarning = true,
-                        ).show()
+    // 打开文件所在位置：点击时再取实际生效的歌曲下载目录，保证设置变更后立即生效
+    val openFolderFailedText = stringResource(Res.string.jvm_download_screen_text_10)
+    val openDownloadFolder = {
+        val folderPath = downloaderManager.config.usableFinalDirectory()
+        if (!openFolderInSystemFileManager(folderPath)) {
+            MessageUtils.sendPopTip(openFolderFailedText)
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // 标题、标签栏与下载工具栏固定在列表上方，滚动时始终可见
+        JvmLocalDownloadHeader(
+            modifier = Modifier.padding(horizontal = XyTheme.dimens.outerHorizontalPadding),
+            selectedTab = selectedTab,
+            localCount = localSongs.size,
+            downloadingCount = activeDownloadTasks.size,
+            isSelectingLocal = isSelectingLocal,
+            onSelectTab = { selectedTab = it },
+            onOpenFolder = openDownloadFolder,
+            onToggleLocalSelection = {
+                if (isSelectingLocal) {
+                    isSelectingLocal = false
+                    selectedLocalDownloadIds = emptySet()
+                } else {
+                    isSelectingLocal = true
+                }
+            },
+            onResumeAll = { downloadViewModel.resumeDownloads(activeDownloadTasks) },
+            onPauseAll = { downloadViewModel.pauseDownloads(activeDownloadTasks) },
+            onClearAll = {
+                if (activeDownloadTasks.isNotEmpty()) {
+                    AlertDialogObject(
+                        title = removeDownloadTitle,
+                        body = confirmClearDownloads,
+                        tone = XyDialogTone.Danger,
+                        icon = XyDialogIcon.Trash,
+                        kicker = Res.string.dialog_kicker_danger,
+                        onConfirmation = {
+                            downloadViewModel.deleteDownloads(activeDownloadTasks)
+                        },
+                        // 危险操作必须提供取消回调，动作区才会同时出现「取消」与「确定」
+                        onDismissRequest = {},
+                    ).show()
+                }
+            },
+        )
+
+        // 本地歌曲选择操作栏：展示已选数量，并提供全选、取消与删除本地文件；
+        // 使用通用动画容器展开/收起，与艺术家/专辑详情页保持一致
+        JvmSelectionAnimatedVisibility(
+            visible = selectedTab == JvmLocalDownloadTab.LocalSongs && isSelectingLocal,
+        ) {
+            JvmLocalMusicSelectionBar(
+                modifier = Modifier.padding(
+                    start = XyTheme.dimens.outerHorizontalPadding,
+                    end = XyTheme.dimens.outerHorizontalPadding,
+                    top = 12.dp,
+                ),
+                selectedCount = selectedLocalDownloadIds.size,
+                isSelectAll = isLocalSelectAll,
+                canSelectAll = localDownloadIds.isNotEmpty(),
+                onToggleSelectAll = {
+                    selectedLocalDownloadIds = if (isLocalSelectAll) {
+                        emptySet()
+                    } else {
+                        localDownloadIds.toSet()
+                    }
+                },
+                onCancel = {
+                    isSelectingLocal = false
+                    selectedLocalDownloadIds = emptySet()
+                },
+                onDelete = {
+                    if (selectedLocalDownloadIds.isEmpty()) {
+                        MessageUtils.sendPopTip(pleaseSelectText)
+                    } else {
+                        showDeleteLocalMusicDialog()
                     }
                 },
             )
         }
 
-        when (selectedTab) {
-            JvmLocalDownloadTab.LocalSongs -> {
-                songTableItems(
-                    tableKey = "local_download_local_music",
-                    songs = localSongs,
-                    columns = JvmLocalMusicTableColumns,
-                    ifFavorite = { music -> music.itemId in favoriteSet },
-                    currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
-                    onSongClick = { _, music ->
-                        localViewModel.musicList(
-                            OnMusicPlayParameter(
-                                musicId = music.itemId,
-                                albumId = music.album,
-                            ),
-                            downloadList = localSongs,
-                            playerModeEnum = PlayerModeEnum.SEQUENTIAL_PLAYBACK,
-                        )
-                    },
-                    onOpenArtist = artistClickHandler::openMusicArtists,
-                    onOpenAlbum = { music ->
-                        if (music.album.isNotBlank()) {
-                            navigator.navigate(
-                                AlbumInfo(
-                                    music.album,
-                                    MusicDataTypeEnum.ALBUM,
+        ScreenLazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+            ),
+        ) {
+            when (selectedTab) {
+                JvmLocalDownloadTab.LocalSongs -> {
+                    songTableItems(
+                        tableKey = "local_download_local_music",
+                        songs = localSongs,
+                        // 选择模式下隐藏行内操作，改为展示选择列
+                        columns = JvmLocalMusicTableColumns.copy(
+                            showInlineActions = !isSelectingLocal,
+                            showSelectionColumn = isSelectingLocal,
+                        ),
+                        ifFavorite = { music -> music.itemId in favoriteSet },
+                        currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
+                        // 行级选中状态：按行下标取对应下载记录 id，重复歌曲也不会串选
+                        isSelectedAt = { index, _ ->
+                            localSongRows.getOrNull(index)?.downloadId
+                                ?.let { it in selectedLocalDownloadIds } == true
+                        },
+                        onSongClick = { index, music ->
+                            if (isSelectingLocal) {
+                                // 选择模式下点击整行等价于勾选/取消勾选当前下载记录
+                                localSongRows.getOrNull(index)?.let { row ->
+                                    toggleLocalDownloadSelection(row.downloadId)
+                                }
+                            } else {
+                                localViewModel.musicList(
+                                    OnMusicPlayParameter(
+                                        musicId = music.itemId,
+                                        albumId = music.album,
+                                    ),
+                                    downloadList = localSongs,
+                                    playerModeEnum = PlayerModeEnum.SEQUENTIAL_PLAYBACK,
                                 )
-                            )
-                        }
-                    },
-                    onFavoriteClick = { music ->
-                        localViewModel.musicController.invokingOnFavorite(music.itemId)
-                    },
-                    onDownloadClick = {},
-                    onMoreClick = { music ->
-                        music.show()
-                    },
-                )
-            }
-
-            JvmLocalDownloadTab.Downloading -> {
-                item(key = "download_table_header") {
-                    JvmDownloadTableHeader()
-                }
-                items(activeDownloadTasks, key = { it.id }) { task ->
-                    JvmDownloadTableRow(
-                        task = task,
-                        onPause = { downloadViewModel.pauseDownload(task.id) },
-                        onResume = { downloadViewModel.resumeDownload(task.id) },
-                        onDelete = { downloadViewModel.deleteDownload(task.id) },
+                            }
+                        },
+                        onOpenArtist = artistClickHandler::openMusicArtists,
+                        onOpenAlbum = { music ->
+                            if (music.album.isNotBlank()) {
+                                navigator.navigate(
+                                    AlbumInfo(
+                                        music.album,
+                                        MusicDataTypeEnum.ALBUM,
+                                    )
+                                )
+                            }
+                        },
+                        onFavoriteClick = { music ->
+                            localViewModel.musicController.invokingOnFavorite(music.itemId)
+                        },
+                        onDownloadClick = {},
+                        onMoreClick = { music ->
+                            music.show()
+                        },
+                        // 勾选列点击同样按行下标切换对应下载记录，支持批量选择删除
+                        onSelectionClickAt = { index, _ ->
+                            localSongRows.getOrNull(index)?.let { row ->
+                                toggleLocalDownloadSelection(row.downloadId)
+                            }
+                        },
+                        // 本地歌曲表头吸附固定在列表顶部
+                        stickyTableHeader = true,
                     )
+                }
+
+                JvmLocalDownloadTab.Downloading -> {
+                    // 下载列表表头同样吸附固定，自带页面背景避免下方行透出
+                    stickyHeader(key = "download_table_header") {
+                        JvmDownloadTableHeader(
+                            modifier = Modifier.background(MaterialTheme.colorScheme.background),
+                        )
+                    }
+                    items(activeDownloadTasks, key = { it.id }) { task ->
+                        JvmDownloadTableRow(
+                            task = task,
+                            onPause = { downloadViewModel.pauseDownload(task.id) },
+                            onResume = { downloadViewModel.resumeDownload(task.id) },
+                            onDelete = { downloadViewModel.deleteDownload(task.id) },
+                        )
+                    }
                 }
             }
         }
@@ -268,27 +424,29 @@ internal fun JvmLocalDownloadScreen(
 
 @Composable
 private fun JvmLocalDownloadHeader(
+    modifier: Modifier = Modifier,
     selectedTab: JvmLocalDownloadTab,
     localCount: Int,
     downloadingCount: Int,
+    isSelectingLocal: Boolean,
     onSelectTab: (JvmLocalDownloadTab) -> Unit,
+    // 打开歌曲下载目录，本地歌曲与下载列表共用
+    onOpenFolder: () -> Unit,
+    onToggleLocalSelection: () -> Unit,
     onResumeAll: () -> Unit,
     onPauseAll: () -> Unit,
     onClearAll: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = XyTheme.dimens.outerVerticalPadding),
-    ) {
-        XyTextLarge(
-            text = stringResource(Res.string.local_and_download),
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.headlineMedium.copy(fontSize = 30.sp),
+    Column(modifier = modifier.fillMaxWidth()) {
+        // 与设置页、连接管理页共用统一页头，左右边距由调用方提供，这里只补顶部间距
+        JvmPageTitleBar(
+            title = stringResource(Res.string.local_and_download),
+            paddingValues = PaddingValues(top = XyTheme.dimens.outerVerticalPadding * 2),
         )
         Row(
-            modifier = Modifier.padding(top = 18.dp),
+            modifier = Modifier
+                .padding(top = 18.dp)
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(32.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -302,6 +460,20 @@ private fun JvmLocalDownloadHeader(
                 selected = selectedTab == JvmLocalDownloadTab.Downloading,
                 onClick = { onSelectTab(JvmLocalDownloadTab.Downloading) },
             )
+            Spacer(modifier = Modifier.weight(1f))
+            // 打开文件所在位置：两个标签页都直接定位到当前歌曲下载目录
+            JvmDownloadToolbarButton(
+                text = stringResource(Res.string.jvm_download_screen_text_09),
+                onClick = onOpenFolder,
+                imageVector = folder_open_24px,
+            )
+            // 本地歌曲标签提供选择入口，选择态切换为完成按钮
+            if (selectedTab == JvmLocalDownloadTab.LocalSongs) {
+                JvmSelectionToggleButton(
+                    isSelecting = isSelectingLocal,
+                    onClick = onToggleLocalSelection,
+                )
+            }
         }
 
         if (selectedTab == JvmLocalDownloadTab.Downloading) {
@@ -338,16 +510,29 @@ private fun JvmLocalDownloadTabButton(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    // 未选中标签悬停时文字切换为主题色，选中标签保持主题色
+    val textColorState = rememberXyTextHoverColor(
+        interactionSource = interactionSource,
+        color = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+    )
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
-            .jvmHoverDebounceClickable(onClick = onClick)
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                onClick = onClick,
+            )
             .padding(horizontal = 2.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = label,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            color = textColorState.color,
             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
             maxLines = 1,
         )
@@ -364,9 +549,11 @@ private fun JvmLocalDownloadTabButton(
 
 @Composable
 private fun JvmDownloadToolbarButton(
-    icon: DrawableResource,
     text: String,
     onClick: () -> Unit,
+    icon: DrawableResource? = null,
+    // 资源图标不便复用时（如 ui 模块里的 ImageVector 图标）可直接传入矢量图标
+    imageVector: ImageVector? = null,
 ) {
     Row(
         modifier = Modifier
@@ -378,12 +565,21 @@ private fun JvmDownloadToolbarButton(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = text,
-            tint = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.size(18.dp),
-        )
+        when {
+            icon != null -> Icon(
+                painter = painterResource(icon),
+                contentDescription = text,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(18.dp),
+            )
+
+            imageVector != null -> Icon(
+                imageVector = imageVector,
+                contentDescription = text,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(18.dp),
+            )
+        }
         Text(
             text = text,
             color = MaterialTheme.colorScheme.onSurface,
@@ -394,8 +590,8 @@ private fun JvmDownloadToolbarButton(
 }
 
 @Composable
-private fun JvmDownloadTableHeader() {
-    Column(modifier = Modifier.fillMaxWidth()) {
+private fun JvmDownloadTableHeader(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -733,5 +929,115 @@ private fun isActiveDownloadTask(task: XyDownload): Boolean {
         DownloadStatus.DOWNLOADING,
         DownloadStatus.PAUSED,
         DownloadStatus.FAILED -> true
+    }
+}
+
+/**
+ * 本地歌曲行：绑定下载记录 id 与还原出的歌曲信息。
+ *
+ * 同一首歌可能对应多条下载记录，行级选择必须依赖下载 id，不能只按歌曲 id 匹配。
+ */
+private data class LocalDownloadSongRow(
+    val downloadId: Long,
+    val music: XyMusic,
+)
+
+/**
+ * 本地歌曲选择操作栏。
+ *
+ * 展示已选数量，并提供全选、取消与批量删除本地文件入口。
+ */
+@Composable
+private fun JvmLocalMusicSelectionBar(
+    modifier: Modifier = Modifier,
+    selectedCount: Int,
+    isSelectAll: Boolean,
+    canSelectAll: Boolean,
+    onToggleSelectAll: () -> Unit,
+    onCancel: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    val barShape = RoundedCornerShape(8.dp)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val countPrefix = stringResource(Res.string.selection_count_prefix)
+    val countSuffix = stringResource(Res.string.selection_count_suffix)
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(barShape)
+            // 与列表选择操作栏保持同一套浅色主色底 + 主色描边样式
+            .background(primaryColor.copy(alpha = 0.07f))
+            .border(1.dp, primaryColor.copy(alpha = 0.30f), barShape)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "$countPrefix $selectedCount $countSuffix",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            JvmLocalSelectionTextButton(
+                text = stringResource(
+                    if (isSelectAll) Res.string.deselect_all else Res.string.select_all
+                ),
+                enabled = canSelectAll,
+                onClick = onToggleSelectAll,
+            )
+            JvmLocalSelectionTextButton(
+                text = stringResource(Res.string.cancel),
+                onClick = onCancel,
+            )
+            // 删除按钮使用危险色，点击后还会二次确认提示会删除本地文件
+            JvmLocalSelectionTextButton(
+                text = stringResource(Res.string.delete_local_permanently),
+                enabled = selectedCount > 0,
+                danger = true,
+                onClick = onDelete,
+            )
+        }
+    }
+}
+
+/**
+ * 本地歌曲选择操作栏里的文字按钮。
+ *
+ * @param text 按钮文案
+ * @param enabled 是否可点击
+ * @param danger 是否使用危险色，用于删除等不可逆操作
+ * @param onClick 点击回调
+ */
+@Composable
+private fun JvmLocalSelectionTextButton(
+    text: String,
+    enabled: Boolean = true,
+    danger: Boolean = false,
+    onClick: () -> Unit,
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.height(28.dp),
+        enabled = enabled,
+        shape = RoundedCornerShape(6.dp),
+        contentPadding = PaddingValues(horizontal = 10.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = if (danger) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            }
+        ),
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+        )
     }
 }

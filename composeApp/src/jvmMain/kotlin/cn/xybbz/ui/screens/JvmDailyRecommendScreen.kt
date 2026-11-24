@@ -66,6 +66,8 @@ fun JvmDailyRecommendScreen(
         onLoadArtistInfos = artistInfoLoader.loadArtistInfos,
     )
     val favoriteList by dailyRecommendViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    // 已下载完成的音乐 ID 集合，用于行内展示已下载图标并禁止重复下载
+    val downloadMusicIds by dailyRecommendViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
     val currentPlayingMusicIdFlow = remember(dailyRecommendViewModel) {
         dailyRecommendViewModel.musicController.musicInfoFlow.map { musicInfo ->
             musicInfo?.itemId
@@ -87,6 +89,7 @@ fun JvmDailyRecommendScreen(
                 songs = dailyRecommendViewModel.recommendedMusicList,
                 columns = JvmDailyRecommendMusicTableColumns,
                 ifFavorite = { music -> music.itemId in favoriteList },
+                ifDownloaded = { music -> music.itemId in downloadMusicIds },
                 currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
                 onSongClick = { _, music ->
                     dailyRecommendViewModel.musicList(

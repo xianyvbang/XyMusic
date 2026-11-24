@@ -32,6 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
@@ -55,6 +57,7 @@ import xymusic.composeapp.generated.resources.clear
 import xymusic.composeapp.generated.resources.confirm_delete_database
 import xymusic.composeapp.generated.resources.database_data
 import xymusic.composeapp.generated.resources.database_data_description
+import xymusic.composeapp.generated.resources.dialog_kicker_danger
 import xymusic.composeapp.generated.resources.essential_data
 import xymusic.composeapp.generated.resources.essential_data_description
 import xymusic.composeapp.generated.resources.return_setting_screen
@@ -118,20 +121,23 @@ fun MemoryManagementScreen(
             }
 
             item {
+                // 弹窗在点击回调里创建，正文需要先在 composable 作用域解析
+                val confirmDeleteDatabaseText =
+                    stringResource(Res.string.confirm_delete_database)
                 MemoryManagementItem(
                     cacheSize = memoryManagementViewModel.databaseSize,
                     onClick = {
                         AlertDialogObject(
                             title = warning,
-                            content = {
-                                XyTextSubSmall(
-                                    text = stringResource(Res.string.confirm_delete_database)
-                                )
-                            },
-                            ifWarning = true,
+                            body = confirmDeleteDatabaseText,
+                            tone = XyDialogTone.Danger,
+                            icon = XyDialogIcon.Trash,
+                            kicker = Res.string.dialog_kicker_danger,
                             onConfirmation = {
                                 memoryManagementViewModel.clearDatabaseData()
-                            }
+                            },
+                            // 提供取消回调，动作区才会同时出现「取消」与「确定」
+                            onDismissRequest = {}
                         ).show()
                     },
                     text = stringResource(Res.string.database_data),

@@ -39,7 +39,9 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextButton
 import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.rememberSquareRequestSize
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.Res
@@ -83,9 +85,13 @@ internal fun JvmMusicCardComponent(
         label = "music_card_lift_offset",
     )
 
+    // 卡片封面按实际展示尺寸解码，避免未传请求尺寸时按服务端原图解码。
+    val coverSize = imageSize ?: MusicCardImageSize
+    val coverRequestSize = rememberSquareRequestSize(coverSize)
+
     Column(
         modifier = modifier
-            .width(imageSize ?: MusicCardImageSize)
+            .width(coverSize)
             .hoverable(
                 interactionSource = interactionSource,
                 enabled = enabled,
@@ -119,6 +125,7 @@ internal fun JvmMusicCardComponent(
                         .background(brush),
                     model = model,
                     backModel = backModel,
+                    requestSize = coverRequestSize,
                     placeholder = placeholder,
                     error = error,
                     fallback = fallback,
@@ -162,17 +169,19 @@ private fun JvmMusicCardText(
         horizontalAlignment = Alignment.Start,
     ) {
         if (enabled) {
-            XyText(
+            XyTextButton(
                 modifier = textMarqueeModifier,
                 text = name,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyLarge,
                 onClick = onClick,
             )
-            XyTextSub(
+            XyTextButton(
                 modifier = textMarqueeModifier,
                 text = artistName,
                 maxLines = 1,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 onClick = onClick,
             )
         } else {

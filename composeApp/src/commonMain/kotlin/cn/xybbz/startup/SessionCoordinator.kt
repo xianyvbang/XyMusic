@@ -142,9 +142,11 @@ class SessionCoordinator(
 
     /** 接收连接页完成的交互式登录，避免依赖首页创建时机。 */
     suspend fun markInteractiveLoginSuccess(connection: ConnectionConfig? = null) {
+        // 优先使用登录流程刚写入数据库的连接，避免清空数据库后仍然复用会话里的旧连接，
+        // 导致 Ready 状态值没有变化、StateFlow 不发射，首页等页面收不到刷新信号。
         val currentConnection = connection
-            ?: state.value.connection
             ?: dataSourceManager.restoreLocalDataSourceContext()
+            ?: state.value.connection
         if (currentConnection != null) {
             prepareSessionServices()
             initializePlayerIfNeeded()

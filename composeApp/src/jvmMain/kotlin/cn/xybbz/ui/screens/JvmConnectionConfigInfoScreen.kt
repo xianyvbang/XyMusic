@@ -20,85 +20,70 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.api.utils.withDefaultHttpScheme
-import cn.xybbz.common.enums.img
-import cn.xybbz.localdata.data.connection.ConnectionConfig
-import cn.xybbz.ui.components.JvmSettingBaseRow
-import cn.xybbz.ui.components.JvmSettingConnectionFormCardMinHeight
-import cn.xybbz.ui.components.JvmSettingNote
-import cn.xybbz.ui.components.JvmSettingOverviewTile
-import cn.xybbz.ui.components.JvmSettingPageHeader
+import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.ui.components.JvmPageHeader
 import cn.xybbz.ui.components.JvmSettingPageScaffold
-import cn.xybbz.ui.components.JvmSettingSection
-import cn.xybbz.ui.components.JvmSettingStatusCard
-import cn.xybbz.ui.components.JvmSettingStatusCardItem
-import cn.xybbz.ui.components.JvmSettingSummaryCardWidth
-import cn.xybbz.ui.components.JvmSettingTwoPaneContent
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyButton
-import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.ConnectionConfigInfoViewModel
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import xymusic.composeapp.generated.resources.*
 import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.cancel
 import xymusic.composeapp.generated.resources.connection_address
 import xymusic.composeapp.generated.resources.connection_info
-import xymusic.composeapp.generated.resources.connection_media_library_all_label
-import xymusic.composeapp.generated.resources.connection_permissions_label
-import xymusic.composeapp.generated.resources.connection_server_version_label
 import xymusic.composeapp.generated.resources.connection_server_version_unknown_label
-import xymusic.composeapp.generated.resources.current_connection
-import xymusic.composeapp.generated.resources.delete_prefix
-import xymusic.composeapp.generated.resources.download
-import xymusic.composeapp.generated.resources.http_24px
-import xymusic.composeapp.generated.resources.info_24px
-import xymusic.composeapp.generated.resources.label_24px
 import xymusic.composeapp.generated.resources.password
-import xymusic.composeapp.generated.resources.person_24px
-import xymusic.composeapp.generated.resources.refresh_24px
 import xymusic.composeapp.generated.resources.save
 import xymusic.composeapp.generated.resources.set_alias
-import xymusic.composeapp.generated.resources.warning_24px
 import xymusic.composeapp.generated.resources.username
-import java.net.URI
+
+/** 表单字段标签字号，对应设计稿的等宽小标签。 */
+private val JvmConnectionFieldLabelSize = 9.5.sp
+
+/** 表单字段标签字距。 */
+private val JvmConnectionFieldLabelLetterSpacing = 1.3.sp
+
+/** 表单字段双列布局的切换宽度，低于该宽度时改为上下堆叠。 */
+private val JvmConnectionFieldGridBreakpoint = 520.dp
 
 /**
  * JVM 桌面端连接信息页面。
+ *
+ * 排版对齐设计稿「连接信息」：顶部是页面标题与右侧读数，主体为连接凭据表单；
+ * 设计稿中的「保存影响」和「连接状态」分区不再展示。
  *
  * @param connectionId 当前要编辑的连接 ID。
  * @param connectionConfigInfoViewModel 连接信息编辑 ViewModel。
@@ -110,37 +95,24 @@ fun JvmConnectionConfigInfoScreen(
         parametersOf(connectionId)
     }
 ) {
+    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
     val pageTitle = stringResource(Res.string.connection_info)
     val saveText = stringResource(Res.string.save)
-    val currentConnectionText = stringResource(Res.string.current_connection)
-    val allLibraryText = stringResource(Res.string.connection_media_library_all_label)
-    val downloadText = stringResource(Res.string.download)
-    val deleteText = stringResource(Res.string.delete_prefix)
+    val cancelText = stringResource(Res.string.cancel)
     val connectionConfig = connectionConfigInfoViewModel.connectionConfig
-    val connectionName = connectionConfig?.name
-        ?.takeIf { it.isNotBlank() }
-        ?: connectionConfigInfoViewModel.connectionName.ifBlank { pageTitle }
     val serverVersion = connectionConfig?.serverVersion.orEmpty()
-    val serverVersionText = if (serverVersion.isNotBlank()) {
-        stringResource(Res.string.connection_server_version_label, serverVersion)
+    // 页头读数使用的版本号，有版本时补 v 前缀，与服务端展示习惯一致。
+    val serverVersionValue = if (serverVersion.isNotBlank()) {
+        "v$serverVersion"
     } else {
         stringResource(Res.string.connection_server_version_unknown_label)
     }
-    val dataSourceLabel = connectionConfig?.type?.title ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
+    val dataSourceLabel = connectionConfig?.type?.title
+        ?: stringResource(Res.string.jvm_connection_config_info_screen_text_01)
     val address = connectionConfigInfoViewModel.address
     val username = connectionConfigInfoViewModel.username
-    val currentConnection = connectionConfigInfoViewModel.getConnectionId() == connectionId
     val canSave = address.isNotBlank() && connectionConfigInfoViewModel.connectionName.isNotBlank()
-    val capabilityValue = buildList {
-        if (connectionConfig?.ifEnabledDownload == true) add(downloadText)
-        if (connectionConfig?.ifEnabledDelete == true) add(deleteText)
-    }.takeIf { it.isNotEmpty() }?.joinToString(" / ") ?: stringResource(Res.string.connection_permission_read_only)
-    val capabilityText = stringResource(Res.string.connection_permissions_label, capabilityValue)
-    val libraryText = connectionConfig?.libraryIds
-        ?.takeIf { it.isNotEmpty() }
-        ?.let { stringResource(Res.string.jvm_connection_config_info_screen_text_02, it.size) }
-        ?: allLibraryText
     val saveConnection = {
         coroutineScope.launch {
             // 修改连接设置，成功后沿用原有重新登录逻辑。
@@ -151,533 +123,377 @@ fun JvmConnectionConfigInfoScreen(
         Unit
     }
 
-    JvmSettingPageScaffold(
-        contentPadding = PaddingValues(
-            horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
-            vertical = XyTheme.dimens.outerVerticalPadding * 3
-        )
-    ) {
-        JvmSettingPageHeader(
+    // 与设置页、连接管理页保持一致：内容内边距使用 JvmSettingPageScaffold 的统一默认值。
+    JvmSettingPageScaffold {
+        // 顶部统一页头：标题在左侧，右侧是服务端版本与服务类型读数。
+        JvmPageHeader(
             title = pageTitle,
-            description = stringResource(Res.string.jvm_connection_config_info_screen_text_03),
-        ) {
-            JvmSettingStatusCard(
-                width = JvmSettingSummaryCardWidth,
-                prominentValue = true,
-                items = listOf(
-                    JvmSettingStatusCardItem(
-                        label = stringResource(Res.string.jvm_connection_config_info_screen_text_04),
-                        value = if (currentConnection) currentConnectionText else stringResource(Res.string.jvm_connection_config_info_screen_text_05)
-                    ),
-                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_connection_config_info_screen_text_06), value = serverVersionText),
-                    JvmSettingStatusCardItem(label = stringResource(Res.string.jvm_connection_config_info_screen_text_07), value = dataSourceLabel),
-                )
-            )
-        }
-
-        JvmSettingTwoPaneContent(
-            leftContent = {
-                JvmSettingSection(
-                    title = stringResource(Res.string.jvm_connection_config_info_screen_text_08),
-                    subtitle = stringResource(Res.string.jvm_connection_config_info_screen_text_09),
-                    badge = if (currentConnection) stringResource(Res.string.jvm_connection_config_info_screen_text_10) else stringResource(Res.string.jvm_connection_config_info_screen_text_11),
-                    contentContainerEnabled = false,
+            trailing = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                    verticalAlignment = Alignment.Bottom,
                 ) {
-                    JvmConnectionHeroCard(
-                        connectionConfig = connectionConfig,
-                        name = connectionName,
-                        address = address,
-                        status = if (currentConnection) currentConnectionText else stringResource(Res.string.jvm_connection_config_info_screen_text_12),
+                    JvmConnectionInfoReadout(
+                        label = stringResource(Res.string.jvm_connection_config_info_screen_text_06),
+                        value = serverVersionValue,
+                        emphasized = true,
                     )
-                }
-
-                JvmConnectionOverview(
-                    address = address,
-                    username = username,
-                    serverVersionText = serverVersionText,
-                    connectionConfig = connectionConfig,
-                )
-
-                JvmSettingSection(
-                    title = stringResource(Res.string.jvm_connection_config_info_screen_text_13),
-                    subtitle = stringResource(Res.string.jvm_connection_config_info_screen_text_14),
-                    badge = if (canSave) stringResource(Res.string.jvm_connection_config_info_screen_text_15) else stringResource(Res.string.jvm_connection_config_info_screen_text_16),
-                    contentContainerEnabled = false,
-                    headerAction = {
-                        XyButton(
-                            modifier = Modifier.widthIn(min = 96.dp),
-                            enabled = canSave,
-                            onClick = saveConnection,
-                            text = saveText,
-                        )
-                    },
-                ) {
-                    JvmConnectionFormFields(
-                        address = address,
-                        username = username,
-                        password = connectionConfigInfoViewModel.password,
-                        connectionName = connectionConfigInfoViewModel.connectionName,
-                        onAddressChange = connectionConfigInfoViewModel::updateAddress,
-                        onUsernameChange = connectionConfigInfoViewModel::updateUsername,
-                        onPasswordChange = connectionConfigInfoViewModel::updatePassword,
-                        onConnectionNameChange = connectionConfigInfoViewModel::updateConnectionName,
+                    JvmConnectionInfoReadoutDivider()
+                    JvmConnectionInfoReadout(
+                        label = stringResource(Res.string.jvm_connection_config_info_screen_text_07),
+                        value = dataSourceLabel,
                     )
                 }
             },
-            rightContent = {
-                JvmSettingSection(
-                    title = stringResource(Res.string.jvm_connection_config_info_screen_text_17),
-                    subtitle = stringResource(Res.string.jvm_connection_config_info_screen_text_18),
-                    badge = stringResource(Res.string.jvm_connection_config_info_screen_text_19),
-                ) {
-                    JvmConnectionInfoRow(label = stringResource(Res.string.jvm_connection_config_info_screen_text_20), value = "#$connectionId")
-                    JvmConnectionInfoRow(label = stringResource(Res.string.jvm_connection_config_info_screen_text_07), value = dataSourceLabel)
-                    JvmConnectionInfoRow(label = stringResource(Res.string.music_library), value = libraryText)
-                    JvmConnectionInfoRow(label = stringResource(Res.string.jvm_connection_config_info_screen_text_21), value = capabilityText)
-                }
+        )
 
-                JvmSettingSection(
-                    title = stringResource(Res.string.jvm_connection_config_info_screen_text_22),
-                    subtitle = stringResource(Res.string.jvm_connection_config_info_screen_text_23),
-                    badge = stringResource(Res.string.save),
-                ) {
-                    JvmSettingBaseRow(
-                        icon = Res.drawable.refresh_24px,
-                        title = stringResource(Res.string.jvm_connection_config_info_screen_text_24),
-                        description = stringResource(Res.string.jvm_connection_config_info_screen_text_25),
-                        descriptionMaxLines = 2,
-                        iconSelected = true,
-                        trailing = {
-                            JvmConnectionStatePill(text = if (currentConnection) stringResource(Res.string.jvm_connection_config_info_screen_text_26) else stringResource(Res.string.jvm_connection_config_info_screen_text_27))
-                        }
-                    )
-                    JvmSettingBaseRow(
-                        icon = Res.drawable.label_24px,
-                        title = stringResource(Res.string.jvm_connection_config_info_screen_text_28),
-                        description = stringResource(Res.string.jvm_connection_config_info_screen_text_29),
-                        descriptionMaxLines = 2,
-                        trailing = {
-                            JvmConnectionStatePill(text = stringResource(Res.string.local))
-                        }
-                    )
-                    JvmSettingBaseRow(
-                        icon = Res.drawable.warning_24px,
-                        title = stringResource(Res.string.jvm_connection_config_info_screen_text_30),
-                        description = stringResource(Res.string.jvm_connection_config_info_screen_text_31),
-                        descriptionMaxLines = 2,
-                        iconColor = MaterialTheme.colorScheme.error,
-                        trailing = {
-                            JvmConnectionStatePill(
-                                text = if (canSave) stringResource(Res.string.jvm_connection_config_info_screen_text_32) else stringResource(Res.string.jvm_connection_config_info_screen_text_33),
-                                selected = canSave,
-                            )
-                        }
-                    )
-                    JvmSettingNote(text = stringResource(Res.string.jvm_connection_config_info_screen_text_34))
-                }
-            }
+        JvmConnectionCredentialFormCard(
+            address = address,
+            username = username,
+            password = connectionConfigInfoViewModel.password,
+            connectionName = connectionConfigInfoViewModel.connectionName,
+            canSave = canSave,
+            saveText = saveText,
+            cancelText = cancelText,
+            onAddressChange = connectionConfigInfoViewModel::updateAddress,
+            onUsernameChange = connectionConfigInfoViewModel::updateUsername,
+            onPasswordChange = connectionConfigInfoViewModel::updatePassword,
+            onConnectionNameChange = connectionConfigInfoViewModel::updateConnectionName,
+            onSave = saveConnection,
+            onCancel = { navigator.goBack() },
         )
     }
 }
 
 /**
- * JVM 连接页左侧的连接摘要卡。
+ * 页头读数单元格。
  *
- * @param connectionConfig 当前连接配置，为空时展示占位图标。
- * @param name 当前连接显示名称。
- * @param address 当前连接地址。
- * @param status 当前连接状态标签。
+ * @param label 读数标签。
+ * @param value 读数内容。
+ * @param emphasized 是否使用更大的强调字号。
  */
 @Composable
-private fun JvmConnectionHeroCard(
-    connectionConfig: ConnectionConfig?,
-    name: String,
-    address: String,
-    status: String,
+private fun JvmConnectionInfoReadout(
+    label: String,
+    value: String,
+    emphasized: Boolean = false,
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = if (XyTheme.configs.isDarkTheme) 0.18f else 0.10f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.26f)
-        )
+    Column(
+        modifier = Modifier.widthIn(max = 180.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(XyTheme.dimens.outerHorizontalPadding),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            JvmConnectionServiceAvatar(connectionConfig = connectionConfig)
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
-            ) {
-                XyTextLarge(
-                    text = name,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                XyTextSub(
-                    text = address.ifBlank { stringResource(Res.string.jvm_connection_config_info_screen_text_35) },
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontFamily = FontFamily.Monospace,
-                        lineHeight = 18.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            JvmConnectionStatePill(text = status, selected = true)
-        }
+        XyTextSub(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                letterSpacing = 1.4.sp,
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+        XyText(
+            text = value,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontFamily = FontFamily.Monospace,
+                fontSize = if (emphasized) 15.sp else 12.5.sp,
+                fontWeight = FontWeight.Bold,
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+        )
     }
 }
 
 /**
- * JVM 连接页的服务类型头像。
- *
- * @param connectionConfig 当前连接配置。
+ * 页头读数之间的竖直分隔线。
  */
 @Composable
-private fun JvmConnectionServiceAvatar(connectionConfig: ConnectionConfig?) {
-    val shape = RoundedCornerShape(XyTheme.dimens.corner + XyTheme.dimens.outerVerticalPadding / 2)
+private fun JvmConnectionInfoReadoutDivider() {
     Box(
         modifier = Modifier
-            .size(64.dp)
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(
-                BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
-                shape
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        if (connectionConfig == null) {
-            Icon(
-                painter = painterResource(Res.drawable.http_24px),
-                contentDescription = null,
-                modifier = Modifier.size(34.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        } else {
-            XySmallImage(
-                modifier = Modifier.size(42.dp),
-                model = painterResource(connectionConfig.type.img),
-                contentDescription = connectionConfig.type.title
-            )
-        }
-    }
+            .width(1.dp)
+            .height(30.dp)
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f))
+    )
 }
 
 /**
- * JVM 连接页的三张概览卡。
- *
- * @param address 当前连接地址。
- * @param username 当前用户名。
- * @param serverVersionText 服务端版本文案。
- * @param connectionConfig 当前连接配置。
- */
-@Composable
-private fun JvmConnectionOverview(
-    address: String,
-    username: String,
-    serverVersionText: String,
-    connectionConfig: ConnectionConfig?,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-        verticalAlignment = Alignment.Top
-    ) {
-        JvmSettingOverviewTile(
-            modifier = Modifier.weight(1f),
-            icon = Res.drawable.http_24px,
-            kicker = stringResource(Res.string.jvm_connection_config_info_screen_text_36),
-            value = address.jvmConnectionHostLabel(),
-            sub = address.jvmConnectionProtocolPortLabel(connectionConfig),
-        )
-        JvmSettingOverviewTile(
-            modifier = Modifier.weight(1f),
-            icon = Res.drawable.person_24px,
-            kicker = stringResource(Res.string.username),
-            value = username.ifBlank { stringResource(Res.string.jvm_connection_config_info_screen_text_37) },
-            sub = stringResource(Res.string.jvm_connection_config_info_screen_text_38),
-        )
-        JvmSettingOverviewTile(
-            modifier = Modifier.weight(1f),
-            icon = Res.drawable.info_24px,
-            kicker = stringResource(Res.string.jvm_connection_config_info_screen_text_39),
-            value = serverVersionText.removePrefix(stringResource(Res.string.jvm_connection_config_info_screen_text_40)),
-            sub = connectionConfig?.type?.title ?: stringResource(Res.string.jvm_connection_config_info_screen_text_41),
-        )
-    }
-}
-
-/**
- * JVM 连接页的表单字段集合。
+ * 连接凭据表单卡片。
  *
  * @param address 当前连接地址。
  * @param username 当前用户名。
  * @param password 当前密码。
  * @param connectionName 当前连接别名。
+ * @param canSave 是否允许保存。
+ * @param saveText 保存按钮文案。
+ * @param cancelText 取消按钮文案。
  * @param onAddressChange 地址变更回调。
  * @param onUsernameChange 用户名变更回调。
  * @param onPasswordChange 密码变更回调。
  * @param onConnectionNameChange 别名变更回调。
+ * @param onSave 保存回调。
+ * @param onCancel 取消回调。
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun JvmConnectionFormFields(
+private fun JvmConnectionCredentialFormCard(
     address: String,
     username: String,
     password: String,
     connectionName: String,
+    canSave: Boolean,
+    saveText: String,
+    cancelText: String,
     onAddressChange: (String) -> Unit,
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onConnectionNameChange: (String) -> Unit,
+    onSave: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        ) {
+            // 链接地址
+            JvmConnectionFormField(
+                label = stringResource(Res.string.connection_address),
+                tag = stringResource(Res.string.jvm_connection_config_info_screen_text_43),
+            ) {
+                JvmAddressInputEdit(
+                    address = address,
+                    updateAddress = onAddressChange
+                )
+            }
+
+            // 地址示例与协议支持提示
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                JvmConnectionHintChip(
+                    text = stringResource(
+                        Res.string.jvm_connection_config_info_screen_text_53,
+                        ApiConstants.HTTP
+                    ),
+                    accent = true,
+                )
+                JvmConnectionHintChip(
+                    text = stringResource(Res.string.jvm_connection_new_screen_text_11)
+                )
+            }
+
+            // 用户名与密码双列排布，窄窗口下自动上下堆叠。
+            JvmConnectionCredentialGrid(
+                username = username,
+                password = password,
+                onUsernameChange = onUsernameChange,
+                onPasswordChange = onPasswordChange,
+            )
+
+            // 设置别名
+            JvmConnectionFormField(
+                label = stringResource(Res.string.set_alias),
+            ) {
+                JvmConnectionNameInputEdit(
+                    connectionName = connectionName,
+                    updateConnectionName = onConnectionNameChange
+                )
+            }
+
+            // 保存与取消
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                XyButton(
+                    enabled = canSave,
+                    onClick = onSave,
+                    text = saveText,
+                )
+                OutlinedButton(
+                    modifier = Modifier.widthIn(min = 72.dp),
+                    onClick = onCancel,
+                    shape = RoundedCornerShape(XyTheme.dimens.corner),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    XyText(
+                        text = cancelText,
+                        fontWeight = FontWeight.Normal,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 表单字段容器：等宽小标签 + 必填等标签 + 输入控件。
+ *
+ * @param label 字段标签。
+ * @param tag 字段标签右侧的提示标签；为空时不展示。
+ * @param content 字段输入控件。
+ */
+@Composable
+private fun JvmConnectionFormField(
+    label: String,
+    tag: String? = null,
+    content: @Composable () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
     ) {
-        JvmConnectionFormCard(
-            title = stringResource(Res.string.connection_address),
-            description = stringResource(Res.string.jvm_connection_config_info_screen_text_42, ApiConstants.HTTP, ApiConstants.HTTPS),
-            state = stringResource(Res.string.jvm_connection_config_info_screen_text_43),
-            selected = true,
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            JvmAddressInputEdit(
-                address = address,
-                updateAddress = onAddressChange
+            XyTextSub(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = JvmConnectionFieldLabelSize,
+                    letterSpacing = JvmConnectionFieldLabelLetterSpacing,
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
             )
+            if (!tag.isNullOrBlank()) {
+                JvmConnectionFieldTag(text = tag)
+            }
         }
+        content()
+    }
+}
 
-        JvmConnectionFormCard(
-            title = stringResource(Res.string.username),
-            description = stringResource(Res.string.jvm_connection_config_info_screen_text_44),
-            state = stringResource(Res.string.jvm_connection_config_info_screen_text_45),
+/**
+ * 字段标签旁的小标签。
+ *
+ * @param text 标签文案。
+ */
+@Composable
+private fun JvmConnectionFieldTag(text: String) {
+    Surface(
+        shape = RoundedCornerShape(4.dp),
+        color = Color.Transparent,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f)
+        )
+    ) {
+        XyTextSub(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
+            text = text,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                fontSize = JvmConnectionFieldLabelSize,
+                letterSpacing = 0.4.sp,
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+    }
+}
+
+/**
+ * 用户名与密码字段的双列布局。
+ *
+ * @param username 当前用户名。
+ * @param password 当前密码。
+ * @param onUsernameChange 用户名变更回调。
+ * @param onPasswordChange 密码变更回调。
+ */
+@Composable
+private fun JvmConnectionCredentialGrid(
+    username: String,
+    password: String,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+) {
+    val usernameField: @Composable () -> Unit = {
+        JvmConnectionFormField(
+            label = stringResource(Res.string.username),
         ) {
             JvmUsernameInputEdit(
                 username = username,
                 updateUsername = onUsernameChange
             )
         }
-
-        JvmConnectionFormCard(
-            title = stringResource(Res.string.password),
-            description = stringResource(Res.string.jvm_connection_config_info_screen_text_46),
-            state = stringResource(Res.string.jvm_connection_config_info_screen_text_47),
+    }
+    val passwordField: @Composable () -> Unit = {
+        JvmConnectionFormField(
+            label = stringResource(Res.string.password),
         ) {
             JvmPasswordInputEdit(
                 password = password,
                 updatePassword = onPasswordChange
             )
         }
-
-        JvmConnectionFormCard(
-            title = stringResource(Res.string.set_alias),
-            description = stringResource(Res.string.jvm_connection_config_info_screen_text_48),
-            state = stringResource(Res.string.jvm_connection_config_info_screen_text_43),
-            selected = true,
-        ) {
-            JvmConnectionNameInputEdit(
-                connectionName = connectionName,
-                updateConnectionName = onConnectionNameChange
-            )
-        }
     }
-}
 
-/**
- * JVM 连接页的单个表单卡片。
- *
- * @param title 字段标题。
- * @param description 字段说明。
- * @param state 字段状态标签。
- * @param selected 是否使用主色强调状态。
- * @param content 字段输入控件。
- */
-@Composable
-private fun JvmConnectionFormCard(
-    title: String,
-    description: String,
-    state: String,
-    selected: Boolean = false,
-    content: @Composable () -> Unit,
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = JvmSettingConnectionFormCardMinHeight),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.045f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.075f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(XyTheme.dimens.contentPadding),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)
-                ) {
-                    XyText(
-                        text = title,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    XyTextSub(
-                        text = description,
-                        style = MaterialTheme.typography.labelSmall.copy(lineHeight = 17.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                JvmConnectionStatePill(text = state, selected = selected)
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val gap = XyTheme.dimens.contentPadding
+        if (maxWidth < JvmConnectionFieldGridBreakpoint) {
+            Column(verticalArrangement = Arrangement.spacedBy(gap)) {
+                usernameField()
+                passwordField()
             }
-            content()
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+                Box(modifier = Modifier.weight(1f)) { usernameField() }
+                Box(modifier = Modifier.weight(1f)) { passwordField() }
+            }
         }
     }
 }
 
 /**
- * JVM 连接页右侧详情列表的单行。
- *
- * @param label 行标签。
- * @param value 行内容。
- */
-@Composable
-private fun JvmConnectionInfoRow(
-    label: String,
-    value: String,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = XyTheme.dimens.itemHeight)
-            .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
-                vertical = XyTheme.dimens.contentPadding
-            ),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        XyTextSub(
-            modifier = Modifier.weight(1f),
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        XyText(
-            modifier = Modifier.widthIn(max = 180.dp),
-            text = value,
-            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-/**
- * JVM 连接页通用状态标签。
+ * 表单提示标签。
  *
  * @param text 标签文案。
- * @param selected 是否使用主色强调。
- * @param width 标签最大宽度。
+ * @param accent 是否使用主色强调。
  */
 @Composable
-private fun JvmConnectionStatePill(
+private fun JvmConnectionHintChip(
     text: String,
-    selected: Boolean = false,
-    width: Dp = 128.dp,
+    accent: Boolean = false,
 ) {
-    val color = if (selected) {
+    val color = if (accent) {
         MaterialTheme.colorScheme.primary
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
+
     Surface(
-        shape = CircleShape,
-        color = color.copy(alpha = if (selected) 0.12f else 0.08f),
-        contentColor = color,
+        shape = RoundedCornerShape(4.dp),
+        color = if (accent) color.copy(alpha = 0.10f) else Color.Transparent,
         border = BorderStroke(
             width = 1.dp,
-            color = color.copy(alpha = if (selected) 0.28f else 0.12f)
+            color = color.copy(alpha = if (accent) 0.34f else 0.14f)
         )
     ) {
-        XyText(
-            modifier = Modifier
-                .widthIn(max = width)
-                .padding(
-                    horizontal = XyTheme.dimens.contentPadding,
-                    vertical = XyTheme.dimens.outerVerticalPadding / 2
-                ),
+        XyTextSub(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
             text = text,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontFamily = FontFamily.Monospace,
+                letterSpacing = 0.4.sp,
+            ),
             color = color,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
         )
-    }
-}
-
-/**
- * 提取连接地址中的主机名。
- */
-@Composable
-private fun String.jvmConnectionHostLabel(): String {
-    if (isBlank()) {
-        return stringResource(Res.string.jvm_connection_config_info_screen_text_37)
-    }
-    return runCatching {
-        URI(withDefaultHttpScheme()).host
-    }.getOrNull()?.takeIf { it.isNotBlank() } ?: this
-}
-
-/**
- * 提取连接地址中的协议和端口展示文案。
- *
- * @param connectionConfig 当前连接配置，用于补充默认端口。
- */
-@Composable
-private fun String.jvmConnectionProtocolPortLabel(connectionConfig: ConnectionConfig?): String {
-    if (isBlank()) {
-        return stringResource(Res.string.jvm_connection_config_info_screen_text_49)
-    }
-    val uri = runCatching {
-        URI(withDefaultHttpScheme())
-    }.getOrNull()
-    val scheme = uri?.scheme?.uppercase()?.takeIf { it.isNotBlank() } ?: ApiConstants.HTTP_PROTOCOL_NAME
-    val port = uri?.port
-        ?.takeIf { it > 0 }
-        ?: if (scheme == ApiConstants.HTTPS_PROTOCOL_NAME) {
-            connectionConfig?.type?.httpsPort
-        } else {
-            connectionConfig?.type?.httpPort
-        }
-    return if (port == null) {
-        scheme
-    } else {
-        "$scheme · $port"
     }
 }

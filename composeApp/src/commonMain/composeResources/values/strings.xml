@@ -37,6 +37,8 @@
     <string name="download_failed">下载失败</string>
     <string name="cancel_download">取消下载</string>
     <string name="download">下载</string>
+    <string name="downloaded">已下载</string>
+    <string name="download_url_empty">下载地址为空，无法下载</string>
     <string name="close">关闭</string>
     <string name="close_window">关闭窗口</string>
     <string name="minimize_window">最小化</string>
@@ -67,6 +69,10 @@
     <string name="import_info">导入</string>
     <string name="select_all">全选</string>
     <string name="deselect_all">全不选</string>
+    <!--    音乐列表选择操作栏-->
+    <string name="selection_count_prefix">已选</string>
+    <string name="selection_count_suffix">首</string>
+    <string name="selection_done">完成</string>
     <string name="pause_playback">暂停播放</string>
     <string name="resume_playback">继续播放</string>
     <string name="start_playback">开始播放</string>
@@ -86,6 +92,11 @@
     <!--    艺术家详情-->
     <string name="no_description">暂无简介</string>
     <string name="artist_cover">艺术家封面</string>
+    <string name="artist_all_tracks">全部曲目</string>
+    <string name="play_all">播放全部</string>
+    <string name="expand_description">展开简介</string>
+    <string name="album_count_format">%1$d 张</string>
+    <string name="artist_count_format">%1$d 位</string>
     <!--艺术家-->
     <string name="artist">艺术家</string>
     <string name="get_all_artists">获取所有艺术家</string>
@@ -216,6 +227,17 @@
     <string name="custom_cover_api_hint">api.lrc.cx/cover</string>
     <string name="cache_location">缓存位置</string>
     <string name="song_cache_location">歌曲存储位置</string>
+    <string name="song_download_location">歌曲下载位置</string>
+    <string name="song_download_location_default">使用默认下载目录</string>
+    <string name="song_download_location_fallback">原目录不可用，已回退到 %1$s</string>
+    <string name="song_download_location_note">更改下载目录后，新建下载任务保存到新目录；已下载文件保留在原路径，仍可正常播放与删除。</string>
+    <string name="song_download_location_changed">已切换歌曲下载目录</string>
+    <string name="song_download_location_restored">已恢复默认歌曲下载目录</string>
+    <string name="song_download_location_unsupported">当前平台暂不支持自定义下载目录</string>
+    <string name="song_download_location_not_creatable">无法创建所选目录，请重新选择</string>
+    <string name="song_download_location_not_directory">所选路径不是目录，请重新选择</string>
+    <string name="song_download_location_not_writable">所选目录没有写入权限，请重新选择</string>
+    <string name="song_download_location_no_space">所选目录所在磁盘空间不足，请重新选择</string>
     <string name="connection_management">连接管理</string>
     <string name="download_max_list">最大同时下载数量</string>
     <string name="more">更多</string>
@@ -260,6 +282,8 @@
     <string name="song_info">歌曲信息</string>
     <string name="delete_permanently">永久删除</string>
     <string name="delete_local_permanently">删除本地文件</string>
+    <string name="delete_local_music_title">删除本地歌曲</string>
+    <string name="confirm_delete_local_music">注意! 删除本地歌曲会同时删除已下载的音乐文件, 确定要删除这%1$d首歌曲吗?</string>
     <string name="volume_value_setting">调节音量</string>
     <string name="play_settings">播放过度设置-淡入淡出</string>
     <string name="play_settings_time">播放过度设置-淡入淡出时长</string>
@@ -378,6 +402,12 @@
     <string name="plex_resource_error">获得Plex资源地址失败</string>
 
     <string name="unknown">未知</string>
+
+    <string name="dialog_kicker_danger">危险操作 / 不可撤销</string>
+    <string name="dialog_kicker_rename">输入 / 重命名</string>
+    <string name="dialog_kicker_create">输入 / 创建</string>
+    <string name="dialog_kicker_import">导入 / 确认</string>
+    <string name="dialog_kicker_export">导出 / 选择格式</string>
 
     <string name="remove_download_title">批量删除下载</string>
     <string name="confirm_delete_download">注意! 删除下载任务会同时删除已下载的本地音乐文件, 确定要删除这%1$d个下载吗?</string>
@@ -583,6 +613,7 @@
     <string name="jvm_connection_config_info_screen_text_47">加密</string>
     <string name="jvm_connection_config_info_screen_text_48">别名只影响本地列表和页面标题展示。</string>
     <string name="jvm_connection_config_info_screen_text_49">等待填写服务地址</string>
+    <string name="jvm_connection_config_info_screen_text_53">示例 %1$s192.168.1.2:8096</string>
     <string name="jvm_connection_management_text_01">全部</string>
     <string name="jvm_connection_management_text_02">集中管理桌面端音乐服务连接：查看当前数据源、切换连接、编辑账号地址，并为每个连接维护可见媒体库范围。</string>
     <string name="jvm_connection_management_text_03">卡片承载连接身份与状态，右侧保留当前连接的详细信息和常用操作。</string>
@@ -600,6 +631,14 @@
     <string name="jvm_connection_management_text_15">添加连接后可以在这里切换数据源并管理媒体库范围。</string>
     <string name="jvm_connection_management_text_16">暂无当前连接</string>
     <string name="jvm_connection_management_text_17">选择或添加连接后，这里会展示服务端、权限和媒体库信息。</string>
+    <string name="jvm_connection_management_text_18">网络 / 服务器</string>
+    <string name="jvm_connection_management_text_19">连接数</string>
+    <string name="jvm_connection_management_text_20">类型</string>
+    <string name="jvm_connection_management_text_21">%1$s 个库</string>
+    <string name="jvm_connection_management_text_23">全部媒体库</string>
+    <string name="jvm_connection_management_text_28">支持 Jellyfin / Navidrome / Subsonic / Emby / Plex</string>
+    <string name="jvm_connection_management_text_29">切换连接后会重新读取媒体库；正在播放的队列会保留，需重新点播以使用新数据源。</string>
+    <string name="jvm_connection_management_text_30">已连接</string>
     <string name="jvm_connection_new_screen_text_01">选择服务</string>
     <string name="jvm_connection_new_screen_text_02">输入凭据</string>
     <string name="jvm_connection_new_screen_text_03">选择资源</string>
@@ -698,6 +737,8 @@
     <string name="jvm_download_screen_text_06">歌名/歌手</string>
     <string name="jvm_download_screen_text_07">进度</string>
     <string name="jvm_download_screen_text_08">下载中</string>
+    <string name="jvm_download_screen_text_09">打开文件所在位置</string>
+    <string name="jvm_download_screen_text_10">无法打开所在文件夹，请确认路径是否存在</string>
     <string name="jvm_interface_setting_screen_text_01">已设置</string>
     <string name="jvm_interface_setting_screen_text_02">未设置</string>
     <string name="jvm_interface_setting_screen_text_03">把主题、背景和桌面显示偏好放进同一张可预览的控制台，保持紧凑，同时能快速看到当前视觉结果。</string>
@@ -857,6 +898,10 @@
     <string name="jvm_select_library_screen_text_28">不过滤任何音乐库 · 服务端全部内容</string>
     <string name="jvm_select_library_screen_text_29">未标记类型</string>
     <string name="jvm_select_library_screen_text_30">%1$s · 连接 #%2$s · ID %3$s</string>
+    <string name="jvm_select_library_screen_text_31">可见媒体库</string>
+    <string name="jvm_select_library_screen_text_32">聚合范围</string>
+    <string name="jvm_select_library_screen_text_33">当前生效范围：%1$s</string>
+    <string name="jvm_select_library_screen_text_34">可见媒体库 / %1$s</string>
     <string name="jvm_set_background_image_screen_text_01">未选择背景图片</string>
     <string name="jvm_set_background_image_screen_text_02">将背景图选择、清除和裁剪预览放在同一个桌面工作区，保存前即可看到它与侧栏、内容区和播放栏叠加后的状态。</string>
     <string name="jvm_set_background_image_screen_text_03">当前状态</string>
@@ -987,4 +1032,12 @@
     <string name="custom_api_screen_text_01">验证信息作为请求头传入,使用%1$s作为Key为验证信息,更多信息请参考</string>
     <string name="custom_api_screen_text_02">验证信息</string>
     <string name="transcode_audio_bit_rate_type_text_01">不转码</string>
+    <string name="jvm_album_info_text_02">保存播放记录</string>
+    <string name="jvm_album_info_text_03">开启后下次从断点继续</string>
+    <!--桌面端右键菜单与歌词偏移菜单-->
+    <string name="jvm_menu_now">NOW</string>
+    <string name="jvm_lyrics_offset_readout">歌词偏移 / 无上限</string>
+    <string name="jvm_lyrics_offset_step_back">−0.5s</string>
+    <string name="jvm_lyrics_offset_step_forward">+0.5s</string>
+    <string name="jvm_lyrics_offset_confirm">确认偏移</string>
 </resources>

@@ -7,18 +7,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -32,18 +31,17 @@ import cn.xybbz.router.Navigator
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.components.JvmHorizontalScrollbarBottomPadding
 import cn.xybbz.ui.components.JvmLazyHorizontalGridComponent
+import cn.xybbz.ui.components.JvmPageTitleBar
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
-import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
-import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextButton
 import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.viewmodel.HomeViewModel
 import kotlinx.coroutines.flow.Flow
@@ -66,7 +64,6 @@ private val HomeMusicTableColumns = SongTableColumns(
 )
 
 private const val HomeAlbumRowCount = 2
-private val HomeTopAppBarTitleHeight = 64.dp
 
 @Composable
 fun JvmHomeScreen(
@@ -82,6 +79,8 @@ fun JvmHomeScreen(
     val mostPlayedAlbumList by homeViewModel.homeDataRepository.mostPlayedAlbums.collectAsStateWithLifecycle()
     val recommendedMusicList by homeViewModel.homeDataRepository.recommendedMusic.collectAsStateWithLifecycle()
     val favoriteSet by homeViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    // 已下载完成的音乐 ID 集合，用于行内展示已下载图标并禁止重复下载
+    val downloadMusicIds by homeViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
     val navigator = LocalNavigator.current
     val currentPlayingMusicIdFlow = remember(homeViewModel) {
         homeViewModel.musicController.musicInfoFlow.map { musicInfo ->
@@ -108,6 +107,7 @@ fun JvmHomeScreen(
         onOpenArtist = artistClickHandler::openMusicArtists,
         currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
         favoriteMusicIds = favoriteSet,
+        downloadedMusicIds = downloadMusicIds,
     )
 
     ScreenLazyColumn(
@@ -117,29 +117,24 @@ fun JvmHomeScreen(
         state = homeListState,
         contentPadding = PaddingValues(),
     ) {
-        homeTopAnchor()
+//        homeTopAnchor()
         // 让 LazyListScope 同时拥有 HomeMusicSectionScope 的上下文，下面可直接调用统一封装后的 homeMusicSection。
         with(homeMusicSectionScope) {
             var hasPreviousSection = false
 
             if (recommendedMusicList.isNotEmpty()) {
+                // 首个分区标题统一使用设置页、连接管理页的页头组件
                 homeMusicSection(
                     sectionKey = "recommended_music",
                     title = dailyRecommendations,
                     musicList = recommendedMusicList,
-                    alignTitleWithTopAppBar = true,
+                    usePageHeader = !hasPreviousSection,
                     headerAction = {
-                        TextButton(
-                            modifier = Modifier
-                                .padding(XyTheme.dimens.outerHorizontalPadding)
-                                .jvmHoverDebounceClickable(),
+                        XyTextButton(
+                            text = viewMore,
+                            fontWeight = FontWeight.Bold,
                             onClick = { navigator.navigate(DailyRecommend) },
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            XyText(
-                                text = viewMore,
-                            )
-                        }
+                        )
                     }
                 )
                 hasPreviousSection = true
@@ -153,6 +148,7 @@ fun JvmHomeScreen(
                     sectionKey = "latest_album",
                     title = latestAlbums,
                     albumList = newestAlbumList,
+                    usePageHeader = !hasPreviousSection,
                     onOpenAlbum = { album ->
                         navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
                     }
@@ -244,6 +240,7 @@ private fun HomeSectionSpacing() {
  * @property onOpenArtist 艺人打开回调，统一复用艺术家文本和右键菜单的打开逻辑。
  * @property currentPlayingMusicIdFlow 当前正在播放的歌曲 ID 流，交给 SongRow 按行监听播放状态。
  * @property favoriteMusicIds 已收藏歌曲 ID 列表，用于标记表格中的收藏状态。
+ * @property downloadedMusicIds 已下载完成歌曲 ID 列表，用于标记表格中的已下载状态。
  */
 private class HomeMusicSectionScope(
     private val homeViewModel: HomeViewModel,
@@ -251,6 +248,7 @@ private class HomeMusicSectionScope(
     private val onOpenArtist: (XyMusic) -> Unit,
     private val currentPlayingMusicIdFlow: Flow<String?>,
     private val favoriteMusicIds: List<String>,
+    private val downloadedMusicIds: List<String>,
 ) {
     /**
      * 构建首页中的歌曲分区。
@@ -262,13 +260,13 @@ private class HomeMusicSectionScope(
         sectionKey: String,
         title: String,
         musicList: List<XyMusic>,
-        alignTitleWithTopAppBar: Boolean = false,
+        usePageHeader: Boolean = false,
         headerAction: @Composable (() -> Unit)? = null,
     ) {
         // 每个分区先添加独立 header，headerAction 用于推荐歌曲的“查看更多”等差异化按钮。
         item(key = "${sectionKey}_header") {
-            if (alignTitleWithTopAppBar) {
-                JvmHomeTopAppBarSectionHeader(title = title, action = headerAction)
+            if (usePageHeader) {
+                JvmHomePageSectionHeader(title = title, action = headerAction)
             } else {
                 JvmHomeDesktopSectionHeader(title = title, action = headerAction)
             }
@@ -281,6 +279,8 @@ private class HomeMusicSectionScope(
             columns = HomeMusicTableColumns,
             // 根据全局收藏列表判断当前行是否收藏。
             ifFavorite = { music -> music.itemId in favoriteMusicIds },
+            // 根据全局已下载列表判断当前行是否已下载，已下载时展示完成图标且不可重复下载。
+            ifDownloaded = { music -> music.itemId in downloadedMusicIds },
             // 播放状态下沉到 SongRow 内按行监听，避免 JvmHomeScreen 顶层跟随播放状态重组。
             currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
             onSongClick = { _, music ->
@@ -316,6 +316,7 @@ private fun LazyListScope.homeAlbumSection(
     sectionKey: String,
     title: String,
     albumList: List<XyAlbum>,
+    usePageHeader: Boolean = false,
     onOpenAlbum: (XyAlbum) -> Unit,
 ) {
     val albumSnapshot = albumList.toList()
@@ -326,7 +327,11 @@ private fun LazyListScope.homeAlbumSection(
     val rowCount = minOf(HomeAlbumRowCount, albumSnapshot.size)
 
     item(key = "${sectionKey}_header") {
-        JvmHomeDesktopSectionHeader(title = title)
+        if (usePageHeader) {
+            JvmHomePageSectionHeader(title = title)
+        } else {
+            JvmHomeDesktopSectionHeader(title = title)
+        }
     }
     item(key = "${sectionKey}_grid_spacing") {
         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding + XyTheme.dimens.contentPadding))
@@ -343,7 +348,10 @@ private fun LazyListScope.homeAlbumSection(
                 ),
             rows = GridCells.Fixed(rowCount),
             userScrollEnabled = false,
-            contentPadding = PaddingValues(0.dp),
+            // 专辑网格左右保留与标题一致的页面外边距，纵向间距由外层 item 控制
+            contentPadding = PaddingValues(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+            ),
             horizontalArrangement = Arrangement.spacedBy(gridSpacing),
             verticalArrangement = Arrangement.spacedBy(gridSpacing),
         ) {
@@ -362,20 +370,24 @@ private fun LazyListScope.homeAlbumSection(
     }
 }
 
+/**
+ * 首页首个分区标题。
+ *
+ * 复用设置页、连接管理页的 [JvmPageTitleBar]，让首页首屏标题与其他一级页面保持一致。
+ */
 @Composable
-private fun JvmHomeTopAppBarSectionHeader(
+private fun JvmHomePageSectionHeader(
     title: String,
     action: @Composable (() -> Unit)? = null,
 ) {
-    XyRow(
-        modifier = Modifier.height(HomeTopAppBarTitleHeight),
-        paddingValues = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-    ) {
-        TopAppBarTitle(title = title)
-        if (action != null) {
-            action()
-        }
-    }
+    JvmPageTitleBar(
+        title = title,
+        trailing = {
+            if (action != null) {
+                action()
+            }
+        },
+    )
 }
 
 @Composable
@@ -383,7 +395,10 @@ private fun JvmHomeDesktopSectionHeader(
     title: String,
     action: @Composable (() -> Unit)? = null,
 ) {
-    XyRow(paddingValues = PaddingValues(/*vertical = XyTheme.dimens.outerVerticalPadding*/)) {
+    // 分区标题只保留左右外边距，纵向间距由分区之间的 spacing 项控制
+    XyRow(
+        paddingValues = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
+    ) {
         XyTextLarge(text = title)
         if (action != null) {
             action()

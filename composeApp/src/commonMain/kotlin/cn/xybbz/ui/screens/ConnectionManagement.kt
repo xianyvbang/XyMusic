@@ -42,6 +42,8 @@ import cn.xybbz.router.Connection
 import cn.xybbz.router.ConnectionInfo
 import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.BottomSheetObject
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SettingItemComponent
@@ -55,7 +57,6 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.ItemTrailingArrowRight
 import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.ConnectionManagementViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -66,6 +67,7 @@ import xymusic.composeapp.generated.resources.arrow_back_24px
 import xymusic.composeapp.generated.resources.confirm_delete_connection
 import xymusic.composeapp.generated.resources.connection_settings_list
 import xymusic.composeapp.generated.resources.delete_connection
+import xymusic.composeapp.generated.resources.dialog_kicker_danger
 import xymusic.composeapp.generated.resources.library_add_24px
 import xymusic.composeapp.generated.resources.modify_connection
 import xymusic.composeapp.generated.resources.more_vert_24px
@@ -91,6 +93,8 @@ fun ConnectionManagement(
         skipPartiallyExpanded = true
     )
     val warning = stringResource(Res.string.warning)
+    // 删除确认弹窗在点击回调里创建，正文需要先在 composable 作用域解析
+    val confirmDeleteConnectionText = stringResource(Res.string.confirm_delete_connection)
 
     XyColumnScreen {
 
@@ -195,12 +199,10 @@ fun ConnectionManagement(
                                                 onClick = {
                                                     AlertDialogObject(
                                                         title = warning,
-                                                        content = {
-                                                            XyTextSubSmall(
-                                                                text = stringResource(Res.string.confirm_delete_connection)
-                                                            )
-                                                        },
-                                                        ifWarning = true,
+                                                        body = confirmDeleteConnectionText,
+                                                        tone = XyDialogTone.Danger,
+                                                        icon = XyDialogIcon.Trash,
+                                                        kicker = Res.string.dialog_kicker_danger,
                                                         onConfirmation = {
                                                             coroutineScope.launch {
                                                                 connectionManagementViewModel.removeConnection(
@@ -210,7 +212,9 @@ fun ConnectionManagement(
                                                             }.invokeOnCompletion {
                                                                 sheetObject.dismiss()
                                                             }
-                                                        }
+                                                        },
+                                                        // 危险操作必须提供取消回调，动作区才会同时出现「取消」与「确定」
+                                                        onDismissRequest = {}
                                                     ).show()
 
                                                 }, textColor = Color.Red

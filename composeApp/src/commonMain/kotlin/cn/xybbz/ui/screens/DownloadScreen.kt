@@ -64,6 +64,8 @@ import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.router.Setting
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogIcon
+import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -72,7 +74,6 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.DownloadViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -115,6 +116,11 @@ fun DownloadScreen(
 ) {
 
     val removeDownloadTitle = stringResource(Res.string.remove_download_title)
+    // 删除确认弹窗在点击回调里创建，正文需要先在 composable 作用域解析
+    val confirmDeleteDownloadText = stringResource(
+        Res.string.confirm_delete_download,
+        downloadViewModel.selectedTaskIds.size
+    )
 
     val tasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     XyColumnScreen {
@@ -130,18 +136,14 @@ fun DownloadScreen(
                 if (downloadViewModel.selectedTaskIds.isNotEmpty())
                     AlertDialogObject(
                         title = removeDownloadTitle,
-                        content = {
-                            XyTextSubSmall(
-                                text = stringResource(
-                                    Res.string.confirm_delete_download,
-                                    downloadViewModel.selectedTaskIds.size
-                                )
-                            )
-                        }, onConfirmation = {
+                        body = confirmDeleteDownloadText,
+                        icon = XyDialogIcon.Trash,
+                        kicker = Res.string.dialog_kicker_danger,
+                        onConfirmation = {
                             downloadViewModel.performBatchDelete()
                         }, onDismissRequest = {
                             downloadViewModel.enterMultiSelectMode()
-                        }, ifWarning = true
+                        }, tone = XyDialogTone.Danger
                     ).show()
             },
             onSelectAll = {

@@ -71,6 +71,10 @@ data class HomeMusic(
      */
     val name: String = "",
     /**
+     * 下载地址，首页缓存写入时必须保留，否则还原出的音乐无法下载
+     */
+    val downloadUrl: String = "",
+    /**
      * 音乐艺术家名称
      */
     val artists: List<String>?,
@@ -104,12 +108,15 @@ data class HomeMusic(
             itemId = musicId,
             pic = pic,
             name = name,
-            downloadUrl = "",
+            // 直接回填缓存的下载地址，保证首页歌曲也能正常下载
+            downloadUrl = downloadUrl,
             album = album,
             albumName = albumName,
             connectionId = connectionId,
             artists = artists,
             codec = codec,
+            // 复用编码作为格式后缀，保证下载文件名带扩展名
+            container = codec,
             bitRate = bitRate,
             runTimeTicks = runTimeTicks,
         )

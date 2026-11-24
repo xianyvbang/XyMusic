@@ -89,6 +89,8 @@ interface XyMusicDao {
                         musicId = it.itemId,
                         pic = it.pic,
                         name = it.name,
+                        // 首页缓存单独保存下载地址，避免后续还原时丢失
+                        downloadUrl = it.downloadUrl,
                         artists = it.artists,
                         album = it.album,
                         albumName = it.albumName,
@@ -1071,6 +1073,12 @@ interface XyMusicDao {
         itemIds: List<String>
     ): List<XyMusic>
 
+    /**
+     * 根据 id 列表批量查询音乐详情。
+     *
+     * 注意：SQLite 的 in 查询不保证返回顺序与传入顺序一致，调用方如需保持顺序，
+     * 必须按自己的 id 顺序对结果重新排序。
+     */
     @Query(
         """
         select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,null as filePath,
