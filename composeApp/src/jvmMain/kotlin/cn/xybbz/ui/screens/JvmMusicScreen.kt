@@ -34,7 +34,6 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.router.AlbumInfo
-import cn.xybbz.ui.components.JvmCollapsingTitleContainer
 import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.JvmMusicSelectionPanel
 import cn.xybbz.ui.components.JvmPageTitleBar
@@ -146,10 +145,9 @@ fun JvmMusicScreen(
     }
 
     XyColumnScreen {
-        if (selectUiState.isOpen) {
-            // 选择模式下标题固定在列表外，滚动时退出选择按钮始终可见
-            musicTopBar(Modifier)
-        }
+        // 标题固定在列表外，列表内容在普通态与选择态下保持同一套项结构，
+        // 避免开关选择时 LazyColumn 的滚动锚点在“标题/表头”之间切换导致标题被顶出视口
+        musicTopBar(Modifier)
         // 选择操作栏固定在页头下方，随页面一起展示而不会跟随列表滚动被顶出视口；
         // 非选择态不占高度，底部播放栏始终展示播放控制。
         JvmMusicSelectionPanel(
@@ -170,14 +168,6 @@ fun JvmMusicScreen(
             lazyState = musicListState,
             pagingItems = homeMusicPager,
         ) {
-            if (!selectUiState.isOpen) {
-                item(key = "music_screen_title") {
-                    // 标题作为列表首项参与滚动：上滑时缩小淡出，回滑时放大恢复
-                    JvmCollapsingTitleContainer(lazyListState = musicListState) {
-                        musicTopBar(Modifier)
-                    }
-                }
-            }
             songTableItems(
                 tableKey = "music_screen",
                 pagingItems = homeMusicPager,
