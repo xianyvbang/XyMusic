@@ -18,6 +18,11 @@
 
 package cn.xybbz.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +62,7 @@ import cn.xybbz.download.core.DownloadRequest
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.localdata.config.LocalDatabaseClient
+import cn.xybbz.ui.theme.XyTheme
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.Res
@@ -75,6 +81,45 @@ import xymusic.composeapp.generated.resources.select_all
 import xymusic.composeapp.generated.resources.selection_count_prefix
 import xymusic.composeapp.generated.resources.selection_count_suffix
 import xymusic.composeapp.generated.resources.unfavorite
+
+/**
+ * 选择操作栏中按条件展示的批量操作项。
+ *
+ * 全选、取消、播放选中、加入歌单、取消收藏为常驻操作，不在此模型内。
+ *
+ * @param showDelete 是否展示删除
+ * @param showRemoveFromPlaylist 是否展示从歌单移除
+ * @param showDownload 是否展示下载
+ */
+internal data class MusicSelectionActionItems(
+    val showDelete: Boolean,
+    val showRemoveFromPlaylist: Boolean,
+    val showDownload: Boolean,
+)
+
+/**
+ * 根据数据源能力与当前选择场景，计算需要展示的批量操作项。
+ *
+ * 抽成纯函数便于单元测试覆盖各数据源与场景组合下的按钮可见性。
+ *
+ * @param canDelete 数据源是否支持删除
+ * @param canDownload 数据源是否支持下载
+ * @param ifPlaylist 当前是否在歌单场景中选择
+ * @param ifLocal 当前是否为本地歌曲选择
+ */
+internal fun resolveMusicSelectionActionItems(
+    canDelete: Boolean,
+    canDownload: Boolean,
+    ifPlaylist: Boolean,
+    ifLocal: Boolean,
+): MusicSelectionActionItems {
+    return MusicSelectionActionItems(
+        showDelete = canDelete,
+        showRemoveFromPlaylist = ifPlaylist,
+        // 本地歌曲没有远程下载入口，只有远程资源才展示下载
+        showDownload = !ifLocal && canDownload,
+    )
+}
 
 /**
  * 音乐列表选择操作栏。
@@ -108,6 +153,13 @@ fun JvmMusicSelectionActionBar(
     val selectUiState by selectControl.uiState.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
     val pleaseSelect = stringResource(Res.string.please_select)
+    // 按数据源能力与选择场景计算按条件展示的批量操作项
+    val actionItems = resolveMusicSelectionActionItems(
+        canDelete = dataSourceManager.getCanDelete(),
+        canDownload = dataSourceManager.getCanDownload(),
+        ifPlaylist = selectUiState.ifPlaylist,
+        ifLocal = selectUiState.ifLocal,
+    )
 
     // 批量下载选中音乐：沿用底部播放栏原有的入队逻辑，下载完成后退出选择模式
     val downloadSelected: () -> Unit = {
@@ -212,7 +264,7 @@ fun JvmMusicSelectionActionBar(
             )
 
             // 删除：仅数据源支持删除时展示，本地文件与远程资源文案不同
-            if (dataSourceManager.getCanDelete()) {
+            if (actionItems.showDelete) {
                 JvmSelectionTextButton(
                     text = if (selectUiState.ifLocal) {
                         stringResource(Res.string.delete_local_permanently)
@@ -269,7 +321,7 @@ fun JvmMusicSelectionActionBar(
             )
 
             // 歌单场景下额外提供移除选中音乐
-            if (selectUiState.ifPlaylist) {
+            if (actionItems.showRemoveFromPlaylist) {
                 JvmSelectionTextButton(
                     text = stringResource(Res.string.music_remove_from_playlist),
                     enabled = selectUiState.ifEnableButton,
@@ -304,7 +356,7 @@ fun JvmMusicSelectionActionBar(
             )
 
             // 下载：远程资源且数据源支持下载时展示，作为主操作按钮
-            if (!selectUiState.ifLocal && dataSourceManager.getCanDownload()) {
+            if (actionItems.showDownload) {
                 JvmSelectionTextButton(
                     text = stringResource(Res.string.download),
                     primary = true,
@@ -319,6 +371,85 @@ fun JvmMusicSelectionActionBar(
                 )
             }
         }
+    }
+}
+
+/**
+ * 选择模式操作区域的展开/收起动画容器。
+ *
+ * 统一各音乐列表页选择操作区域的进入与退出动画，页面只需要传入可见性，
+ * 避免各处重复编写 AnimatedVisibility 的动画参数；退出时也会保留收起动画。
+ *
+ * @param visible 是否展示内容
+ * @param modifier 外层修饰符
+ * @param content 选择模式下的操作区域内容
+ */
+@Composable
+fun JvmSelectionAnimatedVisibility(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    AnimatedVisibility(
+        visible = visible,
+        modifier = modifier,
+        enter = expandVertically() + fadeIn(),
+        exit = shrinkVertically() + fadeOut(),
+    ) {
+        content()
+    }
+}
+
+/**
+ * 带动画的选择操作栏。
+ *
+ * 在选择模式切换时展开/收起，并把各音乐列表页统一的左右边距一并收敛到组件内部，
+ * 页面只需要传入可见性与选择数据，无需重复编写动画和边距代码。
+ *
+ * @param visible 是否展示选择操作栏
+ * @param selectControl 选择状态控制器，提供选中数量与批量操作方法
+ * @param allMusicIds 当前列表全部音乐 id，用于全选
+ * @param dataSourceManager 数据源管理器，用于判断删除、下载能力
+ * @param musicPlayContext 播放上下文，用于播放选中音乐
+ * @param db 本地音乐数据库
+ * @param downloadDb 下载数据库
+ * @param musicController 播放控制器，用于取消收藏后同步收藏状态
+ * @param downloaderManager 下载管理器，用于批量下载选中音乐
+ * @param modifier 外层修饰符
+ */
+@Composable
+fun JvmMusicSelectionPanel(
+    visible: Boolean,
+    selectControl: SelectControl,
+    allMusicIds: () -> List<String>,
+    dataSourceManager: DataSourceManager,
+    musicPlayContext: MusicPlayContext,
+    db: LocalDatabaseClient,
+    downloadDb: DownloadDatabaseClient,
+    musicController: MusicCommonController,
+    downloaderManager: DownloaderManager,
+    modifier: Modifier = Modifier,
+) {
+    JvmSelectionAnimatedVisibility(
+        visible = visible,
+        modifier = modifier,
+    ) {
+        JvmMusicSelectionActionBar(
+            selectControl = selectControl,
+            allMusicIds = allMusicIds,
+            dataSourceManager = dataSourceManager,
+            musicPlayContext = musicPlayContext,
+            db = db,
+            downloadDb = downloadDb,
+            musicController = musicController,
+            downloaderManager = downloaderManager,
+            // 统一页面内边距，与列表内容的左右对齐
+            modifier = Modifier.padding(
+                start = XyTheme.dimens.outerHorizontalPadding,
+                end = XyTheme.dimens.outerHorizontalPadding,
+                bottom = XyTheme.dimens.innerVerticalPadding,
+            ),
+        )
     }
 }
 

@@ -19,12 +19,9 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -40,7 +37,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -96,7 +92,8 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.JvmLazyListComponent
-import cn.xybbz.ui.components.JvmMusicSelectionActionBar
+import cn.xybbz.ui.components.JvmMusicSelectionPanel
+import cn.xybbz.ui.components.JvmSelectionToggleButton
 import cn.xybbz.ui.components.JvmUnderlineTab
 import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.MusicAlbumCardComponent
@@ -128,19 +125,15 @@ import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.artist
 import xymusic.composeapp.generated.resources.artist_cover
 import xymusic.composeapp.generated.resources.artrist_info
-import xymusic.composeapp.generated.resources.check_24px
 import xymusic.composeapp.generated.resources.expand_description
 import xymusic.composeapp.generated.resources.no_description
 import xymusic.composeapp.generated.resources.pause_circle_24px
 import xymusic.composeapp.generated.resources.pause_playback
 import xymusic.composeapp.generated.resources.play_all
 import xymusic.composeapp.generated.resources.play_circle_24px
-import xymusic.composeapp.generated.resources.playlist_add_check_24px
 import xymusic.composeapp.generated.resources.random_play
 import xymusic.composeapp.generated.resources.reached_bottom
 import xymusic.composeapp.generated.resources.resume_playback
-import xymusic.composeapp.generated.resources.select
-import xymusic.composeapp.generated.resources.selection_done
 import xymusic.composeapp.generated.resources.shuffle_24px
 
 /**
@@ -402,43 +395,17 @@ fun JvmArtistInfoScreen(
                     ) {
                         // 选择模式下列表内操作栏承载全选与批量操作，这里只保留入口/完成按钮
                         if (selectedTab == TabListEnum.Music) {
-                            val isSelecting = selectUiState.isOpen
-                            val actionText = if (isSelecting) {
-                                stringResource(Res.string.selection_done)
-                            } else {
-                                stringResource(Res.string.select)
-                            }
-                            OutlinedButton(
+                            JvmSelectionToggleButton(
+                                isSelecting = selectUiState.isOpen,
                                 onClick = {
-                                    if (isSelecting) {
+                                    if (selectUiState.isOpen) {
                                         artistInfoViewModel.selectControl.dismiss()
                                     } else {
-                                        // 本页使用列表内的选择操作栏，底部播放栏不再展示选择操作
-                                        artistInfoViewModel.selectControl.show(
-                                            true,
-                                            useListActionBar = true
-                                        )
+                                        // 批量操作由列表内的选择操作栏承载
+                                        artistInfoViewModel.selectControl.show(true)
                                     }
                                 },
-                                modifier = Modifier.height(32.dp),
-                                shape = RoundedCornerShape(XyTheme.dimens.corner),
-                                contentPadding = PaddingValues(horizontal = 10.dp),
-                            ) {
-                                Icon(
-                                    // 选择态切换为完成图标，明确当前点击会退出选择模式
-                                    painter = painterResource(
-                                        if (isSelecting) {
-                                            Res.drawable.check_24px
-                                        } else {
-                                            Res.drawable.playlist_add_check_24px
-                                        }
-                                    ),
-                                    contentDescription = actionText,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = actionText)
-                            }
+                            )
                         }
                     }
                 }
@@ -447,29 +414,19 @@ fun JvmArtistInfoScreen(
                     TabListEnum.Music -> {
                         // 选择模式展开的批量操作栏，紧跟在章节导航下方
                         item(key = "artist_selection_bar") {
-                            AnimatedVisibility(
+                            JvmMusicSelectionPanel(
                                 visible = selectUiState.isOpen,
-                                enter = expandVertically() + fadeIn(),
-                                exit = shrinkVertically() + fadeOut(),
-                            ) {
-                                JvmMusicSelectionActionBar(
-                                    selectControl = artistInfoViewModel.selectControl,
-                                    allMusicIds = {
-                                        musicPage.itemSnapshotList.items.map { it.itemId }
-                                    },
-                                    dataSourceManager = artistInfoViewModel.dataSourceManager,
-                                    musicPlayContext = artistInfoViewModel.musicPlayContext,
-                                    db = artistInfoViewModel.db,
-                                    downloadDb = artistInfoViewModel.downloadDb,
-                                    musicController = artistInfoViewModel.musicController,
-                                    downloaderManager = artistInfoViewModel.downloaderManager,
-                                    modifier = Modifier.padding(
-                                        start = XyTheme.dimens.outerHorizontalPadding,
-                                        end = XyTheme.dimens.outerHorizontalPadding,
-                                        bottom = XyTheme.dimens.innerVerticalPadding,
-                                    ),
-                                )
-                            }
+                                selectControl = artistInfoViewModel.selectControl,
+                                allMusicIds = {
+                                    musicPage.itemSnapshotList.items.map { it.itemId }
+                                },
+                                dataSourceManager = artistInfoViewModel.dataSourceManager,
+                                musicPlayContext = artistInfoViewModel.musicPlayContext,
+                                db = artistInfoViewModel.db,
+                                downloadDb = artistInfoViewModel.downloadDb,
+                                musicController = artistInfoViewModel.musicController,
+                                downloaderManager = artistInfoViewModel.downloaderManager,
+                            )
                         }
                         songTableItems(
                             tableKey = "artist_info_music",

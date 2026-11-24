@@ -36,6 +36,7 @@ import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.SwipeRefreshListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -46,7 +47,11 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.arrow_back_24px
+import xymusic.composeapp.generated.resources.close_24px
+import xymusic.composeapp.generated.resources.close_selection
 import xymusic.composeapp.generated.resources.my_favorites
+import xymusic.composeapp.generated.resources.open_selection_function
+import xymusic.composeapp.generated.resources.playlist_add_check_24px
 import xymusic.composeapp.generated.resources.return_home
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
@@ -67,20 +72,56 @@ fun FavoriteScreen(
     val downloadMusicIdList by favoriteViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
         emptyList()
     )
+    // 批量选择状态：决定顶部栏形态与列表行的勾选展示
+    val selectUiState by favoriteViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
 
     XyColumnScreen {
         TopAppBarComponent(
             title = {
-                TopAppBarTitle(
-                    title = stringResource(Res.string.my_favorites)
-                )
+                if (selectUiState.isOpen) {
+                    // 选择模式下标题区域切换为全选控件，与音乐列表页保持一致
+                    XySelectAllComponent(
+                        isSelectAll = selectUiState.isSelectAll,
+                        onSelectAll = {
+                            favoriteViewModel.selectControl.toggleSelectionAll(
+                                favoriteMusicListPage.itemSnapshotList.items.map { it.itemId }
+                            )
+                        }
+                    )
+                } else {
+                    TopAppBarTitle(
+                        title = stringResource(Res.string.my_favorites)
+                    )
+                }
             }, navigationIcon = {
                 IconButton(onClick = composeClick { navigator.goBack() }) {
                     Icon(
                         painter = painterResource(Res.drawable.arrow_back_24px),
                         contentDescription = stringResource(Res.string.return_home)
                     )
+                }
+            }, actions = {
+                if (selectUiState.isOpen) {
+                    // 选择模式下右侧只保留退出选择按钮
+                    IconButton(onClick = {
+                        favoriteViewModel.selectControl.dismiss()
+                    }) {
+                        Icon(
+                            painter = painterResource(Res.drawable.close_24px),
+                            contentDescription = stringResource(Res.string.close_selection)
+                        )
+                    }
+                } else {
+                    // 普通模式下提供批量选择入口
+                    IconButton(onClick = {
+                        favoriteViewModel.selectControl.show(ifOpenSelect = true)
+                    }) {
+                        Icon(
+                            painter = painterResource(Res.drawable.playlist_add_check_24px),
+                            contentDescription = stringResource(Res.string.open_selection_function)
+                        )
+                    }
                 }
             })
         SwipeRefreshListComponent(
@@ -100,6 +141,21 @@ fun FavoriteScreen(
                             ifDownload = music.itemId in downloadMusicIdList,
                             ifPlay = musicInfo?.itemId == music.itemId,
                             backgroundColor = Color.Transparent,
+                            // 选择模式下展示勾选框，并仅在未选择时响应播放点击
+                            ifSelect = selectUiState.isOpen,
+                            ifSelectCheckBox = {
+                                music.itemId in selectUiState.selectedMusicIds
+                            },
+                            trailingOnSelectClick = {
+                                favoriteViewModel.selectControl.toggleSelection(
+                                    music.itemId,
+                                    onIsSelectAll = {
+                                        selectUiState.selectedMusicIds.containsAll(
+                                            favoriteMusicListPage.itemSnapshotList.items.map { it.itemId }
+                                        )
+                                    }
+                                )
+                            },
                             onMusicPlay = {
 
                                 favoriteViewModel.musicPlayContext.favorite(

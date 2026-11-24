@@ -62,9 +62,7 @@ data class SelectUiState(
     // 当前操作的歌单 id
     val playlistId: String? = null,
     // 是否在歌单中操作
-    val ifPlaylist: Boolean = false,
-    // 是否由页面内的选择操作栏承载批量操作，为 true 时底部播放栏不再展示选择操作
-    val useListActionBar: Boolean = false
+    val ifPlaylist: Boolean = false
 )
 
 /**
@@ -102,10 +100,6 @@ class SelectControl {
     // 当前是否在歌单场景中操作
     val ifPlaylist: Boolean
         get() = uiState.value.ifPlaylist
-
-    // 是否由页面内的选择操作栏承载批量操作
-    val useListActionBar: Boolean
-        get() = uiState.value.useListActionBar
 
     // 永久删除所选音乐资源，从硬盘上删除
     val onRemoveSelectListResource: (suspend (DataSourceManager, CoroutineScope) -> Unit) =
@@ -185,11 +179,9 @@ class SelectControl {
         playlistId: String? = null,
         ifPlaylist: Boolean = false,
         ifLocal: Boolean = false,
-        onOpenChange: ((Boolean) -> Unit)? = null,
-        // 页面内已有选择操作栏时置为 true，底部播放栏会隐藏选择操作
-        useListActionBar: Boolean = false
+        onOpenChange: ((Boolean) -> Unit)? = null
     ) {
-        setData(ifOpenSelect, playlistId, false, ifPlaylist, ifLocal, useListActionBar)
+        setData(ifOpenSelect, playlistId, false, ifPlaylist, ifLocal)
         this.onOpenChange = onOpenChange
     }
 
@@ -208,8 +200,7 @@ class SelectControl {
         playlistId: String? = null,
         ifEnableButton: Boolean,
         ifPlaylist: Boolean,
-        ifLocal: Boolean = false,
-        useListActionBar: Boolean = false
+        ifLocal: Boolean = false
     ) {
         _uiState.update {
             it.copy(
@@ -217,8 +208,7 @@ class SelectControl {
                 playlistId = playlistId.takeIf { ifPlaylist },
                 ifEnableButton = ifEnableButton,
                 ifPlaylist = ifPlaylist,
-                ifLocal = ifLocal,
-                useListActionBar = useListActionBar
+                ifLocal = ifLocal
             )
         }
     }
@@ -235,8 +225,7 @@ class SelectControl {
                 ifEnableButton = false,
                 playlistId = null,
                 ifPlaylist = false,
-                ifLocal = false,
-                useListActionBar = false
+                ifLocal = false
             )
         }
         onOpenChange?.invoke(false)

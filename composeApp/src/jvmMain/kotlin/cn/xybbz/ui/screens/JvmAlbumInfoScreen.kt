@@ -19,12 +19,9 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -102,7 +99,8 @@ import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.JvmLazyListComponent
-import cn.xybbz.ui.components.JvmMusicSelectionActionBar
+import cn.xybbz.ui.components.JvmMusicSelectionPanel
+import cn.xybbz.ui.components.JvmSelectionToggleButton
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -136,7 +134,6 @@ import org.koin.core.parameter.parametersOf
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.album
 import xymusic.composeapp.generated.resources.album_cover
-import xymusic.composeapp.generated.resources.check_24px
 import xymusic.composeapp.generated.resources.close_24px
 import xymusic.composeapp.generated.resources.confirm_delete_playlist
 import xymusic.composeapp.generated.resources.delete_24px
@@ -161,12 +158,9 @@ import xymusic.composeapp.generated.resources.play_all
 import xymusic.composeapp.generated.resources.play_arrow_24px
 import xymusic.composeapp.generated.resources.playing
 import xymusic.composeapp.generated.resources.playlist
-import xymusic.composeapp.generated.resources.playlist_add_check_24px
 import xymusic.composeapp.generated.resources.random_play
 import xymusic.composeapp.generated.resources.rename_playlist
 import xymusic.composeapp.generated.resources.resume_playback
-import xymusic.composeapp.generated.resources.select
-import xymusic.composeapp.generated.resources.selection_done
 import xymusic.composeapp.generated.resources.shuffle_24px
 import xymusic.composeapp.generated.resources.songs_count_suffix
 import xymusic.composeapp.generated.resources.start_playback
@@ -353,7 +347,7 @@ fun JvmAlbumInfoScreen(
 
         else -> stringResource(Res.string.start_playback)
     }
-    // 选择模式：本页使用列表内的选择操作栏，底部播放栏不再重复展示
+    // 选择模式：批量操作由列表内的选择操作栏承载
     val toggleSelection: () -> Unit = {
         if (selectUiState.isOpen) {
             albumInfoViewModel.selectControl.dismiss()
@@ -362,7 +356,6 @@ fun JvmAlbumInfoScreen(
                 ifOpenSelect = true,
                 playlistId = itemId,
                 ifPlaylist = dataType == MusicDataTypeEnum.PLAYLIST,
-                useListActionBar = true,
             )
         }
     }
@@ -594,29 +587,19 @@ fun JvmAlbumInfoScreen(
 
             // 选择模式展开的批量操作栏，紧跟在吸顶操作栏下方
             item(key = "album_selection_bar") {
-                AnimatedVisibility(
+                JvmMusicSelectionPanel(
                     visible = selectUiState.isOpen,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut(),
-                ) {
-                    JvmMusicSelectionActionBar(
-                        selectControl = albumInfoViewModel.selectControl,
-                        allMusicIds = {
-                            musicListPage.itemSnapshotList.items.map { it.itemId }
-                        },
-                        dataSourceManager = albumInfoViewModel.dataSourceManager,
-                        musicPlayContext = albumInfoViewModel.musicPlayContext,
-                        db = albumInfoViewModel.db,
-                        downloadDb = albumInfoViewModel.downloadDb,
-                        musicController = albumInfoViewModel.musicController,
-                        downloaderManager = albumInfoViewModel.downloaderManager,
-                        modifier = Modifier.padding(
-                            start = XyTheme.dimens.outerHorizontalPadding,
-                            end = XyTheme.dimens.outerHorizontalPadding,
-                            bottom = XyTheme.dimens.innerVerticalPadding,
-                        ),
-                    )
-                }
+                    selectControl = albumInfoViewModel.selectControl,
+                    allMusicIds = {
+                        musicListPage.itemSnapshotList.items.map { it.itemId }
+                    },
+                    dataSourceManager = albumInfoViewModel.dataSourceManager,
+                    musicPlayContext = albumInfoViewModel.musicPlayContext,
+                    db = albumInfoViewModel.db,
+                    downloadDb = albumInfoViewModel.downloadDb,
+                    musicController = albumInfoViewModel.musicController,
+                    downloaderManager = albumInfoViewModel.downloaderManager,
+                )
             }
 
             songTableItems(
@@ -1014,10 +997,6 @@ private fun JvmAlbumStickyOperationBar(
     onToggleSelect: () -> Unit,
     sortContent: @Composable () -> Unit,
 ) {
-    val selectText = stringResource(Res.string.select)
-    val doneText = stringResource(Res.string.selection_done)
-    val actionText = if (ifOpenSelect) doneText else selectText
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1067,29 +1046,10 @@ private fun JvmAlbumStickyOperationBar(
             if (!ifOpenSelect) {
                 sortContent()
             }
-            OutlinedButton(
+            JvmSelectionToggleButton(
+                isSelecting = ifOpenSelect,
                 onClick = onToggleSelect,
-                modifier = Modifier
-                    .height(32.dp)
-                    .pointerHoverIcon(PointerIcon.Hand),
-                shape = RoundedCornerShape(XyTheme.dimens.corner),
-                contentPadding = PaddingValues(horizontal = 10.dp),
-            ) {
-                Icon(
-                    // 选择态切换为完成图标，明确当前点击会退出选择模式
-                    painter = painterResource(
-                        if (ifOpenSelect) {
-                            Res.drawable.check_24px
-                        } else {
-                            Res.drawable.playlist_add_check_24px
-                        }
-                    ),
-                    contentDescription = actionText,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(text = actionText)
-            }
+            )
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }

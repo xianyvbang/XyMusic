@@ -18,17 +18,12 @@
 
 package cn.xybbz.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -41,11 +36,11 @@ import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.JvmCollapsingTitleContainer
 import cn.xybbz.ui.components.JvmLazyListComponent
+import cn.xybbz.ui.components.JvmMusicSelectionPanel
 import cn.xybbz.ui.components.JvmPageTitleBar
-import cn.xybbz.ui.components.JvmPageTitleBarPadding
+import cn.xybbz.ui.components.JvmSelectionToggleButton
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SongTableColumns
-import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
@@ -59,11 +54,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic.composeapp.generated.resources.Res
-import xymusic.composeapp.generated.resources.close_24px
-import xymusic.composeapp.generated.resources.close_selection
 import xymusic.composeapp.generated.resources.music
-import xymusic.composeapp.generated.resources.open_selection_function
-import xymusic.composeapp.generated.resources.playlist_add_check_24px
 import xymusic.composeapp.generated.resources.random_play
 import xymusic.composeapp.generated.resources.shuffle_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -108,7 +99,6 @@ fun JvmMusicScreen(
         MusicSelectTopBarComponent(
             modifier = topBarModifier,
             title = stringResource(Res.string.music),
-            musicViewModel = musicViewModel,
             onIfShowMusicDropdownMenu = { musicViewModel.dataSourceManager.dataSourceType?.ifShowMusicDropdownMenu == true },
             onRandomPlayerClick = {
                 coroutineScope.launch {
@@ -117,14 +107,8 @@ fun JvmMusicScreen(
                     )
                 }
             },
-            onSelectAll = {
-                coroutineScope.launch {
-                    musicViewModel.selectControl.toggleSelectionAll(homeMusicPager.itemSnapshotList.items.map { it.itemId })
-                }
-            },
             selectControl = musicViewModel.selectControl,
             ifOpenSelect = selectUiState.isOpen,
-            isSelectAll = selectUiState.isSelectAll,
             sortOrFilterContent = {
                 SelectSortBottomSheetComponent(
                     onIfSelectOneYear = { musicViewModel.dataSourceManager.dataSourceType?.ifMusicSelectOneYear },
@@ -166,6 +150,21 @@ fun JvmMusicScreen(
             // 选择模式下标题固定在列表外，滚动时退出选择按钮始终可见
             musicTopBar(Modifier)
         }
+        // 选择操作栏固定在页头下方，随页面一起展示而不会跟随列表滚动被顶出视口；
+        // 非选择态不占高度，底部播放栏始终展示播放控制。
+        JvmMusicSelectionPanel(
+            visible = selectUiState.isOpen,
+            selectControl = musicViewModel.selectControl,
+            allMusicIds = {
+                homeMusicPager.itemSnapshotList.items.map { it.itemId }
+            },
+            dataSourceManager = musicViewModel.dataSourceManager,
+            musicPlayContext = musicViewModel.musicPlayContext,
+            db = musicViewModel.db,
+            downloadDb = musicViewModel.downloadDb,
+            musicController = musicViewModel.musicController,
+            downloaderManager = musicViewModel.downloaderManager,
+        )
 
         JvmLazyListComponent(
             lazyState = musicListState,
@@ -257,38 +256,27 @@ fun JvmMusicScreen(
 private fun MusicSelectTopBarComponent(
     modifier: Modifier,
     title: String,
-    musicViewModel: MusicViewModel,
     onIfShowMusicDropdownMenu: () -> Boolean,
     onRandomPlayerClick: () -> Unit,
-    onSelectAll: () -> Unit,
     ifOpenSelect: Boolean,
-    isSelectAll: Boolean,
     selectControl: SelectControl,
     sortOrFilterContent: @Composable () -> Unit
 ) {
     if (ifOpenSelect) {
-        // 选择模式下标题区域切换为全选控件，右侧只保留退出选择按钮，
-        // 内边距与统一页头一致（含底部间距），避免切换模式时标题位置发生跳动。
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(JvmPageTitleBarPadding),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            XySelectAllComponent(
-                isSelectAll = isSelectAll,
-                onSelectAll = onSelectAll
-            )
-            IconButton(onClick = {
-                selectControl.dismiss()
-            }) {
-                Icon(
-                    painter = painterResource(Res.drawable.close_24px),
-                    contentDescription = stringResource(Res.string.close_selection)
+        // 选择模式下与艺术家/专辑详情页保持一致：页头保留标题，右侧只保留「完成」，
+        // 全选与批量操作统一由列表内的选择操作栏承载。
+        JvmPageTitleBar(
+            title = title,
+            modifier = modifier,
+            trailing = {
+                JvmSelectionToggleButton(
+                    isSelecting = true,
+                    onClick = {
+                        selectControl.dismiss()
+                    },
                 )
-            }
-        }
+            },
+        )
     } else {
         // 普通模式下与设置页、连接管理页共用统一页头，操作按钮放在标题右侧
         JvmPageTitleBar(
@@ -304,14 +292,13 @@ private fun MusicSelectTopBarComponent(
                     )
                 }
 
-                IconButton(onClick = {
-                    musicViewModel.selectControl.show(ifOpenSelect = true)
-                }) {
-                    Icon(
-                        painter = painterResource(Res.drawable.playlist_add_check_24px),
-                        contentDescription = stringResource(Res.string.open_selection_function)
-                    )
-                }
+                JvmSelectionToggleButton(
+                    isSelecting = false,
+                    onClick = {
+                        // 批量操作由列表内的选择操作栏承载
+                        selectControl.show(ifOpenSelect = true)
+                    },
+                )
                 if (onIfShowMusicDropdownMenu()) {
                     sortOrFilterContent()
                 }

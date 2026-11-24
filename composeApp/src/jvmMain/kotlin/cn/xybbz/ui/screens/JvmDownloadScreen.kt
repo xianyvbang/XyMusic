@@ -86,6 +86,8 @@ import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.JvmPageTitleBar
+import cn.xybbz.ui.components.JvmSelectionAnimatedVisibility
+import cn.xybbz.ui.components.JvmSelectionToggleButton
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
@@ -295,8 +297,11 @@ internal fun JvmLocalDownloadScreen(
             },
         )
 
-        // 本地歌曲选择操作栏：展示已选数量，并提供全选、取消与删除本地文件
-        if (selectedTab == JvmLocalDownloadTab.LocalSongs && isSelectingLocal) {
+        // 本地歌曲选择操作栏：展示已选数量，并提供全选、取消与删除本地文件；
+        // 使用通用动画容器展开/收起，与艺术家/专辑详情页保持一致
+        JvmSelectionAnimatedVisibility(
+            visible = selectedTab == JvmLocalDownloadTab.LocalSongs && isSelectingLocal,
+        ) {
             JvmLocalMusicSelectionBar(
                 modifier = Modifier.padding(
                     start = XyTheme.dimens.outerHorizontalPadding,
@@ -464,34 +469,10 @@ private fun JvmLocalDownloadHeader(
             )
             // 本地歌曲标签提供选择入口，选择态切换为完成按钮
             if (selectedTab == JvmLocalDownloadTab.LocalSongs) {
-                OutlinedButton(
+                JvmSelectionToggleButton(
+                    isSelecting = isSelectingLocal,
                     onClick = onToggleLocalSelection,
-                    modifier = Modifier.height(32.dp),
-                    shape = RoundedCornerShape(XyTheme.dimens.corner),
-                    contentPadding = PaddingValues(horizontal = 10.dp),
-                ) {
-                    Icon(
-                        painter = painterResource(
-                            if (isSelectingLocal) {
-                                Res.drawable.check_24px
-                            } else {
-                                Res.drawable.playlist_add_check_24px
-                            }
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = stringResource(
-                            if (isSelectingLocal) {
-                                Res.string.selection_done
-                            } else {
-                                Res.string.select
-                            }
-                        )
-                    )
-                }
+                )
             }
         }
 
