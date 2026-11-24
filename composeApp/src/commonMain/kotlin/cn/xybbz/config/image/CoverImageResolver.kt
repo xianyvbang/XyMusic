@@ -15,7 +15,6 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import io.ktor.http.URLBuilder
-import io.ktor.util.appendAll
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.compose.koinInject
 
@@ -240,6 +239,14 @@ private fun rememberCoverImageResolver(): CoverImageResolver {
     }
 }
 
+/**
+ * 把数据源返回的封面地址转换成可直接加载的完整地址。
+ *
+ * 这里只负责拼接服务地址，不能把认证参数（u/t/s/v/c/f）写进 URL：
+ * Subsonic/Navidrome 的盐和 token 每次登录都会变，写进 URL 会让 Sketch 的内存、结果、下载
+ * 三层缓存 key 在每次登录后全部变化，导致封面重复从远程下载。
+ * 真实请求的认证由 XyAuthenticatedRequest 插件在发请求时读取 TokenServer 的最新值补充。
+ */
 fun String?.normalizeCoverUrl(baseUrl: String?): String? {
     val normalizedValue = this?.trim()?.takeIf { it.isNotBlank() } ?: return null
     val imageUrl = if (normalizedValue.isAbsoluteNetworkUrl()) {
@@ -247,11 +254,7 @@ fun String?.normalizeCoverUrl(baseUrl: String?): String? {
     } else {
         baseUrl.orEmpty() + normalizedValue
     }
-    val urlBuilder = URLBuilder(imageUrl)
-    // 封面 URL 拼接只读取一次认证快照，避免 query 参数版本混用。
-    val authenticatedRequestData = TokenServer.authenticatedRequestData
-    urlBuilder.parameters.appendAll(authenticatedRequestData.queryMap)
-    return urlBuilder.buildString()
+    return URLBuilder(imageUrl).buildString()
 }
 
 fun String.isAbsoluteNetworkUrl(): Boolean {
