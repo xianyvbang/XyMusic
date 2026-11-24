@@ -103,25 +103,23 @@ fun JvmFavoriteScreen(
                 )
             },
         )
+        // 选择操作栏固定在页头下方，非选择态不占高度，与音乐列表页保持一致的 UI 结构
+        JvmMusicSelectionPanel(
+            visible = selectUiState.isOpen,
+            selectControl = favoriteViewModel.selectControl,
+            allMusicIds = {
+                favoriteMusicListPage.itemSnapshotList.items.map { it.itemId }
+            },
+            dataSourceManager = favoriteViewModel.dataSourceManager,
+            musicPlayContext = favoriteViewModel.musicPlayContext,
+            db = favoriteViewModel.db,
+            downloadDb = favoriteViewModel.downloadDb,
+            musicController = favoriteViewModel.musicController,
+            downloaderManager = favoriteViewModel.downloaderManager,
+        )
         JvmLazyListComponent(
             pagingItems = favoriteMusicListPage,
         ) {
-            // 选择模式展开的批量操作栏，紧跟在页头下方
-            item(key = "favorite_selection_bar") {
-                JvmMusicSelectionPanel(
-                    visible = selectUiState.isOpen,
-                    selectControl = favoriteViewModel.selectControl,
-                    allMusicIds = {
-                        favoriteMusicListPage.itemSnapshotList.items.map { it.itemId }
-                    },
-                    dataSourceManager = favoriteViewModel.dataSourceManager,
-                    musicPlayContext = favoriteViewModel.musicPlayContext,
-                    db = favoriteViewModel.db,
-                    downloadDb = favoriteViewModel.downloadDb,
-                    musicController = favoriteViewModel.musicController,
-                    downloaderManager = favoriteViewModel.downloaderManager,
-                )
-            }
             songTableItems(
                 tableKey = "favorite_music",
                 pagingItems = favoriteMusicListPage,
