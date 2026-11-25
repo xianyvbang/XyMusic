@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>XyMusic · JVM 连接到媒体服务器（原型）</title>
+<style>
+  /* ============================================================
+     设计语言：Signal Deck（信号台）
+     与设置页同源：琥珀单点强调 + 等宽读数 + 细线分区
+     连接页只保留必要层级：协议 / 凭据 / 状态
+     ============================================================ */
+  :root{
+    --accent:#F0A03C;
+    --accent-ink:#1A1206;
+    --font-ui:"Segoe UI Variable Display","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif;
+    --font-mono:"Cascadia Code","Consolas","JetBrains Mono",ui-monospace,monospace;
+
+    --bg:#0C0C0E;
+    --bg-deep:#08080A;
+    --surface:#121215;
+    --surface-2:#17171B;
+    --line:rgba(255,255,255,.09);
+    --line-strong:rgba(255,255,255,.16);
+    --ink:#ECEAE6;
+    --ink-soft:#A9A49C;
+    --ink-mute:#767169;
+    --wash:rgba(255,255,255,.05);
+    --shadow:0 24px 60px rgba(0,0,0,.55);
+    --ok:#5FBF7F;
+    --bad:#D0553F;
+  }
+  html[data-theme="light"]{
+    --accent:#A9611A;
+    --accent-ink:#FFF7EC;
+    --bg:#EDEAE3;
+    --bg-deep:#E2DED5;
+    --surface:#F7F5F0;
+    --surface-2:#FBF9F5;
+    --line:rgba(23,20,14,.12);
+    --line-strong:rgba(23,20,14,.22);
+    --ink:#17150F;
+    --ink-soft:#5E574C;
+    --ink-mute:#8B8377;
+    --wash:rgba(23,20,14,.045);
+    --shadow:0 24px 60px rgba(40,32,20,.18);
+    --ok:#2F7D4E;
+    --bad:#A63A26;
+  }
+
+  *{box-sizing:border-box;}
+  /* 保证组件自身的 display 不会覆盖 hidden 属性 */
+  [hidden]{display:none !important;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:var(--font-ui);
+    background:
+      radial-gradient(1100px 520px at 10% -14%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+      var(--bg-deep);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    padding:24px 24px 30px;
+    min-height:100%;
+  }
+  /* 纸纹噪点：压掉大面积纯色 */
+  body::after{
+    content:"";
+    position:fixed;inset:0;pointer-events:none;z-index:99;
+    opacity:.03;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- 预览工具条（非产品 UI） ---------- */
+  .proto{
+    max-width:1360px;margin:0 auto 14px;
+    display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap;
+  }
+  .proto-title{display:flex;flex-direction:column;gap:5px;min-width:0;}
+  .proto-title .k{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;}
+  .proto-title h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em;}
+  .proto-title p{margin:0;color:var(--ink-soft);font-size:12px;line-height:1.65;max-width:74ch;}
+  .states{margin-left:auto;display:flex;gap:2px;padding:2px;border:1px solid var(--line);border-radius:7px;flex:none;}
+  .states button{
+    border:0;background:transparent;color:var(--ink-soft);cursor:pointer;
+    font-family:var(--font-ui);font-size:11.5px;font-weight:600;
+    height:26px;padding:0 11px;border-radius:5px;transition:.16s;
+  }
+  .states button:hover{color:var(--ink);background:var(--wash);}
+  .states button.on{background:var(--accent);color:var(--accent-ink);}
+
+  /* ---------- 窗口 ---------- */
+  .window{
+    max-width:1360px;margin:0 auto;height:min(840px, calc(100vh - 162px));min-height:400px;
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    border-radius:14px;overflow:hidden;
+    box-shadow:var(--shadow);
+    display:flex;flex-direction:column;
+  }
+  .titlebar{
+    height:42px;flex:none;display:flex;align-items:center;gap:10px;
+    padding:0 0 0 14px;
+    border-bottom:1px solid var(--line);
+  }
+  .mark{
+    width:18px;height:18px;border-radius:5px;flex:none;
+    background:linear-gradient(140deg, var(--accent), color-mix(in srgb, var(--accent) 35%, #7A4BFF));
+    box-shadow:0 0 14px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .titlebar .name{font-size:12px;font-weight:700;}
+  .titlebar .crumb{font-family:var(--font-mono);font-size:10px;color:var(--ink-mute);letter-spacing:.12em;}
+  .tb-right{margin-left:auto;display:flex;align-items:center;gap:4px;padding-right:6px;}
+  .icon-btn{
+    width:30px;height:26px;display:grid;place-items:center;border:0;background:transparent;
+    color:var(--ink-soft);border-radius:5px;cursor:pointer;transition:.15s;
+  }
+  .icon-btn:hover{background:var(--wash);color:var(--ink);}
+  .icon-btn.close:hover{background:#C4402F;color:#fff;}
+  .winctl{display:flex;gap:2px;margin-left:6px;}
+
+  .app{flex:1;display:flex;min-height:0;}
+
+  /* ---------- 左侧协议栏 ---------- */
+  .rail{
+    width:236px;flex:none;min-height:0;
+    display:flex;flex-direction:column;
+    padding:24px 14px 16px;
+    border-right:1px solid var(--line);
+    background:color-mix(in srgb, var(--surface) 55%, var(--bg-deep));
+  }
+  .rail-head{
+    display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+    padding:0 8px 16px;
+  }
+  .rail-title{font-size:13px;font-weight:700;letter-spacing:-.005em;}
+  .rail-state{
+    font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;
+    color:var(--ink-mute);white-space:nowrap;transition:color .2s;
+  }
+  .rail-state.active{color:var(--accent);}
+  .rail-state.ok{color:var(--ok);}
+  .rail-state.bad{color:var(--bad);}
+
+  .proto-list{display:flex;flex-direction:column;gap:2px;}
+  .proto-card{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 8px;border-radius:7px;cursor:pointer;
+    border:0;background:transparent;text-align:left;position:relative;width:100%;
+    font-family:var(--font-ui);transition:.15s ease;
+  }
+  .proto-card:hover{background:var(--wash);}
+  .proto-card.on{background:var(--wash);}
+  .proto-card.on::before{
+    content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:2px;
+    border-radius:2px;background:var(--accent);
+  }
+  .proto-mark{
+    width:26px;height:26px;flex:none;border-radius:6px;
+    display:grid;place-items:center;
+    font-family:var(--font-mono);font-size:11.5px;font-weight:700;
+    color:var(--ink-soft);background:rgba(255,255,255,.045);border:1px solid var(--line);
+    transition:.16s;
+  }
+  html[data-theme="light"] .proto-mark{background:rgba(23,20,14,.04);}
+  .proto-card.on .proto-mark{
+    color:var(--accent);
+    border-color:color-mix(in srgb, var(--accent) 34%, transparent);
+    background:color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .proto-name{
+    flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .proto-card.on .proto-name{color:var(--ink);font-weight:700;}
+  .proto-port{
+    flex:none;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-mute);
+    letter-spacing:.02em;
+  }
+
+  .rail-note{
+    margin-top:auto;padding:14px 8px 0;border-top:1px solid var(--line);
+    display:flex;gap:8px;align-items:flex-start;
+    font-size:10.5px;line-height:1.6;color:var(--ink-mute);
+  }
+  .rail-note svg{flex:none;margin-top:1px;opacity:.7;}
+
+  /* ---------- 主区 ---------- */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0;}
+  .main-scroll{
+    flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+    padding:30px 34px 30px;
+    scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent;
+  }
+  .main-scroll::-webkit-scrollbar{width:10px;}
+  .main-scroll::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:6px;border:3px solid transparent;background-clip:content-box;}
+
+  /* ---------- 页头 ---------- */
+  .hero{display:flex;flex-direction:column;gap:9px;margin-bottom:24px;}
+  .hero .rule{width:30px;height:3px;border-radius:2px;background:var(--accent);}
+  .kick{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;}
+  .hero h1{margin:0;font-size:clamp(24px,2.6vw,32px);font-weight:800;letter-spacing:-.03em;line-height:1.08;}
+  .hero p{margin:0;font-size:12.5px;line-height:1.7;color:var(--ink-soft);max-width:64ch;}
+
+  /* ---------- 主内容列 ----------
+     表单列收窄到 600px，结果卡出现时只在右侧补位，避免左侧被挤压 */
+  .panes{display:grid;grid-template-columns:minmax(0,600px);gap:20px;align-items:start;}
+  @media (min-width:1240px){
+    /* 空间足够时结果卡并排显示，左侧表单宽度保持不变 */
+    .panes.split{grid-template-columns:minmax(0,600px) minmax(260px,1fr);}
+  }
+  /* 自动滚动到结果卡时留出上下边距 */
+  #sidePanel{scroll-margin-block:14px;}
+  .panel{
+    min-width:0;padding:20px;
+    border:1px solid var(--line);border-radius:12px;
+    background:color-mix(in srgb, var(--surface-2) 42%, transparent);
+  }
+  .panel-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;}
+  .panel-head > div{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
+  .panel-kick{font-family:var(--font-mono);font-size:9px;letter-spacing:.16em;color:var(--ink-mute);text-transform:uppercase;}
+  .panel-head h2{margin:0;font-size:15.5px;font-weight:800;letter-spacing:-.015em;}
+  .panel-head p{margin:0;font-size:11.5px;line-height:1.6;color:var(--ink-soft);}
+
+  .tag{
+    flex:none;font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;
+    padding:2px 6px;border-radius:4px;border:1px solid var(--line);
+    color:var(--ink-soft);background:var(--wash);white-space:nowrap;
+  }
+  .tag.ok{color:var(--ok);border-color:color-mix(in srgb, var(--ok) 34%, transparent);background:color-mix(in srgb, var(--ok) 9%, transparent);}
+  .tag.bad{color:var(--bad);border-color:color-mix(in srgb, var(--bad) 34%, transparent);background:color-mix(in srgb, var(--bad) 9%, transparent);}
+
+  /* ---------- 表单 ---------- */
+  .fields{display:flex;flex-direction:column;gap:15px;}
+  .field{display:flex;flex-direction:column;gap:7px;min-width:0;}
+  .field > label{
+    display:flex;align-items:center;gap:8px;min-height:16px;
+    font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;
+    color:var(--ink-mute);text-transform:uppercase;
+  }
+  .field > label em{flex:1;height:1px;background:var(--line);}
+  .input-wrap{
+    display:flex;align-items:center;gap:9px;height:40px;padding:0 10px;
+    border:1px solid var(--line);border-radius:7px;background:var(--wash);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .input-wrap:hover{border-color:var(--line-strong);}
+  .input-wrap:focus-within{
+    border-color:color-mix(in srgb, var(--accent) 58%, transparent);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .input-wrap .lead{flex:none;color:var(--ink-mute);display:grid;place-items:center;transition:.15s;}
+  .input-wrap:focus-within .lead{color:var(--accent);}
+  .input-wrap input{
+    flex:1;min-width:0;height:100%;border:0;background:transparent;outline:none;
+    color:var(--ink);font-family:var(--font-mono);font-size:12px;
+  }
+  .input-wrap input::placeholder{color:var(--ink-mute);}
+  .act{
+    flex:none;width:22px;height:22px;display:grid;place-items:center;
+    border:0;border-radius:4px;background:transparent;color:var(--ink-mute);cursor:pointer;transition:.15s;
+  }
+  .act:hover{background:var(--wash);color:var(--ink);}
+  .hints{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  /* 桌面宽度下账号与密码并排，压缩表单高度 */
+  .field-pair{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
+  /* 并排字段的标签字数不同，固定标签宽度让细线起点对齐 */
+  .field-pair .field > label > span{min-width:32px;}
+
+  .callout{
+    display:flex;gap:8px;align-items:flex-start;padding:9px 11px;
+    border:1px dashed color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius:7px;background:color-mix(in srgb, var(--accent) 5%, transparent);
+    font-size:11px;line-height:1.6;color:var(--ink-soft);
+  }
+  .callout svg{flex:none;margin-top:2px;color:var(--accent);}
+
+  .actions{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    margin-top:18px;padding-top:16px;border-top:1px solid var(--line);
+  }
+  .avail{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink-mute);}
+  .avail.ready{color:var(--accent);}
+  .grow{flex:1;}
+
+  .btn{
+    height:34px;padding:0 14px;border-radius:6px;border:1px solid var(--line);
+    background:transparent;color:var(--ink);
+    font-family:var(--font-ui);font-size:12px;font-weight:600;
+    cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--line-strong);background:var(--wash);}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .btn.primary:hover{filter:brightness(1.06);}
+  .btn:disabled{background:var(--wash);border-color:var(--line);color:var(--ink-mute);cursor:not-allowed;filter:none;}
+  .btn.block{width:100%;justify-content:center;}
+
+  /* 键盘可达性：统一焦点环 */
+  .btn:focus-visible,
+  .proto-card:focus-visible,
+  .res-item:focus-visible,
+  .act:focus-visible,
+  .icon-btn:focus-visible,
+  .states button:focus-visible{
+    outline:2px solid color-mix(in srgb, var(--accent) 65%, transparent);
+    outline-offset:2px;
+  }
+
+  /* ---------- 右侧状态 ---------- */
+  .kv{display:flex;flex-direction:column;}
+  .kv-row{
+    display:flex;align-items:baseline;justify-content:space-between;gap:14px;
+    padding:9px 0;border-bottom:1px solid var(--line);
+  }
+  .kv-row:last-child{border-bottom:0;}
+  .kv-row .k{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;color:var(--ink-mute);text-transform:uppercase;white-space:nowrap;}
+  .kv-row .v{
+    font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--ink);
+    max-width:68%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  /* 资源候选 */
+  .res-list{display:flex;flex-direction:column;gap:6px;}
+  .res-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 11px;border-radius:7px;cursor:pointer;
+    border:1px solid var(--line);background:transparent;
+    transition:.16s ease;
+  }
+  .res-item:hover{border-color:color-mix(in srgb, var(--accent) 42%, transparent);}
+  .res-item.on{
+    border-color:color-mix(in srgb, var(--accent) 52%, transparent);
+    background:color-mix(in srgb, var(--accent) 6%, transparent);
+  }
+  .radio{
+    width:14px;height:14px;flex:none;border-radius:50%;
+    border:1px solid var(--line-strong);display:grid;place-items:center;transition:.16s;
+  }
+  .radio i{width:6px;height:6px;border-radius:50%;background:var(--accent);transform:scale(0);transition:.16s;}
+  .res-item.on .radio{border-color:var(--accent);}
+  .res-item.on .radio i{transform:scale(1);}
+  .res-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .res-main b{font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .res-main span{
+    font-family:var(--font-mono);font-size:9.5px;color:var(--ink-soft);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+
+  /* 读取中 */
+  .probe{position:relative;height:2px;border-radius:1px;background:var(--line);overflow:hidden;}
+  .probe i{
+    position:absolute;top:0;bottom:0;width:30%;border-radius:1px;background:var(--accent);
+    animation:probe 1.15s cubic-bezier(.5,0,.5,1) infinite;
+  }
+  @keyframes probe{0%{left:-30%;}100%{left:100%;}}
+  .mono-line{font-family:var(--font-mono);font-size:10px;color:var(--ink-mute);letter-spacing:.02em;word-break:break-all;}
+  .skeleton{display:flex;flex-direction:column;gap:7px;margin-top:16px;}
+  .skeleton i{
+    height:8px;border-radius:3px;
+    background:linear-gradient(90deg, var(--wash), var(--line-strong), var(--wash));
+    background-size:220% 100%;animation:shimmer 1.4s linear infinite;
+  }
+  .skeleton i:nth-child(1){width:78%;}
+  .skeleton i:nth-child(2){width:52%;}
+  @keyframes shimmer{0%{background-position:120% 0;}100%{background-position:-120% 0;}}
+
+  /* 登录中：单次登录请求，不做子阶段拆分 */
+  .login-wait{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--ink-soft);}
+  .spin{
+    width:14px;height:14px;flex:none;border-radius:50%;
+    border:2px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    border-top-color:var(--accent);
+    animation:spin .75s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* 完成块 */
+  .done{
+    display:flex;align-items:center;gap:11px;margin-top:16px;padding:12px;
+    border:1px solid color-mix(in srgb, var(--ok) 30%, transparent);
+    border-radius:8px;background:color-mix(in srgb, var(--ok) 7%, transparent);
+  }
+  .done-mark{
+    width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;
+    background:var(--ok);color:#08120B;
+    animation:pop .3s cubic-bezier(.22,1.6,.36,1) both;
+  }
+  @keyframes pop{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .done-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .done-txt b{font-size:12px;font-weight:700;color:var(--ok);}
+  .done-txt span{font-size:10.5px;color:var(--ink-soft);}
+
+  /* 错误 */
+  .err-head{display:flex;align-items:center;gap:8px;}
+  .err-head svg{flex:none;color:var(--bad);}
+  .err-head b{font-size:13px;font-weight:800;color:var(--bad);}
+  .err p{margin:9px 0 12px;font-size:11.5px;line-height:1.65;color:var(--ink-soft);}
+  .err code{
+    display:block;padding:9px 10px;border-radius:6px;
+    border:1px solid var(--line);background:var(--bg-deep);
+    font-family:var(--font-mono);font-size:9.5px;line-height:1.75;color:var(--ink-mute);
+    white-space:pre-wrap;word-break:break-all;
+  }
+  html[data-theme="light"] .err code{background:var(--bg);}
+  .err-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+
+  /* ---------- 底部状态行 ---------- */
+  .foot{
+    flex:none;height:32px;display:flex;align-items:center;gap:18px;
+    padding:0 20px;border-top:1px solid var(--line);
+    font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-mute);
+    white-space:nowrap;overflow:hidden;
+  }
+  .foot b{color:var(--ink-soft);font-weight:600;}
+  .foot .st{display:flex;align-items:center;gap:6px;min-width:0;}
+  .foot .dot{width:5px;height:5px;border-radius:50%;background:var(--ink-mute);flex:none;transition:.2s;}
+  .foot .dot.ok{background:var(--ok);box-shadow:0 0 6px var(--ok);}
+  .foot .dot.active{background:var(--accent);box-shadow:0 0 6px var(--accent);}
+  .foot .dot.bad{background:var(--bad);box-shadow:0 0 6px var(--bad);}
+  .foot .right{margin-left:auto;overflow:hidden;text-overflow:ellipsis;}
+
+  /* ---------- 入场 ---------- */
+  .page{animation:rise .45s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  .panes > *{animation:rise .45s cubic-bezier(.22,1,.36,1) both;}
+  .panes > *:nth-child(2){animation-delay:80ms;}
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width:1100px){
+    .hero p{max-width:none;}
+  }
+  @media (max-width:900px){
+    .rail{width:76px;padding:22px 10px 14px;}
+    .rail-head{justify-content:center;padding:0 0 14px;}
+    .rail-title,.rail-state,.proto-name,.proto-port,.rail-note{display:none;}
+    .proto-card{justify-content:center;padding:8px 0;}
+    .proto-card.on::before{left:-10px;}
+    .main-scroll{padding:26px 22px;}
+  }
+  @media (max-width:760px){
+    body{padding:12px;}
+    .proto{gap:12px;}
+    .states{margin-left:0;width:100%;}
+    .states button{flex:1;padding:0 6px;}
+    .window{height:auto;min-height:0;}
+    .app{flex-direction:column;}
+    .rail{
+      width:100%;flex-direction:row;align-items:center;gap:6px;
+      padding:10px 12px;border-right:0;border-bottom:1px solid var(--line);
+      overflow-x:auto;
+    }
+    .proto-list{flex-direction:row;gap:6px;}
+    .rail-head,.rail-note{display:none;}
+    .proto-card.on::before{top:auto;bottom:0;left:0;right:0;width:auto;height:2px;}
+    .main-scroll{padding:22px 16px;}
+    .field-pair{grid-template-columns:1fr;}
+    .foot{height:auto;flex-wrap:wrap;padding:8px 16px;gap:8px 14px;}
+    .foot .right{margin-left:0;}
+  }
+  /* 矮窗口（如 1280×720 及以下）压缩头部，保证主操作不被推出可视区 */
+  @media (max-height:740px){
+    .main-scroll{padding-top:12px;padding-bottom:18px;}
+    .hero{gap:6px;margin-bottom:10px;}
+    .hero .rule,.hero .kick,.hero p{display:none;}
+    .hero h1{font-size:23px;}
+    .panel{padding:12px;}
+    .fields{gap:10px;}
+    .actions{margin-top:12px;padding-top:10px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="proto">
+  <div class="proto-title">
+    <div class="k">XyMusic · Windows / Server</div>
+    <h1>连接到媒体服务器</h1>
+    <p>沿用设置页的 Signal Deck：琥珀单点强调、等宽读数与细线分区。左侧选择协议，中间填写凭据，旁边实时呈现资源发现与登录进度。</p>
+  </div>
+  <div class="states" id="states">
+    <button data-phase="form" class="on">填写</button>
+    <button data-phase="resources">资源</button>
+    <button data-phase="logging">登录</button>
+    <button data-phase="success">成功</button>
+    <button data-phase="error">失败</button>
+  </div>
+</header>
+
+<div class="window">
+  <div class="titlebar">
+    <div class="mark"></div>
+    <span class="name">XyMusic</span>
+    <span class="crumb" id="crumb">/ 服务器连接</span>
+    <div class="tb-right">
+      <button class="icon-btn" id="themeBtn" title="切换主题" aria-label="切换明暗主题">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.5 6.5 0 0 0 9.8 9.8Z"/></svg>
+      </button>
+      <div class="winctl">
+        <button class="icon-btn" title="最小化"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5h6" stroke="currentColor" stroke-width="1.2"/></svg></button>
+        <button class="icon-btn" title="最大化"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="2" width="6" height="6"/></svg></button>
+        <button class="icon-btn close" title="关闭"><svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.2"><path d="M2.5 2.5l5 5M7.5 2.5l-5 5"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+    <aside class="rail">
+      <div class="rail-head">
+        <span class="rail-title">服务器连接</span>
+        <span class="rail-state" id="railState">未连接</span>
+      </div>
+      <div class="proto-list" id="protoList"></div>
+      <div class="rail-note">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8Z"/><path d="M12 17v4"/></svg>
+        <span>端口与协议由地址隐式给出，无需单独选择 SSL。</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="main-scroll">
+        <div class="page">
+          <div class="hero">
+            <div class="rule"></div>
+            <div class="kick">Server / Connection</div>
+            <h1>连接到媒体服务器</h1>
+            <p id="heroDesc">已选择 Jellyfin，输入服务地址和账号后即可读取媒体资源。</p>
+          </div>
+
+          <div class="panes">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-kick" id="formKick">02 / 04 · 输入凭据</div>
+                  <h2 id="formTitle">Jellyfin 凭据</h2>
+                </div>
+                <span class="tag" id="formTag">必填</span>
+              </div>
+
+              <div class="fields">
+                <div class="field" id="addrField">
+                  <label for="fAddr"><span>服务地址</span><i class="tag">URI</i><em></em></label>
+                  <div class="input-wrap">
+                    <span class="lead">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.4 3 14.6 0 18-3-3.4-3-14.6 0-18Z"/></svg>
+                    </span>
+                    <input id="fAddr" value="http://192.168.1.8:8096" placeholder="http://192.168.1.12:8096" spellcheck="false" autocomplete="off" />
+                    <button class="act" id="clearAddr" title="清空" aria-label="清空服务地址">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                    </button>
+                  </div>
+                  <div class="hints">
+                    <span class="tag" id="portTag">默认端口 8096</span>
+                    <span class="tag ok" id="addrOk">地址格式可用</span>
+                  </div>
+                </div>
+
+                <div class="field-pair">
+                  <div class="field">
+                    <label for="fUser"><span>用户名</span><em></em></label>
+                    <div class="input-wrap">
+                      <span class="lead">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.3-6 8-6s6.5 2 8 6"/></svg>
+                      </span>
+                      <input id="fUser" value="menglong" placeholder="admin" spellcheck="false" autocomplete="off" />
+                      <button class="act" id="clearUser" title="清空" aria-label="清空用户名">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label for="fPass"><span>密码</span><em></em></label>
+                    <div class="input-wrap">
+                      <span class="lead">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V8a4 4 0 0 1 8 0v2"/></svg>
+                      </span>
+                      <input id="fPass" type="password" value="xymusic-2026" placeholder="password" autocomplete="off" />
+                      <button class="act" id="togglePass" title="显示密码" aria-label="显示或隐藏密码">
+                        <svg id="eyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/><path d="M4 20 20 4"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="callout" id="plexNote" hidden>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 8v5M12 16.5v.2"/><circle cx="12" cy="12" r="9"/></svg>
+                  <span>Plex 将通过账号自动读取可用服务器，无需填写地址。</span>
+                </div>
+              </div>
+
+              <div class="actions">
+                <button class="btn" id="btnReset">重新选择</button>
+                <span class="grow"></span>
+                <span class="avail ready" id="availHint">可以连接</span>
+                <button class="btn primary" id="btnConnect">连接</button>
+              </div>
+            </section>
+
+            <aside class="panel" id="sidePanel"></aside>
+          </div>
+        </div>
+      </div>
+
+      <footer class="foot">
+        <span class="st"><i class="dot" id="footDot"></i><b id="footState">未连接</b></span>
+        <span>地址 <b id="footAddr">192.168.1.8:8096</b></span>
+        <span class="right" id="footPhase">IDLE · JVM 21</span>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ============================ 数据 ============================ */
+const PROTOCOLS = {
+  JELLYFIN:  { title:'Jellyfin',  describe:'jellyfin媒体服务器',  port:8096,  version:'10.10.7', mark:'J', ifInputUrl:true,  defaultAddr:'http://192.168.1.8:8096' },
+  SUBSONIC:  { title:'Subsonic',  describe:'Subsonic媒体服务器',  port:4040,  version:'1.16.0',  mark:'S', ifInputUrl:true,  defaultAddr:'http://192.168.1.8:4040' },
+  NAVIDROME: { title:'Navidrome', describe:'navidrome媒体服务器', port:4533,  version:'0.56.0',  mark:'N', ifInputUrl:true,  defaultAddr:'http://192.168.1.8:4533' },
+  EMBY:      { title:'Emby',      describe:'emby媒体服务器',      port:8096,  version:'4.1.1.0', mark:'E', ifInputUrl:true,  defaultAddr:'http://192.168.1.8:8096' },
+  PLEX:      { title:'Plex',      describe:'PLEX媒体服务器',      port:32400, version:'4.1.1.0', mark:'P', ifInputUrl:false, defaultAddr:'https://192-168-1-8.plex.direct:32400' }
+};
+
+/* 预览用候选资源，字段与 JVM 侧 ResourceData 对齐 */
+const PLEX_RESOURCES = [
+  { name:'家庭 Plex', addressUrl:'192-168-1-8.plex.direct · 32400', product:'Plex Media Server' },
+  { name:'影音仓库', addressUrl:'192-168-1-9.plex.direct · 32400', product:'可用' }
+];
+
+const ICON_CHECK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>';
+const ICON_WARN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 8v5M12 16.5v.2"/><circle cx="12" cy="12" r="9"/></svg>';
+
+/* ============================ 状态 ============================ */
+const state = {
+  protocol:'JELLYFIN',
+  phase:'form',            // form | probing | resources | logging | success | error
+  address:'http://192.168.1.8:8096',
+  username:'menglong',
+  password:'xymusic-2026',
+  showPass:false,
+  resIndex:0,
+  errorKind:'resource'     // resource | login
+};
+
+let timers = [];
+const later = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
+const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const proto = () => PROTOCOLS[state.protocol];
+const stripScheme = s => String(s || '').replace(/^https?:\/\//, '');
+const addressValid = v => /^https?:\/\/[^\s/]+/i.test(String(v || '').trim());
+
+function canConnect(){
+  if(['probing','logging','success'].includes(state.phase)) return false;
+  const p = proto();
+  return p.ifInputUrl
+    ? !!state.address.trim() && !!state.username.trim()
+    : !!state.username.trim();
+}
+
+/* ============================ 渲染：协议栏 ============================ */
+function renderProtocols(){
+  $('protoList').innerHTML = Object.entries(PROTOCOLS).map(([key, p]) => `
+    <button class="proto-card${key === state.protocol ? ' on' : ''}" data-proto="${key}" title="${p.title} · ${p.port}">
+      <span class="proto-mark">${p.mark}</span>
+      <span class="proto-name">${p.title}</span>
+      <span class="proto-port">${p.port}</span>
+    </button>`).join('');
+
+  document.querySelectorAll('[data-proto]').forEach(el => {
+    el.onclick = () => {
+      if(el.dataset.proto === state.protocol) return;
+      clearTimers();
+      state.protocol = el.dataset.proto;
+      state.phase = 'form';
+      state.resIndex = 0;
+      state.address = proto().defaultAddr;
+      $('fAddr').value = state.address;
+      render();
+    };
+  });
+}
+
+/* ============================ 渲染：右侧各阶段 ============================ */
+const head = (kick, title, sub) => `
+  <div class="panel-head">
+    <div>
+      <div class="panel-kick">${kick}</div>
+      <h2>${title}</h2>
+      ${sub ? `<p>${sub}</p>` : ''}
+    </div>
+  </div>`;
+
+function candidates(){
+  const p = proto();
+  if(!p.ifInputUrl) return PLEX_RESOURCES.map(r => ({ title:r.name, address:r.addressUrl, tag:r.product }));
+  const base = state.address || p.defaultAddr;
+  return [
+    { title:'推荐地址', address:base, tag:'推荐' },
+    { title:'候选地址', address:base.replace(/^http:\/\//, 'https://'), tag:'可选' }
+  ];
+}
+
+function resourcesMarkup(){
+  const p = proto();
+  const list = candidates();
+  return head('03 / 04 · 选择资源', '选择资源地址',
+      (p.ifInputUrl ? `已找到可连接的 ${p.title} 地址。` : '已读取账号下的 Plex 服务器。') + ' 点击地址将立即登录。') + `
+    <div class="res-list">
+      ${list.map((c, i) => `
+        <div class="res-item${i === state.resIndex ? ' on' : ''}" data-res="${i}">
+          <span class="radio"><i></i></span>
+          <span class="res-main"><b>${esc(c.title)}</b><span>${esc(c.address)}</span></span>
+          <span class="tag${i === 0 ? ' ok' : ''}">${esc(c.tag)}</span>
+        </div>`).join('')}
+    </div>
+    <div class="actions" style="margin-top:16px;padding-top:14px">
+      <button class="btn block" data-act="edit">修改连接信息</button>
+    </div>`;
+}
+
+function probingMarkup(){
+  return head('03 / 04 · 读取资源', '读取可用资源', '正在探测地址与端口，并读取服务端公开信息。') + `
+    <div class="probe"><i></i></div>
+    <p class="mono-line" style="margin:12px 0 0">${esc(stripScheme(state.address) || 'auto')}</p>
+    <div class="skeleton"><i></i><i></i></div>`;
+}
+
+function loginMarkup(){
+  const p = proto();
+  const ok = state.phase === 'success';
+  const addr = p.ifInputUrl ? state.address : (PLEX_RESOURCES[state.resIndex]?.addressUrl || '自动发现');
+  return head(
+      ok ? '04 / 04 · 已完成' : '04 / 04 · 登录验证',
+      ok ? '登录成功' : '正在登录',
+      ok ? '账号与资源地址已确认，可以进入主页。' : `正在使用 ${p.title} 账号登录所选资源。`
+    ) + `
+    ${ok ? '' : `
+      <div class="login-wait">
+        <span class="spin"></span>
+        <span>正在校验账号与密码，请稍候</span>
+      </div>
+      <div class="probe" style="margin-top:12px"><i></i></div>`}
+    <div class="kv" style="margin-top:${ok ? 0 : 16}px">
+      <div class="kv-row"><span class="k">资源地址</span><span class="v">${esc(stripScheme(addr))}</span></div>
+      <div class="kv-row"><span class="k">协议版本</span><span class="v">${p.version}+</span></div>
+    </div>
+    ${ok ? `
+      <div class="done">
+        <span class="done-mark">${ICON_CHECK}</span>
+        <span class="done-txt"><b>连接成功</b><span>媒体库即将同步</span></span>
+        <button class="btn primary" id="btnEnter">进入主页</button>
+      </div>` : ''}`;
+}
+
+function errorMarkup(){
+  const p = proto();
+  const login = state.errorKind === 'login';
+  return head(login ? 'LOGIN / FAILED' : 'DISCOVERY / FAILED', login ? '登录失败' : '资源读取失败',
+      login ? '账号或密码未被服务器接受，请核对后重试。' : '未能从该地址读取可用资源，请检查地址与网络。') + `
+    <div class="err">
+      <div class="err-head">
+        ${ICON_WARN}
+        <b>${login ? '凭据校验未通过' : '地址不可达'}</b>
+        <span class="tag bad">${login ? 'E_AUTH' : 'E_PROBE'}</span>
+      </div>
+      <p>${login
+        ? '请确认用户名与密码，或该账号是否具备访问权限。'
+        : '请确认服务已启动，并检查端口映射、防火墙或反向代理是否正确转发。'}</p>
+      <code>${login
+        ? 'cn.xybbz.api.exception.AuthException: 401 Unauthorized\n  at ConnectionViewModel.connect(...)'
+        : 'java.net.ConnectException: Connection refused\n  at KtorClient.probe(' + esc(stripScheme(state.address) || 'auto') + ')'}</code>
+      <div class="err-actions">
+        <button class="btn primary" data-act="retry">重新连接</button>
+        <button class="btn" data-act="edit">修改连接信息</button>
+      </div>
+    </div>`;
+}
+
+function renderSide(){
+  const host = $('sidePanel');
+  // 填写阶段没有可展示的结果，隐藏结果卡并让表单占满内容宽度
+  const show = state.phase !== 'form';
+  host.hidden = !show;
+  document.querySelector('.panes').classList.toggle('split', show);
+  if(!show){
+    host.innerHTML = '';
+    return;
+  }
+  if(state.phase === 'probing') host.innerHTML = probingMarkup();
+  else if(state.phase === 'resources') host.innerHTML = resourcesMarkup();
+  else if(state.phase === 'logging' || state.phase === 'success') host.innerHTML = loginMarkup();
+  else host.innerHTML = errorMarkup();
+
+  document.querySelectorAll('[data-res]').forEach(el => {
+    el.onclick = () => { state.resIndex = Number(el.dataset.res); startLogin(); };
+  });
+  document.querySelectorAll('[data-act="edit"]').forEach(el => {
+    el.onclick = resetToForm;
+  });
+  document.querySelectorAll('[data-act="retry"]').forEach(el => {
+    el.onclick = () => { state.errorKind === 'login' ? startLogin() : beginProbe(); };
+  });
+  const enter = $('btnEnter');
+  if(enter) enter.onclick = () => { enter.textContent = '已在主页'; enter.disabled = true; };
+}
+
+/* ============================ 渲染：表单 / 状态 ============================ */
+function renderFormMeta(){
+  const p = proto();
+  $('heroDesc').textContent = p.ifInputUrl
+    ? `已选择 ${p.title}，输入服务地址和账号后即可读取媒体资源。`
+    : `已选择 ${p.title}，输入账号后会自动读取可用服务器。`;
+
+  const stepKick = { form:'02 / 04 · 输入凭据', probing:'02 / 04 · 输入凭据', resources:'02 / 04 · 已提交',
+                     logging:'02 / 04 · 已提交', success:'02 / 04 · 已提交', error:'02 / 04 · 输入凭据' }[state.phase];
+  $('formKick').textContent = stepKick;
+  $('formTitle').textContent = `${p.title} 凭据`;
+  $('formTag').textContent = ['logging','success','resources'].includes(state.phase) ? '已提交' : '必填';
+
+  $('addrField').hidden = !p.ifInputUrl;
+  $('plexNote').hidden = p.ifInputUrl;
+  $('fAddr').placeholder = `http://192.168.1.12:${p.port}`;
+  $('portTag').textContent = `默认端口 ${p.port}`;
+  $('addrOk').hidden = !addressValid(state.address);
+
+  const ready = canConnect();
+  $('btnConnect').disabled = !ready;
+  $('btnConnect').textContent = ['probing','logging'].includes(state.phase) ? '连接中' : '连接';
+  const hint = $('availHint');
+  // 按当前阶段给出可用性说明，避免已提交后仍提示“填写后可用”
+  hint.textContent = state.phase === 'success' ? '已连接'
+    : ['probing','logging'].includes(state.phase) ? '正在握手'
+    : ready ? '可以连接'
+    : (p.ifInputUrl ? '填写地址与用户名后可用' : '填写用户名后可用');
+  hint.classList.toggle('ready', ready);
+}
+
+function renderStatus(){
+  const p = proto();
+  const ok = state.phase === 'success';
+  const bad = state.phase === 'error';
+  const busy = ['probing','logging'].includes(state.phase);
+
+  const rail = $('railState');
+  rail.className = 'rail-state' + (ok ? ' ok' : bad ? ' bad' : busy ? ' active' : '');
+  rail.textContent = ok ? '已连接' : bad ? '失败' : busy ? '握手中' : '未连接';
+
+  $('footDot').className = 'dot' + (ok ? ' ok' : bad ? ' bad' : busy ? ' active' : '');
+  $('footState').textContent = ok ? '已连接' : bad ? '连接失败' : busy ? '握手中' : '未连接';
+  $('footAddr').textContent = p.ifInputUrl ? (stripScheme(state.address) || '未填写') : '自动发现';
+  $('footPhase').textContent = {
+    form:'IDLE', probing:'PROBE', resources:'SELECT', logging:'LOGIN', success:'READY', error:'FAILED'
+  }[state.phase] + ' · JVM 21';
+
+  document.querySelectorAll('#states button').forEach(b => b.classList.toggle('on', b.dataset.phase === state.phase));
+  $('crumb').textContent = ok ? '/ 服务器连接 / 已连接' : '/ 服务器连接';
+}
+
+function render(){
+  renderProtocols();
+  renderFormMeta();
+  renderSide();
+  renderStatus();
+}
+
+/* ============================ 流程 ============================ */
+function resetToForm(){
+  clearTimers();
+  state.phase = 'form';
+  state.errorKind = 'resource';
+  render();
+}
+
+/* 窄窗口下结果卡会堆到表单下方，主动滚到可视区避免“点了没反应”的错觉 */
+function revealSide(){
+  // 仅当结果卡堆到表单下方时才需要滚动，并排布局无需滚动
+  if(window.matchMedia('(max-width:1239px)').matches){
+    // 以卡片底边对齐，保证整张结果卡完整露出
+    $('sidePanel').scrollIntoView({behavior:'smooth', block:'end'});
+  }
+}
+
+function beginProbe(){
+  clearTimers();
+  state.phase = 'probing';
+  state.errorKind = 'resource';
+  render();
+  revealSide();
+  later(() => {
+    if(state.phase !== 'probing') return;
+    state.phase = 'resources';
+    render();
+    revealSide();
+  }, 1100);
+}
+
+/* 登录只发一次请求，结果只有成功与失败，因此不做子阶段推进 */
+function startLogin(){
+  clearTimers();
+  state.phase = 'logging';
+  render();
+  later(() => { state.phase = 'success'; render(); }, 1200);
+}
+
+/* 预览按钮：直接进入对应阶段，便于评审 */
+function previewPhase(phase){
+  clearTimers();
+  state.phase = phase;
+  if(phase === 'error') state.errorKind = 'resource';
+  if(['resources','logging','success'].includes(phase) && proto().ifInputUrl && !state.address){
+    state.address = proto().defaultAddr;
+    $('fAddr').value = state.address;
+  }
+  render();
+  if(phase !== 'form') revealSide();
+}
+
+/* ============================ 绑定 ============================ */
+$('fAddr').oninput = e => {
+  state.address = e.target.value;
+  $('clearAddr').hidden = !state.address;
+  $('addrOk').hidden = !addressValid(state.address);
+  renderFormMeta();
+  if(state.phase === 'form') renderSide();
+  renderStatus();
+};
+$('fUser').oninput = e => {
+  state.username = e.target.value;
+  $('clearUser').hidden = !state.username;
+  renderFormMeta();
+  if(state.phase === 'form') renderSide();
+};
+$('fPass').oninput = e => { state.password = e.target.value; };
+$('clearAddr').onclick = () => {
+  state.address = '';
+  $('fAddr').value = '';
+  $('clearAddr').hidden = true;
+  $('addrOk').hidden = true;
+  renderFormMeta();
+  if(state.phase === 'form') renderSide();
+  renderStatus();
+};
+$('clearUser').onclick = () => {
+  state.username = '';
+  $('fUser').value = '';
+  $('clearUser').hidden = true;
+  renderFormMeta();
+  if(state.phase === 'form') renderSide();
+};
+$('togglePass').onclick = () => {
+  state.showPass = !state.showPass;
+  $('fPass').type = state.showPass ? 'text' : 'password';
+  $('eyeIcon').innerHTML = state.showPass
+    ? '<path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/>'
+    : '<path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/><path d="M4 20 20 4"/>';
+};
+$('btnReset').onclick = resetToForm;
+$('btnConnect').onclick = () => { if(canConnect()) beginProbe(); };
+['fAddr','fPass'].forEach(id => {
+  $(id).addEventListener('keydown', e => { if(e.key === 'Enter' && canConnect()) beginProbe(); });
+});
+
+document.querySelectorAll('#states button').forEach(b => {
+  b.onclick = () => {
+    // 已在失败态时再次点击「失败」，在资源错误与凭据错误之间切换预览
+    if(b.dataset.phase === 'error' && state.phase === 'error'){
+      state.errorKind = state.errorKind === 'resource' ? 'login' : 'resource';
+      renderSide();
+      return;
+    }
+    previewPhase(b.dataset.phase);
+  };
+});
+
+$('themeBtn').onclick = () => {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+};
+
+/* 初始化 */
+$('clearUser').hidden = !state.username;
+$('clearAddr').hidden = !state.address;
+render();
+</script>
+</body>
+</html>
