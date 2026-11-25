@@ -178,6 +178,14 @@ abstract class IDataSourceParentServer(
     }
 
     /**
+     * 当前数据源服务是否已完成客户端初始化，可安全发起请求。
+     * 未完成初始化（例如刚通过 switchDataSource 发布、尚未登录）时，HttpClient 仍处于 lateinit 未赋值状态。
+     */
+    fun isApiClientInitialized(): Boolean {
+        return defaultParentApiClient.isHttpClientInitialized
+    }
+
+    /**
      * 预绑定本地连接上下文。
      * 启动/切换阶段会先创建数据源服务，再后台自动登录；这里仅让 getConnectionId 和媒体库选择先可读。
      * 不发送登录成功事件、不保存设置、不触发远程同步，避免把“服务可读”和“登录完成”混在一起。

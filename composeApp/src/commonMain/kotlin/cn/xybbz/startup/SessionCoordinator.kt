@@ -161,11 +161,16 @@ class SessionCoordinator(
         val currentConnection = connection
             ?: dataSourceManager.restoreLocalDataSourceContext()
             ?: state.value.connection
-        if (currentConnection != null) {
-            prepareSessionServices()
-            initializePlayerIfNeeded()
-            setReady(currentConnection)
+            ?: return
+        // 交互式登录可能发生在临时对象上，当前发布的服务未必完成 HttpClient 初始化；
+        // 此时直接置为就绪会让后续远程请求命中未初始化的 lateinit 字段，必须补一次真实登录。
+        if (!dataSourceManager.isCurrentServerInitialized()) {
+            sessionMutex.withLock { login(currentConnection) }
+            return
         }
+        prepareSessionServices()
+        initializePlayerIfNeeded()
+        setReady(currentConnection)
     }
 
     private suspend fun restoreAndLogin() {

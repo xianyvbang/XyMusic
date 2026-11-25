@@ -46,6 +46,13 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         protected set
 
     /**
+     * HttpClient 是否已完成初始化。
+     * 供上层判断当前数据源服务能否安全发起请求，避免外部直接访问 lateinit 字段。
+     */
+    val isHttpClientInitialized: Boolean
+        get() = this::httpClient.isInitialized
+
+    /**
      * token的header名称
      */
     protected open val tokenHeaderName = ApiConstants.AUTHORIZATION

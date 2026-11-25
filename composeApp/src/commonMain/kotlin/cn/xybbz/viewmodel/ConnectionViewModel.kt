@@ -38,6 +38,7 @@ import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.startup.AppSessionState
 import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.platform.ContextWrapper
 import kotlinx.coroutines.flow.launchIn
@@ -68,6 +69,12 @@ class ConnectionViewModel(
         private set
 
     private var tmpDataSourceParentServer by mutableStateOf<IDataSourceServer?>(null)
+
+    /**
+     * 本次登录是否使用正式服务（当前会话未就绪时使用）。
+     * 用于登录失败后撤销本次发布的服务，避免残留半初始化服务污染下一次连接。
+     */
+    private var usingFormalServer = false
 
     var address by mutableStateOf("")
         private set
@@ -278,7 +285,10 @@ class ConnectionViewModel(
         }
         loading = true
         clearLoginStatus()
-        if (dataSourceManager.dataSourceType == null) {
+        // 只有当前会话已就绪（已有可用连接，属于“新增连接”场景）才用临时对象探测；
+        // 首次连接或上一次连接失败时必须使用正式服务，保证登录成功的就是当前发布的数据源。
+        usingFormalServer = sessionCoordinator.state.value !is AppSessionState.Ready
+        if (usingFormalServer) {
             dataSourceManager.switchDataSource(tmpDatasource)
             tmpDataSourceParentServer = dataSourceManager
         } else {
@@ -308,6 +318,12 @@ class ConnectionViewModel(
             isLoginSuccess = loginSateInfo.isLoginSuccess
             isLoginError = loginSateInfo.isError
             isCredentialStoreError = loginSateInfo.isCredentialStoreUnavailable
+            if (loginSateInfo.isError && usingFormalServer) {
+                // 本次借用了正式服务但登录失败：撤销发布，恢复到“首次连接”语义，
+                // 避免残留一个半初始化的服务影响下一次连接。
+                dataSourceManager.release()
+                usingFormalServer = false
+            }
             if (loginSateInfo.isLoginSuccess) {
                 // 连接页完成登录后立即更新会话状态，首页无需等待自身创建或监听旧事件。
                 viewModelScope.launch {

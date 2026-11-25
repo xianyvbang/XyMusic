@@ -176,6 +176,14 @@ open class DataSourceManager(
             ?: throw IllegalStateException("Data source server is not initialized")
 
     /**
+     * 当前发布的数据源服务是否已完成客户端初始化。
+     * switchDataSource 只会发布对象、不会执行登录，交互式登录也可能发生在临时对象上，
+     * 因此会话在置为就绪前必须通过这里校验，避免对未初始化的服务发起请求。
+     */
+    fun isCurrentServerInitialized(): Boolean =
+        currentDataSourceServerOrNull()?.isApiClientInitialized() == true
+
+    /**
      * 媒体库 ID 变化流。
      * 跳过初始值，只把用户切库或服务端刷新后的变化交给首页刷新逻辑。
      */
@@ -446,13 +454,18 @@ open class DataSourceManager(
         }
         updateDataSourceType(dataSourceType)
         Log.i("=====", "数据源开始切换")
-        getDataSourceServerByType(dataSourceType, false).let {
-            // 发布服务前先绑定本地连接配置，getConnectionId 不再依赖额外缓存状态。
-            connectionConfig?.let(it::bindLocalConnectionConfig)
-            // 当前生效的连接 ID 由这里统一发出，给首页和下载统计等场景订阅。
-            _connectionIdFlow.value = connectionConfig?.id ?: 0L
-            // 发布非空服务对象后，MainScreen 即可创建主壳；自动登录仍可继续后台执行。
-            _dataSourceServerFlow.value = it
+        // 记录切换前的旧服务，等新服务发布后再关闭，避免状态流出现短暂空窗。
+        val previousServer = currentDataSourceServerOrNull()
+        val newServer = getDataSourceServerByType(dataSourceType, false)
+        // 发布服务前先绑定本地连接配置，getConnectionId 不再依赖额外缓存状态。
+        connectionConfig?.let(newServer::bindLocalConnectionConfig)
+        // 当前生效的连接 ID 由这里统一发出，给首页和下载统计等场景订阅。
+        _connectionIdFlow.value = connectionConfig?.id ?: 0L
+        // 发布非空服务对象后，MainScreen 即可创建主壳；自动登录仍可继续后台执行。
+        _dataSourceServerFlow.value = newServer
+        // 旧服务已不再被任何状态引用，关闭其 HttpClient 连接池与协程作用域，避免反复切换泄漏。
+        if (previousServer != null && previousServer !== newServer) {
+            previousServer.close()
         }
         Log.i("=====", "数据源切换完成")
     }
