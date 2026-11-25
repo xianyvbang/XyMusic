@@ -120,94 +120,85 @@ fun JvmHomeScreen(
 //        homeTopAnchor()
         // 让 LazyListScope 同时拥有 HomeMusicSectionScope 的上下文，下面可直接调用统一封装后的 homeMusicSection。
         with(homeMusicSectionScope) {
-            var hasPreviousSection = false
+            // 所有分区都固定参与列表构建：数据未到达时由分区占位容器占住列表头部位置，
+            // 数据到达后只在该分区内部追加内容，列表顶部的 item 结构不再发生插入/删除，
+            // 避免 LazyColumn 按 item key 重新锚定、把滚动位置固定在后面的分区上。
+            var hasVisibleSection = false
 
-            if (recommendedMusicList.isNotEmpty()) {
-                // 首个分区标题统一使用设置页、连接管理页的页头组件
-                homeMusicSection(
-                    sectionKey = "recommended_music",
-                    title = dailyRecommendations,
-                    musicList = recommendedMusicList,
-                    usePageHeader = !hasPreviousSection,
-                    headerAction = {
-                        XyTextButton(
-                            text = viewMore,
-                            fontWeight = FontWeight.Bold,
-                            onClick = { navigator.navigate(DailyRecommend) },
-                        )
-                    }
-                )
-                hasPreviousSection = true
-            }
-
-            if (newestAlbumList.isNotEmpty()) {
-                if (hasPreviousSection) {
-                    homeSectionSpacing(sectionKey = "latest_album")
+            // 推荐分区始终是第一个分区，页头样式固定，不会因为其他数据后到而切换高度。
+            homeMusicSection(
+                sectionKey = "recommended_music",
+                title = dailyRecommendations,
+                musicList = recommendedMusicList,
+                usePageHeader = true,
+                headerAction = {
+                    XyTextButton(
+                        text = viewMore,
+                        fontWeight = FontWeight.Bold,
+                        onClick = { navigator.navigate(DailyRecommend) },
+                    )
                 }
-                homeAlbumSection(
-                    sectionKey = "latest_album",
-                    title = latestAlbums,
-                    albumList = newestAlbumList,
-                    usePageHeader = !hasPreviousSection,
-                    onOpenAlbum = { album ->
-                        navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
-                    }
-                )
-                hasPreviousSection = true
-            }
+            )
+            hasVisibleSection = recommendedMusicList.isNotEmpty()
 
-            if (recentMusicList.isNotEmpty()) {
-                if (hasPreviousSection) {
-                    homeSectionSpacing(sectionKey = "recent_music")
-                }
-                homeMusicSection(
-                    sectionKey = "recent_music",
-                    title = recentlyPlayedMusic,
-                    musicList = recentMusicList,
-                )
-                hasPreviousSection = true
+            // 只有前面已经出现过有数据的分区时才插入间距，保持空分区不占视觉空间。
+            if (newestAlbumList.isNotEmpty() && hasVisibleSection) {
+                homeSectionSpacing(sectionKey = "latest_album")
             }
+            homeAlbumSection(
+                sectionKey = "latest_album",
+                title = latestAlbums,
+                albumList = newestAlbumList,
+                onOpenAlbum = { album ->
+                    navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+                }
+            )
+            hasVisibleSection = hasVisibleSection || newestAlbumList.isNotEmpty()
 
-            if (recentAlbumList.isNotEmpty()) {
-                if (hasPreviousSection) {
-                    homeSectionSpacing(sectionKey = "recent_album")
-                }
-                homeAlbumSection(
-                    sectionKey = "recent_album",
-                    title = recentlyPlayedAlbums,
-                    albumList = recentAlbumList,
-                    onOpenAlbum = { album ->
-                        navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
-                    }
-                )
-                hasPreviousSection = true
+            if (recentMusicList.isNotEmpty() && hasVisibleSection) {
+                homeSectionSpacing(sectionKey = "recent_music")
             }
+            homeMusicSection(
+                sectionKey = "recent_music",
+                title = recentlyPlayedMusic,
+                musicList = recentMusicList,
+            )
+            hasVisibleSection = hasVisibleSection || recentMusicList.isNotEmpty()
 
-            if (mostPlayedAlbumList.isNotEmpty()) {
-                if (hasPreviousSection) {
-                    homeSectionSpacing(sectionKey = "most_played_album")
-                }
-                homeAlbumSection(
-                    sectionKey = "most_played_album",
-                    title = mostPlayed,
-                    albumList = mostPlayedAlbumList,
-                    onOpenAlbum = { album ->
-                        navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
-                    }
-                )
-                hasPreviousSection = true
+            if (recentAlbumList.isNotEmpty() && hasVisibleSection) {
+                homeSectionSpacing(sectionKey = "recent_album")
             }
+            homeAlbumSection(
+                sectionKey = "recent_album",
+                title = recentlyPlayedAlbums,
+                albumList = recentAlbumList,
+                onOpenAlbum = { album ->
+                    navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+                }
+            )
+            hasVisibleSection = hasVisibleSection || recentAlbumList.isNotEmpty()
 
-            if (mostPlayedMusicList.isNotEmpty()) {
-                if (hasPreviousSection) {
-                    homeSectionSpacing(sectionKey = "most_played_music")
-                }
-                homeMusicSection(
-                    sectionKey = "most_played_music",
-                    title = mostPlayed,
-                    musicList = mostPlayedMusicList,
-                )
+            if (mostPlayedAlbumList.isNotEmpty() && hasVisibleSection) {
+                homeSectionSpacing(sectionKey = "most_played_album")
             }
+            homeAlbumSection(
+                sectionKey = "most_played_album",
+                title = mostPlayed,
+                albumList = mostPlayedAlbumList,
+                onOpenAlbum = { album ->
+                    navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+                }
+            )
+            hasVisibleSection = hasVisibleSection || mostPlayedAlbumList.isNotEmpty()
+
+            if (mostPlayedMusicList.isNotEmpty() && hasVisibleSection) {
+                homeSectionSpacing(sectionKey = "most_played_music")
+            }
+            homeMusicSection(
+                sectionKey = "most_played_music",
+                title = mostPlayed,
+                musicList = mostPlayedMusicList,
+            )
         }
     }
 }
@@ -263,13 +254,22 @@ private class HomeMusicSectionScope(
         usePageHeader: Boolean = false,
         headerAction: @Composable (() -> Unit)? = null,
     ) {
-        // 每个分区先添加独立 header，headerAction 用于推荐歌曲的“查看更多”等差异化按钮。
-        item(key = "${sectionKey}_header") {
-            if (usePageHeader) {
+        // 分区占位容器：无论数据是否到达，都保留一个 key 固定的 item。
+        // 数据未到达时只占 1dp 高度作为滚动锚点，数据到达后在同一 item 内渲染分区页头，
+        // 这样列表头部不会因为数据后到而“凭空插入”item，滚动位置也就不会跑到后面的分区上。
+        item(key = "${sectionKey}_placeholder") {
+            if (musicList.isEmpty()) {
+                Spacer(modifier = Modifier.height(1.dp))
+            } else if (usePageHeader) {
                 JvmHomePageSectionHeader(title = title, action = headerAction)
             } else {
                 JvmHomeDesktopSectionHeader(title = title, action = headerAction)
             }
+        }
+
+        // 无数据时占位容器已经承担锚点职责，这里不再追加任何行 item。
+        if (musicList.isEmpty()) {
+            return
         }
 
         // 歌曲表格的通用行为集中在这里，调用处只需要传入当前分区自己的 musicList。
@@ -316,23 +316,26 @@ private fun LazyListScope.homeAlbumSection(
     sectionKey: String,
     title: String,
     albumList: List<XyAlbum>,
-    usePageHeader: Boolean = false,
     onOpenAlbum: (XyAlbum) -> Unit,
 ) {
     val albumSnapshot = albumList.toList()
+
+    // 分区占位容器（与歌曲分区保持一致）：空数据时保留 1dp 锚点，数据到达后渲染分区页头，
+    // 保证专辑分区的 item 结构在数据到达前后保持稳定，不会顶掉滚动锚点。
+    item(key = "${sectionKey}_placeholder") {
+        if (albumSnapshot.isEmpty()) {
+            Spacer(modifier = Modifier.height(1.dp))
+        } else {
+            JvmHomeDesktopSectionHeader(title = title)
+        }
+    }
+
     if (albumSnapshot.isEmpty()) {
         return
     }
 
     val rowCount = minOf(HomeAlbumRowCount, albumSnapshot.size)
 
-    item(key = "${sectionKey}_header") {
-        if (usePageHeader) {
-            JvmHomePageSectionHeader(title = title)
-        } else {
-            JvmHomeDesktopSectionHeader(title = title)
-        }
-    }
     item(key = "${sectionKey}_grid_spacing") {
         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding + XyTheme.dimens.contentPadding))
     }
