@@ -168,11 +168,17 @@
     border-color:color-mix(in srgb, var(--accent) 34%, transparent);
     background:color-mix(in srgb, var(--accent) 12%, transparent);
   }
+  .proto-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
   .proto-name{
-    flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    font-size:12.5px;font-weight:600;color:var(--ink-soft);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .proto-card.on .proto-name{color:var(--ink);font-weight:700;}
+  /* 最低支持的服务端版本，随协议切换 */
+  .proto-ver{
+    font-family:var(--font-mono);font-size:9px;letter-spacing:.03em;color:var(--ink-mute);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
   .proto-port{
     flex:none;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-mute);
     letter-spacing:.02em;
@@ -431,7 +437,7 @@
   @media (max-width:900px){
     .rail{width:76px;padding:22px 10px 14px;}
     .rail-head{justify-content:center;padding:0 0 14px;}
-    .rail-title,.rail-state,.proto-name,.proto-port,.rail-note{display:none;}
+    .rail-title,.rail-state,.proto-name,.proto-ver,.proto-port,.rail-note{display:none;}
     .proto-card{justify-content:center;padding:8px 0;}
     .proto-card.on::before{left:-10px;}
     .main-scroll{padding:26px 22px;}
@@ -458,13 +464,14 @@
   }
   /* 矮窗口（如 1280×720 及以下）压缩头部，保证主操作不被推出可视区 */
   @media (max-height:740px){
-    .main-scroll{padding-top:12px;padding-bottom:18px;}
-    .hero{gap:6px;margin-bottom:10px;}
+    .main-scroll{padding-top:8px;padding-bottom:14px;}
+    .hero{gap:6px;margin-bottom:6px;}
     .hero .rule,.hero .kick,.hero p{display:none;}
-    .hero h1{font-size:23px;}
-    .panel{padding:12px;}
-    .fields{gap:10px;}
-    .actions{margin-top:12px;padding-top:10px;}
+    .hero h1{font-size:22px;}
+    .panel{padding:10px;}
+    .panel-head{margin-bottom:12px;}
+    .fields{gap:9px;}
+    .actions{margin-top:8px;padding-top:8px;}
   }
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
@@ -619,7 +626,7 @@ const PROTOCOLS = {
   SUBSONIC:  { title:'Subsonic',  describe:'Subsonic媒体服务器',  port:4040,  version:'1.16.0',  mark:'S', ifInputUrl:true,  defaultAddr:'http://192.168.1.8:4040' },
   NAVIDROME: { title:'Navidrome', describe:'navidrome媒体服务器', port:4533,  version:'0.56.0',  mark:'N', ifInputUrl:true,  defaultAddr:'http://192.168.1.8:4533' },
   EMBY:      { title:'Emby',      describe:'emby媒体服务器',      port:8096,  version:'4.1.1.0', mark:'E', ifInputUrl:true,  defaultAddr:'http://192.168.1.8:8096' },
-  PLEX:      { title:'Plex',      describe:'PLEX媒体服务器',      port:32400, version:'4.1.1.0', mark:'P', ifInputUrl:false, defaultAddr:'https://192-168-1-8.plex.direct:32400' }
+  PLEX:      { title:'Plex',      describe:'PLEX媒体服务器',      port:32400, version:'1.29.2', mark:'P', ifInputUrl:false, defaultAddr:'https://192-168-1-8.plex.direct:32400' }
 };
 
 /* 预览用候选资源，字段与 JVM 侧 ResourceData 对齐 */
@@ -664,9 +671,12 @@ function canConnect(){
 /* ============================ 渲染：协议栏 ============================ */
 function renderProtocols(){
   $('protoList').innerHTML = Object.entries(PROTOCOLS).map(([key, p]) => `
-    <button class="proto-card${key === state.protocol ? ' on' : ''}" data-proto="${key}" title="${p.title} · ${p.port}">
+    <button class="proto-card${key === state.protocol ? ' on' : ''}" data-proto="${key}" title="${p.title} · ${p.port} · 最低支持 ${p.version}">
       <span class="proto-mark">${p.mark}</span>
-      <span class="proto-name">${p.title}</span>
+      <span class="proto-main">
+        <span class="proto-name">${p.title}</span>
+        <span class="proto-ver">最低支持 ${p.version}</span>
+      </span>
       <span class="proto-port">${p.port}</span>
     </button>`).join('');
 

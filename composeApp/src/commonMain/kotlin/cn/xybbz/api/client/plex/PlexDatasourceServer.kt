@@ -201,11 +201,12 @@ class PlexDatasourceServer(
         val resourceData = systemInfo.flatMap { infoResponse ->
             infoResponse.connections.flatMap { connection ->
                 val tmpResourceData = mutableListOf<ResourceData>()
+                // 服务端版本使用 productVersion（即 Plex Media Server 版本）；platformVersion 是服务器所在操作系统的版本，不能用于版本校验
                 val ipv4Data = ResourceData(
                     infoResponse.name,
                     infoResponse.product,
                     "${ApiConstants.HTTP}${connection.address}:${connection.port}",
-                    serverVersion = infoResponse.platformVersion ?: "",
+                    serverVersion = infoResponse.productVersion,
                     serverName = infoResponse.name,
                     serverId = Uuid.random().toString()
 
@@ -217,7 +218,7 @@ class PlexDatasourceServer(
                         infoResponse.name,
                         infoResponse.product,
                         "${ApiConstants.HTTP}[${connection.address}]:${connection.port}",
-                        serverVersion = infoResponse.platformVersion ?: "",
+                        serverVersion = infoResponse.productVersion,
                         serverName = infoResponse.name,
                         serverId = Uuid.random().toString()
                     )
@@ -228,7 +229,7 @@ class PlexDatasourceServer(
                     name = infoResponse.name,
                     infoResponse.product,
                     connection.uri,
-                    serverVersion = infoResponse.platformVersion ?: "",
+                    serverVersion = infoResponse.productVersion,
                     serverName = infoResponse.name,
                     serverId = Uuid.random().toString()
                 )
