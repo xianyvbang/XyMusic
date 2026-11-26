@@ -240,8 +240,7 @@ fun JvmConnectionNewScreen(
                                         onUsernameChange = connectionViewModel::setUserNameData,
                                         onPasswordChange = connectionViewModel::setPasswordData,
                                         onTogglePassword = { showPassword = !showPassword },
-                                        onConnect = connectionViewModel::connect,
-                                        onReset = connectionViewModel::resetConnectionInput
+                                        onConnect = connectionViewModel::connect
                                     )
                                     if (showResourcePanel) {
                                         JvmConnectionResultPanel(
@@ -258,7 +257,6 @@ fun JvmConnectionNewScreen(
                                             errorHint = stringResource(connectionViewModel.errorHint),
                                             tmpAddressList = connectionViewModel.tmpAddressList,
                                             tmpPlexInfo = connectionViewModel.tmpPlexInfo,
-                                            selectedResourceAddress = connectionViewModel.tmpAddress,
                                             connectionReady = connectionReady,
                                             onSelectResource = connectionViewModel::selectResourceAndLogin,
                                             onRetry = connectionViewModel::connect,
@@ -290,8 +288,7 @@ fun JvmConnectionNewScreen(
                                         onUsernameChange = connectionViewModel::setUserNameData,
                                         onPasswordChange = connectionViewModel::setPasswordData,
                                         onTogglePassword = { showPassword = !showPassword },
-                                        onConnect = connectionViewModel::connect,
-                                        onReset = connectionViewModel::resetConnectionInput
+                                        onConnect = connectionViewModel::connect
                                     )
                                     if (showResourcePanel) {
                                         JvmConnectionResultPanel(
@@ -308,7 +305,6 @@ fun JvmConnectionNewScreen(
                                             errorHint = stringResource(connectionViewModel.errorHint),
                                             tmpAddressList = connectionViewModel.tmpAddressList,
                                             tmpPlexInfo = connectionViewModel.tmpPlexInfo,
-                                            selectedResourceAddress = connectionViewModel.tmpAddress,
                                             connectionReady = connectionReady,
                                             onSelectResource = connectionViewModel::selectResourceAndLogin,
                                             onRetry = connectionViewModel::connect,
@@ -330,10 +326,8 @@ fun JvmConnectionNewScreen(
                         connected = connectionReady,
                         busy = connectionViewModel.loading || connectionViewModel.resourceLoading,
                         failed = connectionViewModel.isLoginError || connectionViewModel.isResourceLoginError,
-                        showResourcePanel = showResourcePanel,
                         selectedDataSource = selectedDataSource,
-                        address = connectionViewModel.address,
-                        loginStage = loginStage
+                        address = connectionViewModel.address
                     )
                 }
             }
@@ -394,7 +388,7 @@ private fun JvmConnectionNewTitleBar() {
  * @param compact 是否处于图标模式。
  * @param dataSourceTypes 可展示的协议列表。
  * @param selectedDataSource 当前选中协议。
- * @param busy 是否正在握手。
+ * @param busy 是否正在登录。
  * @param connected 是否已连接。
  * @param failed 最近一次连接是否失败。
  * @param onSelectDataSource 协议切换回调。
@@ -474,39 +468,6 @@ private fun JvmConnectionProtocolRail(
                     selected = dataSourceType == selectedDataSource,
                     compact = compact,
                     onClick = { onSelectDataSource(dataSourceType) }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        if (!compact) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = dimens.outerHorizontalPadding)
-                    .height(1.dp)
-                    .background(JvmConnectionLineColor())
-            )
-            Row(
-                modifier = Modifier.padding(
-                    horizontal = dimens.outerHorizontalPadding,
-                    vertical = dimens.contentPadding
-                ),
-                horizontalArrangement = Arrangement.spacedBy(dimens.outerVerticalPadding),
-                verticalAlignment = Alignment.Top
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.info_24px),
-                    contentDescription = null,
-                    modifier = Modifier.size(dimens.contentPadding),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                XyTextSub(
-                    text = stringResource(Res.string.jvm_connection_rail_note),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2
                 )
             }
         }
@@ -693,13 +654,15 @@ private fun JvmConnectionFormPanel(
     onPasswordChange: (String) -> Unit,
     onTogglePassword: () -> Unit,
     onConnect: () -> Unit,
-    onReset: () -> Unit,
 ) {
     val dimens = XyTheme.dimens
     // 地址与账号都填写后才允许发起连接，避免无效请求。
     val canConnect = !busy && username.isNotBlank() &&
             (!selectedDataSource.ifInputUrl || address.isNotBlank())
-    val addressValid = address.startsWith(ApiConstants.HTTP) || address.startsWith(ApiConstants.HTTPS)
+    // 地址为空时不提示；有内容时按“协议 + 主机 + 可选端口/路径”校验，区分可用与不可用。
+    val trimmedAddress = address.trim()
+    val addressBlank = trimmedAddress.isEmpty()
+    val addressValid = !addressBlank && trimmedAddress.isValidServiceAddress()
 
     JvmConnectionPanelCard(modifier = modifier) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
@@ -764,13 +727,22 @@ private fun JvmConnectionFormPanel(
                     borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
                     backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.09f)
                 )
-                if (addressValid) {
-                    JvmConnectionTag(
-                        text = stringResource(Res.string.jvm_connection_address_valid),
-                        color = XyTheme.extendedColors.success,
-                        borderColor = XyTheme.extendedColors.success.copy(alpha = 0.34f),
-                        backgroundColor = XyTheme.extendedColors.success.copy(alpha = 0.09f)
-                    )
+                if (!addressBlank) {
+                    if (addressValid) {
+                        JvmConnectionTag(
+                            text = stringResource(Res.string.jvm_connection_address_valid),
+                            color = XyTheme.extendedColors.success,
+                            borderColor = XyTheme.extendedColors.success.copy(alpha = 0.34f),
+                            backgroundColor = XyTheme.extendedColors.success.copy(alpha = 0.09f)
+                        )
+                    } else {
+                        JvmConnectionTag(
+                            text = stringResource(Res.string.jvm_connection_address_invalid),
+                            color = XyTheme.extendedColors.danger,
+                            borderColor = XyTheme.extendedColors.danger.copy(alpha = 0.34f),
+                            backgroundColor = XyTheme.extendedColors.danger.copy(alpha = 0.09f)
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(dimens.contentPadding + dimens.outerVerticalPadding))
@@ -837,11 +809,7 @@ private fun JvmConnectionFormPanel(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            JvmConnectionButton(
-                text = stringResource(Res.string.reselect),
-                primary = false,
-                onClick = onReset
-            )
+            // 重新选择按钮已移除：切换左侧协议即可重置输入，操作行只保留状态提示与连接按钮。
             Spacer(modifier = Modifier.weight(1f))
             XyText(
                 text = when {
@@ -884,15 +852,7 @@ private fun JvmConnectionUserField(
             onValueChange = onUsernameChange,
             hint = "admin",
             leading = painterResource(Res.drawable.person_24px),
-            keyboardType = KeyboardType.Text,
-            trailing = if (username.isNotBlank()) {
-                {
-                    JvmConnectionIconAction(
-                        painter = painterResource(Res.drawable.cancel_24px),
-                        onClick = { onUsernameChange("") }
-                    )
-                }
-            } else null
+            keyboardType = KeyboardType.Text
         )
     }
 }
@@ -1046,7 +1006,6 @@ private fun JvmConnectionResultPanel(
     errorHint: String,
     tmpAddressList: List<String>,
     tmpPlexInfo: List<ResourceData>,
-    selectedResourceAddress: String,
     connectionReady: Boolean,
     onSelectResource: (Int) -> Unit,
     onRetry: () -> Unit,
@@ -1062,7 +1021,6 @@ private fun JvmConnectionResultPanel(
             loginLoading || connectionReady -> {
                 JvmConnectionLoginContent(
                     selectedDataSource = selectedDataSource,
-                    resourceAddress = selectedResourceAddress.ifBlank { address },
                     stage = loginStage,
                     onEnter = onEnter
                 )
@@ -1073,8 +1031,7 @@ private fun JvmConnectionResultPanel(
                     loginError = loginError,
                     errorHint = errorHint,
                     errorMessage = errorMessage,
-                    onRetry = onRetry,
-                    onEditConnectionInfo = onEditConnectionInfo
+                    onRetry = onRetry
                 )
             }
 
@@ -1168,7 +1125,6 @@ private fun JvmConnectionProbingContent(address: String) {
 @Composable
 private fun JvmConnectionLoginContent(
     selectedDataSource: DataSourceType,
-    resourceAddress: String,
     stage: JvmConnectionNewLoginStage,
     onEnter: () -> Unit,
 ) {
@@ -1221,18 +1177,6 @@ private fun JvmConnectionLoginContent(
         JvmConnectionIndeterminateBar()
     }
 
-    Spacer(modifier = Modifier.height(dimens.contentPadding))
-    JvmConnectionKvRow(
-        label = stringResource(Res.string.jvm_connection_new_screen_text_38),
-        value = resourceAddress.stripScheme(),
-        showDivider = true
-    )
-    JvmConnectionKvRow(
-        label = stringResource(Res.string.jvm_about_screen_text_09),
-        value = "${selectedDataSource.version}+",
-        showDivider = false
-    )
-
     if (success) {
         Spacer(modifier = Modifier.height(dimens.contentPadding))
         Row(
@@ -1271,12 +1215,6 @@ private fun JvmConnectionLoginContent(
                     maxLines = 1,
                     style = MaterialTheme.typography.bodySmall
                 )
-                XyTextSub(
-                    text = stringResource(Res.string.jvm_connection_success_sync),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1
-                )
             }
             JvmConnectionButton(
                 text = stringResource(Res.string.jvm_connection_new_screen_text_40),
@@ -1296,7 +1234,6 @@ private fun JvmConnectionErrorContent(
     errorHint: String,
     errorMessage: String,
     onRetry: () -> Unit,
-    onEditConnectionInfo: () -> Unit,
 ) {
     val dimens = XyTheme.dimens
     val danger = XyTheme.extendedColors.danger
@@ -1373,11 +1310,6 @@ private fun JvmConnectionErrorContent(
             text = stringResource(Res.string.jvm_connection_retry),
             primary = true,
             onClick = onRetry
-        )
-        JvmConnectionButton(
-            text = stringResource(Res.string.jvm_connection_new_screen_text_22),
-            primary = false,
-            onClick = onEditConnectionInfo
         )
     }
 }
@@ -1527,17 +1459,15 @@ private fun JvmConnectionResourceRow(
 }
 
 /**
- * 底部状态条：连接状态、地址与当前阶段。
+ * 底部状态条：连接状态与地址。
  */
 @Composable
 private fun JvmConnectionStatusBar(
     connected: Boolean,
     busy: Boolean,
     failed: Boolean,
-    showResourcePanel: Boolean,
     selectedDataSource: DataSourceType,
     address: String,
-    loginStage: JvmConnectionNewLoginStage,
 ) {
     val dimens = XyTheme.dimens
     val dotColor = when {
@@ -1551,14 +1481,6 @@ private fun JvmConnectionStatusBar(
         failed -> stringResource(Res.string.jvm_connection_rail_state_failed)
         busy -> stringResource(Res.string.jvm_connection_rail_state_busy)
         else -> stringResource(Res.string.jvm_connection_rail_state_idle)
-    }
-    val phaseText = when {
-        connected -> stringResource(Res.string.jvm_connection_phase_ready)
-        loginStage == JvmConnectionNewLoginStage.LoggingIn -> stringResource(Res.string.jvm_connection_phase_login)
-        busy -> stringResource(Res.string.jvm_connection_phase_probe)
-        failed -> stringResource(Res.string.jvm_connection_phase_failed)
-        showResourcePanel -> stringResource(Res.string.jvm_connection_phase_select)
-        else -> stringResource(Res.string.jvm_connection_phase_idle)
     }
     val addressText = if (selectedDataSource.ifInputUrl) {
         address.stripScheme().ifBlank { stringResource(Res.string.jvm_connection_new_screen_text_15) }
@@ -1602,13 +1524,6 @@ private fun JvmConnectionStatusBar(
             }
             XyTextSub(
                 text = stringResource(Res.string.jvm_connection_status_address) + " " + addressText,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = JvmConnectionMonoStyle(),
-                maxLines = 1
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            XyTextSub(
-                text = "$phaseText · JVM 21",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = JvmConnectionMonoStyle(),
                 maxLines = 1
@@ -1666,50 +1581,6 @@ private fun JvmConnectionPanelTitle(text: String) {
         maxLines = 1,
         style = MaterialTheme.typography.titleMedium
     )
-}
-
-/**
- * 等宽键值行。
- */
-@Composable
-private fun JvmConnectionKvRow(
-    label: String,
-    value: String,
-    showDivider: Boolean,
-) {
-    val dimens = XyTheme.dimens
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = dimens.outerVerticalPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            XyText(
-                text = label,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Normal,
-                maxLines = 1,
-                style = JvmConnectionMonoStyle()
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            XyText(
-                text = value,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.W600,
-                maxLines = 1,
-                style = JvmConnectionMonoStyle()
-            )
-        }
-        if (showDivider) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(JvmConnectionLineColor())
-            )
-        }
-    }
 }
 
 /**
@@ -1839,6 +1710,30 @@ private fun JvmConnectionMonoStyle(letterSpacing: androidx.compose.ui.unit.TextU
  */
 private fun String.stripScheme(): String =
     removePrefix(ApiConstants.HTTP).removePrefix(ApiConstants.HTTPS)
+
+/**
+ * 地址格式规则：协议可省略（应用会自动补全 http/https），主机必填，端口与路径可选。
+ * 主机支持域名、IPv4 以及方括号形式的 IPv6。
+ */
+private val JvmConnectionAddressPattern = Regex(
+    "^(?:https?://)?(?:\\[[0-9a-fA-F:]+\\]|[A-Za-z0-9._~%-]+)(?::\\d{1,5})?(?:[/?#]\\S*)?$",
+    RegexOption.IGNORE_CASE
+)
+
+/** 端口提取：正则只约束位数，这里再确认端口落在 1..65535。 */
+private val JvmConnectionPortPattern = Regex(":(\\d{1,5})(?:/|$)")
+
+/**
+ * 判断输入内容是否为可用的服务地址。
+ */
+private fun String.isValidServiceAddress(): Boolean {
+    val value = trim()
+    if (value.isEmpty() || !JvmConnectionAddressPattern.matches(value)) {
+        return false
+    }
+    val port = JvmConnectionPortPattern.find(value)?.groupValues?.getOrNull(1)?.toIntOrNull()
+    return port == null || port in 1..65535
+}
 
 /**
  * 资源候选的数据载体。

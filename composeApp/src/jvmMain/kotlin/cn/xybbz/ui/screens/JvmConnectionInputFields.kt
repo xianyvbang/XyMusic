@@ -123,23 +123,7 @@ fun JvmUsernameInputEdit(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
         hint = stringResource(Res.string.username),
         icon = painterResource(Res.drawable.person_24px),
-        iconContentDescription = stringResource(Res.string.username),
-        actionContent = if (username.isNotBlank()) {
-            {
-                IconButton(
-                    onClick = composeClick {
-                        updateUsername("")
-                    },
-                    modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
-                ) {
-                    Icon(
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        painter = painterResource(Res.drawable.cancel_24px),
-                        contentDescription = stringResource(Res.string.clear)
-                    )
-                }
-            }
-        } else null
+        iconContentDescription = stringResource(Res.string.username)
     )
 }
 

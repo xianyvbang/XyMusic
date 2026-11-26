@@ -157,11 +157,13 @@
   }
   .proto-mark{
     width:26px;height:26px;flex:none;border-radius:6px;
-    display:grid;place-items:center;
-    font-family:var(--font-mono);font-size:11.5px;font-weight:700;
+    display:grid;place-items:center;overflow:hidden;
     color:var(--ink-soft);background:rgba(255,255,255,.045);border:1px solid var(--line);
     transition:.16s;
   }
+  /* 协议官方图标：位图铺满圆角块，矢量图标保留少量内边距 */
+  .proto-mark img{width:100%;height:100%;object-fit:cover;display:block;}
+  .proto-mark svg{width:100%;height:100%;display:block;padding:2px;box-sizing:border-box;}
   html[data-theme="light"] .proto-mark{background:rgba(23,20,14,.04);}
   .proto-card.on .proto-mark{
     color:var(--accent);
@@ -183,13 +185,6 @@
     flex:none;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-mute);
     letter-spacing:.02em;
   }
-
-  .rail-note{
-    margin-top:auto;padding:14px 8px 0;border-top:1px solid var(--line);
-    display:flex;gap:8px;align-items:flex-start;
-    font-size:10.5px;line-height:1.6;color:var(--ink-mute);
-  }
-  .rail-note svg{flex:none;margin-top:1px;opacity:.7;}
 
   /* ---------- 主区 ---------- */
   .main{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0;}
@@ -313,17 +308,6 @@
   }
 
   /* ---------- 右侧状态 ---------- */
-  .kv{display:flex;flex-direction:column;}
-  .kv-row{
-    display:flex;align-items:baseline;justify-content:space-between;gap:14px;
-    padding:9px 0;border-bottom:1px solid var(--line);
-  }
-  .kv-row:last-child{border-bottom:0;}
-  .kv-row .k{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;color:var(--ink-mute);text-transform:uppercase;white-space:nowrap;}
-  .kv-row .v{
-    font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--ink);
-    max-width:68%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  }
   /* 资源候选 */
   .res-list{display:flex;flex-direction:column;gap:6px;}
   .res-item{
@@ -393,7 +377,6 @@
   @keyframes pop{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
   .done-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
   .done-txt b{font-size:12px;font-weight:700;color:var(--ok);}
-  .done-txt span{font-size:10.5px;color:var(--ink-soft);}
 
   /* 错误 */
   .err-head{display:flex;align-items:center;gap:8px;}
@@ -422,7 +405,6 @@
   .foot .dot.ok{background:var(--ok);box-shadow:0 0 6px var(--ok);}
   .foot .dot.active{background:var(--accent);box-shadow:0 0 6px var(--accent);}
   .foot .dot.bad{background:var(--bad);box-shadow:0 0 6px var(--bad);}
-  .foot .right{margin-left:auto;overflow:hidden;text-overflow:ellipsis;}
 
   /* ---------- 入场 ---------- */
   .page{animation:rise .45s cubic-bezier(.22,1,.36,1) both;}
@@ -437,7 +419,7 @@
   @media (max-width:900px){
     .rail{width:76px;padding:22px 10px 14px;}
     .rail-head{justify-content:center;padding:0 0 14px;}
-    .rail-title,.rail-state,.proto-name,.proto-ver,.proto-port,.rail-note{display:none;}
+    .rail-title,.rail-state,.proto-name,.proto-ver,.proto-port{display:none;}
     .proto-card{justify-content:center;padding:8px 0;}
     .proto-card.on::before{left:-10px;}
     .main-scroll{padding:26px 22px;}
@@ -455,12 +437,11 @@
       overflow-x:auto;
     }
     .proto-list{flex-direction:row;gap:6px;}
-    .rail-head,.rail-note{display:none;}
+    .rail-head{display:none;}
     .proto-card.on::before{top:auto;bottom:0;left:0;right:0;width:auto;height:2px;}
     .main-scroll{padding:22px 16px;}
     .field-pair{grid-template-columns:1fr;}
     .foot{height:auto;flex-wrap:wrap;padding:8px 16px;gap:8px 14px;}
-    .foot .right{margin-left:0;}
   }
   /* 矮窗口（如 1280×720 及以下）压缩头部，保证主操作不被推出可视区 */
   @media (max-height:740px){
@@ -519,10 +500,6 @@
         <span class="rail-state" id="railState">未连接</span>
       </div>
       <div class="proto-list" id="protoList"></div>
-      <div class="rail-note">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8Z"/><path d="M12 17v4"/></svg>
-        <span>端口与协议由地址隐式给出，无需单独选择 SSL。</span>
-      </div>
     </aside>
 
     <main class="main">
@@ -560,6 +537,7 @@
                   <div class="hints">
                     <span class="tag" id="portTag">默认端口 8096</span>
                     <span class="tag ok" id="addrOk">地址格式可用</span>
+                    <span class="tag bad" id="addrBad" hidden>地址格式不可用</span>
                   </div>
                 </div>
 
@@ -571,9 +549,6 @@
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.3-6 8-6s6.5 2 8 6"/></svg>
                       </span>
                       <input id="fUser" value="menglong" placeholder="admin" spellcheck="false" autocomplete="off" />
-                      <button class="act" id="clearUser" title="清空" aria-label="清空用户名">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                      </button>
                     </div>
                   </div>
 
@@ -598,7 +573,6 @@
               </div>
 
               <div class="actions">
-                <button class="btn" id="btnReset">重新选择</button>
                 <span class="grow"></span>
                 <span class="avail ready" id="availHint">可以连接</span>
                 <button class="btn primary" id="btnConnect">连接</button>
@@ -613,7 +587,6 @@
       <footer class="foot">
         <span class="st"><i class="dot" id="footDot"></i><b id="footState">未连接</b></span>
         <span>地址 <b id="footAddr">192.168.1.8:8096</b></span>
-        <span class="right" id="footPhase">IDLE · JVM 21</span>
       </footer>
     </main>
   </div>
@@ -629,7 +602,15 @@ const PROTOCOLS = {
   PLEX:      { title:'Plex',      describe:'PLEX媒体服务器',      port:32400, version:'1.29.2', mark:'P', ifInputUrl:false, defaultAddr:'https://192-168-1-8.plex.direct:32400' }
 };
 
-/* 预览用候选资源，字段与 JVM 侧 ResourceData 对齐 */
+/* 协议官方图标：位图引用仓库内的 composeResources，Jellyfin 为矢量图标内联为 SVG */
+const LOGO_BASE = 'composeApp/src/commonMain/composeResources/drawable/';
+const LOGO = {
+  JELLYFIN: '<svg viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="jellyfinGrad" x1="110.25" y1="213.3" x2="496.14" y2="436.09" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#AA5CC3"/><stop offset="1" stop-color="#00A4DC"/></linearGradient></defs><path fill="url(#jellyfinGrad)" d="M256,201.6c-20.4,0 -86.2,119.3 -76.2,139.4s142.5,19.9 152.4,0S276.5,201.6 256,201.6z"/><path fill="url(#jellyfinGrad)" d="M256,23.3c-61.6,0 -259.8,359.4 -229.6,420.1s429.3,60 459.2,0S317.6,23.3 256,23.3zM406.5,390.8c-19.6,39.3 -281.1,39.8 -300.9,0s110.1,-275.3 150.4,-275.3S426.1,351.4 406.5,390.8z"/></svg>',
+  SUBSONIC: `<img src="${LOGO_BASE}subsonic_logo.png" alt="">`,
+  NAVIDROME: `<img src="${LOGO_BASE}navidrome_icon.png" alt="">`,
+  EMBY: `<img src="${LOGO_BASE}emby_logo_24.png" alt="">`,
+  PLEX: `<img src="${LOGO_BASE}plex_logos.jpeg" alt="">`
+};
 const PLEX_RESOURCES = [
   { name:'家庭 Plex', addressUrl:'192-168-1-8.plex.direct · 32400', product:'Plex Media Server' },
   { name:'影音仓库', addressUrl:'192-168-1-9.plex.direct · 32400', product:'可用' }
@@ -658,7 +639,24 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const proto = () => PROTOCOLS[state.protocol];
 const stripScheme = s => String(s || '').replace(/^https?:\/\//, '');
-const addressValid = v => /^https?:\/\/[^\s/]+/i.test(String(v || '').trim());
+/* 地址格式：协议可省略（应用会自动补全），主机必填，端口 1..65535，路径/查询可选 */
+const ADDR_PATTERN = /^(?:https?:\/\/)?(?:\[[0-9a-fA-F:]+\]|[A-Za-z0-9._~%-]+)(?::\d{1,5})?(?:[/?#]\S*)?$/i;
+const PORT_PATTERN = /:(\d{1,5})(?:\/|$)/;
+function addressValid(v){
+  const value = String(v || '').trim();
+  if(!value || !ADDR_PATTERN.test(value)) return false;
+  const matched = PORT_PATTERN.exec(value);
+  const port = matched ? Number(matched[1]) : null;
+  return port === null || (port >= 1 && port <= 65535);
+}
+
+/* 地址标签：空输入不提示，格式合法显示可用，格式非法显示不可用 */
+function syncAddressTags(){
+  const value = String(state.address || '').trim();
+  const valid = addressValid(value);
+  $('addrOk').hidden = !valid;
+  $('addrBad').hidden = !value || valid;
+}
 
 function canConnect(){
   if(['probing','logging','success'].includes(state.phase)) return false;
@@ -672,7 +670,7 @@ function canConnect(){
 function renderProtocols(){
   $('protoList').innerHTML = Object.entries(PROTOCOLS).map(([key, p]) => `
     <button class="proto-card${key === state.protocol ? ' on' : ''}" data-proto="${key}" title="${p.title} · ${p.port} · 最低支持 ${p.version}">
-      <span class="proto-mark">${p.mark}</span>
+      <span class="proto-mark">${LOGO[key] || p.mark}</span>
       <span class="proto-main">
         <span class="proto-name">${p.title}</span>
         <span class="proto-ver">最低支持 ${p.version}</span>
@@ -742,7 +740,6 @@ function probingMarkup(){
 function loginMarkup(){
   const p = proto();
   const ok = state.phase === 'success';
-  const addr = p.ifInputUrl ? state.address : (PLEX_RESOURCES[state.resIndex]?.addressUrl || '自动发现');
   return head(
       ok ? '04 / 04 · 已完成' : '04 / 04 · 登录验证',
       ok ? '登录成功' : '正在登录',
@@ -754,14 +751,10 @@ function loginMarkup(){
         <span>正在校验账号与密码，请稍候</span>
       </div>
       <div class="probe" style="margin-top:12px"><i></i></div>`}
-    <div class="kv" style="margin-top:${ok ? 0 : 16}px">
-      <div class="kv-row"><span class="k">资源地址</span><span class="v">${esc(stripScheme(addr))}</span></div>
-      <div class="kv-row"><span class="k">协议版本</span><span class="v">${p.version}+</span></div>
-    </div>
     ${ok ? `
       <div class="done">
         <span class="done-mark">${ICON_CHECK}</span>
-        <span class="done-txt"><b>连接成功</b><span>媒体库即将同步</span></span>
+        <span class="done-txt"><b>连接成功</b></span>
         <button class="btn primary" id="btnEnter">进入主页</button>
       </div>` : ''}`;
 }
@@ -785,7 +778,6 @@ function errorMarkup(){
         : 'java.net.ConnectException: Connection refused\n  at KtorClient.probe(' + esc(stripScheme(state.address) || 'auto') + ')'}</code>
       <div class="err-actions">
         <button class="btn primary" data-act="retry">重新连接</button>
-        <button class="btn" data-act="edit">修改连接信息</button>
       </div>
     </div>`;
 }
@@ -835,7 +827,7 @@ function renderFormMeta(){
   $('plexNote').hidden = p.ifInputUrl;
   $('fAddr').placeholder = `http://192.168.1.12:${p.port}`;
   $('portTag').textContent = `默认端口 ${p.port}`;
-  $('addrOk').hidden = !addressValid(state.address);
+  syncAddressTags();
 
   const ready = canConnect();
   $('btnConnect').disabled = !ready;
@@ -843,7 +835,7 @@ function renderFormMeta(){
   const hint = $('availHint');
   // 按当前阶段给出可用性说明，避免已提交后仍提示“填写后可用”
   hint.textContent = state.phase === 'success' ? '已连接'
-    : ['probing','logging'].includes(state.phase) ? '正在握手'
+    : ['probing','logging'].includes(state.phase) ? '登录中'
     : ready ? '可以连接'
     : (p.ifInputUrl ? '填写地址与用户名后可用' : '填写用户名后可用');
   hint.classList.toggle('ready', ready);
@@ -857,14 +849,11 @@ function renderStatus(){
 
   const rail = $('railState');
   rail.className = 'rail-state' + (ok ? ' ok' : bad ? ' bad' : busy ? ' active' : '');
-  rail.textContent = ok ? '已连接' : bad ? '失败' : busy ? '握手中' : '未连接';
+  rail.textContent = ok ? '已连接' : bad ? '失败' : busy ? '登录中' : '未连接';
 
   $('footDot').className = 'dot' + (ok ? ' ok' : bad ? ' bad' : busy ? ' active' : '');
-  $('footState').textContent = ok ? '已连接' : bad ? '连接失败' : busy ? '握手中' : '未连接';
+  $('footState').textContent = ok ? '已连接' : bad ? '连接失败' : busy ? '登录中' : '未连接';
   $('footAddr').textContent = p.ifInputUrl ? (stripScheme(state.address) || '未填写') : '自动发现';
-  $('footPhase').textContent = {
-    form:'IDLE', probing:'PROBE', resources:'SELECT', logging:'LOGIN', success:'READY', error:'FAILED'
-  }[state.phase] + ' · JVM 21';
 
   document.querySelectorAll('#states button').forEach(b => b.classList.toggle('on', b.dataset.phase === state.phase));
   $('crumb').textContent = ok ? '/ 服务器连接 / 已连接' : '/ 服务器连接';
@@ -933,14 +922,13 @@ function previewPhase(phase){
 $('fAddr').oninput = e => {
   state.address = e.target.value;
   $('clearAddr').hidden = !state.address;
-  $('addrOk').hidden = !addressValid(state.address);
+  syncAddressTags();
   renderFormMeta();
   if(state.phase === 'form') renderSide();
   renderStatus();
 };
 $('fUser').oninput = e => {
   state.username = e.target.value;
-  $('clearUser').hidden = !state.username;
   renderFormMeta();
   if(state.phase === 'form') renderSide();
 };
@@ -949,17 +937,10 @@ $('clearAddr').onclick = () => {
   state.address = '';
   $('fAddr').value = '';
   $('clearAddr').hidden = true;
-  $('addrOk').hidden = true;
+  syncAddressTags();
   renderFormMeta();
   if(state.phase === 'form') renderSide();
   renderStatus();
-};
-$('clearUser').onclick = () => {
-  state.username = '';
-  $('fUser').value = '';
-  $('clearUser').hidden = true;
-  renderFormMeta();
-  if(state.phase === 'form') renderSide();
 };
 $('togglePass').onclick = () => {
   state.showPass = !state.showPass;
@@ -968,7 +949,6 @@ $('togglePass').onclick = () => {
     ? '<path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/>'
     : '<path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/><path d="M4 20 20 4"/>';
 };
-$('btnReset').onclick = resetToForm;
 $('btnConnect').onclick = () => { if(canConnect()) beginProbe(); };
 ['fAddr','fPass'].forEach(id => {
   $(id).addEventListener('keydown', e => { if(e.key === 'Enter' && canConnect()) beginProbe(); });
@@ -992,7 +972,6 @@ $('themeBtn').onclick = () => {
 };
 
 /* 初始化 */
-$('clearUser').hidden = !state.username;
 $('clearAddr').hidden = !state.address;
 render();
 </script>

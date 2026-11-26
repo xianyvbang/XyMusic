@@ -682,13 +682,14 @@
     <string name="jvm_connection_new_screen_text_41">首次打开</string>
     <!-- 连接到媒体服务器页面（Signal Deck 重设计） -->
     <string name="jvm_connection_rail_state_idle">未连接</string>
-    <string name="jvm_connection_rail_state_busy">握手中</string>
+    <string name="jvm_connection_rail_state_busy">登录中</string>
     <string name="jvm_connection_rail_state_ok">已连接</string>
     <string name="jvm_connection_rail_state_failed">失败</string>
     <string name="jvm_connection_min_supported">最低支持 %1$s</string>
     <string name="jvm_connection_required">必填</string>
     <string name="jvm_connection_submitted">已提交</string>
     <string name="jvm_connection_address_valid">地址格式可用</string>
+    <string name="jvm_connection_address_invalid">地址格式不可用</string>
     <string name="jvm_connection_ready">可以连接</string>
     <string name="jvm_connection_need_address_user">填写地址与用户名后可用</string>
     <string name="jvm_connection_need_user">填写用户名后可用</string>
@@ -696,16 +697,7 @@
     <string name="jvm_connection_click_to_login">点击地址将立即登录。</string>
     <string name="jvm_connection_retry">重新连接</string>
     <string name="jvm_connection_status_address">地址</string>
-    <string name="jvm_connection_status_phase">阶段</string>
-    <string name="jvm_connection_phase_idle">IDLE</string>
-    <string name="jvm_connection_phase_probe">PROBE</string>
-    <string name="jvm_connection_phase_select">SELECT</string>
-    <string name="jvm_connection_phase_login">LOGIN</string>
-    <string name="jvm_connection_phase_ready">READY</string>
-    <string name="jvm_connection_phase_failed">FAILED</string>
     <string name="jvm_connection_uri_tag">URI</string>
-    <string name="jvm_connection_rail_note">端口与协议由地址隐式给出，无需单独选择 SSL。</string>
-    <string name="jvm_connection_success_sync">媒体库即将同步</string>
     <string name="jvm_connection_error_auth_title">凭据校验未通过</string>
     <string name="jvm_connection_error_probe_title">地址不可达</string>
     <string name="jvm_connection_error_auth_hint">请确认用户名与密码，或该账号是否具备访问权限。</string>
