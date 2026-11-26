@@ -22,15 +22,12 @@ import cn.xybbz.api.AuthenticatedRequestData
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.base.IDownLoadApi
-import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.api.enums.subsonic.Status
 import cn.xybbz.api.events.ReLoginEventBus
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpResponseValidator
@@ -108,30 +105,6 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 //                maxRetries = 1
             }*/
             HttpResponseValidator {
-                validateResponse { response ->
-                    val any = response.body<Any>()
-                    if (any is SubsonicResponse<*>) {
-                        val body: SubsonicResponse<*> = any
-                        if (body.subsonicResponse.status == Status.Failed) {
-                            val error = body.subsonicResponse.error
-                            val code = error?.code
-                            if (code == 40) {
-                                logger.error { "接口报错响应:${body.subsonicResponse}" }
-                                throw UnauthorizedException(
-                                    msg = "${error.message}",
-                                    statusCode = code,
-                                    responsePhrase = error.message
-                                )
-                            } else {
-                                throw ServiceException(
-                                    message = error?.message ?: "",
-                                    code = code
-                                )
-                            }
-                        }
-                    }
-                }
-
                 handleResponseExceptionWithRequest { exception, request ->
                     // 请求上下文：即使响应体为空，日志里也能定位是哪个接口、什么状态码
                     val requestInfo = "${request.method.value} ${request.url}"
