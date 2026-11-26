@@ -36,9 +36,11 @@ import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.takeFrom
+import kotlinx.coroutines.CancellationException
 
 abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
@@ -131,30 +133,39 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 }
 
                 handleResponseExceptionWithRequest { exception, request ->
+                    // 请求上下文：即使响应体为空，日志里也能定位是哪个接口、什么状态码
+                    val requestInfo = "${request.method.value} ${request.url}"
                     when (exception) {
                         is ServerResponseException -> {
                             val exceptionResponse = exception.response
-                            val exceptionResponseText = exceptionResponse.bodyAsText()
-                            throw ServiceException(
-                                exceptionResponse.status.value,
-                                exceptionResponseText
-                            ) as Throwable
+                            val exceptionResponseText = readResponseTextSafely(exceptionResponse)
+                            logger.error {
+                                "服务端异常: $requestInfo -> ${exceptionResponse.status.value} ${exceptionResponse.status.description}, 响应体: $exceptionResponseText"
+                            }
+                            throw ServiceException(exceptionResponseText, exceptionResponse.status.value)
                         }
 
                         is ClientRequestException -> {
                             val exceptionResponse = exception.response
-                            val exceptionResponseText = exceptionResponse.bodyAsText()
+                            val exceptionResponseText = readResponseTextSafely(exceptionResponse)
+                            logger.error {
+                                "客户端异常: $requestInfo -> ${exceptionResponse.status.value} ${exceptionResponse.status.description}, 响应体: $exceptionResponseText"
+                            }
                             if (exceptionResponse.status == HttpStatusCode.Unauthorized) {
                                 throw UnauthorizedException(
                                     exceptionResponseText,
                                     exceptionResponse.status.value,
-                                    exceptionResponseText
-                                ) as Throwable
+                                    exceptionResponse.status.description
+                                )
                             } else {
-                                throw ServiceException(
-                                    exceptionResponse.status.value,
-                                    exceptionResponseText
-                                ) as Throwable
+                                throw ServiceException(exceptionResponseText, exceptionResponse.status.value)
+                            }
+                        }
+
+                        else -> {
+                            // 连接中断、超时等异常同样记录，避免静默失败（协程取消不算错误）
+                            if (exception !is CancellationException) {
+                                logger.error(exception) { "请求异常: $requestInfo" }
                             }
                         }
                     }
@@ -168,6 +179,22 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         httpClient = newHttpClient
         restartApiClients()
         downloadApi(true)
+    }
+
+    /**
+     * 安全读取异常响应的响应体文本。
+     * Ktor 默认校验在构造 ResponseException 时已经读取过一次响应体，这里二次读取可能为空或直接抛异常，
+     * 因此读取失败或内容为空时回退到状态描述，保证日志与异常信息不会是一片空白。
+     */
+    private suspend fun readResponseTextSafely(response: HttpResponse): String {
+        val text = try {
+            response.bodyAsText()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        }
+        return text?.takeIf { it.isNotBlank() } ?: response.status.description
     }
 
     /**
