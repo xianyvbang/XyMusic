@@ -18,14 +18,12 @@
 
 package cn.xybbz.ui.screens
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,14 +34,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -53,33 +50,32 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
@@ -95,28 +91,42 @@ import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyIconButton
 import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.ConnectionViewModel
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import xymusic.composeapp.generated.resources.*
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.cancel_24px
 import xymusic.composeapp.generated.resources.check_24px
 import xymusic.composeapp.generated.resources.http_24px
+import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.logo_new
 import xymusic.composeapp.generated.resources.password_24px
 import xymusic.composeapp.generated.resources.person_24px
 import xymusic.composeapp.generated.resources.visibility_24px
 import xymusic.composeapp.generated.resources.visibility_off_24px
+import xymusic.composeapp.generated.resources.warning_24px
+import xymusic.composeapp.generated.resources.*
 
+/**
+ * JVM 连接到媒体服务器页面。
+ *
+ * 视觉按 Signal Deck 设计稿还原，同时遵循项目约定：
+ * 1. 文案统一走 XyText / XyTextSub，样式取自 MaterialTheme.typography；
+ * 2. 颜色统一取自 MaterialTheme.colorScheme 与 XyTheme.extendedColors；
+ * 3. 间距、圆角、行高取自 XyTheme.dimens，不写死数值；
+ * 4. 输入框、按钮、图标按钮复用 XyEdit / XyButton / XyIconButton。
+ *
+ * @param connectionUiType 页面入口类型，首次打开时页面自行绘制标题栏。
+ * @param modifier 外部布局修饰符。
+ * @param connectionViewModel 连接业务 ViewModel，默认走 Koin 注入。
+ */
 @Composable
 fun JvmConnectionNewScreen(
     connectionUiType: ConnectionUiType? = null,
     modifier: Modifier = Modifier,
-    // 连接业务统一由 ViewModel 承担，默认走 Koin 注入，测试时可传入替身实例。
     connectionViewModel: ConnectionViewModel = koinViewModel<ConnectionViewModel>(),
 ) {
     val navigator = LocalNavigator.current
@@ -129,11 +139,9 @@ fun JvmConnectionNewScreen(
     val selectedDataSource = connectionViewModel.dataSourceType
         ?: dataSourceTypes.firstOrNull()
         ?: DataSourceType.JELLYFIN
-    // 资源面板显隐由 ViewModel 统一计算，页面只负责按状态渲染。
     val showResourcePanel = connectionViewModel.showResourcePanel
-    // 当前资源选择下标直接来自 ViewModel，候选地址和 Plex 资源共用这一份选择状态。
     val selectedResourceIndex = connectionViewModel.selectUrlIndex
-    // 新页面只需要把 ViewModel 的加载/成功状态映射成视觉阶段，不参与真实登录流程。
+    // 登录结果只有成功与失败两种终态，页面只负责把状态映射成视觉阶段。
     val loginStage = when {
         connectionViewModel.isLoginSuccess -> JvmConnectionNewLoginStage.Success
         connectionViewModel.loading -> JvmConnectionNewLoginStage.LoggingIn
@@ -141,10 +149,8 @@ fun JvmConnectionNewScreen(
     }
     val connectionReady = connectionViewModel.isLoginSuccess
 
-    // 密码显隐只影响本页输入框表现，属于纯 UI 状态，不进入连接业务层。
-    var showPassword by remember {
-        mutableStateOf(false)
-    }
+    // 密码显隐只影响本页输入框表现，属于纯 UI 状态。
+    var showPassword by remember { mutableStateOf(false) }
 
     LaunchedEffect(dataSourceTypes) {
         // 首次进入时保证有默认协议，选择规则由 ViewModel 维护。
@@ -156,168 +162,219 @@ fun JvmConnectionNewScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        val compact = maxWidth < 920.dp
-        val contentModifier = if (compact) {
-            Modifier.verticalScroll(rememberScrollState())
+        val dimens = XyTheme.dimens
+        // 协议轨在窄窗口收成图标列，保证主内容仍有足够宽度。
+        val compactRail = maxWidth < 900.dp
+        val railWidth = if (compactRail) dimens.itemHeight + dimens.contentPadding else 236.dp
+        val horizontalPadding = if (maxWidth < 760.dp) dimens.outerHorizontalPadding else dimens.outerHorizontalPadding * 2 + dimens.outerVerticalPadding / 2
+        val contentWidth = maxWidth - railWidth - horizontalPadding * 2
+        val paneGap = dimens.contentPadding + dimens.outerVerticalPadding
+        // 结果卡并排需要表单 600 + 间距 + 结果卡最小 260 的空间，不足时下沉。
+        val sideBySide = contentWidth >= 880.dp
+        val formWidth = if (sideBySide) {
+            minOf(600.dp, contentWidth - paneGap - 260.dp)
         } else {
-            Modifier
+            minOf(600.dp, contentWidth)
         }
+        // 矮窗口压缩头部与间距，保证主操作始终在首屏可见。
+        val compactHeight = maxHeight < 640.dp
+        // 表单过窄时账号与密码改为上下排列。
+        val narrowFields = formWidth < 480.dp
+        val scrollState = rememberScrollState()
 
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             if (connectionUiType == ConnectionUiType.FIRST_OPEN) {
                 JvmConnectionNewTitleBar()
             }
+            Row(modifier = Modifier.fillMaxSize()) {
+                JvmConnectionProtocolRail(
+                    width = railWidth,
+                    compact = compactRail,
+                    dataSourceTypes = dataSourceTypes,
+                    selectedDataSource = selectedDataSource,
+                    busy = connectionViewModel.loading || connectionViewModel.resourceLoading,
+                    connected = connectionReady,
+                    failed = connectionViewModel.isLoginError || connectionViewModel.isResourceLoginError,
+                    onSelectDataSource = { connectionViewModel.selectDataSource(it) }
+                )
+                // 轨道右侧的细分隔线，避免整列使用四边框。
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .fillMaxHeight()
+                        .background(JvmConnectionLineColor())
+                )
+                Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                    Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(scrollState)
+                                .padding(
+                                    horizontal = horizontalPadding,
+                                    vertical = if (compactHeight) dimens.contentPadding else dimens.outerHorizontalPadding + dimens.outerVerticalPadding
+                                )
+                        ) {
+                            JvmConnectionHero(
+                                selectedDataSource = selectedDataSource,
+                                compact = compactHeight
+                            )
+                            Spacer(modifier = Modifier.height(if (compactHeight) dimens.contentPadding else dimens.contentPadding + dimens.outerVerticalPadding))
+                            if (sideBySide) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(paneGap),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    JvmConnectionFormPanel(
+                                        modifier = Modifier.width(formWidth),
+                                        selectedDataSource = selectedDataSource,
+                                        address = connectionViewModel.address,
+                                        username = connectionViewModel.username,
+                                        password = connectionViewModel.password,
+                                        showPassword = showPassword,
+                                        submitted = showResourcePanel || connectionViewModel.loading || connectionReady,
+                                        busy = connectionViewModel.loading || connectionViewModel.resourceLoading || connectionReady,
+                                        connected = connectionReady,
+                                        narrowFields = narrowFields,
+                                        onAddressChange = connectionViewModel::setAddressData,
+                                        onUsernameChange = connectionViewModel::setUserNameData,
+                                        onPasswordChange = connectionViewModel::setPasswordData,
+                                        onTogglePassword = { showPassword = !showPassword },
+                                        onConnect = connectionViewModel::connect,
+                                        onReset = connectionViewModel::resetConnectionInput
+                                    )
+                                    if (showResourcePanel) {
+                                        JvmConnectionResultPanel(
+                                            modifier = Modifier.weight(1f),
+                                            selectedDataSource = selectedDataSource,
+                                            address = connectionViewModel.address,
+                                            selectedResourceIndex = selectedResourceIndex,
+                                            loginStage = loginStage,
+                                            resourceLoading = connectionViewModel.resourceLoading,
+                                            resourceError = connectionViewModel.isResourceLoginError,
+                                            loginLoading = connectionViewModel.loading,
+                                            loginError = connectionViewModel.isLoginError,
+                                            errorMessage = connectionViewModel.errorMessage,
+                                            errorHint = stringResource(connectionViewModel.errorHint),
+                                            tmpAddressList = connectionViewModel.tmpAddressList,
+                                            tmpPlexInfo = connectionViewModel.tmpPlexInfo,
+                                            selectedResourceAddress = connectionViewModel.tmpAddress,
+                                            connectionReady = connectionReady,
+                                            onSelectResource = connectionViewModel::selectResourceAndLogin,
+                                            onRetry = connectionViewModel::connect,
+                                            onEditConnectionInfo = connectionViewModel::resetConnectionInput,
+                                            onEnter = {
+                                                if (!ifEntryPage) {
+                                                    connectionViewModel.updateIfConnectionConfig()
+                                                } else {
+                                                    navigator.goBack()
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(paneGap)) {
+                                    JvmConnectionFormPanel(
+                                        modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp),
+                                        selectedDataSource = selectedDataSource,
+                                        address = connectionViewModel.address,
+                                        username = connectionViewModel.username,
+                                        password = connectionViewModel.password,
+                                        showPassword = showPassword,
+                                        submitted = showResourcePanel || connectionViewModel.loading || connectionReady,
+                                        busy = connectionViewModel.loading || connectionViewModel.resourceLoading || connectionReady,
+                                        connected = connectionReady,
+                                        narrowFields = narrowFields,
+                                        onAddressChange = connectionViewModel::setAddressData,
+                                        onUsernameChange = connectionViewModel::setUserNameData,
+                                        onPasswordChange = connectionViewModel::setPasswordData,
+                                        onTogglePassword = { showPassword = !showPassword },
+                                        onConnect = connectionViewModel::connect,
+                                        onReset = connectionViewModel::resetConnectionInput
+                                    )
+                                    if (showResourcePanel) {
+                                        JvmConnectionResultPanel(
+                                            modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp),
+                                            selectedDataSource = selectedDataSource,
+                                            address = connectionViewModel.address,
+                                            selectedResourceIndex = selectedResourceIndex,
+                                            loginStage = loginStage,
+                                            resourceLoading = connectionViewModel.resourceLoading,
+                                            resourceError = connectionViewModel.isResourceLoginError,
+                                            loginLoading = connectionViewModel.loading,
+                                            loginError = connectionViewModel.isLoginError,
+                                            errorMessage = connectionViewModel.errorMessage,
+                                            errorHint = stringResource(connectionViewModel.errorHint),
+                                            tmpAddressList = connectionViewModel.tmpAddressList,
+                                            tmpPlexInfo = connectionViewModel.tmpPlexInfo,
+                                            selectedResourceAddress = connectionViewModel.tmpAddress,
+                                            connectionReady = connectionReady,
+                                            onSelectResource = connectionViewModel::selectResourceAndLogin,
+                                            onRetry = connectionViewModel::connect,
+                                            onEditConnectionInfo = connectionViewModel::resetConnectionInput,
+                                            onEnter = {
+                                                if (!ifEntryPage) {
+                                                    connectionViewModel.updateIfConnectionConfig()
+                                                } else {
+                                                    navigator.goBack()
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    JvmConnectionStatusBar(
+                        connected = connectionReady,
+                        busy = connectionViewModel.loading || connectionViewModel.resourceLoading,
+                        failed = connectionViewModel.isLoginError || connectionViewModel.isResourceLoginError,
+                        showResourcePanel = showResourcePanel,
+                        selectedDataSource = selectedDataSource,
+                        address = connectionViewModel.address,
+                        loginStage = loginStage
+                    )
+                }
+            }
+        }
 
-            if (compact) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .then(contentModifier)
-                ) {
-                    JvmConnectionNewSidebar(
-                        modifier = Modifier.fillMaxWidth(),
-                        dataSourceTypes = dataSourceTypes,
-                        selectedDataSource = selectedDataSource,
-                        activeStep = when {
-                            connectionViewModel.loading || connectionViewModel.isLoginSuccess -> 3
-                            showResourcePanel -> 2
-                            else -> 1
-                        },
-                        statusText = connectionUiType.connectionStatusText(),
-                        onSelectDataSource = {
-                            connectionViewModel.selectDataSource(it)
-                        }
-                    )
-                    JvmConnectionNewMainContent(
-                        modifier = Modifier.fillMaxWidth(),
-                        compact = true,
-                        selectedDataSource = selectedDataSource,
-                        address = connectionViewModel.address,
-                        username = connectionViewModel.username,
-                        password = connectionViewModel.password,
-                        showPassword = showPassword,
-                        showResourcePanel = showResourcePanel,
-                        selectedResourceIndex = selectedResourceIndex,
-                        loginStage = loginStage,
-                        connectionReady = connectionReady,
-                        resourceLoading = connectionViewModel.resourceLoading,
-                        resourceError = connectionViewModel.isResourceLoginError,
-                        loginLoading = connectionViewModel.loading,
-                        loginError = connectionViewModel.isLoginError,
-                        errorMessage = connectionViewModel.errorMessage,
-                        errorHint = stringResource(connectionViewModel.errorHint),
-                        tmpAddressList = connectionViewModel.tmpAddressList,
-                        tmpPlexInfo = connectionViewModel.tmpPlexInfo,
-                        selectedResourceAddress = connectionViewModel.tmpAddress,
-                        onAddressChange = connectionViewModel::setAddressData,
-                        onUsernameChange = connectionViewModel::setUserNameData,
-                        onPasswordChange = connectionViewModel::setPasswordData,
-                        onTogglePassword = { showPassword = !showPassword },
-                        // 连接、重置和资源选择都委托给 ViewModel，页面不承载业务分支。
-                        onConnect = connectionViewModel::connect,
-                        onReset = connectionViewModel::resetConnectionInput,
-                        onSelectResource = connectionViewModel::selectResourceAndLogin,
-                        onEnter = {
-                            if (!ifEntryPage) {
-                                connectionViewModel.updateIfConnectionConfig()
-                            } else {
-                                navigator.goBack()
-                            }
-                        }
-                    )
-                }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    JvmConnectionNewSidebar(
-                        modifier = Modifier
-                            .width(324.dp)
-                            .fillMaxHeight(),
-                        dataSourceTypes = dataSourceTypes,
-                        selectedDataSource = selectedDataSource,
-                        activeStep = when {
-                            connectionViewModel.loading || connectionViewModel.isLoginSuccess -> 3
-                            showResourcePanel -> 2
-                            else -> 1
-                        },
-                        statusText = connectionUiType.connectionStatusText(),
-                        onSelectDataSource = {
-                            connectionViewModel.selectDataSource(it)
-                        }
-                    )
-                    JvmConnectionNewMainContent(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .verticalScroll(rememberScrollState()),
-                        compact = false,
-                        selectedDataSource = selectedDataSource,
-                        address = connectionViewModel.address,
-                        username = connectionViewModel.username,
-                        password = connectionViewModel.password,
-                        showPassword = showPassword,
-                        showResourcePanel = showResourcePanel,
-                        selectedResourceIndex = selectedResourceIndex,
-                        loginStage = loginStage,
-                        connectionReady = connectionReady,
-                        resourceLoading = connectionViewModel.resourceLoading,
-                        resourceError = connectionViewModel.isResourceLoginError,
-                        loginLoading = connectionViewModel.loading,
-                        loginError = connectionViewModel.isLoginError,
-                        errorMessage = connectionViewModel.errorMessage,
-                        errorHint = stringResource(connectionViewModel.errorHint),
-                        tmpAddressList = connectionViewModel.tmpAddressList,
-                        tmpPlexInfo = connectionViewModel.tmpPlexInfo,
-                        selectedResourceAddress = connectionViewModel.tmpAddress,
-                        onAddressChange = connectionViewModel::setAddressData,
-                        onUsernameChange = connectionViewModel::setUserNameData,
-                        onPasswordChange = connectionViewModel::setPasswordData,
-                        onTogglePassword = { showPassword = !showPassword },
-                        // 连接、重置和资源选择都委托给 ViewModel，页面不承载业务分支。
-                        onConnect = connectionViewModel::connect,
-                        onReset = connectionViewModel::resetConnectionInput,
-                        onSelectResource = connectionViewModel::selectResourceAndLogin,
-                        onEnter = {
-                            if (!ifEntryPage) {
-                                connectionViewModel.updateIfConnectionConfig()
-                            } else {
-                                navigator.goBack()
-                            }
-                        }
-                    )
-                }
+        // 窄窗口下结果卡在表单下方，出现时自动滚到可视区，避免“点了没反应”的错觉。
+        LaunchedEffect(showResourcePanel, sideBySide) {
+            if (showResourcePanel && !sideBySide) {
+                delay(80)
+                scrollState.animateScrollTo(scrollState.maxValue)
             }
         }
     }
 }
 
+/**
+ * 首次打开时页面自绘的窗口标题栏。
+ */
 @Composable
 private fun JvmConnectionNewTitleBar() {
+    val dimens = XyTheme.dimens
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(dimens.itemHeight - dimens.contentPadding)
             .desktopWindowDragArea()
             .background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.86f))
             .border(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                color = JvmConnectionLineColor()
             )
-            .padding(start = XyTheme.dimens.outerHorizontalPadding),
+            .padding(start = dimens.outerHorizontalPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         XySmallImage(
-            modifier = Modifier
-                .size(XyTheme.dimens.outerHorizontalPadding + XyTheme.dimens.contentPadding),
+            modifier = Modifier.size(dimens.outerHorizontalPadding + dimens.contentPadding),
             model = painterResource(Res.drawable.logo_new),
             contentDescription = null,
-            shape = RoundedCornerShape(XyTheme.dimens.corner / 2)
+            shape = RoundedCornerShape(dimens.corner / 2)
         )
-        Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+        Spacer(modifier = Modifier.width(dimens.contentPadding))
         XyText(
             text = "XyMusic",
             modifier = Modifier.weight(1f),
@@ -330,732 +387,653 @@ private fun JvmConnectionNewTitleBar() {
     }
 }
 
+/**
+ * 左侧协议轨。
+ *
+ * @param width 轨道宽度，窄窗口为图标列。
+ * @param compact 是否处于图标模式。
+ * @param dataSourceTypes 可展示的协议列表。
+ * @param selectedDataSource 当前选中协议。
+ * @param busy 是否正在握手。
+ * @param connected 是否已连接。
+ * @param failed 最近一次连接是否失败。
+ * @param onSelectDataSource 协议切换回调。
+ */
 @Composable
-private fun JvmConnectionNewSidebar(
-    modifier: Modifier,
+private fun JvmConnectionProtocolRail(
+    width: Dp,
+    compact: Boolean,
     dataSourceTypes: List<DataSourceType>,
     selectedDataSource: DataSourceType,
-    activeStep: Int,
-    statusText: String,
+    busy: Boolean,
+    connected: Boolean,
+    failed: Boolean,
     onSelectDataSource: (DataSourceType) -> Unit,
 ) {
+    val dimens = XyTheme.dimens
+    val stateColor = when {
+        connected -> XyTheme.extendedColors.success
+        failed -> XyTheme.extendedColors.danger
+        busy -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val stateText = when {
+        connected -> stringResource(Res.string.jvm_connection_rail_state_ok)
+        failed -> stringResource(Res.string.jvm_connection_rail_state_failed)
+        busy -> stringResource(Res.string.jvm_connection_rail_state_busy)
+        else -> stringResource(Res.string.jvm_connection_rail_state_idle)
+    }
+
     Column(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-            )
-            .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
-                vertical = XyTheme.dimens.innerVerticalPadding + XyTheme.dimens.outerVerticalPadding
-            ),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding + XyTheme.dimens.outerVerticalPadding)
+        modifier = Modifier
+            .width(width)
+            .fillMaxHeight()
+            .background(MaterialTheme.colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            XyText(
-                text = stringResource(Res.string.server_connection),
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.W900,
-                style = MaterialTheme.typography.titleMedium,
-            )
-            JvmConnectionNewStatusPill(text = statusText)
+        if (!compact) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = dimens.outerHorizontalPadding,
+                        end = dimens.outerHorizontalPadding,
+                        top = dimens.contentPadding + dimens.outerVerticalPadding,
+                        bottom = dimens.outerHorizontalPadding
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                XyText(
+                    text = stringResource(Res.string.server_connection),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.W700,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.titleSmall
+                )
+                XyText(
+                    text = stateText,
+                    color = stateColor,
+                    fontWeight = FontWeight.W600,
+                    maxLines = 1,
+                    style = JvmConnectionMonoStyle()
+                )
+            }
+        } else {
+            Spacer(modifier = Modifier.height(dimens.contentPadding + dimens.outerVerticalPadding))
         }
 
         Column(
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = dimens.contentPadding),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             dataSourceTypes.forEach { dataSourceType ->
-                JvmConnectionNewProtocolItem(
+                JvmConnectionProtocolCard(
                     dataSourceType = dataSourceType,
                     selected = dataSourceType == selectedDataSource,
+                    compact = compact,
                     onClick = { onSelectDataSource(dataSourceType) }
                 )
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f, fill = true))
+        Spacer(modifier = Modifier.weight(1f))
 
-        JvmConnectionNewStepPanel(activeStep = activeStep)
-    }
-}
-
-@Composable
-private fun JvmConnectionNewProtocolItem(
-    dataSourceType: DataSourceType,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val shape = RoundedCornerShape(XyTheme.dimens.corner)
-    val borderColor = if (selected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.56f)
-    } else {
-        Color.Transparent
-    }
-    val backgroundColor = if (selected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerLowest
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 68.dp)
-            .clip(shape)
-            .background(backgroundColor)
-            .border(1.dp, borderColor, shape)
-            .jvmHoverDebounceClickable(onClick = onClick)
-            .padding(XyTheme.dimens.contentPadding),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-    ) {
-        JvmConnectionNewProtocolLogo(
-            painter = painterResource(dataSourceType.img),
-            contentDescription = dataSourceType.title
-        )
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            XyText(
-                text = dataSourceType.title,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.W800,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodyMedium,
+        if (!compact) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = dimens.outerHorizontalPadding)
+                    .height(1.dp)
+                    .background(JvmConnectionLineColor())
             )
-            XyTextSub(
-                text = dataSourceType.describe,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-        JvmConnectionNewChip(text = dataSourceType.httpPort.toString())
-    }
-}
-
-@Composable
-private fun JvmConnectionNewProtocolLogo(
-    painter: Painter,
-    contentDescription: String?,
-    size: Dp? = null,
-) {
-    val logoSize = size
-        ?: XyTheme.dimens.innerHorizontalPadding +
-        XyTheme.dimens.innerHorizontalPadding +
-        XyTheme.dimens.contentPadding
-
-    Surface(
-        modifier = Modifier.size(logoSize),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f),
-    ) {
-        XySmallImage(
-            modifier = Modifier.fillMaxSize(),
-            model = painter,
-            contentDescription = contentDescription,
-            shape = RoundedCornerShape(XyTheme.dimens.corner)
-        )
-    }
-}
-
-@Composable
-private fun JvmConnectionNewStatusPill(
-    text: String,
-) {
-    val successColor = XyTheme.extendedColors.success
-    Row(
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(successColor.copy(alpha = 0.1f))
-            .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding / 2,
-                vertical = XyTheme.dimens.innerVerticalPadding / 2
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding / 2)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(XyTheme.dimens.innerVerticalPadding / 2)
-                .clip(CircleShape)
-                .background(successColor)
-        )
-        XyText(
-            text = text,
-            color = successColor,
-            fontWeight = FontWeight.W700,
-            maxLines = 1,
-            style = MaterialTheme.typography.labelSmall,
-        )
-    }
-}
-
-@Composable
-private fun JvmConnectionNewStepPanel(
-    activeStep: Int,
-) {
-    val steps = listOf(stringResource(Res.string.jvm_connection_new_screen_text_01), stringResource(Res.string.jvm_connection_new_screen_text_02), stringResource(Res.string.jvm_connection_new_screen_text_03), stringResource(Res.string.jvm_connection_new_screen_text_04))
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.72f))
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(XyTheme.dimens.corner)
-            )
-            .padding(XyTheme.dimens.contentPadding),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-    ) {
-        steps.forEachIndexed { index, text ->
-            JvmConnectionNewStepItem(
-                number = index + 1,
-                text = text,
-                done = index < activeStep,
-                active = index == activeStep,
-            )
-        }
-    }
-}
-
-@Composable
-private fun JvmConnectionNewStepItem(
-    number: Int,
-    text: String,
-    done: Boolean,
-    active: Boolean,
-) {
-    val successColor = XyTheme.extendedColors.success
-    val circleColor = when {
-        done -> successColor
-        active -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.16f)
-    }
-    val textColor = if (done || active) {
-        MaterialTheme.colorScheme.onSurface
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(XyTheme.dimens.contentPadding + XyTheme.dimens.innerVerticalPadding)
-                .clip(CircleShape)
-                .background(circleColor),
-            contentAlignment = Alignment.Center
-        ) {
-            if (done) {
-                Icon(
-                    modifier = Modifier.size(XyTheme.dimens.outerHorizontalPadding),
-                    painter = painterResource(Res.drawable.check_24px),
-                    contentDescription = null,
-                    tint = Color.White
-                )
-            } else {
-                XyText(
-                    text = number.toString(),
-                    color = if (active) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.W800,
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
-        }
-        XyText(
-            text = text,
-            color = textColor,
-            fontWeight = if (done || active) FontWeight.W700 else FontWeight.Normal,
-            maxLines = 1,
-            style = MaterialTheme.typography.bodySmall,
-        )
-    }
-}
-
-@Composable
-private fun JvmConnectionNewMainContent(
-    modifier: Modifier,
-    compact: Boolean,
-    selectedDataSource: DataSourceType,
-    address: String,
-    username: String,
-    password: String,
-    showPassword: Boolean,
-    showResourcePanel: Boolean,
-    selectedResourceIndex: Int,
-    loginStage: JvmConnectionNewLoginStage,
-    connectionReady: Boolean,
-    resourceLoading: Boolean,
-    resourceError: Boolean,
-    loginLoading: Boolean,
-    loginError: Boolean,
-    errorMessage: String,
-    errorHint: String,
-    tmpAddressList: List<String>,
-    tmpPlexInfo: List<ResourceData>,
-    selectedResourceAddress: String,
-    onAddressChange: (String) -> Unit,
-    onUsernameChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onTogglePassword: () -> Unit,
-    onConnect: () -> Unit,
-    onReset: () -> Unit,
-    onSelectResource: (Int) -> Unit,
-    onEnter: () -> Unit,
-) {
-    // MainContent 只接收 ViewModel 已经整理好的状态，用来分发给左右面板和成功横幅。
-    Column(
-        modifier = modifier
-            .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding + XyTheme.dimens.contentPadding,
-                vertical = XyTheme.dimens.innerVerticalPadding + XyTheme.dimens.contentPadding
-            ),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding + XyTheme.dimens.outerVerticalPadding)
-    ) {
-        JvmConnectionNewHeader(
-            selectedDataSource = selectedDataSource,
-            compact = compact
-        )
-
-        // 登录成功后展示真实收尾按钮，按钮动作由上层根据入口类型处理。
-        AnimatedVisibility(visible = connectionReady) {
-            JvmConnectionNewSuccessBanner(
-                selectedDataSource = selectedDataSource,
-                onEnter = onEnter
-            )
-        }
-
-        if (compact) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding)
-            ) {
-                if (showResourcePanel) {
-                    JvmConnectionNewSidePanel(
-                        showResourcePanel = true,
-                        selectedDataSource = selectedDataSource,
-                        address = address,
-                        selectedResourceIndex = selectedResourceIndex,
-                        loginStage = loginStage,
-                        resourceLoading = resourceLoading,
-                        resourceError = resourceError,
-                        loginLoading = loginLoading,
-                        loginError = loginError,
-                        errorMessage = errorMessage,
-                        errorHint = errorHint,
-                        tmpAddressList = tmpAddressList,
-                        tmpPlexInfo = tmpPlexInfo,
-                        selectedResourceAddress = selectedResourceAddress,
-                        connectionReady = connectionReady,
-                        onSelectResource = onSelectResource,
-                        onEditConnectionInfo = onReset
-                    )
-                } else {
-                    JvmConnectionNewFormPanel(
-                        selectedDataSource = selectedDataSource,
-                        address = address,
-                        username = username,
-                        password = password,
-                        showPassword = showPassword,
-                        onAddressChange = onAddressChange,
-                        onUsernameChange = onUsernameChange,
-                        onPasswordChange = onPasswordChange,
-                        onTogglePassword = onTogglePassword,
-                        onConnect = onConnect,
-                        onReset = onReset
-                    )
-                    JvmConnectionNewSidePanel(
-                        showResourcePanel = false,
-                        selectedDataSource = selectedDataSource,
-                        address = address,
-                        selectedResourceIndex = selectedResourceIndex,
-                        loginStage = loginStage,
-                        resourceLoading = resourceLoading,
-                        resourceError = resourceError,
-                        loginLoading = loginLoading,
-                        loginError = loginError,
-                        errorMessage = errorMessage,
-                        errorHint = errorHint,
-                        tmpAddressList = tmpAddressList,
-                        tmpPlexInfo = tmpPlexInfo,
-                        selectedResourceAddress = selectedResourceAddress,
-                        connectionReady = connectionReady,
-                        onSelectResource = onSelectResource
-                    )
-                }
-            }
-        } else {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
+                modifier = Modifier.padding(
+                    horizontal = dimens.outerHorizontalPadding,
+                    vertical = dimens.contentPadding
+                ),
+                horizontalArrangement = Arrangement.spacedBy(dimens.outerVerticalPadding),
                 verticalAlignment = Alignment.Top
             ) {
-                JvmConnectionNewFormPanel(
-                    modifier = Modifier.weight(1f),
-                    selectedDataSource = selectedDataSource,
-                    address = address,
-                    username = username,
-                    password = password,
-                    showPassword = showPassword,
-                    onAddressChange = onAddressChange,
-                    onUsernameChange = onUsernameChange,
-                    onPasswordChange = onPasswordChange,
-                    onTogglePassword = onTogglePassword,
-                    onConnect = onConnect,
-                    onReset = onReset
+                Icon(
+                    painter = painterResource(Res.drawable.info_24px),
+                    contentDescription = null,
+                    modifier = Modifier.size(dimens.contentPadding),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                JvmConnectionNewSidePanel(
-                    modifier = Modifier.weight(1f),
-                    showResourcePanel = showResourcePanel,
-                    selectedDataSource = selectedDataSource,
-                    address = address,
-                    selectedResourceIndex = selectedResourceIndex,
-                    loginStage = loginStage,
-                    resourceLoading = resourceLoading,
-                    resourceError = resourceError,
-                    loginLoading = loginLoading,
-                    loginError = loginError,
-                    errorMessage = errorMessage,
-                    errorHint = errorHint,
-                    tmpAddressList = tmpAddressList,
-                    tmpPlexInfo = tmpPlexInfo,
-                    selectedResourceAddress = selectedResourceAddress,
-                    connectionReady = connectionReady,
-                    onSelectResource = onSelectResource
+                XyTextSub(
+                    text = stringResource(Res.string.jvm_connection_rail_note),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2
                 )
             }
         }
     }
 }
 
+/**
+ * 单个协议卡片：字母徽标 + 名称 + 最低支持版本 + 默认端口。
+ */
 @Composable
-private fun JvmConnectionNewHeader(
+private fun JvmConnectionProtocolCard(
+    dataSourceType: DataSourceType,
+    selected: Boolean,
+    compact: Boolean,
+    onClick: () -> Unit,
+) {
+    val dimens = XyTheme.dimens
+    val primary = MaterialTheme.colorScheme.primary
+    val shape = RoundedCornerShape(dimens.corner / 2)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = dimens.itemHeight - dimens.contentPadding)
+            .clip(shape)
+            .background(if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f) else Color.Transparent)
+            .jvmHoverDebounceClickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = dimens.outerVerticalPadding, vertical = dimens.outerVerticalPadding),
+            verticalAlignment = Alignment.CenterVertically,
+            // 图标模式下徽标居中，完整模式下按「徽标 + 名称 + 端口」横向排列。
+            horizontalArrangement = if (compact) {
+                Arrangement.Center
+            } else {
+                Arrangement.spacedBy(dimens.outerVerticalPadding + 2.dp)
+            }
+        ) {
+            // 协议图标：选中时使用主色淡底，图标本身沿用各协议官方 logo。
+            Box(
+                modifier = Modifier
+                    .size(dimens.itemHeight - dimens.contentPadding - dimens.outerVerticalPadding * 2)
+                    .clip(RoundedCornerShape(dimens.corner / 2))
+                    .background(
+                        if (selected) primary.copy(alpha = 0.12f)
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = if (selected) primary.copy(alpha = 0.34f) else JvmConnectionLineColor(),
+                        shape = RoundedCornerShape(dimens.corner / 2)
+                    )
+                    .padding(dimens.outerVerticalPadding / 2),
+                contentAlignment = Alignment.Center
+            ) {
+                XySmallImage(
+                    modifier = Modifier.fillMaxSize(),
+                    model = painterResource(dataSourceType.img),
+                    contentDescription = dataSourceType.title,
+                    shape = RoundedCornerShape(dimens.corner / 3)
+                )
+            }
+            if (!compact) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                ) {
+                    XyText(
+                        text = dataSourceType.title,
+                        color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (selected) FontWeight.W700 else FontWeight.W600,
+                        maxLines = 1,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    XyText(
+                        text = stringResource(Res.string.jvm_connection_min_supported, dataSourceType.version),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Normal,
+                        maxLines = 1,
+                        style = JvmConnectionMonoStyle()
+                    )
+                }
+                XyText(
+                    text = dataSourceType.httpPort.toString(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Normal,
+                    maxLines = 1,
+                    style = JvmConnectionMonoStyle()
+                )
+            }
+        }
+        // 选中态左侧强调条。
+        if (selected) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .width(2.dp)
+                    .height(dimens.contentPadding * 2)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(primary)
+            )
+        }
+    }
+}
+
+/**
+ * 页头：小横线 + 英文标签 + 标题 + 说明。
+ */
+@Composable
+private fun JvmConnectionHero(
     selectedDataSource: DataSourceType,
     compact: Boolean,
 ) {
-    val titleCopy = if (selectedDataSource.ifInputUrl) {
+    val dimens = XyTheme.dimens
+    val desc = if (selectedDataSource.ifInputUrl) {
         stringResource(Res.string.jvm_connection_new_screen_text_05, selectedDataSource.title)
     } else {
         stringResource(Res.string.jvm_connection_new_screen_text_06, selectedDataSource.title)
     }
-
-    if (compact) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-        ) {
-            JvmConnectionNewHeaderText(titleCopy = titleCopy)
-            JvmConnectionNewSelectedService(dataSourceType = selectedDataSource)
-        }
-    } else {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
-            verticalAlignment = Alignment.Top
-        ) {
-            JvmConnectionNewHeaderText(
-                modifier = Modifier.weight(1f),
-                titleCopy = titleCopy
+    Column(modifier = Modifier.widthIn(max = 720.dp)) {
+        if (!compact) {
+            Box(
+                modifier = Modifier
+                    .width(dimens.contentPadding * 2 + dimens.outerVerticalPadding)
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(MaterialTheme.colorScheme.primary)
             )
-            JvmConnectionNewSelectedService(dataSourceType = selectedDataSource)
-        }
-    }
-}
-
-@Composable
-private fun JvmConnectionNewHeaderText(
-    titleCopy: String,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-    ) {
-        XyTextLarge(
-            text = stringResource(Res.string.jvm_connection_new_screen_text_07),
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.W900,
-            style = MaterialTheme.typography.headlineLarge,
-        )
-        Spacer(modifier = Modifier.height(9.dp))
-        XyTextSub(
-            text = titleCopy,
-            modifier = Modifier.widthIn(max = 640.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.35
-            ),
-        )
-    }
-}
-
-@Composable
-private fun JvmConnectionNewSelectedService(
-    dataSourceType: DataSourceType,
-) {
-    Row(
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                shape = CircleShape
-            )
-            .padding(
-                start = XyTheme.dimens.outerHorizontalPadding / 2,
-                end = XyTheme.dimens.contentPadding,
-                top = XyTheme.dimens.innerVerticalPadding / 2,
-                bottom = XyTheme.dimens.innerVerticalPadding / 2
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(XyTheme.dimens.dialogCorner)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
+            Spacer(modifier = Modifier.height(dimens.outerVerticalPadding))
             XyText(
-                text = dataSourceType.title.first().toString(),
+                text = "SERVER / CONNECTION",
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.W900,
-                style = MaterialTheme.typography.labelSmall
+                fontWeight = FontWeight.W600,
+                maxLines = 1,
+                style = JvmConnectionMonoStyle(letterSpacing = 2.sp)
             )
+            Spacer(modifier = Modifier.height(dimens.outerVerticalPadding / 2))
         }
         XyText(
-            text = dataSourceType.title,
-            color = MaterialTheme.colorScheme.primary,
+            text = stringResource(Res.string.jvm_connection_new_screen_text_07),
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W800,
-            maxLines = 1,
-            style = MaterialTheme.typography.bodySmall
+            maxLines = 2,
+            style = if (compact) {
+                MaterialTheme.typography.titleLarge
+            } else {
+                MaterialTheme.typography.headlineMedium
+            }
         )
+        if (!compact) {
+            Spacer(modifier = Modifier.height(dimens.outerVerticalPadding))
+            XyTextSub(
+                text = desc,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 3
+            )
+        }
     }
 }
 
+/**
+ * 凭据表单卡。
+ *
+ * @param narrowFields 表单宽度不足时把账号与密码改为上下排列。
+ * @param connected 是否已连接成功。
+ * @param busy 是否正在请求中。
+ */
 @Composable
-private fun JvmConnectionNewFormPanel(
+private fun JvmConnectionFormPanel(
+    modifier: Modifier,
     selectedDataSource: DataSourceType,
     address: String,
     username: String,
     password: String,
     showPassword: Boolean,
+    submitted: Boolean,
+    busy: Boolean,
+    connected: Boolean,
+    narrowFields: Boolean,
     onAddressChange: (String) -> Unit,
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onTogglePassword: () -> Unit,
     onConnect: () -> Unit,
     onReset: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    JvmConnectionNewPanel(
-        modifier = modifier,
-    ) {
-        XyText(
-            text = stringResource(Res.string.jvm_connection_new_screen_text_08, selectedDataSource.title),
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.W900,
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(modifier = Modifier.height(5.dp))
-        XyTextSub(
-            text = selectedDataSource.describe,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(modifier = Modifier.height(18.dp))
+    val dimens = XyTheme.dimens
+    // 地址与账号都填写后才允许发起连接，避免无效请求。
+    val canConnect = !busy && username.isNotBlank() &&
+            (!selectedDataSource.ifInputUrl || address.isNotBlank())
+    val addressValid = address.startsWith(ApiConstants.HTTP) || address.startsWith(ApiConstants.HTTPS)
 
-        Column {
-            AnimatedVisibility(visible = selectedDataSource.ifInputUrl) {
-                Column {
-                    JvmConnectionNewInputField(
-                        label = stringResource(Res.string.jvm_connection_new_screen_text_09),
-                        text = address,
-                        onChange = onAddressChange,
-                        hint = "${ApiConstants.HTTP}192.168.1.12:${selectedDataSource.httpPort}",
-                        keyboardType = KeyboardType.Uri,
-                        leadingIcon = painterResource(Res.drawable.http_24px),
-                        actionContent = if (address.isNotBlank()) {
-                            {
-                                JvmConnectionNewClearButton {
-                                    onAddressChange("")
-                                }
-                            }
-                        } else null
-                    )
-                    Spacer(modifier = Modifier.height(7.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-                    ) {
-                        JvmConnectionNewChip(
-                            text = stringResource(Res.string.jvm_connection_new_screen_text_10, selectedDataSource.httpPort),
-                            color = MaterialTheme.colorScheme.primary,
-                            backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        )
-                        JvmConnectionNewChip(text = stringResource(Res.string.jvm_connection_new_screen_text_11))
-                    }
-                    Spacer(modifier = Modifier.height(14.dp))
-                }
+    JvmConnectionPanelCard(modifier = modifier) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+            Column(modifier = Modifier.weight(1f)) {
+                XyText(
+                    text = "02 / 04 · " + stringResource(
+                        if (submitted) Res.string.jvm_connection_submitted
+                        else Res.string.jvm_connection_new_screen_text_02
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Normal,
+                    maxLines = 1,
+                    style = JvmConnectionMonoStyle(letterSpacing = 1.6.sp)
+                )
+                Spacer(modifier = Modifier.height(dimens.outerVerticalPadding / 2))
+                XyText(
+                    text = stringResource(Res.string.jvm_connection_new_screen_text_08, selectedDataSource.title),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.W800,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
+            JvmConnectionTag(
+                text = stringResource(
+                    if (submitted) Res.string.jvm_connection_submitted
+                    else Res.string.jvm_connection_required
+                )
+            )
+        }
+        Spacer(modifier = Modifier.height(dimens.contentPadding + dimens.outerVerticalPadding))
 
-            JvmConnectionNewInputField(
-                label = stringResource(Res.string.username),
-                text = username,
-                onChange = onUsernameChange,
-                hint = "admin",
-                keyboardType = KeyboardType.Text,
-                leadingIcon = painterResource(Res.drawable.person_24px),
-                actionContent = if (username.isNotBlank()) {
+        if (selectedDataSource.ifInputUrl) {
+            JvmConnectionFieldLabel(
+                label = stringResource(Res.string.jvm_connection_new_screen_text_09),
+                tag = stringResource(Res.string.jvm_connection_uri_tag)
+            )
+            Spacer(modifier = Modifier.height(dimens.outerVerticalPadding))
+            JvmConnectionTextField(
+                value = address,
+                onValueChange = onAddressChange,
+                hint = "${ApiConstants.HTTP}192.168.1.12:${selectedDataSource.httpPort}",
+                leading = painterResource(Res.drawable.http_24px),
+                keyboardType = KeyboardType.Uri,
+                trailing = if (address.isNotBlank()) {
                     {
-                        JvmConnectionNewClearButton {
-                            onUsernameChange("")
-                        }
+                        JvmConnectionIconAction(
+                            painter = painterResource(Res.drawable.cancel_24px),
+                            onClick = { onAddressChange("") }
+                        )
                     }
                 } else null
             )
-            Spacer(modifier = Modifier.height(14.dp))
-
-            JvmConnectionNewInputField(
-                label = stringResource(Res.string.password),
-                text = password,
-                onChange = onPasswordChange,
-                hint = "password",
-                keyboardType = KeyboardType.Password,
-                leadingIcon = painterResource(Res.drawable.password_24px),
-                visualTransformation = if (showPassword) {
-                    VisualTransformation.None
-                } else {
-                    PasswordVisualTransformation()
-                },
-                actionContent = {
-                    XyIconButton(
-                        onClick = onTogglePassword,
-                    ) {
-                        Icon(
-                            painter = painterResource(
-                                if (showPassword) {
-                                    Res.drawable.visibility_24px
-                                } else {
-                                    Res.drawable.visibility_off_24px
-                                }
-                            ),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-
-            AnimatedVisibility(visible = !selectedDataSource.ifInputUrl) {
-                Column {
-                    JvmConnectionNewChip(
-                        text = stringResource(Res.string.jvm_connection_new_screen_text_12),
-                        color = XyTheme.extendedColors.warning,
-                        backgroundColor = XyTheme.extendedColors.warningContainer,
+            Spacer(modifier = Modifier.height(dimens.outerVerticalPadding))
+            Row(horizontalArrangement = Arrangement.spacedBy(dimens.outerVerticalPadding)) {
+                JvmConnectionTag(
+                    text = stringResource(
+                        Res.string.jvm_connection_new_screen_text_10,
+                        selectedDataSource.httpPort.toString()
+                    ),
+                    color = MaterialTheme.colorScheme.primary,
+                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                    backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.09f)
+                )
+                if (addressValid) {
+                    JvmConnectionTag(
+                        text = stringResource(Res.string.jvm_connection_address_valid),
+                        color = XyTheme.extendedColors.success,
+                        borderColor = XyTheme.extendedColors.success.copy(alpha = 0.34f),
+                        backgroundColor = XyTheme.extendedColors.success.copy(alpha = 0.09f)
                     )
-                    Spacer(modifier = Modifier.height(14.dp))
                 }
             }
+            Spacer(modifier = Modifier.height(dimens.contentPadding + dimens.outerVerticalPadding))
+        }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                OutlinedButton(
-                    modifier = Modifier.jvmHoverDebounceClickable(),
-                    onClick = onReset,
-                    shape = RoundedCornerShape(XyTheme.dimens.corner),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                ) {
-                    XyText(
-                        text = stringResource(Res.string.reselect),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Normal,
-                        style = MaterialTheme.typography.labelLarge
-                    )
+        // 账号与密码并排，窄表单时自动改为上下排列。
+        if (narrowFields) {
+            Column(verticalArrangement = Arrangement.spacedBy(dimens.contentPadding + dimens.outerVerticalPadding)) {
+                JvmConnectionUserField(username, onUsernameChange)
+                JvmConnectionPasswordField(password, showPassword, onPasswordChange, onTogglePassword)
+            }
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(dimens.contentPadding + dimens.outerVerticalPadding)) {
+                Box(modifier = Modifier.weight(1f)) {
+                    JvmConnectionUserField(username, onUsernameChange)
                 }
-                Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
-                XyButton(
-                    onClick = onConnect,
-                    text = stringResource(Res.string.connect)
+                Box(modifier = Modifier.weight(1f)) {
+                    JvmConnectionPasswordField(password, showPassword, onPasswordChange, onTogglePassword)
+                }
+            }
+        }
+
+        if (!selectedDataSource.ifInputUrl) {
+            Spacer(modifier = Modifier.height(dimens.contentPadding + dimens.outerVerticalPadding))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(dimens.corner / 2))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(dimens.corner / 2)
+                    )
+                    .padding(horizontal = dimens.contentPadding, vertical = dimens.outerVerticalPadding),
+                horizontalArrangement = Arrangement.spacedBy(dimens.outerVerticalPadding),
+                verticalAlignment = Alignment.Top
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.info_24px),
+                    contentDescription = null,
+                    modifier = Modifier.size(dimens.contentPadding),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                XyTextSub(
+                    text = stringResource(Res.string.jvm_connection_new_screen_text_12),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.height(dimens.contentPadding + dimens.outerVerticalPadding))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(JvmConnectionLineColor())
+        )
+        Spacer(modifier = Modifier.height(dimens.contentPadding))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            JvmConnectionButton(
+                text = stringResource(Res.string.reselect),
+                primary = false,
+                onClick = onReset
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            XyText(
+                text = when {
+                    connected -> stringResource(Res.string.jvm_connection_rail_state_ok)
+                    busy -> stringResource(Res.string.jvm_connection_rail_state_busy)
+                    canConnect -> stringResource(Res.string.jvm_connection_ready)
+                    selectedDataSource.ifInputUrl -> stringResource(Res.string.jvm_connection_need_address_user)
+                    else -> stringResource(Res.string.jvm_connection_need_user)
+                },
+                color = if (canConnect) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Normal,
+                maxLines = 1,
+                style = JvmConnectionMonoStyle()
+            )
+            Spacer(modifier = Modifier.width(dimens.outerVerticalPadding))
+            JvmConnectionButton(
+                text = stringResource(Res.string.connect),
+                primary = true,
+                enabled = canConnect,
+                onClick = onConnect
+            )
         }
     }
 }
 
+/**
+ * 用户名输入区。
+ */
 @Composable
-private fun JvmConnectionNewInputField(
-    label: String,
-    text: String,
-    onChange: (String) -> Unit,
-    hint: String,
-    keyboardType: KeyboardType,
-    leadingIcon: Painter,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-    actionContent: (@Composable () -> Unit)? = null,
+private fun JvmConnectionUserField(
+    username: String,
+    onUsernameChange: (String) -> Unit,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-    ) {
-        XyText(
-            text = label,
-//            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.W800,
-            style = MaterialTheme.typography.bodySmall,
-        )
-        XyEdit(
-            text = text,
-            onChange = onChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-//            backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-            paddingValues = PaddingValues(),
-            hint = hint,
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            visualTransformation = visualTransformation,
-            leadingContent = {
-                Icon(
-                    painter = leadingIcon,
-                    contentDescription = label,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            actionContent = actionContent
+    val dimens = XyTheme.dimens
+    Column {
+        JvmConnectionFieldLabel(label = stringResource(Res.string.username))
+        Spacer(modifier = Modifier.height(dimens.outerVerticalPadding))
+        JvmConnectionTextField(
+            value = username,
+            onValueChange = onUsernameChange,
+            hint = "admin",
+            leading = painterResource(Res.drawable.person_24px),
+            keyboardType = KeyboardType.Text,
+            trailing = if (username.isNotBlank()) {
+                {
+                    JvmConnectionIconAction(
+                        painter = painterResource(Res.drawable.cancel_24px),
+                        onClick = { onUsernameChange("") }
+                    )
+                }
+            } else null
         )
     }
 }
 
+/**
+ * 密码输入区。
+ */
 @Composable
-private fun JvmConnectionNewClearButton(
+private fun JvmConnectionPasswordField(
+    password: String,
+    showPassword: Boolean,
+    onPasswordChange: (String) -> Unit,
+    onTogglePassword: () -> Unit,
+) {
+    val dimens = XyTheme.dimens
+    Column {
+        JvmConnectionFieldLabel(label = stringResource(Res.string.password))
+        Spacer(modifier = Modifier.height(dimens.outerVerticalPadding))
+        JvmConnectionTextField(
+            value = password,
+            onValueChange = onPasswordChange,
+            hint = "password",
+            leading = painterResource(Res.drawable.password_24px),
+            keyboardType = KeyboardType.Password,
+            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            trailing = {
+                JvmConnectionIconAction(
+                    painter = painterResource(
+                        if (showPassword) Res.drawable.visibility_24px else Res.drawable.visibility_off_24px
+                    ),
+                    onClick = onTogglePassword
+                )
+            }
+        )
+    }
+}
+
+/**
+ * 表单字段标签：等宽小字 + 可选标签 + 右侧细线。
+ */
+@Composable
+private fun JvmConnectionFieldLabel(
+    label: String,
+    tag: String? = null,
+) {
+    val dimens = XyTheme.dimens
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        XyText(
+            text = label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Normal,
+            maxLines = 1,
+            style = JvmConnectionMonoStyle()
+        )
+        if (tag != null) {
+            Spacer(modifier = Modifier.width(dimens.outerVerticalPadding / 2))
+            JvmConnectionTag(text = tag)
+        }
+        Spacer(modifier = Modifier.width(dimens.outerVerticalPadding))
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(JvmConnectionLineColor())
+        )
+    }
+}
+
+/**
+ * 统一风格的输入框，复用项目 XyEdit。
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun JvmConnectionTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    hint: String,
+    leading: Painter,
+    keyboardType: KeyboardType,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    val dimens = XyTheme.dimens
+    XyEdit(
+        text = value,
+        onChange = onValueChange,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(dimens.contentPadding * 2 + dimens.innerVerticalPadding * 2),
+        // 高度由外层控制，内部不再叠加纵向留白。
+        paddingValues = PaddingValues(),
+        hint = hint,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        visualTransformation = visualTransformation,
+        textStyle = MaterialTheme.typography.bodyMedium.copy(
+            fontFamily = FontFamily.Monospace,
+            color = MaterialTheme.colorScheme.onSurface
+        ),
+        leadingContent = {
+            Icon(
+                painter = leading,
+                contentDescription = null,
+                modifier = Modifier.size(dimens.outerHorizontalPadding),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        actionContent = trailing
+    )
+}
+
+/**
+ * 输入框右侧的小图标操作。
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun JvmConnectionIconAction(
+    painter: Painter,
     onClick: () -> Unit,
 ) {
     XyIconButton(
         onClick = onClick,
+        modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
     ) {
         Icon(
-            painter = painterResource(Res.drawable.cancel_24px),
+            painter = painter,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
 
+/**
+ * 结果卡：按 ViewModel 状态渲染探测、资源列表、登录与错误。
+ */
 @Composable
-private fun JvmConnectionNewSidePanel(
-    showResourcePanel: Boolean,
+private fun JvmConnectionResultPanel(
+    modifier: Modifier,
     selectedDataSource: DataSourceType,
     address: String,
     selectedResourceIndex: Int,
@@ -1071,794 +1049,811 @@ private fun JvmConnectionNewSidePanel(
     selectedResourceAddress: String,
     connectionReady: Boolean,
     onSelectResource: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-    onEditConnectionInfo: (() -> Unit)? = null,
+    onRetry: () -> Unit,
+    onEditConnectionInfo: () -> Unit,
+    onEnter: () -> Unit,
 ) {
-    // 侧栏卡片根据 ViewModel 的 showResourcePanel 切换预览或真实资源/登录状态。
-    JvmConnectionNewPanel(
-        modifier = modifier,
-    ) {
-        AnimatedContent(
-            targetState = showResourcePanel,
-            modifier = Modifier.fillMaxWidth(),
-            transitionSpec = {
-                ContentTransform(
-                    targetContentEnter = fadeIn(
-                        animationSpec = tween(
-                            durationMillis = 180,
-                            easing = FastOutSlowInEasing
-                        )
-                    ),
-                    initialContentExit = fadeOut(
-                        animationSpec = tween(
-                            durationMillis = 140,
-                            easing = FastOutSlowInEasing
-                        )
-                    ),
-                    sizeTransform = SizeTransform(clip = true) { _, _ ->
-                        tween(
-                            durationMillis = 280,
-                            easing = FastOutSlowInEasing
-                        )
-                    }
-                )
-            },
-            label = "connectionSidePanel"
-        ) { resourcePanelVisible ->
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (resourcePanelVisible) {
-                    JvmConnectionNewResourceContent(
-                        selectedDataSource = selectedDataSource,
-                        address = address,
-                        selectedResourceIndex = selectedResourceIndex,
-                        loginStage = loginStage,
-                        resourceLoading = resourceLoading,
-                        resourceError = resourceError,
-                        loginLoading = loginLoading,
-                        loginError = loginError,
-                        errorMessage = errorMessage,
-                        errorHint = errorHint,
-                        tmpAddressList = tmpAddressList,
-                        tmpPlexInfo = tmpPlexInfo,
-                        selectedResourceAddress = selectedResourceAddress,
-                        connectionReady = connectionReady,
-                        onSelectResource = onSelectResource,
-                        onEditConnectionInfo = onEditConnectionInfo,
-                    )
-                } else {
-                    JvmConnectionNewSummaryContent(
-                        selectedDataSource = selectedDataSource,
-                        address = address,
-                    )
-                }
+    JvmConnectionPanelCard(modifier = modifier) {
+        when {
+            resourceLoading -> {
+                JvmConnectionProbingContent(address = address)
             }
-        }
-    }
-}
 
-@Composable
-private fun JvmConnectionNewSummaryContent(
-    selectedDataSource: DataSourceType,
-    address: String,
-) {
-    val accentBlockSize = XyTheme.dimens.innerHorizontalPadding +
-        XyTheme.dimens.contentPadding +
-        XyTheme.dimens.innerVerticalPadding +
-        XyTheme.dimens.innerVerticalPadding / 2
-    val heroLogoSize = accentBlockSize + accentBlockSize
+            loginLoading || connectionReady -> {
+                JvmConnectionLoginContent(
+                    selectedDataSource = selectedDataSource,
+                    resourceAddress = selectedResourceAddress.ifBlank { address },
+                    stage = loginStage,
+                    onEnter = onEnter
+                )
+            }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(150.dp)
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                        XyTheme.extendedColors.success.copy(alpha = 0.12f)
-                    )
+            resourceError || loginError -> {
+                JvmConnectionErrorContent(
+                    loginError = loginError,
+                    errorHint = errorHint,
+                    errorMessage = errorMessage,
+                    onRetry = onRetry,
+                    onEditConnectionInfo = onEditConnectionInfo
                 )
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(heroLogoSize)
-                .clip(RoundedCornerShape(XyTheme.dimens.dialogCorner))
-                .background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.78f))
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                    shape = RoundedCornerShape(XyTheme.dimens.dialogCorner)
-                )
-                .padding(XyTheme.dimens.outerHorizontalPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            XySmallImage(
-                modifier = Modifier
-                    .fillMaxSize(),
-                model = painterResource(selectedDataSource.img),
-                contentDescription = selectedDataSource.title,
-                shape = RoundedCornerShape(XyTheme.dimens.corner)
-            )
-        }
-    }
-    Spacer(modifier = Modifier.height(12.dp))
-    JvmConnectionNewMetaRow(label = stringResource(Res.string.jvm_connection_new_screen_text_13), value = selectedDataSource.title)
-    JvmConnectionNewMetaRow(
-        label = stringResource(Res.string.jvm_connection_new_screen_text_14),
-        value = if (selectedDataSource.ifInputUrl) {
-            address.removePrefix(ApiConstants.HTTP).removePrefix(ApiConstants.HTTPS).ifBlank { stringResource(Res.string.jvm_connection_config_info_screen_text_37) }
-        } else {
-            stringResource(Res.string.jvm_connection_new_screen_text_15)
-        }
-    )
-    JvmConnectionNewMetaRow(
-        label = stringResource(Res.string.jvm_about_screen_text_09),
-        value = if (selectedDataSource.ifInputUrl) {
-            "${selectedDataSource.version}+"
-        } else {
-            stringResource(Res.string.jvm_connection_new_screen_text_16)
-        }
-    )
-    Spacer(modifier = Modifier.height(14.dp))
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(XyTheme.dimens.corner)
-            )
-            .padding(XyTheme.dimens.contentPadding),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(accentBlockSize)
-                .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                .background(
-                    Brush.linearGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.primary,
-                            XyTheme.extendedColors.success
+            }
+
+            tmpPlexInfo.isNotEmpty() -> {
+                // 字符串在组合上下文内先取好，避免在 map 的普通 lambda 中调用 stringResource。
+                val availableTag = stringResource(Res.string.jvm_connection_new_screen_text_25)
+                JvmConnectionResourceList(
+                    selectedDataSource = selectedDataSource,
+                    items = tmpPlexInfo.map { plexItem ->
+                        JvmConnectionResourceItem(
+                            title = plexItem.name,
+                            address = plexItem.addressUrl,
+                            tag = plexItem.product.ifBlank { availableTag }
                         )
-                    )
-                )
-        )
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            XyText(
-                text = stringResource(Res.string.jvm_connection_new_screen_text_17),
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.W800,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodySmall
-            )
-            XyTextSub(
-                text = stringResource(Res.string.jvm_connection_new_screen_text_18),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-    }
-}
-
-@Composable
-private fun JvmConnectionNewMetaRow(
-    label: String,
-    value: String,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = XyTheme.dimens.outerVerticalPadding / 2),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        XyTextSub(
-            text = label,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall
-        )
-        XyText(
-            text = value,
-            modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.W800,
-            maxLines = 1,
-            style = MaterialTheme.typography.bodySmall
-        )
-    }
-}
-
-@Composable
-private fun JvmConnectionNewResourceContent(
-    selectedDataSource: DataSourceType,
-    address: String,
-    selectedResourceIndex: Int,
-    loginStage: JvmConnectionNewLoginStage,
-    resourceLoading: Boolean,
-    resourceError: Boolean,
-    loginLoading: Boolean,
-    loginError: Boolean,
-    errorMessage: String,
-    errorHint: String,
-    tmpAddressList: List<String>,
-    tmpPlexInfo: List<ResourceData>,
-    selectedResourceAddress: String,
-    connectionReady: Boolean,
-    onSelectResource: (Int) -> Unit,
-    onEditConnectionInfo: (() -> Unit)? = null,
-) {
-    // 资源内容只渲染 ViewModel 暴露的真实候选地址、Plex 资源和错误状态。
-    XyText(
-        text = stringResource(Res.string.jvm_connection_new_screen_text_19),
-        color = MaterialTheme.colorScheme.onSurface,
-        fontWeight = FontWeight.W900,
-        style = MaterialTheme.typography.titleMedium
-    )
-    Spacer(modifier = Modifier.height(5.dp))
-    XyTextSub(
-        text = if (selectedDataSource.ifInputUrl) {
-            stringResource(Res.string.jvm_connection_new_screen_text_20, selectedDataSource.title)
-        } else {
-            stringResource(Res.string.jvm_connection_new_screen_text_21)
-        },
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        style = MaterialTheme.typography.bodySmall
-    )
-    if (onEditConnectionInfo != null) {
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .jvmHoverDebounceClickable(),
-            onClick = onEditConnectionInfo,
-            shape = RoundedCornerShape(XyTheme.dimens.corner),
-        ) {
-            XyText(
-                text = stringResource(Res.string.jvm_connection_new_screen_text_22),
-                fontWeight = FontWeight.Normal,
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
-    }
-    Spacer(modifier = Modifier.height(14.dp))
-
-    // 状态优先级由业务流程决定：加载和登录结果优先，其次才展示可选择资源。
-    when {
-        resourceLoading -> {
-            JvmConnectionNewLoadingPanel(text = stringResource(Res.string.jvm_connection_new_screen_text_23))
-        }
-
-        loginLoading || connectionReady -> {
-            // 点击资源后 ViewModel 会立即开始登录，因此这里展示登录进度或成功状态。
-            JvmConnectionNewLoginStatusPanel(
-                selectedDataSource = selectedDataSource,
-                resourceAddress = selectedResourceAddress.ifBlank { address },
-                stage = loginStage,
-            )
-        }
-
-        resourceError -> {
-            JvmConnectionNewErrorPanel(
-                title = stringResource(Res.string.jvm_connection_new_screen_text_24),
-                errorHint = errorHint,
-                errorMessage = errorMessage
-            )
-        }
-
-        loginError -> {
-            JvmConnectionNewErrorPanel(
-                title = stringResource(Res.string.login_failed),
-                errorHint = errorHint,
-                errorMessage = errorMessage
-            )
-        }
-
-        tmpPlexInfo.isNotEmpty() -> {
-            // Plex 等账号发现型协议会展示真实资源列表。
-            Column(
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-            ) {
-                tmpPlexInfo.forEachIndexed { index, item ->
-                    JvmConnectionNewResourceItem(
-                        title = item.name,
-                        address = item.addressUrl,
-                        tag = item.product.ifBlank { stringResource(Res.string.jvm_connection_new_screen_text_25) },
-                        selected = index == selectedResourceIndex,
-                        onClick = { onSelectResource(index) }
-                    )
-                }
-            }
-        }
-
-        tmpAddressList.isNotEmpty() -> {
-            // URL 输入型协议在地址不完整时会由 ViewModel 生成候选连接地址。
-            Column(
-                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-            ) {
-                tmpAddressList.forEachIndexed { index, item ->
-                    JvmConnectionNewResourceItem(
-                        title = if (index == 0) stringResource(Res.string.jvm_connection_new_screen_text_26) else stringResource(Res.string.jvm_connection_new_screen_text_27),
-                        address = item,
-                        tag = if (index == 0) stringResource(Res.string.recommend) else stringResource(Res.string.jvm_connection_new_screen_text_28),
-                        selected = index == selectedResourceIndex,
-                        onClick = { onSelectResource(index) }
-                    )
-                }
-            }
-        }
-
-        else -> {
-            // 资源请求已触发但没有可展示数据时，保留面板并给出空态。
-            JvmConnectionNewEmptyResourcePanel()
-        }
-    }
-}
-
-@Composable
-private fun JvmConnectionNewResourceItem(
-    title: String,
-    address: String,
-    tag: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val shape = RoundedCornerShape(XyTheme.dimens.corner)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 58.dp)
-            .clip(shape)
-            .background(
-                if (selected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainerLowest
-                }
-            )
-            .border(
-                width = 1.dp,
-                color = if (selected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.48f)
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.22f)
-                },
-                shape = shape
-            )
-            .jvmHoverDebounceClickable(onClick = onClick)
-            .padding(
-                horizontal = XyTheme.dimens.contentPadding,
-                vertical = XyTheme.dimens.outerVerticalPadding
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(XyTheme.dimens.contentPadding + XyTheme.dimens.innerVerticalPadding / 2)
-                .clip(CircleShape)
-                .border(
-                    width = if (selected) 5.dp else 2.dp,
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.56f)
                     },
-                    shape = CircleShape
+                    selectedIndex = selectedResourceIndex,
+                    onSelectResource = onSelectResource,
+                    onEditConnectionInfo = onEditConnectionInfo
                 )
-                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-        )
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            XyText(
-                text = title,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.W800,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            XyTextSub(
-                text = address,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-        JvmConnectionNewChip(
-            text = tag,
-            color = XyTheme.extendedColors.success,
-            backgroundColor = XyTheme.extendedColors.successContainer
-        )
-    }
-}
+            }
 
-@Composable
-private fun JvmConnectionNewLoadingPanel(
-    text: String,
-) {
-    // 资源加载和登录加载共用轻量状态面板，文案由调用处按业务阶段传入。
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(XyTheme.dimens.corner)
-            )
-            .padding(XyTheme.dimens.contentPadding),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-    ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(28.dp),
-            color = MaterialTheme.colorScheme.primary,
-            strokeWidth = 3.dp
-        )
-        XyText(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.W800,
-            style = MaterialTheme.typography.bodyMedium
-        )
-    }
-}
+            tmpAddressList.isNotEmpty() -> {
+                // 候选地址的标题与标签同样是固定文案，提前取出后在 map 中复用。
+                val recommendTitle = stringResource(Res.string.jvm_connection_new_screen_text_26)
+                val candidateTitle = stringResource(Res.string.jvm_connection_new_screen_text_27)
+                val recommendTag = stringResource(Res.string.recommend)
+                val optionalTag = stringResource(Res.string.jvm_connection_new_screen_text_28)
+                JvmConnectionResourceList(
+                    selectedDataSource = selectedDataSource,
+                    items = tmpAddressList.mapIndexed { index, item ->
+                        JvmConnectionResourceItem(
+                            title = if (index == 0) recommendTitle else candidateTitle,
+                            address = item,
+                            tag = if (index == 0) recommendTag else optionalTag
+                        )
+                    },
+                    selectedIndex = selectedResourceIndex,
+                    onSelectResource = onSelectResource,
+                    onEditConnectionInfo = onEditConnectionInfo
+                )
+            }
 
-@Composable
-private fun JvmConnectionNewErrorPanel(
-    title: String,
-    errorHint: String,
-    errorMessage: String,
-) {
-    // 错误内容完全来自 ViewModel，页面只负责组合标题、提示和后端返回的详细信息。
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(XyTheme.extendedColors.danger.copy(alpha = 0.08f))
-            .border(
-                width = 1.dp,
-                color = XyTheme.extendedColors.danger.copy(alpha = 0.24f),
-                shape = RoundedCornerShape(XyTheme.dimens.corner)
-            )
-            .padding(XyTheme.dimens.contentPadding),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-    ) {
-        XyText(
-            text = title,
-            color = XyTheme.extendedColors.danger,
-            fontWeight = FontWeight.W900,
-            style = MaterialTheme.typography.bodyMedium
-        )
-        XyTextSub(
-            text = errorHint,
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.bodySmall
-        )
-        if (errorMessage.isNotBlank()) {
-            XyTextSub(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 3,
-                style = MaterialTheme.typography.bodySmall
-            )
+            else -> {
+                XyTextSub(
+                    text = stringResource(Res.string.jvm_connection_new_screen_text_29),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2
+                )
+            }
         }
     }
 }
 
+/**
+ * 资源探测中：细进度条 + 地址 + 骨架占位。
+ */
 @Composable
-private fun JvmConnectionNewEmptyResourcePanel() {
-    // ViewModel 已请求资源面板但暂无候选数据时，保留面板避免视觉状态跳回表单。
-    XyTextSub(
-        text = stringResource(Res.string.jvm_connection_new_screen_text_29),
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        style = MaterialTheme.typography.bodySmall
+private fun JvmConnectionProbingContent(address: String) {
+    val dimens = XyTheme.dimens
+    JvmConnectionPanelKicker(
+        text = "03 / 04 · " + stringResource(Res.string.jvm_connection_new_screen_text_03)
     )
+    Spacer(modifier = Modifier.height(dimens.outerVerticalPadding / 2))
+    JvmConnectionPanelTitle(text = stringResource(Res.string.jvm_connection_new_screen_text_23))
+    Spacer(modifier = Modifier.height(dimens.outerVerticalPadding / 2))
+    XyTextSub(
+        text = stringResource(Res.string.jvm_connection_loading_address),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodySmall,
+        maxLines = 2
+    )
+    Spacer(modifier = Modifier.height(dimens.contentPadding))
+    JvmConnectionIndeterminateBar()
+    Spacer(modifier = Modifier.height(dimens.contentPadding))
+    XyTextSub(
+        text = address.stripScheme(),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = JvmConnectionMonoStyle(),
+        maxLines = 1
+    )
+    Spacer(modifier = Modifier.height(dimens.contentPadding))
+    JvmConnectionSkeletonBar(fraction = 0.78f)
+    Spacer(modifier = Modifier.height(dimens.outerVerticalPadding))
+    JvmConnectionSkeletonBar(fraction = 0.52f)
 }
 
+/**
+ * 登录状态：单次登录请求，成功与失败两种结果。
+ */
 @Composable
-private fun JvmConnectionNewLoginStatusPanel(
+private fun JvmConnectionLoginContent(
     selectedDataSource: DataSourceType,
     resourceAddress: String,
     stage: JvmConnectionNewLoginStage,
-    modifier: Modifier = Modifier,
+    onEnter: () -> Unit,
 ) {
-    val successColor = XyTheme.extendedColors.success
-    val activeStage = if (stage == JvmConnectionNewLoginStage.Idle) {
-        JvmConnectionNewLoginStage.LoggingIn
-    } else {
-        stage
-    }
-    val isSuccess = activeStage == JvmConnectionNewLoginStage.Success
-    val activeIndex = when (activeStage) {
-        JvmConnectionNewLoginStage.Idle,
-        JvmConnectionNewLoginStage.LoggingIn -> 1
-        JvmConnectionNewLoginStage.Success -> 3
-    }
-    val title = when (activeStage) {
-        JvmConnectionNewLoginStage.Idle,
-        JvmConnectionNewLoginStage.LoggingIn -> stringResource(Res.string.jvm_connection_new_screen_text_30)
-        JvmConnectionNewLoginStage.Success -> stringResource(Res.string.login_success)
-    }
-    val detail = when (activeStage) {
-        JvmConnectionNewLoginStage.Idle,
-        JvmConnectionNewLoginStage.LoggingIn -> stringResource(Res.string.jvm_connection_new_screen_text_31, selectedDataSource.title)
-        JvmConnectionNewLoginStage.Success -> stringResource(Res.string.jvm_connection_new_screen_text_32)
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(
-                if (isSuccess) {
-                    successColor.copy(alpha = 0.1f)
-                } else {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                }
-            )
-            .border(
-                width = 1.dp,
-                color = if (isSuccess) {
-                    successColor.copy(alpha = 0.24f)
-                } else {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
-                },
-                shape = RoundedCornerShape(XyTheme.dimens.corner)
-            )
-            .padding(XyTheme.dimens.contentPadding),
-        verticalArrangement = Arrangement.spacedBy(13.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            JvmConnectionNewLoginIndicator(
-                success = isSuccess,
-                successColor = successColor
-            )
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                XyText(
-                    text = title,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.W900,
-                    maxLines = 1,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                XyTextSub(
-                    text = detail,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            JvmConnectionNewChip(
-                text = if (isSuccess) stringResource(Res.string.jvm_connection_new_screen_text_33) else stringResource(Res.string.jvm_connection_new_screen_text_34),
-                color = if (isSuccess) successColor else MaterialTheme.colorScheme.primary,
-                backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest
-            )
+    val dimens = XyTheme.dimens
+    val success = stage == JvmConnectionNewLoginStage.Success
+    JvmConnectionPanelKicker(
+        text = if (success) {
+            "04 / 04 · " + stringResource(Res.string.jvm_connection_new_screen_text_33)
+        } else {
+            "04 / 04 · " + stringResource(Res.string.jvm_connection_new_screen_text_04)
         }
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-        ) {
-            listOf(stringResource(Res.string.jvm_connection_new_screen_text_35), stringResource(Res.string.jvm_connection_new_screen_text_36), stringResource(Res.string.jvm_connection_new_screen_text_37)).forEachIndexed { index, text ->
-                JvmConnectionNewLoginProgressItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = text,
-                    done = index < activeIndex,
-                    active = index == activeIndex,
-                    successColor = successColor
-                )
-            }
-        }
-
-        JvmConnectionNewMetaRow(
-            label = stringResource(Res.string.jvm_connection_new_screen_text_38),
-            value = resourceAddress.ifBlank { stringResource(Res.string.jvm_connection_new_screen_text_15) }
+    )
+    Spacer(modifier = Modifier.height(dimens.outerVerticalPadding / 2))
+    JvmConnectionPanelTitle(
+        text = stringResource(
+            if (success) Res.string.login_success else Res.string.jvm_connection_new_screen_text_30
         )
-    }
-}
+    )
+    Spacer(modifier = Modifier.height(dimens.outerVerticalPadding / 2))
+    XyTextSub(
+        text = if (success) {
+            stringResource(Res.string.jvm_connection_new_screen_text_32)
+        } else {
+            stringResource(Res.string.jvm_connection_new_screen_text_31, selectedDataSource.title)
+        },
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodySmall,
+        maxLines = 2
+    )
 
-@Composable
-private fun JvmConnectionNewLoginIndicator(
-    success: Boolean,
-    successColor: Color,
-) {
-    Box(
-        modifier = Modifier.size(30.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        if (success) {
+    if (!success) {
+        Spacer(modifier = Modifier.height(dimens.contentPadding))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(dimens.outerVerticalPadding)
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(dimens.outerHorizontalPadding),
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 2.dp
+            )
+            XyTextSub(
+                text = stringResource(Res.string.jvm_connection_verifying),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1
+            )
+        }
+        Spacer(modifier = Modifier.height(dimens.contentPadding))
+        JvmConnectionIndeterminateBar()
+    }
+
+    Spacer(modifier = Modifier.height(dimens.contentPadding))
+    JvmConnectionKvRow(
+        label = stringResource(Res.string.jvm_connection_new_screen_text_38),
+        value = resourceAddress.stripScheme(),
+        showDivider = true
+    )
+    JvmConnectionKvRow(
+        label = stringResource(Res.string.jvm_about_screen_text_09),
+        value = "${selectedDataSource.version}+",
+        showDivider = false
+    )
+
+    if (success) {
+        Spacer(modifier = Modifier.height(dimens.contentPadding))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(dimens.corner / 2))
+                .background(XyTheme.extendedColors.success.copy(alpha = 0.07f))
+                .border(
+                    width = 1.dp,
+                    color = XyTheme.extendedColors.success.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(dimens.corner / 2)
+                )
+                .padding(dimens.contentPadding),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(dimens.contentPadding)
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .size(dimens.outerHorizontalPadding + dimens.outerVerticalPadding / 2)
                     .clip(CircleShape)
-                    .background(successColor),
+                    .background(XyTheme.extendedColors.success),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    modifier = Modifier.size(18.dp),
                     painter = painterResource(Res.drawable.check_24px),
                     contentDescription = null,
-                    tint = Color.White
+                    modifier = Modifier.size(dimens.contentPadding),
+                    tint = MaterialTheme.colorScheme.surface
                 )
             }
-        } else {
-            CircularProgressIndicator(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.primary,
-                strokeWidth = 3.dp
+            Column(modifier = Modifier.weight(1f)) {
+                XyText(
+                    text = stringResource(Res.string.connection_successful),
+                    color = XyTheme.extendedColors.success,
+                    fontWeight = FontWeight.W700,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                XyTextSub(
+                    text = stringResource(Res.string.jvm_connection_success_sync),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1
+                )
+            }
+            JvmConnectionButton(
+                text = stringResource(Res.string.jvm_connection_new_screen_text_40),
+                primary = true,
+                onClick = onEnter
             )
         }
     }
 }
 
+/**
+ * 错误状态：资源不可达或凭据校验失败。
+ */
 @Composable
-private fun JvmConnectionNewLoginProgressItem(
-    text: String,
-    done: Boolean,
-    active: Boolean,
-    successColor: Color,
-    modifier: Modifier = Modifier,
+private fun JvmConnectionErrorContent(
+    loginError: Boolean,
+    errorHint: String,
+    errorMessage: String,
+    onRetry: () -> Unit,
+    onEditConnectionInfo: () -> Unit,
 ) {
-    val color = when {
-        done -> successColor
-        active -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
+    val dimens = XyTheme.dimens
+    val danger = XyTheme.extendedColors.danger
+    JvmConnectionPanelKicker(
+        text = if (loginError) "LOGIN / FAILED" else "DISCOVERY / FAILED"
+    )
+    Spacer(modifier = Modifier.height(dimens.outerVerticalPadding / 2))
+    JvmConnectionPanelTitle(
+        text = stringResource(
+            if (loginError) Res.string.login_failed else Res.string.jvm_connection_new_screen_text_24
+        )
+    )
+    Spacer(modifier = Modifier.height(dimens.contentPadding))
     Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f))
-            .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding / 2,
-                vertical = XyTheme.dimens.outerVerticalPadding
-            ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+        horizontalArrangement = Arrangement.spacedBy(dimens.outerVerticalPadding)
     ) {
-        Box(
-            modifier = Modifier
-                .size(XyTheme.dimens.outerVerticalPadding)
-                .clip(CircleShape)
-                .background(color.copy(alpha = if (done || active) 1f else 0.55f))
+        Icon(
+            painter = painterResource(Res.drawable.warning_24px),
+            contentDescription = null,
+            modifier = Modifier.size(dimens.outerHorizontalPadding),
+            tint = danger
         )
         XyText(
-            text = text,
-            color = color,
+            text = stringResource(
+                if (loginError) Res.string.jvm_connection_error_auth_title
+                else Res.string.jvm_connection_error_probe_title
+            ),
+            color = danger,
             fontWeight = FontWeight.W800,
             maxLines = 1,
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.bodySmall
+        )
+        JvmConnectionTag(
+            text = if (loginError) "E_AUTH" else "E_PROBE",
+            color = danger,
+            borderColor = danger.copy(alpha = 0.34f),
+            backgroundColor = danger.copy(alpha = 0.09f)
+        )
+    }
+    Spacer(modifier = Modifier.height(dimens.outerVerticalPadding))
+    XyTextSub(
+        text = stringResource(
+            if (loginError) Res.string.jvm_connection_error_auth_hint
+            else Res.string.jvm_connection_error_probe_hint
+        ),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodySmall,
+        maxLines = 3
+    )
+    val detail = listOf(errorHint, errorMessage).filter { it.isNotBlank() }.joinToString("\n")
+    if (detail.isNotBlank()) {
+        Spacer(modifier = Modifier.height(dimens.contentPadding))
+        XyTextSub(
+            text = detail,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(dimens.corner / 2))
+                .background(MaterialTheme.colorScheme.background)
+                .border(
+                    width = 1.dp,
+                    color = JvmConnectionLineColor(),
+                    shape = RoundedCornerShape(dimens.corner / 2)
+                )
+                .padding(horizontal = dimens.contentPadding, vertical = dimens.outerVerticalPadding),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = JvmConnectionMonoStyle(),
+            maxLines = 4
+        )
+    }
+    Spacer(modifier = Modifier.height(dimens.contentPadding))
+    Row(horizontalArrangement = Arrangement.spacedBy(dimens.outerVerticalPadding)) {
+        JvmConnectionButton(
+            text = stringResource(Res.string.jvm_connection_retry),
+            primary = true,
+            onClick = onRetry
+        )
+        JvmConnectionButton(
+            text = stringResource(Res.string.jvm_connection_new_screen_text_22),
+            primary = false,
+            onClick = onEditConnectionInfo
         )
     }
 }
 
+/**
+ * 资源候选列表。
+ */
 @Composable
-private fun JvmConnectionNewSuccessBanner(
+private fun JvmConnectionResourceList(
     selectedDataSource: DataSourceType,
-    onEnter: () -> Unit,
+    items: List<JvmConnectionResourceItem>,
+    selectedIndex: Int,
+    onSelectResource: (Int) -> Unit,
+    onEditConnectionInfo: () -> Unit,
 ) {
-    // 成功横幅只出现于 ViewModel 登录成功后，进入主页/返回上一页由 onEnter 统一收尾。
-    val successColor = XyTheme.extendedColors.success
+    val dimens = XyTheme.dimens
+    JvmConnectionPanelKicker(
+        text = "03 / 04 · " + stringResource(Res.string.jvm_connection_new_screen_text_03)
+    )
+    Spacer(modifier = Modifier.height(dimens.outerVerticalPadding / 2))
+    JvmConnectionPanelTitle(text = stringResource(Res.string.jvm_connection_new_screen_text_19))
+    Spacer(modifier = Modifier.height(dimens.outerVerticalPadding / 2))
+    val baseDesc = if (selectedDataSource.ifInputUrl) {
+        stringResource(Res.string.jvm_connection_new_screen_text_20, selectedDataSource.title)
+    } else {
+        stringResource(Res.string.jvm_connection_new_screen_text_21)
+    }
+    XyTextSub(
+        text = baseDesc + " " + stringResource(Res.string.jvm_connection_click_to_login),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodySmall,
+        maxLines = 2
+    )
+    Spacer(modifier = Modifier.height(dimens.contentPadding))
+
+    items.forEachIndexed { index, item ->
+        JvmConnectionResourceRow(
+            item = item,
+            selected = index == selectedIndex,
+            recommended = index == 0,
+            onClick = { onSelectResource(index) }
+        )
+        if (index != items.lastIndex) {
+            Spacer(modifier = Modifier.height(dimens.outerVerticalPadding))
+        }
+    }
+
+    Spacer(modifier = Modifier.height(dimens.contentPadding))
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(JvmConnectionLineColor())
+    )
+    Spacer(modifier = Modifier.height(dimens.contentPadding))
+    JvmConnectionButton(
+        text = stringResource(Res.string.jvm_connection_new_screen_text_22),
+        primary = false,
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onEditConnectionInfo
+    )
+}
+
+/**
+ * 单条资源候选。
+ */
+@Composable
+private fun JvmConnectionResourceRow(
+    item: JvmConnectionResourceItem,
+    selected: Boolean,
+    recommended: Boolean,
+    onClick: () -> Unit,
+) {
+    val dimens = XyTheme.dimens
+    val primary = MaterialTheme.colorScheme.primary
+    val shape = RoundedCornerShape(dimens.corner / 2)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(successColor.copy(alpha = 0.1f))
+            .heightIn(min = dimens.itemHeight - dimens.contentPadding)
+            .clip(shape)
+            .background(if (selected) primary.copy(alpha = 0.06f) else Color.Transparent)
             .border(
                 width = 1.dp,
-                color = successColor.copy(alpha = 0.24f),
-                shape = RoundedCornerShape(XyTheme.dimens.corner)
+                color = if (selected) primary.copy(alpha = 0.52f) else JvmConnectionLineColor(),
+                shape = shape
             )
-            .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
-                vertical = XyTheme.dimens.innerVerticalPadding
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .jvmHoverDebounceClickable(onClick = onClick)
+            .padding(horizontal = dimens.contentPadding, vertical = dimens.outerVerticalPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(dimens.contentPadding)
     ) {
+        // 单选框：选中时填充主色圆点。
+        Box(
+            modifier = Modifier
+                .size(dimens.contentPadding + dimens.outerVerticalPadding / 2)
+                .clip(CircleShape)
+                .border(
+                    width = 1.dp,
+                    color = if (selected) primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .size(dimens.outerVerticalPadding - 2.dp)
+                        .clip(CircleShape)
+                        .background(primary)
+                )
+            }
+        }
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             XyText(
-                text = stringResource(Res.string.connection_successful),
-                color = successColor,
-                fontWeight = FontWeight.W900,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            XyTextSub(
-                text = stringResource(Res.string.jvm_connection_new_screen_text_39, selectedDataSource.title),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
+                text = item.title,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.W700,
+                maxLines = 1,
                 style = MaterialTheme.typography.bodySmall
             )
+            XyTextSub(
+                text = item.address,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = JvmConnectionMonoStyle(),
+                maxLines = 1
+            )
         }
-        Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
-        XyButton(
-            onClick = onEnter,
-            text = stringResource(Res.string.jvm_connection_new_screen_text_40),
+        JvmConnectionTag(
+            text = item.tag,
+            color = if (recommended) XyTheme.extendedColors.success else MaterialTheme.colorScheme.onSurfaceVariant,
+            borderColor = if (recommended) {
+                XyTheme.extendedColors.success.copy(alpha = 0.34f)
+            } else {
+                JvmConnectionLineColor()
+            },
+            backgroundColor = if (recommended) {
+                XyTheme.extendedColors.success.copy(alpha = 0.09f)
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+            }
         )
     }
 }
 
+/**
+ * 底部状态条：连接状态、地址与当前阶段。
+ */
 @Composable
-private fun JvmConnectionNewPanel(
-    modifier: Modifier = Modifier,
+private fun JvmConnectionStatusBar(
+    connected: Boolean,
+    busy: Boolean,
+    failed: Boolean,
+    showResourcePanel: Boolean,
+    selectedDataSource: DataSourceType,
+    address: String,
+    loginStage: JvmConnectionNewLoginStage,
+) {
+    val dimens = XyTheme.dimens
+    val dotColor = when {
+        connected -> XyTheme.extendedColors.success
+        failed -> XyTheme.extendedColors.danger
+        busy -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val stateText = when {
+        connected -> stringResource(Res.string.jvm_connection_rail_state_ok)
+        failed -> stringResource(Res.string.jvm_connection_rail_state_failed)
+        busy -> stringResource(Res.string.jvm_connection_rail_state_busy)
+        else -> stringResource(Res.string.jvm_connection_rail_state_idle)
+    }
+    val phaseText = when {
+        connected -> stringResource(Res.string.jvm_connection_phase_ready)
+        loginStage == JvmConnectionNewLoginStage.LoggingIn -> stringResource(Res.string.jvm_connection_phase_login)
+        busy -> stringResource(Res.string.jvm_connection_phase_probe)
+        failed -> stringResource(Res.string.jvm_connection_phase_failed)
+        showResourcePanel -> stringResource(Res.string.jvm_connection_phase_select)
+        else -> stringResource(Res.string.jvm_connection_phase_idle)
+    }
+    val addressText = if (selectedDataSource.ifInputUrl) {
+        address.stripScheme().ifBlank { stringResource(Res.string.jvm_connection_new_screen_text_15) }
+    } else {
+        stringResource(Res.string.jvm_connection_new_screen_text_15)
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(JvmConnectionLineColor())
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimens.outerHorizontalPadding * 2)
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = dimens.outerHorizontalPadding),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(dimens.contentPadding)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(dimens.outerVerticalPadding / 2)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(dimens.outerVerticalPadding - 3.dp)
+                        .clip(CircleShape)
+                        .background(dotColor)
+                )
+                XyText(
+                    text = stateText,
+                    color = dotColor,
+                    fontWeight = FontWeight.W600,
+                    maxLines = 1,
+                    style = JvmConnectionMonoStyle()
+                )
+            }
+            XyTextSub(
+                text = stringResource(Res.string.jvm_connection_status_address) + " " + addressText,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = JvmConnectionMonoStyle(),
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            XyTextSub(
+                text = "$phaseText · JVM 21",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = JvmConnectionMonoStyle(),
+                maxLines = 1
+            )
+        }
+    }
+}
+
+/**
+ * 面板容器：细边框 + 低对比底色。
+ */
+@Composable
+private fun JvmConnectionPanelCard(
+    modifier: Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-        ),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
-            content = content
-        )
+    val dimens = XyTheme.dimens
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(dimens.corner))
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.55f))
+            .border(
+                width = 1.dp,
+                color = JvmConnectionLineColor(),
+                shape = RoundedCornerShape(dimens.corner)
+            )
+            .padding(dimens.contentPadding + dimens.outerVerticalPadding),
+        content = content
+    )
+}
+
+/**
+ * 面板顶部等宽小标题。
+ */
+@Composable
+private fun JvmConnectionPanelKicker(text: String) {
+    XyText(
+        text = text,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontWeight = FontWeight.Normal,
+        maxLines = 1,
+        style = JvmConnectionMonoStyle(letterSpacing = 1.6.sp)
+    )
+}
+
+/**
+ * 面板标题。
+ */
+@Composable
+private fun JvmConnectionPanelTitle(text: String) {
+    XyText(
+        text = text,
+        color = MaterialTheme.colorScheme.onSurface,
+        fontWeight = FontWeight.W800,
+        maxLines = 1,
+        style = MaterialTheme.typography.titleMedium
+    )
+}
+
+/**
+ * 等宽键值行。
+ */
+@Composable
+private fun JvmConnectionKvRow(
+    label: String,
+    value: String,
+    showDivider: Boolean,
+) {
+    val dimens = XyTheme.dimens
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = dimens.outerVerticalPadding),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            XyText(
+                text = label,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Normal,
+                maxLines = 1,
+                style = JvmConnectionMonoStyle()
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            XyText(
+                text = value,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.W600,
+                maxLines = 1,
+                style = JvmConnectionMonoStyle()
+            )
+        }
+        if (showDivider) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(JvmConnectionLineColor())
+            )
+        }
     }
 }
 
+/**
+ * 小标签：可选自定义前景、描边与底色。
+ */
 @Composable
-private fun JvmConnectionNewChip(
+private fun JvmConnectionTag(
     text: String,
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    backgroundColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f),
+    borderColor: Color = JvmConnectionLineColor(),
+    backgroundColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
 ) {
+    val dimens = XyTheme.dimens
     Box(
         modifier = Modifier
-            .clip(CircleShape)
+            .clip(RoundedCornerShape(dimens.corner / 3))
             .background(backgroundColor)
-            .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding / 2,
-                vertical = XyTheme.dimens.outerVerticalPadding / 2
-            ),
-        contentAlignment = Alignment.Center
+            .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(dimens.corner / 3))
+            .padding(horizontal = dimens.outerVerticalPadding - 2.dp, vertical = 2.dp)
     ) {
         XyText(
             text = text,
             color = color,
-            fontWeight = FontWeight.W700,
+            fontWeight = FontWeight.Normal,
             maxLines = 1,
-            style = MaterialTheme.typography.labelSmall,
+            style = JvmConnectionMonoStyle()
         )
     }
 }
 
+/**
+ * 通用按钮：复用 XyButton，主按钮使用主色填充，次按钮使用描边。
+ */
+@Composable
+private fun JvmConnectionButton(
+    text: String,
+    primary: Boolean,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    val line = JvmConnectionLineColor()
+    XyButton(
+        modifier = modifier,
+        onClick = onClick,
+        text = text,
+        enabled = enabled,
+        color = if (primary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+        backgroundColor = if (primary) MaterialTheme.colorScheme.primary else Color.Transparent,
+        hoverBackgroundColor = if (primary) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+        },
+        border = if (primary) null else BorderStroke(1.dp, line),
+        textStyle = MaterialTheme.typography.labelMedium
+    )
+}
+
+/**
+ * 不确定进度条：用于资源探测与登录请求等待。
+ */
+@Composable
+private fun JvmConnectionIndeterminateBar() {
+    val transition = rememberInfiniteTransition(label = "connectionProgress")
+    val progress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1150, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "connectionProgressOffset"
+    )
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(2.dp)
+            .clip(RoundedCornerShape(1.dp))
+            .background(JvmConnectionLineColor())
+    ) {
+        val barWidth = maxWidth
+        Box(
+            modifier = Modifier
+                .offset(x = barWidth * progress - barWidth * 0.3f)
+                .width(barWidth * 0.3f)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.primary)
+        )
+    }
+}
+
+/**
+ * 骨架占位条。
+ */
+@Composable
+private fun JvmConnectionSkeletonBar(fraction: Float) {
+    val dimens = XyTheme.dimens
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(fraction)
+            .height(dimens.outerVerticalPadding)
+            .clip(RoundedCornerShape(dimens.corner / 3))
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+    )
+}
+
+/**
+ * 统一的细线颜色，跟随主题明暗。
+ */
+@Composable
+private fun JvmConnectionLineColor(): Color =
+    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f)
+
+/**
+ * 等宽小字样式：字号与行高沿用主题，仅替换字体族与字距。
+ */
+@Composable
+private fun JvmConnectionMonoStyle(letterSpacing: androidx.compose.ui.unit.TextUnit = 0.sp) =
+    MaterialTheme.typography.labelSmall.copy(
+        fontFamily = FontFamily.Monospace,
+        letterSpacing = letterSpacing
+    )
+
+/**
+ * 去掉地址里的协议前缀，便于等宽展示。
+ */
+private fun String.stripScheme(): String =
+    removePrefix(ApiConstants.HTTP).removePrefix(ApiConstants.HTTPS)
+
+/**
+ * 资源候选的数据载体。
+ */
+private data class JvmConnectionResourceItem(
+    val title: String,
+    val address: String,
+    val tag: String,
+)
+
+/**
+ * 登录阶段：登录只有一次请求，成功与失败是终态。
+ */
 private enum class JvmConnectionNewLoginStage {
     Idle,
     LoggingIn,
     Success,
-}
-
-@Composable
-private fun ConnectionUiType?.connectionStatusText(): String = when (this) {
-    // 侧栏状态文案跟随入口类型，避免添加连接时仍显示“首次打开”。
-    ConnectionUiType.FIRST_OPEN -> stringResource(Res.string.jvm_connection_new_screen_text_41)
-    ConnectionUiType.ADD_CONNECTION -> stringResource(Res.string.add_connection)
-    null -> stringResource(Res.string.server_connection)
 }
