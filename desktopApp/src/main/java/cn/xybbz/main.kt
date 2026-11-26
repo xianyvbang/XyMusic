@@ -30,10 +30,13 @@ import cn.xybbz.ui.xy.LocalModalSideSheetContent
 import io.github.vinceglb.filekit.FileKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.painterResource
 import java.awt.TrayIcon
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import javax.swing.JFrame
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.logo_new
 
 /**
  * JVM 桌面端应用入口。
@@ -113,6 +116,8 @@ fun main() {
             resizable = true,
             title = "XyMusic",
             state = windowState,
+            // 窗口与任务栏图标使用应用 logo，避免显示 Compose 默认图标。
+            icon = painterResource(Res.drawable.logo_new),
 //            alwaysOnTop = true,
         ) {
             // 设置页关闭“最小化到托盘”后，及时移除已经安装的托盘图标。
