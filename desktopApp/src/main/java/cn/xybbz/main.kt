@@ -15,6 +15,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import cn.xybbz.config.setting.JvmAutoStartManager
+import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.di.initKoin
 import cn.xybbz.proxy.JvmReverseProxyServer
@@ -48,6 +50,8 @@ fun main() {
     val koinApplication = initKoin {}
     // 窗口关闭行为需要读取桌面端启动设置，这里直接从 Koin 取设置管理器。
     val settingsManager = koinApplication.koin.get<SettingsManager>()
+    // 托盘菜单需要直接控制播放，这里拿到全局播放控制器。
+    val musicController = koinApplication.koin.get<MusicCommonController>()
 
     // 防止多个窗口关闭入口重复释放同一批应用级资源。
     var isClosing = false
@@ -94,7 +98,21 @@ fun main() {
                 if (window != null && minimizeToTray && DesktopTray.isSupported()) {
                     // 托盘图标按需安装，避免未开启该设置时常驻托盘。
                     if (trayIcon == null) {
-                        trayIcon = DesktopTray.install(showMainWindow, exitApplicationSafely)
+                        trayIcon = DesktopTray.install(
+                            onShowWindow = showMainWindow,
+                            onExit = exitApplicationSafely,
+                            // 播放/暂停：正在播放或加载中则暂停，否则在存在当前歌曲时继续播放。
+                            onPlayPause = {
+                                val playState = musicController.state
+                                if (playState == PlayStateEnum.Playing || playState == PlayStateEnum.Loading) {
+                                    musicController.pause()
+                                } else if (musicController.musicInfo != null) {
+                                    musicController.resume()
+                                }
+                            },
+                            onPrevious = musicController::seekToPrevious,
+                            onNext = musicController::seekToNext,
+                        )
                     }
                     if (trayIcon != null) {
                         window.isVisible = false

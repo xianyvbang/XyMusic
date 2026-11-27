@@ -46,6 +46,15 @@ internal object DesktopTray {
     /** 菜单命令 ID：退出。 */
     private const val COMMAND_EXIT = 2
 
+    /** 菜单命令 ID：播放/暂停。 */
+    private const val COMMAND_PLAY_PAUSE = 3
+
+    /** 菜单命令 ID：上一曲。 */
+    private const val COMMAND_PREVIOUS = 4
+
+    /** 菜单命令 ID：下一曲。 */
+    private const val COMMAND_NEXT = 5
+
     /** Win32 菜单项标志：普通文本项。 */
     private const val MF_STRING = 0x0000
 
@@ -66,6 +75,9 @@ internal object DesktopTray {
 
     /** Win32 窗口样式：无边框弹出窗口。 */
     private const val WS_POPUP = 0x80000000.toInt()
+
+    /** Win32 扩展窗口样式：工具窗口，不会出现在任务栏和 Alt+Tab 列表中。 */
+    private const val WS_EX_TOOLWINDOW = 0x00000080
 
     /** Win32 显示窗口方式：显示但不激活。 */
     private const val SW_SHOWNOACTIVATE = 4
@@ -100,9 +112,18 @@ internal object DesktopTray {
      *
      * @param onShowWindow 点击“显示主界面”或双击托盘图标时回调。
      * @param onExit 点击“退出”时回调。
+     * @param onPlayPause 点击“播放/暂停”时回调。
+     * @param onPrevious 点击“上一曲”时回调。
+     * @param onNext 点击“下一曲”时回调。
      * @return 安装成功返回托盘图标对象，失败返回 null。
      */
-    fun install(onShowWindow: () -> Unit, onExit: () -> Unit): TrayIcon? {
+    fun install(
+        onShowWindow: () -> Unit,
+        onExit: () -> Unit,
+        onPlayPause: () -> Unit,
+        onPrevious: () -> Unit,
+        onNext: () -> Unit,
+    ): TrayIcon? {
         if (!SystemTray.isSupported()) {
             return null
         }
@@ -112,12 +133,16 @@ internal object DesktopTray {
                 addMouseListener(object : MouseAdapter() {
                     override fun mousePressed(event: MouseEvent) {
                         // 部分环境在按下时就标记为弹出菜单触发。
-                        if (event.isPopupTrigger) showMenuSafely(onShowWindow, onExit)
+                        if (event.isPopupTrigger) {
+                            showMenuSafely(onShowWindow, onExit, onPlayPause, onPrevious, onNext)
+                        }
                     }
 
                     override fun mouseReleased(event: MouseEvent) {
                         // Windows 托盘右键菜单在释放时触发。
-                        if (event.isPopupTrigger) showMenuSafely(onShowWindow, onExit)
+                        if (event.isPopupTrigger) {
+                            showMenuSafely(onShowWindow, onExit, onPlayPause, onPrevious, onNext)
+                        }
                     }
 
                     override fun mouseClicked(event: MouseEvent) {
@@ -140,14 +165,20 @@ internal object DesktopTray {
     }
 
     /** 带防抖地把菜单请求投递给菜单线程。 */
-    private fun showMenuSafely(onShowWindow: () -> Unit, onExit: () -> Unit) {
+    private fun showMenuSafely(
+        onShowWindow: () -> Unit,
+        onExit: () -> Unit,
+        onPlayPause: () -> Unit,
+        onPrevious: () -> Unit,
+        onNext: () -> Unit,
+    ) {
         val now = System.currentTimeMillis()
         if (now - lastMenuShownAt < MENU_DEBOUNCE_MILLIS) {
             return
         }
         lastMenuShownAt = now
         ensureMenuThreadStarted()
-        menuRequests.offer(MenuRequest(onShowWindow, onExit))
+        menuRequests.offer(MenuRequest(onShowWindow, onExit, onPlayPause, onPrevious, onNext))
     }
 
     /** 保证菜单线程已经启动。 */
@@ -167,9 +198,10 @@ internal object DesktopTray {
      * 如果每次弹完就销毁窗口、线程也不处理消息，第二次弹出的菜单会立刻被取消。
      */
     private fun menuLoop() {
-        // 使用系统自带的 STATIC 窗口类创建 1x1 宿主窗口，避免注册自定义窗口类。
+        // 使用系统自带的 STATIC 窗口类创建 1x1 宿主窗口，避免注册自定义窗口类；
+        // 加 WS_EX_TOOLWINDOW 让它不出现在任务栏和 Alt+Tab 列表中。
         val owner = user32.CreateWindowExW(
-            0,
+            WS_EX_TOOLWINDOW,
             WString("STATIC"),
             WString(""),
             WS_POPUP,
@@ -201,10 +233,17 @@ internal object DesktopTray {
                 // 先清空上一次菜单可能残留的消息，避免新菜单被立刻取消。
                 pumpMessages(message)
                 val command = runCatching { showNativeMenu(owner) }.getOrDefault(0)
-                // 菜单回调统一回到 AWT 事件线程，保证窗口操作线程安全。
-                when (command) {
-                    COMMAND_SHOW_WINDOW -> EventQueue.invokeLater(request.onShowWindow)
-                    COMMAND_EXIT -> EventQueue.invokeLater(request.onExit)
+                // 菜单回调统一回到 AWT 事件线程，保证窗口与播放器操作线程安全。
+                val callback = when (command) {
+                    COMMAND_SHOW_WINDOW -> request.onShowWindow
+                    COMMAND_EXIT -> request.onExit
+                    COMMAND_PLAY_PAUSE -> request.onPlayPause
+                    COMMAND_PREVIOUS -> request.onPrevious
+                    COMMAND_NEXT -> request.onNext
+                    else -> null
+                }
+                if (callback != null) {
+                    EventQueue.invokeLater(callback)
                 }
             }
         } finally {
@@ -259,6 +298,11 @@ internal object DesktopTray {
     private fun trackPopupMenu(owner: Pointer): Int {
         val menu = user32.CreatePopupMenu() ?: return 0
         try {
+            // 播放控制放在最上方，其次是窗口与退出。
+            user32.AppendMenuW(menu, MF_STRING, COMMAND_PLAY_PAUSE.toLong(), WString("播放/暂停"))
+            user32.AppendMenuW(menu, MF_STRING, COMMAND_PREVIOUS.toLong(), WString("上一曲"))
+            user32.AppendMenuW(menu, MF_STRING, COMMAND_NEXT.toLong(), WString("下一曲"))
+            user32.AppendMenuW(menu, MF_SEPARATOR, 0L, null)
             user32.AppendMenuW(menu, MF_STRING, COMMAND_SHOW_WINDOW.toLong(), WString("显示主界面"))
             user32.AppendMenuW(menu, MF_SEPARATOR, 0L, null)
             user32.AppendMenuW(menu, MF_STRING, COMMAND_EXIT.toLong(), WString("退出"))
@@ -323,6 +367,12 @@ internal object DesktopTray {
         val onShowWindow: () -> Unit,
         /** 退出应用回调。 */
         val onExit: () -> Unit,
+        /** 播放/暂停回调。 */
+        val onPlayPause: () -> Unit,
+        /** 上一曲回调。 */
+        val onPrevious: () -> Unit,
+        /** 下一曲回调。 */
+        val onNext: () -> Unit,
     )
 
     /** 托盘菜单需要用到的 user32 函数，W 结尾的接口一律使用宽字符（UTF-16）传参。 */
