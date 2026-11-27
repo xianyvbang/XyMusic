@@ -33,12 +33,16 @@ import io.github.vinceglb.filekit.FileKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import java.awt.TrayIcon
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import javax.swing.JFrame
 import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.app_name
 import xymusic.composeapp.generated.resources.logo_new
+import xymusic.composeapp.generated.resources.window_title_paused
+import xymusic.composeapp.generated.resources.window_title_playing
 
 /**
  * JVM 桌面端应用入口。
@@ -145,6 +149,30 @@ fun main() {
                     DesktopTray.dispose(trayIcon)
                     trayIcon = null
                 }
+            }
+
+            // 应用名称，暂停时作为窗口标题的展示内容
+            val appName = stringResource(Res.string.app_name)
+            // 播放状态与当前歌曲，用于实时刷新窗口标题
+            val playState by musicController.stateFlow.collectAsState()
+            val currentMusic by musicController.musicInfoFlow.collectAsState()
+            // 窗口标题：播放中为“正在播放-歌曲名”，暂停时为“已暂停-应用名称”，其余状态保持默认
+            val windowTitle = when (playState) {
+                PlayStateEnum.Playing -> {
+                    val songName = currentMusic?.name?.takeIf { it.isNotBlank() }
+                    if (songName == null) {
+                        "XyMusic"
+                    } else {
+                        "${stringResource(Res.string.window_title_playing)}-$songName"
+                    }
+                }
+
+                PlayStateEnum.Pause -> "${stringResource(Res.string.window_title_paused)}-$appName"
+
+                else -> "XyMusic"
+            }
+            LaunchedEffect(windowTitle) {
+                window.title = windowTitle
             }
 
             DisposableEffect(window) {

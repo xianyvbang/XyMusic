@@ -18,6 +18,9 @@
 
 <resources>
     <string name="app_name">咸鱼听歌</string>
+    <!--桌面端窗口标题前缀-->
+    <string name="window_title_playing">正在播放</string>
+    <string name="window_title_paused">已暂停</string>
     <string name="home">首页</string>
     <string name="music">音乐</string>
     <string name="genres">流派</string>
