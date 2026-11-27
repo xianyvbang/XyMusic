@@ -1786,7 +1786,7 @@ class PlexDatasourceServer(
             pic = itemImageUrl,
             name = album.title,
             connectionId = getConnectionId(),
-            artistIds = listOfNotNull(album.parentRatingKey?.toString()?.takeIf { it.isNotBlank() }),
+            artistIds = listOfNotNull(album.parentRatingKey?.takeIf { it.isNotBlank() }),
             artists = listOfNotNull(album.parentTitle?.takeIf { it.isNotBlank() }),
             year = album.year,
             premiereDate = album.originallyAvailableAt?.atStartOfDayIn(TimeZone.currentSystemDefault())
