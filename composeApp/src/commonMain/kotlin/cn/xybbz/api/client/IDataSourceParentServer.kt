@@ -116,6 +116,24 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 
+/**
+ * 组装未授权异常详情，供登录异常弹层展示。
+ * 优先使用服务端返回的响应文本，再补上状态码与响应短语，两者重复时不重复展示。
+ */
+private fun UnauthorizedException.toLoginErrorDetail(): String {
+    val body = message?.trim().orEmpty()
+    val phrase = responsePhrase?.trim().orEmpty()
+    val statusLine = buildString {
+        if (statusCode > 0) append("状态码：$statusCode")
+        if (phrase.isNotBlank() && phrase != body) {
+            if (isNotEmpty()) append(' ')
+            append(phrase)
+        }
+    }
+    return listOf(body, statusLine).filter { it.isNotBlank() }.joinToString("\n")
+}
+
+
 abstract class IDataSourceParentServer(
     private val defaultParentApiClient: DefaultParentApiClient,
     /**
@@ -319,7 +337,7 @@ abstract class IDataSourceParentServer(
                 }
 
                 is UnauthorizedException -> {
-                    emit(ClientLoginInfoState.UnauthorizedErrorState)
+                    emit(ClientLoginInfoState.UnauthorizedErrorState(it.toLoginErrorDetail()))
                 }
 
                 is CredentialStoreException -> {
@@ -457,7 +475,7 @@ abstract class IDataSourceParentServer(
                 }
 
                 is UnauthorizedException -> {
-                    emit(ClientLoginInfoState.UnauthorizedErrorState)
+                    emit(ClientLoginInfoState.UnauthorizedErrorState(it.toLoginErrorDetail()))
                 }
 
                 is CredentialStoreException -> {

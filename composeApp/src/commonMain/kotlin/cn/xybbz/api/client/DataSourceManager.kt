@@ -99,6 +99,7 @@ import xymusic.composeapp.generated.resources.import_playlist_failed
 import xymusic.composeapp.generated.resources.import_playlist_success
 import xymusic.composeapp.generated.resources.importing_playlist
 import xymusic.composeapp.generated.resources.login_failed
+import xymusic.composeapp.generated.resources.login_failed_no_token
 import xymusic.composeapp.generated.resources.connection_credential_store_unavailable
 import xymusic.composeapp.generated.resources.connection_needs_relogin
 import xymusic.composeapp.generated.resources.no_connection_selected
@@ -413,12 +414,15 @@ open class DataSourceManager(
                 )
             }
 
-            ClientLoginInfoState.UnauthorizedErrorState -> {
+            is ClientLoginInfoState.UnauthorizedErrorState -> {
                 Log.i(Constants.LOG_ERROR_PREFIX, "登录失败,账号或密码错误")
                 LoginStateData(
                     loading = false,
                     isError = true,
-                    errorHint = Res.string.login_failed
+                    // 明确提示账号或密码错误，避免详情弹层只有「登录失败」这类笼统文案
+                    errorHint = Res.string.login_failed_no_token,
+                    // 服务端返回的响应文本与状态码作为详细错误信息展示
+                    errorMessage = loginState.detail
                 )
             }
 

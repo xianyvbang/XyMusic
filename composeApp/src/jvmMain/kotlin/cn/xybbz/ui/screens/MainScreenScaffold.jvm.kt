@@ -47,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
@@ -411,12 +412,22 @@ private fun DesktopLoginStatusFloatingAction(
     val loginFailedText = stringResource(Res.string.login_failed)
     val errorInteractionSource = remember { MutableInteractionSource() }
 
+    // 状态语义色：连接中使用主题主色，登录失败使用危险色
+    val statusColor = if (loginLoading) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        XyTheme.extendedColors.danger
+    }
+    // 状态色与卡片底色混合出不透明的容器色，避免半透明导致背景透出
+    val statusContainerColor = statusColor.copy(alpha = 0.10f)
+        .compositeOver(MaterialTheme.colorScheme.surfaceContainerHigh)
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .widthIn(max = jvmRouterMenuWidth),
         shape = RoundedCornerShape(XyTheme.dimens.corner),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = statusContainerColor,
         tonalElevation = 6.dp,
         shadowElevation = 8.dp,
     ) {
@@ -434,7 +445,7 @@ private fun DesktopLoginStatusFloatingAction(
             ) {
                 XyTextSubSmall(
                     text = loggingInText,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = statusColor,
                     maxLines = 1,
                 )
                 LinearProgressIndicator(
@@ -442,8 +453,8 @@ private fun DesktopLoginStatusFloatingAction(
                         .fillMaxWidth()
                         .padding(top = XyTheme.dimens.innerVerticalPadding)
                         .height(4.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    color = statusColor,
+                    trackColor = statusColor.copy(alpha = 0.18f).compositeOver(statusContainerColor),
                 )
             }
         } else {
@@ -465,7 +476,7 @@ private fun DesktopLoginStatusFloatingAction(
                         painter = painterResource(Res.drawable.warning_24px),
                         contentDescription = loginFailedText,
                         modifier = Modifier.size(DesktopLoginStatusErrorButtonSize),
-                        tint = XyTheme.extendedColors.danger,
+                        tint = statusColor,
                     )
                     Column(
                         modifier = Modifier.weight(1f),
@@ -473,13 +484,15 @@ private fun DesktopLoginStatusFloatingAction(
                     ) {
                         XyTextSubSmall(
                             text = loginFailedText,
-                            color = XyTheme.extendedColors.danger,
+                            color = statusColor,
                             maxLines = 1,
                         )
                         if (errorHint.isNotBlank()) {
                             XyTextSubSmall(
                                 text = errorHint,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                // 提示语使用危险色的弱化色，既保持状态一致又不喧宾夺主
+                                color = statusColor.copy(alpha = 0.75f)
+                                    .compositeOver(statusContainerColor),
                                 maxLines = 1,
                             )
                         }

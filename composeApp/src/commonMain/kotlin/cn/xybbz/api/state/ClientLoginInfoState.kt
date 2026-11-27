@@ -24,8 +24,9 @@ sealed class ClientLoginInfoState {
 
     /**
      * 权限报错
+     * @param [detail] 服务端返回的详细错误信息，用于登录异常弹层展示
      */
-    data object UnauthorizedErrorState : ClientLoginInfoState()
+    data class UnauthorizedErrorState(val detail: String = "") : ClientLoginInfoState()
 
     /**
      * 网络连接异常
