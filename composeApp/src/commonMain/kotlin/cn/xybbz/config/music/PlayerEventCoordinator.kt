@@ -5,6 +5,7 @@ import cn.xybbz.startup.AppSessionState
 import cn.xybbz.startup.SessionCoordinator
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.config.ifLoadPlayerRecommendation
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.database.withTransaction
@@ -210,28 +211,30 @@ class PlayerEventCoordinator(
         recommendationJob?.cancel()
 
         // 切歌后补充加载相似歌曲和热门歌曲，供播放页展示。
-
-        recommendationJob = scope.launch {
-            supervisorScope {
-                launch {
-                    val similar = dataSourceManager.getSimilarMusicList(musicId)
-                    ensureActive()
-                    if (musicController.musicInfo?.itemId == musicId) {
-                        _recommendationStateFlow.update {
-                            it.copy(similarMusicList = similar)
+        // JVM 播放页不展示推荐内容，因此桌面端跳过这两类远程请求。
+        if (ifLoadPlayerRecommendation) {
+            recommendationJob = scope.launch {
+                supervisorScope {
+                    launch {
+                        val similar = dataSourceManager.getSimilarMusicList(musicId)
+                        ensureActive()
+                        if (musicController.musicInfo?.itemId == musicId) {
+                            _recommendationStateFlow.update {
+                                it.copy(similarMusicList = similar)
+                            }
                         }
                     }
-                }
 
-                launch {
-                    val popular = dataSourceManager.getArtistPopularMusicList(
-                        artistId.orEmpty(),
-                        artistName.orEmpty()
-                    )
-                    ensureActive()
-                    if (musicController.musicInfo?.itemId == musicId) {
-                        _recommendationStateFlow.update {
-                            it.copy(popularMusicList = popular)
+                    launch {
+                        val popular = dataSourceManager.getArtistPopularMusicList(
+                            artistId.orEmpty(),
+                            artistName.orEmpty()
+                        )
+                        ensureActive()
+                        if (musicController.musicInfo?.itemId == musicId) {
+                            _recommendationStateFlow.update {
+                                it.copy(popularMusicList = popular)
+                            }
                         }
                     }
                 }
