@@ -33,11 +33,12 @@ internal object DownloadStorageGuard {
         }
     }
 
-    // 已知文件大小时校验可用空间，未知或非正数需求不做强校验。
+    // 已知文件大小时校验可用空间，未知或非正数需求不做强校验；fallbackDirectory 为空时使用平台默认下载目录。
     fun ensureEnoughSpace(
         path: String,
         needBytes: Long,
         contextWrapper: ContextWrapper,
+        fallbackDirectory: String = "",
     ) {
         if (needBytes <= 0L) {
             return
@@ -46,6 +47,7 @@ internal object DownloadStorageGuard {
             path = path,
             requiredBytes = requiredBytesWithReserve(needBytes),
             contextWrapper = contextWrapper,
+            fallbackDirectory = fallbackDirectory,
         )
     }
 
@@ -55,18 +57,21 @@ internal object DownloadStorageGuard {
         currentBytes: Long,
         expectedTotalBytes: Long,
         contextWrapper: ContextWrapper,
+        fallbackDirectory: String = "",
     ) {
         if (expectedTotalBytes > 0L) {
             ensureEnoughSpace(
                 path = path,
                 needBytes = (expectedTotalBytes - currentBytes).coerceAtLeast(0L),
                 contextWrapper = contextWrapper,
+                fallbackDirectory = fallbackDirectory,
             )
         } else {
             ensureUsableSpaceAtLeast(
                 path = path,
                 requiredBytes = MIN_RESERVED_SPACE_BYTES,
                 contextWrapper = contextWrapper,
+                fallbackDirectory = fallbackDirectory,
             )
         }
     }
@@ -76,8 +81,9 @@ internal object DownloadStorageGuard {
         path: String,
         requiredBytes: Long,
         contextWrapper: ContextWrapper,
+        fallbackDirectory: String,
     ) {
-        val usableBytes = DownloadPlatformFiles.usableSpace(path, contextWrapper)
+        val usableBytes = DownloadPlatformFiles.usableSpace(path, contextWrapper, fallbackDirectory)
         if (usableBytes < requiredBytes) {
             throw InsufficientStorageException(
                 "磁盘空间不足：需要至少 ${formatBytes(requiredBytes)}，当前可用 ${formatBytes(usableBytes)}。",

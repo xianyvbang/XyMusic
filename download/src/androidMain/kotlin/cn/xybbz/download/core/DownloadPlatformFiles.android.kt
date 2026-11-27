@@ -23,16 +23,27 @@ internal actual fun platformDefaultDownloadDirectoryPath(contextWrapper: Context
         ?: File(context.filesDir, "downloads")).absolutePath
 }
 
-internal actual fun createPlatformTempDownloadFilePath(contextWrapper: ContextWrapper): String {
-    val directory = File(contextWrapper.context.cacheDir, DownloadConstants.TEMP_DOWNLOAD_DIRECTORY_NAME)
+internal actual fun createPlatformTempDownloadFilePath(
+    contextWrapper: ContextWrapper,
+    downloadDirectory: String,
+): String {
+    // 临时文件与实际下载目录保持一致，避免跨盘移动和独立临时目录。
+    val directory = downloadDirectory.takeIf { it.isNotBlank() }?.let(::File)
+        ?: File(platformDefaultDownloadDirectoryPath(contextWrapper))
     // 父目录创建统一走 FileKit，平台层只负责 Android 临时文件命名。
     ensureDirectoryWithFileKit(directory.absolutePath)
     return File.createTempFile("download_", ".tmp", directory).absolutePath
 }
 
 // Android 端优先通过 StatFs 查询可用空间，失败时退回 File.usableSpace。
-internal actual fun platformUsableSpace(path: String, contextWrapper: ContextWrapper): Long {
-    val target = resolveSpaceTarget(path, contextWrapper.context.cacheDir)
+internal actual fun platformUsableSpace(
+    path: String,
+    contextWrapper: ContextWrapper,
+    fallbackDirectory: String,
+): Long {
+    val fallback = fallbackDirectory.takeIf { it.isNotBlank() }?.let(::File)
+        ?: contextWrapper.context.cacheDir
+    val target = resolveSpaceTarget(path, fallback)
     return runCatching {
         StatFs(target.absolutePath).availableBytes
     }.getOrElse {

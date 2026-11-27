@@ -30,21 +30,42 @@ actual fun getMemoryStorageInfo(
 ): MemoryStorageInfo {
     // JVM 端数据库文件位于持久数据库目录，包含主文件和 Room/SQLite 可能生成的附属文件。
     val databaseFiles = getLocalDatabaseFiles(contextWrapper) + getDownloadDatabaseFiles(contextWrapper)
-    // 应用数据统计需要排除数据库和可重建缓存，下载临时文件属于持久应用数据。
+    // 数据库和可重建缓存单独统计，应用数据统计时需要排除。
     val excludedPaths = databaseFiles.map { it.absoluteFile } +
             contextWrapper.cacheDirectory.absoluteFile
+
+    // 应用数据分散在漫游数据、本地数据和音乐目录三处，分别统计后求和。
+    val appDataRoots = topLevelRoots(
+        listOf(
+            contextWrapper.dataDirectory,
+            contextWrapper.localDataDirectory,
+            contextWrapper.downloadDirectory,
+        ),
+    )
 
     return MemoryStorageInfo(
         // 桌面端可重建缓存单独统计，后续清理入口可以复用该目录。
         cacheSize = folderSize(contextWrapper.cacheDirectory),
-        // 应用数据以 dataDirectory 为根目录，排除数据库和可重建缓存相关文件。
-        appDataSize = folderSizeExcluding(
-            folder = contextWrapper.dataDirectory,
-            excludedPaths = excludedPaths,
-        ),
+        // 应用数据按三处根目录分别统计，排除数据库和可重建缓存。
+        appDataSize = appDataRoots.sumOf { root ->
+            folderSizeExcluding(folder = root, excludedPaths = excludedPaths)
+        },
         // 数据库大小单独统计，便于页面分项展示。
         databaseSize = databaseFiles.sumOf(::folderSize),
     )
+}
+
+// 过滤掉被其他根目录包含的子目录，避免重叠根重复统计。
+private fun topLevelRoots(roots: List<File>): List<File> {
+    val normalized = roots
+        .map { it.absoluteFile }
+        .distinctBy { it.toNormalizedPath() }
+        .map { it to it.toNormalizedPath() }
+    return normalized
+        .filterNot { (_, path) ->
+            normalized.any { (_, other) -> other != path && path.startsWith(other) }
+        }
+        .map { (file, _) -> file }
 }
 
 actual fun clearPlatformCache(contextWrapper: ContextWrapper) {

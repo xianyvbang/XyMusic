@@ -24,18 +24,25 @@ internal object DownloadPlatformFiles {
     fun defaultDownloadDirectory(contextWrapper: ContextWrapper): String =
         platformDefaultDownloadDirectoryPath(contextWrapper)
 
-    // 创建下载使用的临时文件路径。
-    fun createTempDownloadFilePath(contextWrapper: ContextWrapper): String =
-        createPlatformTempDownloadFilePath(contextWrapper)
+    // 创建下载使用的临时文件路径；临时文件与实际下载目录保持一致，不再使用独立临时目录。
+    fun createTempDownloadFilePath(
+        contextWrapper: ContextWrapper,
+        downloadDirectory: String,
+    ): String =
+        createPlatformTempDownloadFilePath(contextWrapper, downloadDirectory)
 
     fun fileLength(path: String): Long = fileLengthWithFileKit(path)
 
     // 计算普通文件的 MD5，供下载完成和迁移后的完整性校验使用。
     fun fileMd5(path: String): String = platformFileMd5(path)
 
-    // 查询指定路径所在磁盘当前可用空间。
-    fun usableSpace(path: String, contextWrapper: ContextWrapper): Long =
-        platformUsableSpace(path, contextWrapper)
+    // 查询指定路径所在磁盘当前可用空间；fallbackDirectory 为空时使用平台默认下载目录。
+    fun usableSpace(
+        path: String,
+        contextWrapper: ContextWrapper,
+        fallbackDirectory: String = "",
+    ): Long =
+        platformUsableSpace(path, contextWrapper, fallbackDirectory)
 
     suspend fun deleteFile(path: String): Boolean = deleteFileWithFileKit(path)
 
@@ -63,11 +70,18 @@ internal object DownloadPlatformFiles {
 // 默认下载目录依赖平台上下文，只返回路径，目录创建由 commonMain 统一交给 FileKit。
 internal expect fun platformDefaultDownloadDirectoryPath(contextWrapper: ContextWrapper): String
 
-// 临时文件创建需要平台生成唯一文件名，但父目录创建统一通过 FileKit 处理。
-internal expect fun createPlatformTempDownloadFilePath(contextWrapper: ContextWrapper): String
+// 临时文件创建需要平台生成唯一文件名；临时文件直接落在实际下载目录，父目录创建统一通过 FileKit 处理。
+internal expect fun createPlatformTempDownloadFilePath(
+    contextWrapper: ContextWrapper,
+    downloadDirectory: String,
+): String
 
-// 查询路径所在磁盘可用空间；平台层负责处理路径不存在时的父目录回退。
-internal expect fun platformUsableSpace(path: String, contextWrapper: ContextWrapper): Long
+// 查询路径所在磁盘可用空间；path 为空时回退到 fallbackDirectory（空则用平台默认目录）。
+internal expect fun platformUsableSpace(
+    path: String,
+    contextWrapper: ContextWrapper,
+    fallbackDirectory: String,
+): Long
 
 // 计算普通路径文件的 MD5；content Uri 等平台特殊目标由平台层自行处理。
 internal expect fun platformFileMd5(path: String): String

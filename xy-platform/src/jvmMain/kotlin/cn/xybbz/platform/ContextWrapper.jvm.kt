@@ -7,28 +7,25 @@ actual class ContextWrapper {
     // JVM 路径解析使用的系统属性映射，测试可通过工厂注入隔离值。
     private val properties: Map<String, String>
 
-    // JVM 路径解析使用的安装目录，测试可通过工厂注入临时目录。
-    private val installationDirectory: File
-
     // JVM 运行时解析到的应用名称，默认沿用桌面安装包名称。
     val appName: String
 
     // JVM 运行时解析到的小写包名，用于需要稳定应用标识的目录或日志场景。
     val packageName: String
 
-    // JVM 持久应用数据根目录，用于保存数据库、缓存和下载中的临时状态。
+    // JVM 持久应用数据根目录（数据库/配置），默认位于用户漫游数据目录。
     val dataDirectory: File
+
+    // JVM 用户本地数据根目录（缓存文件），默认位于用户本地数据目录。
+    val localDataDirectory: File
 
     // JVM 数据库目录，Room 主文件和 SQLite 伴生文件统一落在这里。
     val databaseDirectory: File
 
-    // JVM 可重建缓存目录，用于播放缓存等可清理数据。
+    // JVM 可重建缓存目录，默认位于用户本地数据目录，用于播放缓存等可清理数据。
     val cacheDirectory: File
 
-    // JVM 下载中的临时文件父目录，具体下载临时子目录由下载模块常量决定。
-    val downloadTempParentDirectory: File
-
-    // JVM 默认下载完成目录，避免下载文件落到系统盘用户下载目录。
+    // JVM 默认下载完成目录，默认位于用户音乐目录，方便用户直接查看。
     val downloadDirectory: File
 
     // 兼容旧调用点的应用数据目录，后续新代码应优先使用上面的用途化目录。
@@ -38,34 +35,55 @@ actual class ContextWrapper {
         properties = System.getProperties().stringPropertyNames().associateWith { propertyName ->
             System.getProperty(propertyName).orEmpty()
         },
-        installationDirectory = resolveDefaultInstallationDirectory(),
     )
 
     private constructor(
         properties: Map<String, String>,
-        installationDirectory: File,
     ) {
         this.properties = properties
-        this.installationDirectory = installationDirectory.absoluteFile
 
         appName = resolveAppName()
         packageName = resolvePackageName()
-        dataDirectory = resolveDataDirectory().absoluteFile
+
+        // 显式覆盖根目录优先，测试或高级用户可通过系统属性统一指定所有目录。
+        val overrideRoot = properties[DATA_ROOT_PROPERTY].orBlankToNull()?.let(::File)
+
+        dataDirectory = (overrideRoot ?: File(resolveRoamingRoot(), appName)).absoluteFile
+        localDataDirectory = (overrideRoot ?: File(resolveLocalRoot(), appName)).absoluteFile
         databaseDirectory = File(dataDirectory, DATABASE_DIRECTORY_NAME).absoluteFile
-        cacheDirectory = File(dataDirectory, CACHE_DIRECTORY_NAME).absoluteFile
-        downloadTempParentDirectory = File(dataDirectory, TEMP_DIRECTORY_NAME).absoluteFile
-        downloadDirectory = File(File(dataDirectory, DOWNLOADS_DIRECTORY_NAME), appName).absoluteFile
+        cacheDirectory = File(localDataDirectory, CACHE_DIRECTORY_NAME).absoluteFile
+        downloadDirectory = (overrideRoot?.let { File(File(it, DOWNLOADS_DIRECTORY_NAME), appName) }
+            ?: File(resolveMusicRoot(), appName)).absoluteFile
         applicationDirectory = dataDirectory
     }
 
-    // 解析 JVM 应用数据根目录，优先使用覆盖属性，否则放到当前运行目录所在盘符根目录。
-    private fun resolveDataDirectory(): File {
-        properties[DATA_ROOT_PROPERTY].orBlankToNull()?.let { configuredRoot ->
-            return File(configuredRoot)
-        }
+    // 解析用户漫游数据根目录（Windows: %APPDATA%），数据库和配置放在这里。
+    private fun resolveRoamingRoot(): File {
+        return envDirectory(APPDATA_ENV) ?: File(userHome(), ".config")
+    }
 
-        val installRoot = installationDirectory.toPath().root?.toFile() ?: installationDirectory
-        return File(installRoot, "${appName}Data")
+    // 解析用户本地数据根目录（Windows: %LOCALAPPDATA%），缓存文件放在这里。
+    private fun resolveLocalRoot(): File {
+        return envDirectory(LOCAL_APPDATA_ENV) ?: File(userHome(), ".cache")
+    }
+
+    // 解析用户音乐目录（Windows: %USERPROFILE%\Music），下载的音乐放在这里。
+    private fun resolveMusicRoot(): File {
+        return envDirectory(USER_PROFILE_ENV)?.let { File(it, MUSIC_DIRECTORY_NAME) }
+            ?: File(userHome(), MUSIC_DIRECTORY_NAME)
+    }
+
+    // 读取目录类环境变量，优先使用注入属性，便于测试隔离。
+    private fun envDirectory(name: String): File? {
+        val value = properties[name].orBlankToNull() ?: System.getenv(name).orBlankToNull()
+        return value?.let(::File)
+    }
+
+    // 解析用户主目录，作为非 Windows 平台的兜底。
+    private fun userHome(): File {
+        val home = properties[USER_HOME_PROPERTY].orBlankToNull()
+            ?: System.getProperty(USER_HOME_PROPERTY).orEmpty()
+        return File(home.ifBlank { "." })
     }
 
     // 解析桌面应用名称，空白配置回退到默认名称。
@@ -88,47 +106,39 @@ actual class ContextWrapper {
         // 桌面应用默认名称，未注入包名时使用。
         const val DEFAULT_APP_NAME: String = "XyMusic"
 
+        // Windows 用户漫游数据目录环境变量名。
+        private const val APPDATA_ENV = "APPDATA"
+
+        // Windows 用户本地数据目录环境变量名。
+        private const val LOCAL_APPDATA_ENV = "LOCALAPPDATA"
+
+        // Windows 用户主目录环境变量名。
+        private const val USER_PROFILE_ENV = "USERPROFILE"
+
+        // 用户主目录系统属性名，用于非 Windows 平台兜底。
+        private const val USER_HOME_PROPERTY = "user.home"
+
         // 数据库子目录名称。
         private const val DATABASE_DIRECTORY_NAME = "database"
 
         // 可清理缓存子目录名称。
         private const val CACHE_DIRECTORY_NAME = "cache"
 
-        // 下载中临时文件父目录名称。
-        private const val TEMP_DIRECTORY_NAME = "temp"
-
         // 默认下载完成目录父目录名称。
         private const val DOWNLOADS_DIRECTORY_NAME = "Downloads"
+
+        // 用户音乐目录名称。
+        private const val MUSIC_DIRECTORY_NAME = "Music"
 
         /**
          * 创建 JVM 测试专用上下文，避免测试读写真实用户目录。
          */
         fun createForTest(
             properties: Map<String, String>,
-            installationDirectory: File,
         ): ContextWrapper {
             return ContextWrapper(
                 properties = properties,
-                installationDirectory = installationDirectory,
             )
-        }
-
-        // 解析 JVM 默认安装目录，优先使用代码所在目录，失败时退回当前工作目录。
-        private fun resolveDefaultInstallationDirectory(): File {
-            val codeSourceFile = runCatching {
-                ContextWrapper::class.java.protectionDomain
-                    ?.codeSource
-                    ?.location
-                    ?.toURI()
-                    ?.let(::File)
-                    ?.absoluteFile
-            }.getOrNull()
-
-            return when {
-                codeSourceFile == null -> File(System.getProperty("user.dir").orEmpty().ifBlank { "." }).absoluteFile
-                codeSourceFile.isFile -> codeSourceFile.parentFile ?: codeSourceFile
-                else -> codeSourceFile
-            }
         }
     }
 }

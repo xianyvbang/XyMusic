@@ -21,7 +21,6 @@ class JvmPlaybackCacheDirectoriesTest {
                 ContextWrapper.PACKAGE_NAME_PROPERTY to ContextWrapper.DEFAULT_APP_NAME,
                 ContextWrapper.DATA_ROOT_PROPERTY to File(root, "XyMusicData").absolutePath,
             ),
-            installationDirectory = File(root, "install"),
         )
 
         try {

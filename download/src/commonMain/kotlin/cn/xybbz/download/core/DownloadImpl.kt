@@ -82,25 +82,32 @@ class DownloadImpl(
             try {
                 // 最终文件路径在 commonMain 里只做解析，真正的临时文件创建交给平台 actual。
                 // 自定义目录不可用时回落到平台默认目录，保证下载任务仍能创建。
+                // 当前实际生效的下载目录，用于解析最终路径和空间校验回退。
+                val usableFinalDirectory = downloadDispatcher.config.usableFinalDirectory()
                 val resolved = FileNameResolver.resolve(
                     request = request,
-                    globalFinalDir = downloadDispatcher.config.usableFinalDirectory(),
+                    globalFinalDir = usableFinalDirectory,
                 )
                 finalFilePath = resolved.finalPath
                 tempFilePath = withContext(Dispatchers.IO) {
-                    DownloadPlatformFiles.createTempDownloadFilePath(downloadDispatcher.contextWrapper)
+                    DownloadPlatformFiles.createTempDownloadFilePath(
+                        downloadDispatcher.contextWrapper,
+                        usableFinalDirectory,
+                    )
                 }
                 // 入队前先校验临时目录空间，避免明知容量不足仍创建下载任务。
                 DownloadStorageGuard.ensureEnoughSpace(
                     path = tempFilePath,
                     needBytes = request.fileSize,
                     contextWrapper = downloadDispatcher.contextWrapper,
+                    fallbackDirectory = usableFinalDirectory,
                 )
                 // 最终目录可能和临时目录不在同一磁盘，也需要提前校验一次。
                 DownloadStorageGuard.ensureEnoughSpace(
                     path = resolved.finalPath,
                     needBytes = request.fileSize,
                     contextWrapper = downloadDispatcher.contextWrapper,
+                    fallbackDirectory = usableFinalDirectory,
                 )
 
                 if (!request.uid.isNullOrBlank()) {

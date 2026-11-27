@@ -328,18 +328,21 @@ class DownloadCoreUtilitiesTest {
     }
 
     /**
-     * JVM 下载临时文件应创建在上下文指定的持久临时下载目录中。
+     * JVM 下载临时文件应创建在实际下载目录中，不再使用独立临时目录。
      */
     @Test
-    fun tempDownloadFileUsesContextDownloadTempDirectory() {
+    fun tempDownloadFileUsesActualDownloadDirectory() {
         val root = createTempDirectory()
         val contextWrapper = createTestContextWrapper(root)
-        val tempFile = File(DownloadPlatformFiles.createTempDownloadFilePath(contextWrapper))
+        val downloadDirectory = contextWrapper.downloadDirectory.absolutePath
+        val tempFile = File(
+            DownloadPlatformFiles.createTempDownloadFilePath(contextWrapper, downloadDirectory),
+        )
 
         try {
             assertTrue(tempFile.exists())
             assertEquals(
-                getJvmDownloadTempDirectory(contextWrapper).canonicalFile,
+                contextWrapper.downloadDirectory.canonicalFile,
                 tempFile.parentFile.canonicalFile,
             )
         } finally {
@@ -738,7 +741,6 @@ class DownloadCoreUtilitiesTest {
                 ContextWrapper.PACKAGE_NAME_PROPERTY to ContextWrapper.DEFAULT_APP_NAME,
                 ContextWrapper.DATA_ROOT_PROPERTY to File(root, "XyMusicData").absolutePath,
             ),
-            installationDirectory = File(root, "install"),
         )
     }
 

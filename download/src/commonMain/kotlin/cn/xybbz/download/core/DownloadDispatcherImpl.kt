@@ -234,16 +234,19 @@ class DownloadDispatcherImpl(
             while (runningTasks.size < config.maxConcurrentDownloads) {
                 val task = readyTasks.removeFirstOrNull() ?: break
                 // 任务真正启动前再校验一次空间，覆盖排队期间磁盘空间被占用的情况。
+                val usableFinalDirectory = config.usableFinalDirectory()
                 val failureReason = runCatching {
                     DownloadStorageGuard.ensureEnoughSpace(
                         path = task.tempFilePath,
                         needBytes = (task.fileSize - task.downloadedBytes).coerceAtLeast(0L),
                         contextWrapper = contextWrapper,
+                        fallbackDirectory = usableFinalDirectory,
                     )
                     DownloadStorageGuard.ensureEnoughSpace(
                         path = task.filePath,
                         needBytes = (task.fileSize - task.downloadedBytes).coerceAtLeast(0L),
                         contextWrapper = contextWrapper,
+                        fallbackDirectory = usableFinalDirectory,
                     )
                 }.exceptionOrNull()?.message
 

@@ -5,7 +5,6 @@ import cn.xybbz.platform.ContextWrapper
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.absolutePath
-import io.github.vinceglb.filekit.cacheDir
 import io.github.vinceglb.filekit.createDirectories
 import io.github.vinceglb.filekit.filesDir
 import io.ktor.utils.io.ByteReadChannel
@@ -16,16 +15,27 @@ internal actual fun platformDefaultDownloadDirectoryPath(contextWrapper: Context
     return directory.absolutePath()
 }
 
-internal actual fun createPlatformTempDownloadFilePath(contextWrapper: ContextWrapper): String {
-    val directory = PlatformFile(FileKit.cacheDir, DownloadConstants.TEMP_DOWNLOAD_DIRECTORY_NAME)
+internal actual fun createPlatformTempDownloadFilePath(
+    contextWrapper: ContextWrapper,
+    downloadDirectory: String,
+): String {
+    // 临时文件与实际下载目录保持一致，避免跨盘移动和独立临时目录。
+    val resolvedDirectory = downloadDirectory.ifBlank {
+        platformDefaultDownloadDirectoryPath(contextWrapper)
+    }
+    val directory = PlatformFile(resolvedDirectory)
     directory.createDirectories()
-    // iOS 下载调度当前未启用；这里先给出 FileKit 目录下的稳定临时路径入口。
+    // iOS 下载调度当前未启用；这里先给出实际下载目录下的稳定临时路径入口。
     return PlatformFile(directory, "download_${kotlin.time.Clock.System.now().toEpochMilliseconds()}.tmp")
         .absolutePath()
 }
 
 // iOS 下载随机写入尚未启用，当前先返回最大值，避免误拦截；后续接入 NSFileSystemFreeSize 时替换这里。
-internal actual fun platformUsableSpace(path: String, contextWrapper: ContextWrapper): Long {
+internal actual fun platformUsableSpace(
+    path: String,
+    contextWrapper: ContextWrapper,
+    fallbackDirectory: String,
+): Long {
     return Long.MAX_VALUE
 }
 

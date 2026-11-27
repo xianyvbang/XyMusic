@@ -16,16 +16,27 @@ internal actual fun platformDefaultDownloadDirectoryPath(contextWrapper: Context
     return contextWrapper.downloadDirectory.absolutePath
 }
 
-internal actual fun createPlatformTempDownloadFilePath(contextWrapper: ContextWrapper): String {
-    val directory = getJvmDownloadTempDirectory(contextWrapper)
+internal actual fun createPlatformTempDownloadFilePath(
+    contextWrapper: ContextWrapper,
+    downloadDirectory: String,
+): String {
+    // 临时文件与实际下载目录保持一致，避免跨盘移动和独立临时目录。
+    val directory = downloadDirectory.takeIf { it.isNotBlank() }?.let(::File)
+        ?: contextWrapper.downloadDirectory
     // 父目录创建统一走 FileKit，平台层只负责调用 JVM 临时文件命名能力。
     ensureDirectoryWithFileKit(directory.absolutePath)
     return File.createTempFile("download_", ".tmp", directory).absolutePath
 }
 
-// JVM 端通过 java.io.File 查询路径所在磁盘的可用空间。
-internal actual fun platformUsableSpace(path: String, contextWrapper: ContextWrapper): Long {
-    val target = resolveSpaceTarget(path, contextWrapper.dataDirectory)
+// JVM 端通过 java.io.File 查询路径所在磁盘的可用空间；路径为空时回退到实际下载目录。
+internal actual fun platformUsableSpace(
+    path: String,
+    contextWrapper: ContextWrapper,
+    fallbackDirectory: String,
+): Long {
+    val fallback = fallbackDirectory.takeIf { it.isNotBlank() }?.let(::File)
+        ?: contextWrapper.downloadDirectory
+    val target = resolveSpaceTarget(path, fallback)
     return target.usableSpace.coerceAtLeast(0L)
 }
 
@@ -150,9 +161,4 @@ private fun resolveSpaceTarget(path: String, fallbackDirectory: File): File {
         .firstOrNull { it.exists() }
         ?.let { if (it.isFile) it.parentFile ?: it else it }
         ?: fallbackDirectory
-}
-
-fun getJvmDownloadTempDirectory(contextWrapper: ContextWrapper): File {
-    // JVM 下载临时目录由平台数据根和下载模块目录常量共同决定。
-    return File(contextWrapper.downloadTempParentDirectory, DownloadConstants.TEMP_DOWNLOAD_DIRECTORY_NAME)
 }
