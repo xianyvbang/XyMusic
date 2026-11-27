@@ -28,6 +28,8 @@ kotlin {
         implementation(libs.kotlin.ktor.apache)
         implementation(project.dependencies.platform(libs.koin.bom))
         implementation(libs.koin.core)
+        // 托盘右键菜单通过 JNA 调用 Win32 原生菜单。
+        implementation(libs.jna)
         runtimeOnly(libs.logback.classic)
     }
 }
