@@ -2,6 +2,13 @@
 -keep class * implements com.github.panpf.sketch.util.DecoderProvider { *; }
 -keep class * implements com.github.panpf.sketch.util.FetcherProvider { *; }
 
+# ------------------------------- Room ---------------------------------- #
+# Room 在运行期通过反射按“数据库类名 + _Impl”查找生成的实现类，
+# 类名一旦被混淆就会抛 ClassNotFoundException，导致 Koin 创建数据库实例失败。
+# compose 的 ProGuard 任务不会自动读取 room-runtime 里的 META-INF/proguard/room.pro，
+# 因此按官方 KMP 文档显式声明该规则；生成的 _Impl 同样继承 RoomDatabase，会被一并保留原名和无参构造。
+-keep class * extends androidx.room.RoomDatabase { <init>(); }
+
 # ------------------------------ JNA ------------------------------------ #
 -dontwarn com.sun.jna.internal.Cleaner
 -keep class com.sun.jna.** { *; }
