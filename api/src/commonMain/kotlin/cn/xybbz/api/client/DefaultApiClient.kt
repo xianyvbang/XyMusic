@@ -80,7 +80,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         updateTokenHeaderName()
         updateTokenOrHeadersOrQuery()
         // 打印实际创建客户端的子类名称，便于排查不同服务端客户端的初始化来源。
-        logger.error { "开始创建 createHttpClient，子类: ${this::class.qualifiedName}" }
+        logger.info { "开始创建 createHttpClient，子类: ${this::class.qualifiedName}" }
         val newHttpClient = provideClient().config {
             expectSuccess = true
             followRedirects = true
