@@ -81,6 +81,7 @@ import org.jetbrains.compose.resources.stringResource
 import xymusic.composeapp.generated.resources.*
 import xymusic.composeapp.generated.resources.Res
 import xymusic.composeapp.generated.resources.adjust
+import xymusic.composeapp.generated.resources.album_24px
 import xymusic.composeapp.generated.resources.audio_cache
 import xymusic.composeapp.generated.resources.audio_cache_description
 import xymusic.composeapp.generated.resources.cache_path
@@ -91,13 +92,12 @@ import xymusic.composeapp.generated.resources.database_data_description
 import xymusic.composeapp.generated.resources.essential_data
 import xymusic.composeapp.generated.resources.essential_data_description
 import xymusic.composeapp.generated.resources.folder_managed_24px
+import xymusic.composeapp.generated.resources.image_cache
+import xymusic.composeapp.generated.resources.image_cache_description
 import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.music_note_24px
-import xymusic.composeapp.generated.resources.queue_music_24px
 import xymusic.composeapp.generated.resources.settings_24px
 import xymusic.composeapp.generated.resources.storage_management
-import xymusic.composeapp.generated.resources.temporary_cache
-import xymusic.composeapp.generated.resources.temporary_cache_description
 import xymusic.composeapp.generated.resources.warning
 import java.io.File
 
@@ -576,7 +576,7 @@ private fun JvmStorageSettingsItem?.hasClearableData(): Boolean {
  *
  * @param memoryManagementViewModel 存储管理 ViewModel。
  * @param onClearDatabase 数据库清理回调，调用方负责确认逻辑。
- * @return 按音频缓存、临时缓存、数据库、必要数据顺序排列的展示条目。
+ * @return 按音频缓存、图片缓存、数据库、必要数据顺序排列的展示条目。
  */
 @Composable
 private fun jvmStorageSettingsItems(
@@ -595,14 +595,14 @@ private fun jvmStorageSettingsItems(
             onClear = { memoryManagementViewModel.clearMusicCache() },
         ),
         JvmStorageSettingsItem(
-            title = stringResource(Res.string.temporary_cache),
-            description = stringResource(Res.string.temporary_cache_description),
-            sizeText = memoryManagementViewModel.cacheSize,
-            sizeBytes = memoryManagementViewModel.cacheSize.parseStorageBytes(),
-            icon = Res.drawable.queue_music_24px,
+            title = stringResource(Res.string.image_cache),
+            description = stringResource(Res.string.image_cache_description),
+            sizeText = memoryManagementViewModel.imageCacheSize,
+            sizeBytes = memoryManagementViewModel.imageCacheSize.parseStorageBytes(),
+            icon = Res.drawable.album_24px,
             color = MaterialTheme.colorScheme.tertiary,
             meta = stringResource(Res.string.jvm_memory_management_screen_text_03),
-            onClear = { memoryManagementViewModel.clearAllCache() },
+            onClear = { memoryManagementViewModel.clearImageCache() },
         ),
         JvmStorageSettingsItem(
             title = stringResource(Res.string.database_data),

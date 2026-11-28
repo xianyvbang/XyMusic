@@ -3,6 +3,7 @@ package cn.xybbz.music
 import android.content.Context
 import android.os.Environment
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.platform.PlatformCacheDirectoryNames
 import java.io.File
 
 /**
@@ -18,12 +19,12 @@ internal fun defaultAndroidPlaybackCacheDirectory(context: Context): File {
             // getExternalFilesDir 在外部存储异常时可能返回 null，此时回退到内部存储
             File(
                 context.getExternalFilesDir(null) ?: context.filesDir,
-                ANDROID_CACHE_CHILD_PATH
+                PlatformCacheDirectoryNames.CACHE
             )
         } else {
-            File(context.filesDir, ANDROID_CACHE_CHILD_PATH)
+            File(context.filesDir, PlatformCacheDirectoryNames.CACHE)
         }
-    return File(cacheParentDirectory, ANDROID_CACHE_DIRECTORY_NAME).normalizedDirectory()
+    return File(cacheParentDirectory, PlatformCacheDirectoryNames.SONG).normalizedDirectory()
 }
 
 internal fun resolveAndroidPlaybackCacheDirectory(
@@ -47,6 +48,3 @@ internal fun File.normalizedDirectory(): File {
 internal fun File.isSameDirectory(other: File): Boolean {
     return normalizedDirectory().absolutePath == other.normalizedDirectory().absolutePath
 }
-
-private const val ANDROID_CACHE_CHILD_PATH = "cache"
-private const val ANDROID_CACHE_DIRECTORY_NAME = "music_cache"

@@ -1,6 +1,7 @@
 package cn.xybbz.music
 
 import cn.xybbz.platform.ContextWrapper
+import cn.xybbz.platform.PlatformCacheDirectoryNames
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
@@ -25,7 +26,7 @@ class JvmPlaybackCacheDirectoriesTest {
 
         try {
             assertEquals(
-                File(contextWrapper.cacheDirectory, "jvm-playback-cache").canonicalFile,
+                File(contextWrapper.cacheDirectory, PlatformCacheDirectoryNames.SONG).canonicalFile,
                 JvmPlaybackCacheDirectories.defaultCacheDirectory(contextWrapper),
             )
         } finally {

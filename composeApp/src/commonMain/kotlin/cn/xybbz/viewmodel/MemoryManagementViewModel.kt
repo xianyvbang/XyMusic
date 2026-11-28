@@ -39,6 +39,7 @@ import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.platform.ContextWrapper
 import cn.xybbz.startup.SessionCoordinator
+import com.github.panpf.sketch.Sketch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
@@ -62,6 +63,10 @@ class MemoryManagementViewModel(
      * 会话协调器用于清库后重置会话状态，保证重新登录时能触发页面数据刷新。
      */
     private val sessionCoordinator: SessionCoordinator,
+    /**
+     * 图片加载器，用于统计和清理 Sketch 图片磁盘缓存。
+     */
+    private val sketch: Sketch,
 ) : ViewModel() {
 
     var cacheSize by mutableStateOf("0B")
@@ -71,6 +76,9 @@ class MemoryManagementViewModel(
         private set
 
     var musicCacheSize by mutableStateOf("0B")
+        private set
+
+    var imageCacheSize by mutableStateOf("0B")
         private set
 
     var databaseSize by mutableStateOf("0B")
@@ -101,6 +109,7 @@ class MemoryManagementViewModel(
     fun logStorageInfo() {
         viewModelScope.launch {
             refreshMusicCacheUsage()
+            refreshImageCacheSize()
             refreshStorageInfo()
         }
     }
@@ -124,6 +133,20 @@ class MemoryManagementViewModel(
                 clearPlatformCache(contextWrapper)
             }
             refreshMusicCacheUsage()
+            refreshStorageInfo()
+        }
+    }
+
+    /**
+     * 只清理 Sketch 图片缓存，不触碰音频缓存和其它缓存目录。
+     */
+    fun clearImageCache() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                sketch.downloadCache.clear()
+                sketch.resultCache.clear()
+            }
+            refreshImageCacheSize()
             refreshStorageInfo()
         }
     }
@@ -183,5 +206,16 @@ class MemoryManagementViewModel(
 
     private suspend fun refreshMusicCacheUsage() {
         downloadCacheController.refreshMusicCacheSize()
+    }
+
+    /**
+     * 刷新图片缓存占用。
+     *
+     * Sketch 的下载缓存和结果缓存共同构成图片缓存占用。
+     */
+    private suspend fun refreshImageCacheSize() {
+        withContext(Dispatchers.IO) {
+            imageCacheSize = formatBytes(sketch.downloadCache.size + sketch.resultCache.size)
+        }
     }
 }

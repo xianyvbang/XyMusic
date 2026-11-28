@@ -1,6 +1,7 @@
 package cn.xybbz.music
 
 import cn.xybbz.platform.ContextWrapper
+import cn.xybbz.platform.PlatformCacheDirectoryNames
 import java.io.File
 
 /**
@@ -8,18 +9,13 @@ import java.io.File
  */
 internal object JvmPlaybackCacheDirectories {
     /**
-     * JVM 播放缓存默认目录名。
-     */
-    private const val CACHE_DIRECTORY_NAME = "jvm-playback-cache"
-
-    /**
      * 解析默认播放缓存目录。
      *
      * @param contextWrapper JVM 平台上下文。
      * @return 位于可重建缓存根目录下的播放缓存目录。
      */
     fun defaultCacheDirectory(contextWrapper: ContextWrapper): File {
-        return File(contextWrapper.cacheDirectory, CACHE_DIRECTORY_NAME).normalizedDirectory()
+        return File(contextWrapper.cacheDirectory, PlatformCacheDirectoryNames.SONG).normalizedDirectory()
     }
 }
 

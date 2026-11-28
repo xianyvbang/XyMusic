@@ -195,6 +195,8 @@
     <string name="restore_default">恢复默认</string>
     <string name="temporary_cache">临时缓存</string>
     <string name="temporary_cache_description">临时缓存是使用过程中产生的临时缓存，清理临时缓存不会影响应用的使用</string>
+    <string name="image_cache">图片缓存</string>
+    <string name="image_cache_description">缓存封面等图片数据，清理后会重新从远程加载</string>
     <string name="database_data">数据库数据</string>
     <string name="database_data_description">存储音频、专辑、艺术家、歌单详细信息，清理后会重新从服务端进行获取</string>
     <string name="essential_data">必需数据</string>

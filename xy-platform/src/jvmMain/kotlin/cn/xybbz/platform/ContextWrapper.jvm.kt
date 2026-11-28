@@ -51,7 +51,7 @@ actual class ContextWrapper {
         dataDirectory = (overrideRoot ?: File(resolveRoamingRoot(), appName)).absoluteFile
         localDataDirectory = (overrideRoot ?: File(resolveLocalRoot(), appName)).absoluteFile
         databaseDirectory = File(dataDirectory, DATABASE_DIRECTORY_NAME).absoluteFile
-        cacheDirectory = File(localDataDirectory, CACHE_DIRECTORY_NAME).absoluteFile
+        cacheDirectory = File(localDataDirectory, PlatformCacheDirectoryNames.CACHE).absoluteFile
         downloadDirectory = (overrideRoot?.let { File(File(it, DOWNLOADS_DIRECTORY_NAME), appName) }
             ?: File(resolveMusicRoot(), appName)).absoluteFile
         applicationDirectory = dataDirectory
@@ -120,9 +120,6 @@ actual class ContextWrapper {
 
         // 数据库子目录名称。
         private const val DATABASE_DIRECTORY_NAME = "database"
-
-        // 可清理缓存子目录名称。
-        private const val CACHE_DIRECTORY_NAME = "cache"
 
         // 默认下载完成目录父目录名称。
         private const val DOWNLOADS_DIRECTORY_NAME = "Downloads"
