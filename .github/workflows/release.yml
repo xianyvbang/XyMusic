@@ -1,7 +1,11 @@
 # 正式发布工作流：并行构建 Android APK/AAB 和 Windows JVM MSI，并统一上传到 GitHub Release。
+# 推送 v* 形式的 tag 时自动触发；也保留手动触发入口，便于重跑或补充发布说明。
 name: 发布正式应用
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       release_notes:
@@ -9,9 +13,9 @@ on:
         required: false
         type: string
       prerelease:
-        description: 是否标记为预发布版本。
+        description: 是否标记为预发布版本；默认按预发布发布。
         required: false
-        default: false
+        default: true
         type: boolean
 
 # 自动创建 tag 和上传 Release 资源需要 contents 写权限。
@@ -53,6 +57,11 @@ jobs:
             exit 1
           fi
           tag_name="v${version_name}"
+          # 由 tag 推送触发时，推送的 tag 必须与版本目录中的版本一致，避免误发旧版本。
+          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF_NAME}" != "${tag_name}" ]; then
+            echo "::error::推送的 tag ${GITHUB_REF_NAME} 与版本目录中的 ${tag_name} 不一致，请先更新 gradle/libs.versions.toml 中的 app-versionName 再打 tag。"
+            exit 1
+          fi
           git fetch --tags --force
           if git rev-parse "refs/tags/${tag_name}" > /dev/null 2>&1; then
             tag_commit="$(git rev-list -n 1 "refs/tags/${tag_name}")"
@@ -336,7 +345,12 @@ jobs:
           fi
 
           prerelease_args=()
-          if [ "$IS_PRERELEASE" = "true" ]; then
+          # tag 推送触发时没有输入项，默认按预发布发布；手动触发时以输入值为准（默认 true）。
+          is_prerelease="$IS_PRERELEASE"
+          if [ -z "$is_prerelease" ]; then
+            is_prerelease="true"
+          fi
+          if [ "$is_prerelease" = "true" ]; then
             prerelease_args+=(--prerelease)
           fi
 
