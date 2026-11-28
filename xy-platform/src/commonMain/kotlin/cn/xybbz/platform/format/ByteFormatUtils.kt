@@ -1,4 +1,4 @@
-package cn.xybbz.common.utils
+package cn.xybbz.platform.format
 
 import kotlin.math.pow
 import kotlin.math.round
@@ -22,6 +22,13 @@ private fun splitBytesToUnit(bytes: Double): Pair<Double, Int> {
     return value to unitIndex
 }
 
+/**
+ * 将字节数格式化为容量文本。
+ *
+ * @param bytes 字节数，非正数统一输出 0。
+ * @param withSpace 数值与单位之间是否保留空格。
+ * @return 形如 512B、1.5KB、1.0MB 的容量文本。
+ */
 fun formatBytes(bytes: Long, withSpace: Boolean = false): String {
     if (bytes <= 0L) return if (withSpace) "0 B" else "0B"
 

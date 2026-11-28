@@ -18,7 +18,7 @@
 
 package cn.xybbz.config.music
 
-import cn.xybbz.common.utils.formatBytes
+import cn.xybbz.platform.format.formatBytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow

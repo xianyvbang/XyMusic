@@ -238,7 +238,7 @@ private fun DesktopThemeModeButton(
  */
 @Composable
 fun DesktopThemeModeToggleButton(modifier: Modifier = Modifier) {
-    val settingsManager: SettingsManager = remember { getKoin().get() }
+    val settingsManager: SettingsManager = getKoin().get()
     val coroutineScope = rememberCoroutineScope()
     // 当前主题模式，用于决定图标与循环切换的下一档
     val themeType by settingsManager.themeType.collectAsState()

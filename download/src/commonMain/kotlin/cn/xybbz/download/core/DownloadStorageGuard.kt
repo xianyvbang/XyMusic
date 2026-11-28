@@ -1,6 +1,7 @@
 package cn.xybbz.download.core
 
 import cn.xybbz.platform.ContextWrapper
+import cn.xybbz.platform.format.formatBytes
 import kotlinx.io.IOException
 
 // 下载磁盘空间不足时抛出的专用异常，便于上层展示明确失败原因。
@@ -88,17 +89,6 @@ internal object DownloadStorageGuard {
             throw InsufficientStorageException(
                 "磁盘空间不足：需要至少 ${formatBytes(requiredBytes)}，当前可用 ${formatBytes(usableBytes)}。",
             )
-        }
-    }
-
-    // 将字节数格式化成更适合错误提示阅读的文本。
-    private fun formatBytes(bytes: Long): String {
-        val gib = 1024L * 1024L * 1024L
-        val mib = 1024L * 1024L
-        return when {
-            bytes >= gib -> "${bytes / gib}GB"
-            bytes >= mib -> "${bytes / mib}MB"
-            else -> "${bytes.coerceAtLeast(0L)}B"
         }
     }
 }

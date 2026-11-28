@@ -55,11 +55,11 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.common.utils.formatStorageLabel
 import cn.xybbz.common.utils.openFolderInSystemFileManager
-import cn.xybbz.common.utils.parseStorageBytes
 import cn.xybbz.config.music.CacheMigrationPolicy
 import cn.xybbz.config.music.CacheMigrationProgress
+import cn.xybbz.platform.format.formatStorageLabel
+import cn.xybbz.platform.format.parseStorageBytes
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.XyDialogActionSpec
 import cn.xybbz.ui.components.XyDialogIcon

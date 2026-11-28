@@ -70,7 +70,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.common.utils.formatBytes
 import cn.xybbz.common.utils.openFolderInSystemFileManager
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.image.rememberRawCoverUrls
@@ -81,6 +80,7 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
+import cn.xybbz.platform.format.formatBytes
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.XyDialogIcon

@@ -23,12 +23,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.common.utils.formatBytes
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.musicCacheSizeInfoFlow
 import cn.xybbz.config.music.refreshMusicCacheSize
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+import cn.xybbz.platform.format.formatBytes
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 

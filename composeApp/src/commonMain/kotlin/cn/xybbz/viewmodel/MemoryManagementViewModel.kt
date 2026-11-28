@@ -26,7 +26,6 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.DatabaseUtils
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.common.utils.formatBytes
 import cn.xybbz.config.music.CacheDirectoryChangeFailure
 import cn.xybbz.config.music.CacheDirectoryChangeResult
 import cn.xybbz.config.music.CacheMigrationPolicy
@@ -43,6 +42,7 @@ import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.platform.ContextWrapper
+import cn.xybbz.platform.format.formatBytes
 import cn.xybbz.startup.SessionCoordinator
 import com.github.panpf.sketch.Sketch
 import kotlinx.coroutines.Dispatchers

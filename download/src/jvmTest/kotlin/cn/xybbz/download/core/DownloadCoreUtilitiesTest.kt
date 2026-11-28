@@ -14,6 +14,7 @@ import cn.xybbz.download.utils.fileLengthWithFileKit
 import cn.xybbz.download.utils.moveFileWithFileKit
 import cn.xybbz.download.utils.playableDownloadFilePath
 import cn.xybbz.platform.ContextWrapper
+import cn.xybbz.platform.format.formatBytes
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
 import io.ktor.utils.io.ByteReadChannel
@@ -241,6 +242,40 @@ class DownloadCoreUtilitiesTest {
                 21L * 1024L * 1024L * 1024L,
                 DownloadStorageGuard.requiredBytesWithReserve(20L * 1024L * 1024L * 1024L),
             )
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /**
+     * 磁盘空间不足的异常文案应使用共享容量格式化实现，同时给出需要容量和当前可用容量。
+     */
+    @Test
+    fun insufficientStorageMessageContainsFormattedCapacity() {
+        val root = createTempDirectory()
+        val contextWrapper = createTestContextWrapper(root)
+        val target = File(root, "huge.tmp")
+        val usableBytes = DownloadPlatformFiles.usableSpace(
+            path = target.absolutePath,
+            contextWrapper = contextWrapper,
+        )
+        // 需求容量超出当前可用空间，必然触发空间不足异常。
+        val needBytes = usableBytes + DownloadStorageGuard.MIN_RESERVED_SPACE_BYTES + 1L
+
+        try {
+            val exception = assertFailsWith<InsufficientStorageException> {
+                DownloadStorageGuard.ensureEnoughSpace(
+                    path = target.absolutePath,
+                    needBytes = needBytes,
+                    contextWrapper = contextWrapper,
+                )
+            }
+            val message = exception.message.orEmpty()
+            val requiredText = formatBytes(DownloadStorageGuard.requiredBytesWithReserve(needBytes))
+            val usableText = formatBytes(usableBytes)
+
+            assertTrue(message.contains("需要至少 $requiredText"))
+            assertTrue(message.contains("当前可用 $usableText"))
         } finally {
             root.deleteRecursively()
         }
