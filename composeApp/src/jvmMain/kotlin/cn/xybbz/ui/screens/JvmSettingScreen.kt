@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.copyTextToClipboard
+import cn.xybbz.common.utils.openFolderInSystemFileManager
 import cn.xybbz.config.info.supportsICloudPasswordSync
 import cn.xybbz.config.setting.JvmAutoStartManager
 import cn.xybbz.download.core.DownloadDirectoryIssue
@@ -54,6 +55,7 @@ import cn.xybbz.ui.components.JvmSettingDownloadRow
 import cn.xybbz.ui.components.JvmSettingGroup
 import cn.xybbz.ui.components.JvmSettingGroupGrid
 import cn.xybbz.ui.components.JvmSettingItemFlow
+import cn.xybbz.ui.components.JvmSettingItemWidthFraction
 import cn.xybbz.ui.components.JvmSettingLazyColumn
 import cn.xybbz.ui.components.JvmSettingNote
 import cn.xybbz.ui.components.JvmSettingPageContentPadding
@@ -111,6 +113,8 @@ import xymusic.composeapp.generated.resources.jvm_set_background_image_screen_te
 import xymusic.composeapp.generated.resources.jvm_set_background_image_screen_text_20
 import xymusic.composeapp.generated.resources.jvm_setting_screen_text_60
 import xymusic.composeapp.generated.resources.language
+import xymusic.composeapp.generated.resources.open_directory
+import xymusic.composeapp.generated.resources.open_directory_failed
 import xymusic.composeapp.generated.resources.password_24px
 import xymusic.composeapp.generated.resources.queue_music_24px
 import xymusic.composeapp.generated.resources.restart_alt_24px
@@ -476,43 +480,45 @@ fun JvmSettingScreen(
                                 }
 
                                 // 歌曲下载位置：展示生效目录，行尾提供切换与恢复默认操作。
-                                // 复用通用设置项排列容器，按每行三个设置项的标准宽度生成，避免横向铺满整行。
+                                // 路径类设置项信息较长，宽度放宽到整行宽度的三分之二，避免横向铺满整行。
                                 // 已下载文件不做搬运，旧记录仍保留原路径，因此这里只提示新任务生效。
                                 JvmSettingItemFlow {
-                                    JvmDownloadLocationRow(
-                                        path = songStoragePath,
-                                        isDefaultPath = settingsViewModel.isDefaultDownloadPath,
-                                        isFallback = settingsViewModel.isDownloadDirectoryFallback,
-                                        onChangeDirectory = {
-                                            coroutineScope.launch {
-                                                chooseJvmStorageDirectory(
-                                                    currentPath = songStoragePath,
-                                                    dialogSettings = downloadDirectoryDialogSettings,
-                                                )?.let { selectedPath ->
-                                                    val issue = settingsViewModel.changeDownloadDirectory(
-                                                        selectedPath
-                                                    )
-                                                    if (issue == null) {
-                                                        MessageUtils.sendPopTipSuccess(
-                                                            Res.string.song_download_location_changed
+                                    JvmSettingItemWidthFraction(fraction = 2f / 3f) {
+                                        JvmDownloadLocationRow(
+                                            path = songStoragePath,
+                                            isDefaultPath = settingsViewModel.isDefaultDownloadPath,
+                                            isFallback = settingsViewModel.isDownloadDirectoryFallback,
+                                            onChangeDirectory = {
+                                                coroutineScope.launch {
+                                                    chooseJvmStorageDirectory(
+                                                        currentPath = songStoragePath,
+                                                        dialogSettings = downloadDirectoryDialogSettings,
+                                                    )?.let { selectedPath ->
+                                                        val issue = settingsViewModel.changeDownloadDirectory(
+                                                            selectedPath
                                                         )
-                                                    } else {
-                                                        MessageUtils.sendPopTipError(
-                                                            issue.toDirectoryIssueText()
-                                                        )
+                                                        if (issue == null) {
+                                                            MessageUtils.sendPopTipSuccess(
+                                                                Res.string.song_download_location_changed
+                                                            )
+                                                        } else {
+                                                            MessageUtils.sendPopTipError(
+                                                                issue.toDirectoryIssueText()
+                                                            )
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        },
-                                        onRestoreDefault = {
-                                            coroutineScope.launch {
-                                                settingsViewModel.restoreDefaultDownloadDirectory()
-                                                MessageUtils.sendPopTipSuccess(
-                                                    Res.string.song_download_location_restored
-                                                )
-                                            }
-                                        },
-                                    )
+                                            },
+                                            onRestoreDefault = {
+                                                coroutineScope.launch {
+                                                    settingsViewModel.restoreDefaultDownloadDirectory()
+                                                    MessageUtils.sendPopTipSuccess(
+                                                        Res.string.song_download_location_restored
+                                                    )
+                                                }
+                                            },
+                                        )
+                                    }
                                 }
 
                                 JvmSettingNote(
@@ -735,7 +741,7 @@ private val JvmDownloadConcurrencyMaxWidth = 560.dp
 /**
  * 歌曲下载位置设置行。
  *
- * 整行展示当前生效的下载目录，行尾提供「修改」与「恢复默认」两个操作；
+ * 整行展示当前生效的下载目录，行尾提供「修改」「恢复默认」与「打开目录」三个操作；
  * 已在使用默认目录时禁用恢复操作，避免无意义的重复还原。
  *
  * @param path 当前生效的下载目录路径。
@@ -752,6 +758,8 @@ private fun JvmDownloadLocationRow(
     onChangeDirectory: () -> Unit,
     onRestoreDefault: () -> Unit,
 ) {
+    // 打开目录失败时的提示文案，路径不存在或系统不支持时给出反馈。
+    val openDirectoryFailedText = stringResource(Res.string.open_directory_failed)
     JvmSettingBaseRow(
         icon = Res.drawable.folder_managed_24px,
         title = stringResource(Res.string.song_download_location),
@@ -782,6 +790,17 @@ private fun JvmDownloadLocationRow(
                     text = stringResource(Res.string.restore_default),
                     enabled = !isDefaultPath,
                     onClick = onRestoreDefault,
+                )
+                JvmStorageActionPill(
+                    text = stringResource(Res.string.open_directory),
+                    // 路径为空时没有可打开的目录，禁用该操作。
+                    enabled = path.isNotBlank(),
+                    onClick = {
+                        // 在系统文件管理器中打开当前生效的下载目录，失败时提示用户检查路径。
+                        if (!openFolderInSystemFileManager(path)) {
+                            MessageUtils.sendPopTip(openDirectoryFailedText)
+                        }
+                    },
                 )
             }
         },

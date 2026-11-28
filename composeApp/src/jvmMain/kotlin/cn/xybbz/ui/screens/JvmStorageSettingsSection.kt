@@ -53,7 +53,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.Log
+import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.formatStorageLabel
+import cn.xybbz.common.utils.openFolderInSystemFileManager
 import cn.xybbz.common.utils.parseStorageBytes
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.XyDialogIcon
@@ -63,6 +65,7 @@ import cn.xybbz.ui.components.JvmSettingFlowRow
 import cn.xybbz.ui.components.JvmSettingGroup
 import cn.xybbz.ui.components.JvmSettingGroupVerticalGap
 import cn.xybbz.ui.components.JvmSettingItemFlow
+import cn.xybbz.ui.components.JvmSettingItemWidthFraction
 import cn.xybbz.ui.components.JvmSettingRowDescriptionStyle
 import cn.xybbz.ui.components.JvmSettingWideGroup
 import cn.xybbz.ui.components.rememberJvmFileKitDialogSettings
@@ -96,6 +99,9 @@ import xymusic.composeapp.generated.resources.image_cache
 import xymusic.composeapp.generated.resources.image_cache_description
 import xymusic.composeapp.generated.resources.info_24px
 import xymusic.composeapp.generated.resources.music_note_24px
+import xymusic.composeapp.generated.resources.open_directory
+import xymusic.composeapp.generated.resources.open_directory_failed
+import xymusic.composeapp.generated.resources.restore_default
 import xymusic.composeapp.generated.resources.settings_24px
 import xymusic.composeapp.generated.resources.storage_management
 import xymusic.composeapp.generated.resources.warning
@@ -146,12 +152,13 @@ internal fun JvmStorageSettingsSection(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(JvmSettingGroupVerticalGap),
     ) {
+        // 歌曲缓存位置紧跟在缓存分组下方、存储管理上方展示，方便与缓存相关设置集中查看。
+        JvmStorageLocationGroup(
+            memoryManagementViewModel = memoryManagementViewModel,
+        )
         JvmStorageUsageGroup(
             storageItems = storageItems,
             totalBytes = totalBytes,
-        )
-        JvmStorageLocationGroup(
-            memoryManagementViewModel = memoryManagementViewModel,
         )
     }
 }
@@ -242,7 +249,7 @@ private fun JvmStorageUsageGroup(
 }
 
 /**
- * 存储位置分组：展示当前播放缓存目录，并提供调整目录与恢复默认目录的操作。
+ * 存储位置分组：展示当前播放缓存目录，并提供调整目录、恢复默认目录与打开目录的操作。
  *
  * @param memoryManagementViewModel 存储管理 ViewModel，负责缓存路径读写。
  */
@@ -259,6 +266,15 @@ private fun JvmStorageLocationGroup(
     )
     val isDefaultPath = memoryManagementViewModel.isDefaultMusicCachePath
     val restoreDefaultEnabled = !isDefaultPath
+    // 打开目录失败时的提示文案，路径不存在或系统不支持时给出反馈。
+    val openDirectoryFailedText = stringResource(Res.string.open_directory_failed)
+
+    // 在系统文件管理器中打开当前歌曲缓存目录，失败时提示用户检查路径。
+    fun openCacheDirectory() {
+        if (!openFolderInSystemFileManager(memoryManagementViewModel.musicCachePath)) {
+            MessageUtils.sendPopTip(openDirectoryFailedText)
+        }
+    }
 
     // 打开系统目录选择器：用户取消时返回 null，此时不修改当前缓存目录。
     fun chooseCacheDirectory() {
@@ -273,39 +289,48 @@ private fun JvmStorageLocationGroup(
     }
 
     JvmSettingGroup(title = stringResource(Res.string.jvm_memory_management_screen_text_25)) {
-        // 目录行直接展示完整路径，行尾依次提供“调整”与“恢复默认”两个操作。
+        // 目录行直接展示完整路径，行尾依次提供“调整”“恢复默认”与“打开目录”三个操作。
+        // 路径类设置项信息较长，宽度放宽到整行宽度的三分之二，便于完整展示目录。
         // 已经是默认目录时禁用恢复操作，避免无意义的重复还原。
-        JvmSettingBaseRow(
-            icon = Res.drawable.folder_managed_24px,
-            title = cachePathTitle,
-            description = memoryManagementViewModel.musicCachePath.ifBlank {
-                stringResource(Res.string.jvm_memory_management_screen_text_29)
-            },
-            descriptionStyle = JvmSettingRowDescriptionStyle.Path,
-            minHeight = 72.dp,
-            horizontalPadding = XyTheme.dimens.contentPadding,
-            verticalPadding = XyTheme.dimens.outerVerticalPadding,
-            iconSelected = true,
-            trailing = {
-                // 两个操作按钮横向排列，与存储分类行的按钮保持同样的视觉样式。
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    JvmStorageActionPill(
-                        text = stringResource(Res.string.adjust),
-                        onClick = ::chooseCacheDirectory,
-                    )
-                    JvmStorageActionPill(
-                        text = stringResource(Res.string.jvm_memory_management_screen_text_33),
-                        enabled = restoreDefaultEnabled,
-                        onClick = {
-                            memoryManagementViewModel.restoreDefaultMusicCacheDirectory()
-                        },
-                    )
-                }
-            },
-        )
+        JvmSettingItemWidthFraction(fraction = 2f / 3f) {
+            JvmSettingBaseRow(
+                icon = Res.drawable.folder_managed_24px,
+                title = cachePathTitle,
+                description = memoryManagementViewModel.musicCachePath.ifBlank {
+                    stringResource(Res.string.jvm_memory_management_screen_text_29)
+                },
+                descriptionStyle = JvmSettingRowDescriptionStyle.Path,
+                minHeight = 72.dp,
+                horizontalPadding = XyTheme.dimens.contentPadding,
+                verticalPadding = XyTheme.dimens.outerVerticalPadding,
+                iconSelected = true,
+                trailing = {
+                    // 三个操作按钮横向排列，与存储分类行的按钮保持同样的视觉样式。
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        JvmStorageActionPill(
+                            text = stringResource(Res.string.adjust),
+                            onClick = ::chooseCacheDirectory,
+                        )
+                        JvmStorageActionPill(
+                            text = stringResource(Res.string.restore_default),
+                            enabled = restoreDefaultEnabled,
+                            onClick = {
+                                memoryManagementViewModel.restoreDefaultMusicCacheDirectory()
+                            },
+                        )
+                        JvmStorageActionPill(
+                            text = stringResource(Res.string.open_directory),
+                            // 路径为空时没有可打开的目录，禁用该操作。
+                            enabled = memoryManagementViewModel.musicCachePath.isNotBlank(),
+                            onClick = ::openCacheDirectory,
+                        )
+                    }
+                },
+            )
+        }
     }
 }
 

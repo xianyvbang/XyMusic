@@ -781,6 +781,29 @@ internal fun JvmSettingItemFlow(
 }
 
 /**
+ * 设置项宽度比例覆盖容器。
+ *
+ * 用于让个别设置项突破分组默认的等分宽度，例如路径类设置项按整行宽度的三分之二展示；
+ * 内部设置项通过覆盖 [LocalJvmSettingItemWidth] 读取到按比例换算后的固定宽度。
+ *
+ * @param fraction 宽度比例，取值为 0 到 1，例如 2f / 3f 表示占整行宽度的三分之二。
+ * @param content 需要覆盖宽度的设置项内容。
+ */
+@Composable
+internal fun JvmSettingItemWidthFraction(
+    fraction: Float,
+    content: @Composable () -> Unit,
+) {
+    BoxWithConstraints {
+        // 以当前可用宽度为基准换算目标宽度，兼容不同窗口尺寸下的分组宽度。
+        val targetWidth = maxWidth * fraction
+        CompositionLocalProvider(LocalJvmSettingItemWidth provides targetWidth) {
+            content()
+        }
+    }
+}
+
+/**
  * JVM 设置页宽内容分组。
  *
  * 标题与普通设置分组保持一致，内容区不再切分固定宽度，
