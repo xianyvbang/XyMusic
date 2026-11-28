@@ -233,6 +233,29 @@ private fun DesktopThemeModeButton(
 }
 
 /**
+ * 可独立使用的主题模式切换按钮。
+ * 用于首次连接页等自绘标题栏场景，直接读写全局主题设置。
+ */
+@Composable
+fun DesktopThemeModeToggleButton(modifier: Modifier = Modifier) {
+    val settingsManager: SettingsManager = remember { getKoin().get() }
+    val coroutineScope = rememberCoroutineScope()
+    // 当前主题模式，用于决定图标与循环切换的下一档
+    val themeType by settingsManager.themeType.collectAsState()
+    val colors = DesktopTitleBarColors.current
+    DesktopThemeModeButton(
+        themeType = themeType,
+        tint = colors.foreground,
+        onCycle = { nextThemeType ->
+            coroutineScope.launch {
+                settingsManager.setThemeTypeData(nextThemeType)
+            }
+        },
+        modifier = modifier,
+    )
+}
+
+/**
  * 主题模式图标。
  * 使用 Canvas 直接绘制，避免为该按钮额外新增图片资源。
  */

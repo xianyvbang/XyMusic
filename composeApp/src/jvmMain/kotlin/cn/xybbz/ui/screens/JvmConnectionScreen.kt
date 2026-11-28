@@ -82,6 +82,7 @@ import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.ui.components.DesktopThemeModeToggleButton
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopWindowControls
@@ -124,7 +125,7 @@ import xymusic.composeapp.generated.resources.*
  * @param connectionViewModel 连接业务 ViewModel，默认走 Koin 注入。
  */
 @Composable
-fun JvmConnectionNewScreen(
+fun JvmConnectionScreen(
     connectionUiType: ConnectionUiType? = null,
     modifier: Modifier = Modifier,
     connectionViewModel: ConnectionViewModel = koinViewModel<ConnectionViewModel>(),
@@ -143,9 +144,9 @@ fun JvmConnectionNewScreen(
     val selectedResourceIndex = connectionViewModel.selectUrlIndex
     // 登录结果只有成功与失败两种终态，页面只负责把状态映射成视觉阶段。
     val loginStage = when {
-        connectionViewModel.isLoginSuccess -> JvmConnectionNewLoginStage.Success
-        connectionViewModel.loading -> JvmConnectionNewLoginStage.LoggingIn
-        else -> JvmConnectionNewLoginStage.Idle
+        connectionViewModel.isLoginSuccess -> JvmConnectionLoginStage.Success
+        connectionViewModel.loading -> JvmConnectionLoginStage.LoggingIn
+        else -> JvmConnectionLoginStage.Idle
     }
     val connectionReady = connectionViewModel.isLoginSuccess
 
@@ -184,7 +185,7 @@ fun JvmConnectionNewScreen(
 
         Column(modifier = Modifier.fillMaxSize()) {
             if (connectionUiType == ConnectionUiType.FIRST_OPEN) {
-                JvmConnectionNewTitleBar()
+                JvmConnectionTitleBar()
             }
             Row(modifier = Modifier.fillMaxSize()) {
                 JvmConnectionProtocolRail(
@@ -347,7 +348,7 @@ fun JvmConnectionNewScreen(
  * 首次打开时页面自绘的窗口标题栏。
  */
 @Composable
-private fun JvmConnectionNewTitleBar() {
+private fun JvmConnectionTitleBar() {
     val dimens = XyTheme.dimens
     Row(
         modifier = Modifier
@@ -376,6 +377,10 @@ private fun JvmConnectionNewTitleBar() {
             fontWeight = FontWeight.W900,
             maxLines = 1,
             style = MaterialTheme.typography.titleMedium,
+        )
+        // 首次打开时提供主题模式切换入口，与主标题栏保持一致
+        DesktopThemeModeToggleButton(
+            modifier = Modifier.padding(end = dimens.contentPadding)
         )
         DesktopWindowControls()
     }
@@ -589,24 +594,6 @@ private fun JvmConnectionHero(
         stringResource(Res.string.jvm_connection_new_screen_text_06, selectedDataSource.title)
     }
     Column(modifier = Modifier.widthIn(max = 720.dp)) {
-        if (!compact) {
-            Box(
-                modifier = Modifier
-                    .width(dimens.contentPadding * 2 + dimens.outerVerticalPadding)
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colorScheme.primary)
-            )
-            Spacer(modifier = Modifier.height(dimens.outerVerticalPadding))
-            XyText(
-                text = "SERVER / CONNECTION",
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.W600,
-                maxLines = 1,
-                style = JvmConnectionMonoStyle(letterSpacing = 2.sp)
-            )
-            Spacer(modifier = Modifier.height(dimens.outerVerticalPadding / 2))
-        }
         XyText(
             text = stringResource(Res.string.jvm_connection_new_screen_text_07),
             color = MaterialTheme.colorScheme.onSurface,
@@ -997,7 +984,7 @@ private fun JvmConnectionResultPanel(
     selectedDataSource: DataSourceType,
     address: String,
     selectedResourceIndex: Int,
-    loginStage: JvmConnectionNewLoginStage,
+    loginStage: JvmConnectionLoginStage,
     resourceLoading: Boolean,
     resourceError: Boolean,
     loginLoading: Boolean,
@@ -1125,11 +1112,11 @@ private fun JvmConnectionProbingContent(address: String) {
 @Composable
 private fun JvmConnectionLoginContent(
     selectedDataSource: DataSourceType,
-    stage: JvmConnectionNewLoginStage,
+    stage: JvmConnectionLoginStage,
     onEnter: () -> Unit,
 ) {
     val dimens = XyTheme.dimens
-    val success = stage == JvmConnectionNewLoginStage.Success
+    val success = stage == JvmConnectionLoginStage.Success
     JvmConnectionPanelKicker(
         text = if (success) {
             "04 / 04 · " + stringResource(Res.string.jvm_connection_new_screen_text_33)
@@ -1747,7 +1734,7 @@ private data class JvmConnectionResourceItem(
 /**
  * 登录阶段：登录只有一次请求，成功与失败是终态。
  */
-private enum class JvmConnectionNewLoginStage {
+private enum class JvmConnectionLoginStage {
     Idle,
     LoggingIn,
     Success,

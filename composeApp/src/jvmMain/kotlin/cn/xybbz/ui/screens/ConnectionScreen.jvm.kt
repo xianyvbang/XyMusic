@@ -9,7 +9,7 @@ actual fun ConnectionScreen(
     connectionUiType: ConnectionUiType?,
     modifier: Modifier,
 ) {
-    JvmConnectionNewScreen(
+    JvmConnectionScreen(
         connectionUiType = connectionUiType,
         modifier = modifier,
     )
