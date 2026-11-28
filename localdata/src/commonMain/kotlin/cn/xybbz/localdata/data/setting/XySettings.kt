@@ -22,6 +22,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import cn.xybbz.database.converter.JsonStringListTypeConverter
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
@@ -169,6 +171,11 @@ data class XySettings @OptIn(ExperimentalUuidApi::class) constructor(
      * 歌曲下载目录。空字符串表示使用平台默认目录。
      */
     val downloadFilePath: String = "",
+    /**
+     * 切换缓存目录后删除失败、等待下次启动重试的旧缓存目录。
+     */
+    @field:TypeConverters(JsonStringListTypeConverter::class)
+    val pendingCacheCleanupPaths: List<String> = emptyList(),
     /**
      * 是否允许 iOS 通过 iCloud Keychain 同步服务器密码。
      */

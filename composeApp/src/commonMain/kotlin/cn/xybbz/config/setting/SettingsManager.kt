@@ -89,6 +89,10 @@ class SettingsManager(
     val downloadFilePath = settings.map { it.downloadFilePath }.distinctUntilChanged()
         .stateIn(scope, SharingStarted.Eagerly, settings.value.downloadFilePath)
 
+    //切换缓存目录后删除失败、等待重试的旧缓存目录
+    val pendingCacheCleanupPaths = settings.map { it.pendingCacheCleanupPaths }.distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, settings.value.pendingCacheCleanupPaths)
+
     /**
      * 是否允许 iOS 通过 iCloud Keychain 同步密码。
      */
@@ -465,6 +469,40 @@ class SettingsManager(
      */
     suspend fun setDownloadFilePath(downloadFilePath: String) {
         updateSettings { it.copy(downloadFilePath = downloadFilePath) }
+    }
+
+    /**
+     * 保存待清理的旧缓存目录列表。
+     */
+    suspend fun setPendingCacheCleanupPaths(paths: List<String>) {
+        updateSettings { it.copy(pendingCacheCleanupPaths = paths.distinct()) }
+    }
+
+    /**
+     * 追加一个待清理的旧缓存目录。
+     */
+    suspend fun addPendingCacheCleanupPath(path: String) {
+        if (path.isBlank()) return
+        updateSettings { settings ->
+            if (path in settings.pendingCacheCleanupPaths) {
+                settings
+            } else {
+                settings.copy(pendingCacheCleanupPaths = settings.pendingCacheCleanupPaths + path)
+            }
+        }
+    }
+
+    /**
+     * 移除一个已经清理完成的旧缓存目录。
+     */
+    suspend fun removePendingCacheCleanupPath(path: String) {
+        updateSettings { settings ->
+            if (path !in settings.pendingCacheCleanupPaths) {
+                settings
+            } else {
+                settings.copy(pendingCacheCleanupPaths = settings.pendingCacheCleanupPaths - path)
+            }
+        }
     }
 
     /**

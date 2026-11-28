@@ -25,6 +25,7 @@ expect fun getMemoryStorageInfo(
     contextWrapper: ContextWrapper,
     db: LocalDatabaseClient,
     downloadDb: DownloadDatabaseClient,
+    extraCachePaths: List<String> = emptyList(),
 ): MemoryStorageInfo
 
 /**

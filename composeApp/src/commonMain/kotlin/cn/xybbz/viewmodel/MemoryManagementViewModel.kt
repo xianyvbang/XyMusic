@@ -25,7 +25,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.DatabaseUtils
+import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.formatBytes
+import cn.xybbz.config.music.CacheDirectoryChangeFailure
+import cn.xybbz.config.music.CacheDirectoryChangeResult
+import cn.xybbz.config.music.CacheMigrationPolicy
+import cn.xybbz.config.music.CacheMigrationProgress
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.musicCacheSizeInfoFlow
@@ -44,7 +49,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.StringResource
 import org.koin.core.annotation.KoinViewModel
+import xymusic.composeapp.generated.resources.Res
+import xymusic.composeapp.generated.resources.jvm_cache_migration_cancelled
+import xymusic.composeapp.generated.resources.jvm_cache_migration_failed
+import xymusic.composeapp.generated.resources.jvm_cache_migration_insufficient_space
+import xymusic.composeapp.generated.resources.jvm_cache_migration_invalid_path
+import xymusic.composeapp.generated.resources.jvm_cache_migration_nested
+import xymusic.composeapp.generated.resources.jvm_cache_migration_not_writable
+import xymusic.composeapp.generated.resources.jvm_cache_migration_persist_failed
+import xymusic.composeapp.generated.resources.jvm_cache_migration_success
+import xymusic.composeapp.generated.resources.jvm_cache_migration_target_not_empty
+import xymusic.composeapp.generated.resources.jvm_connection_address_valid
 
 @KoinViewModel
 class MemoryManagementViewModel(
@@ -78,6 +95,24 @@ class MemoryManagementViewModel(
     var musicCacheSize by mutableStateOf("0B")
         private set
 
+    /**
+     * 当前歌曲缓存占用字节数，用于判断切换目录时是否需要提示迁移。
+     */
+    var musicCacheBytes by mutableStateOf(0L)
+        private set
+
+    /**
+     * 当前缓存迁移进度；为 null 表示没有进行中的迁移。
+     */
+    var cacheMigrationProgress by mutableStateOf<CacheMigrationProgress?>(null)
+        private set
+
+    /**
+     * 是否正在迁移缓存目录。
+     */
+    val isMigratingCacheDirectory: Boolean
+        get() = cacheMigrationProgress != null
+
     var imageCacheSize by mutableStateOf("0B")
         private set
 
@@ -94,6 +129,12 @@ class MemoryManagementViewModel(
         viewModelScope.launch {
             downloadCacheController.musicCacheSizeInfoFlow().collect { sizeInfo ->
                 musicCacheSize = sizeInfo.label
+                musicCacheBytes = sizeInfo.bytes
+            }
+        }
+        viewModelScope.launch {
+            downloadCacheController.cacheMigrationProgress.collect { progress ->
+                cacheMigrationProgress = progress
             }
         }
         viewModelScope.launch {
@@ -115,8 +156,10 @@ class MemoryManagementViewModel(
     }
 
     private suspend fun refreshStorageInfo() {
+        // 自定义缓存目录可能不在默认缓存根目录下，需要单独传入统计口径。
+        val extraCachePaths = listOf(musicCachePath).filter { path -> path.isNotBlank() }
         val storageInfo = withContext(Dispatchers.IO) {
-            getMemoryStorageInfo(contextWrapper, db, downloadDb)
+            getMemoryStorageInfo(contextWrapper, db, downloadDb, extraCachePaths)
         }
         updateStorageInfo(storageInfo)
     }
@@ -161,25 +204,82 @@ class MemoryManagementViewModel(
         }
     }
 
-    fun changeMusicCacheDirectory(path: String) {
+    /**
+     * 切换歌曲缓存目录。
+     *
+     * @param path 新目录路径。
+     * @param policy 旧缓存处理策略。
+     */
+    fun changeMusicCacheDirectory(
+        path: String,
+        policy: CacheMigrationPolicy = CacheMigrationPolicy.MIGRATE,
+    ) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                downloadCacheController.changeCacheDirectory(path)
+            val result = withContext(Dispatchers.IO) {
+                downloadCacheController.changeCacheDirectory(path, policy)
             }
+            handleCacheDirectoryChangeResult(result)
             updateMusicCachePathState()
             refreshMusicCacheUsage()
             refreshStorageInfo()
         }
     }
 
-    fun restoreDefaultMusicCacheDirectory() {
+    /**
+     * 恢复默认歌曲缓存目录。
+     *
+     * @param policy 旧缓存处理策略。
+     */
+    fun restoreDefaultMusicCacheDirectory(
+        policy: CacheMigrationPolicy = CacheMigrationPolicy.MIGRATE,
+    ) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                downloadCacheController.restoreDefaultCacheDirectory()
+            val result = withContext(Dispatchers.IO) {
+                downloadCacheController.restoreDefaultCacheDirectory(policy)
             }
+            handleCacheDirectoryChangeResult(result)
             updateMusicCachePathState()
             refreshMusicCacheUsage()
             refreshStorageInfo()
+        }
+    }
+
+    /**
+     * 处理缓存目录切换结果并给出用户提示。
+     *
+     * @param result 控制器返回的切换结果。
+     */
+    private fun handleCacheDirectoryChangeResult(result: CacheDirectoryChangeResult) {
+        when (result) {
+            CacheDirectoryChangeResult.Success -> {
+                MessageUtils.sendPopTipSuccess(Res.string.jvm_cache_migration_success)
+            }
+
+            CacheDirectoryChangeResult.Cancelled -> {
+                MessageUtils.sendPopTip(Res.string.jvm_cache_migration_cancelled)
+            }
+
+            is CacheDirectoryChangeResult.Failed -> {
+                MessageUtils.sendPopTipError(result.reason.toMessageResource())
+            }
+        }
+    }
+
+    /**
+     * 把切换失败原因映射为提示文案。
+     *
+     * @return 对应的字符串资源。
+     */
+    private fun CacheDirectoryChangeFailure.toMessageResource(): StringResource {
+        return when (this) {
+            CacheDirectoryChangeFailure.INVALID_PATH -> Res.string.jvm_cache_migration_invalid_path
+            CacheDirectoryChangeFailure.NOT_WRITABLE -> Res.string.jvm_cache_migration_not_writable
+            CacheDirectoryChangeFailure.SAME_DIRECTORY -> Res.string.jvm_cache_migration_success
+            CacheDirectoryChangeFailure.NESTED_DIRECTORY -> Res.string.jvm_cache_migration_nested
+            CacheDirectoryChangeFailure.TARGET_NOT_EMPTY -> Res.string.jvm_cache_migration_target_not_empty
+            CacheDirectoryChangeFailure.INSUFFICIENT_SPACE -> Res.string.jvm_cache_migration_insufficient_space
+            CacheDirectoryChangeFailure.MIGRATION_FAILED -> Res.string.jvm_cache_migration_failed
+            CacheDirectoryChangeFailure.PERSIST_FAILED -> Res.string.jvm_cache_migration_persist_failed
         }
     }
 

@@ -16,6 +16,7 @@ actual fun getMemoryStorageInfo(
     contextWrapper: ContextWrapper,
     db: LocalDatabaseClient,
     downloadDb: DownloadDatabaseClient,
+    extraCachePaths: List<String>,
 ): MemoryStorageInfo {
     val context = contextWrapper.context
     // Room 数据库路径用于单独展示数据库大小，并在应用数据统计中排除数据库目录。

@@ -1387,6 +1387,15 @@ val Migration_9_10 = object : Migration(9, 10) {
 }
 
 /**
+ * v14 到 v15 的设置迁移：新增待清理旧缓存目录字段。
+ */
+val Migration_14_15 = object : Migration(14, 15) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE xy_settings ADD COLUMN pendingCacheCleanupPaths TEXT NOT NULL DEFAULT ''")
+    }
+}
+
+/**
  * v13 到 v14 的首页音乐迁移：新增下载地址字段，并从完整音乐表回填已有缓存。
  */
 val Migration_13_14 = object : Migration(13, 14) {

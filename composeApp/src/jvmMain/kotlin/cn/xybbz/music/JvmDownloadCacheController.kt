@@ -2,6 +2,11 @@ package cn.xybbz.music
 
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.Log
+import cn.xybbz.config.music.CacheDirectoryChangeFailure
+import cn.xybbz.config.music.CacheDirectoryChangeResult
+import cn.xybbz.config.music.CacheMigrationPhase
+import cn.xybbz.config.music.CacheMigrationPolicy
+import cn.xybbz.config.music.CacheMigrationProgress
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
@@ -156,6 +161,10 @@ class JvmDownloadCacheController(
         observeCacheLimit()
         scope.launch(Dispatchers.IO) {
             getCacheSize()
+        }
+        // 启动时重试清理上次切换目录时因文件占用而删除失败的旧缓存。
+        scope.launch(Dispatchers.IO) {
+            cleanupPendingCacheDirectories()
         }
     }
 
@@ -315,12 +324,33 @@ class JvmDownloadCacheController(
     /**
      * 切换 JVM 播放缓存目录。
      *
+     * 默认按迁移策略处理旧缓存，保留旧方法签名供历史调用点使用。
+     *
      * @param path 用户选择的新目录路径。
      * @return true 表示目录可用且配置已持久化。
      */
     override suspend fun changeCacheDirectory(path: String): Boolean {
-        val targetPath = path.trim().takeIf { it.isNotEmpty() } ?: return false
-        return setActiveCacheDirectory(File(targetPath), persistAsDefault = false)
+        return changeCacheDirectory(path, CacheMigrationPolicy.MIGRATE) is CacheDirectoryChangeResult.Success
+    }
+
+    /**
+     * 按指定策略切换 JVM 播放缓存目录。
+     *
+     * @param path 用户选择的新目录路径。
+     * @param policy 旧缓存处理策略。
+     * @return 切换结果。
+     */
+    override suspend fun changeCacheDirectory(
+        path: String,
+        policy: CacheMigrationPolicy,
+    ): CacheDirectoryChangeResult {
+        val targetPath = path.trim().takeIf { it.isNotEmpty() }
+            ?: return CacheDirectoryChangeResult.Failed(CacheDirectoryChangeFailure.INVALID_PATH)
+        return setActiveCacheDirectory(
+            directory = File(targetPath),
+            persistAsDefault = false,
+            policy = policy,
+        )
     }
 
     /**
@@ -329,7 +359,50 @@ class JvmDownloadCacheController(
      * @return true 表示恢复成功。
      */
     override suspend fun restoreDefaultCacheDirectory(): Boolean {
-        return setActiveCacheDirectory(defaultCacheDirectory, persistAsDefault = true)
+        return restoreDefaultCacheDirectory(CacheMigrationPolicy.MIGRATE) is CacheDirectoryChangeResult.Success
+    }
+
+    /**
+     * 按指定策略恢复 JVM 播放缓存默认目录。
+     *
+     * 默认目录可能残留上次切换时保留的旧缓存，这里允许与已有缓存合并，避免恢复默认被非空校验阻断。
+     *
+     * @param policy 旧缓存处理策略。
+     * @return 切换结果。
+     */
+    override suspend fun restoreDefaultCacheDirectory(
+        policy: CacheMigrationPolicy,
+    ): CacheDirectoryChangeResult {
+        return setActiveCacheDirectory(
+            directory = defaultCacheDirectory,
+            persistAsDefault = true,
+            policy = policy,
+            allowNonEmptyTarget = true,
+        )
+    }
+
+    /**
+     * 清理历史切换目录时删除失败的旧缓存目录。
+     *
+     * 文件可能仍被播放器占用，启动时重试一次；仍然失败则继续保留在待清理列表。
+     */
+    override suspend fun cleanupPendingCacheDirectories() {
+        val pendingPaths = settingsManager.get().pendingCacheCleanupPaths
+        if (pendingPaths.isEmpty()) {
+            return
+        }
+        withContext(Dispatchers.IO) {
+            pendingPaths.forEach { path ->
+                val directory = File(path).normalizedDirectory()
+                // 当前正在使用的目录以及它的父子目录都不能删除。
+                if (JvmPlaybackCacheDirectories.isSameOrNested(directory, cacheDirectory)) {
+                    return@forEach
+                }
+                if (deleteDirectoryBestEffort(directory)) {
+                    settingsManager.removePendingCacheCleanupPath(path)
+                }
+            }
+        }
     }
 
     /**
@@ -1551,42 +1624,177 @@ class JvmDownloadCacheController(
     /**
      * 设置当前活跃缓存目录。
      *
+     * 迁移成功后才持久化新路径，避免中途失败留下指向半迁移目录的配置。
+     *
      * @param directory 目标目录。
      * @param persistAsDefault true 表示写入空路径，后续继续使用默认目录。
-     * @return true 表示切换成功。
+     * @param policy 旧缓存处理策略。
+     * @param allowNonEmptyTarget true 表示允许目标目录已有缓存，按条目合并。
+     * @return 切换结果。
      */
     private suspend fun setActiveCacheDirectory(
         directory: File,
         persistAsDefault: Boolean,
-    ): Boolean = withContext(Dispatchers.IO) {
-        val targetDirectory = directory.normalizedDirectory()
-        if (!ensureCacheDirectory(targetDirectory)) {
-            return@withContext false
-        }
+        policy: CacheMigrationPolicy,
+        allowNonEmptyTarget: Boolean = false,
+    ): CacheDirectoryChangeResult = withContext(Dispatchers.IO) {
+        try {
+            val targetDirectory = directory.normalizedDirectory()
+            val sourceDirectory = cacheDirectory
 
-        val storedPath = if (
-            persistAsDefault ||
-            targetDirectory.isSameDirectory(defaultCacheDirectory)
-        ) {
+            // 目标目录与当前目录相同：只刷新配置和大小，不触发迁移。
+            if (targetDirectory.isSameDirectory(sourceDirectory)) {
+                if (!persistCacheDirectory(targetDirectory, persistAsDefault)) {
+                    return@withContext CacheDirectoryChangeResult.Failed(CacheDirectoryChangeFailure.PERSIST_FAILED)
+                }
+                getCacheSize()
+                return@withContext CacheDirectoryChangeResult.Success
+            }
+
+            val sourceSize = JvmPlaybackCacheDirectories.directorySizeBytes(sourceDirectory)
+            validateTargetDirectory(
+                sourceDirectory = sourceDirectory,
+                targetDirectory = targetDirectory,
+                requiredBytes = if (policy == CacheMigrationPolicy.MIGRATE) sourceSize else 0L,
+                allowNonEmptyTarget = allowNonEmptyTarget,
+            )?.let { failure ->
+                return@withContext failure
+            }
+
+            // 迁移和删除旧目录前先停掉所有写入，避免复制到一半的文件继续变化。
+            cancelInMemorySessions(markStatus = CacheStatus.CANCELLED)
+
+            when (policy) {
+                CacheMigrationPolicy.MIGRATE -> {
+                    if (sourceSize > 0L && !migrateCacheDirectory(sourceDirectory, targetDirectory, sourceSize)) {
+                        return@withContext CacheDirectoryChangeResult.Failed(CacheDirectoryChangeFailure.MIGRATION_FAILED)
+                    }
+                }
+
+                CacheMigrationPolicy.DELETE_OLD -> {
+                    if (sourceSize > 0L) {
+                        updateCacheMigrationProgress(
+                            CacheMigrationProgress(sourceSize, sourceSize, CacheMigrationPhase.DELETING_OLD)
+                        )
+                        deleteDirectoryBestEffort(sourceDirectory)
+                    }
+                }
+
+                CacheMigrationPolicy.KEEP_OLD -> Unit
+            }
+
+            if (!persistCacheDirectory(targetDirectory, persistAsDefault)) {
+                return@withContext CacheDirectoryChangeResult.Failed(CacheDirectoryChangeFailure.PERSIST_FAILED)
+            }
+
+            switchCacheDirectory(targetDirectory)
+            CacheDirectoryChangeResult.Success
+        } finally {
+            updateCacheMigrationProgress(null)
+        }
+    }
+
+    /**
+     * 持久化缓存目录配置。
+     *
+     * @param directory 目标目录。
+     * @param persistAsDefault true 表示写入空路径。
+     * @return true 表示保存成功。
+     */
+    private suspend fun persistCacheDirectory(
+        directory: File,
+        persistAsDefault: Boolean,
+    ): Boolean {
+        val storedPath = if (persistAsDefault || directory.isSameDirectory(defaultCacheDirectory)) {
             ""
         } else {
-            targetDirectory.absolutePath
+            directory.absolutePath
         }
+        return runCatching { settingsManager.setCacheFilePath(storedPath) }.isSuccess
+    }
 
-        val persisted = runCatching {
-            settingsManager.setCacheFilePath(storedPath)
-        }.isSuccess
-        if (!persisted) {
-            return@withContext false
+    /**
+     * 校验目标缓存目录是否可用于切换。
+     *
+     * @param sourceDirectory 当前缓存目录。
+     * @param targetDirectory 目标缓存目录。
+     * @param requiredBytes 迁移需要的目标磁盘空间。
+     * @param allowNonEmptyTarget true 表示允许目标目录已有缓存，按条目合并。
+     * @return 校验失败结果；通过时返回 null。
+     */
+    private fun validateTargetDirectory(
+        sourceDirectory: File,
+        targetDirectory: File,
+        requiredBytes: Long,
+        allowNonEmptyTarget: Boolean,
+    ): CacheDirectoryChangeResult.Failed? {
+        // 父子嵌套会导致迁移递归进自身，直接拒绝。
+        if (JvmPlaybackCacheDirectories.isSameOrNested(sourceDirectory, targetDirectory)) {
+            return CacheDirectoryChangeResult.Failed(CacheDirectoryChangeFailure.NESTED_DIRECTORY)
         }
+        if (!ensureCacheDirectory(targetDirectory)) {
+            return CacheDirectoryChangeResult.Failed(CacheDirectoryChangeFailure.INVALID_PATH)
+        }
+        if (!targetDirectory.canWrite()) {
+            return CacheDirectoryChangeResult.Failed(CacheDirectoryChangeFailure.NOT_WRITABLE)
+        }
+        // 选择新目录时必须为空，避免误把用户其它文件当成缓存；恢复默认目录时允许与残留缓存合并。
+        if (!allowNonEmptyTarget && targetDirectory.listFiles().orEmpty().isNotEmpty()) {
+            return CacheDirectoryChangeResult.Failed(CacheDirectoryChangeFailure.TARGET_NOT_EMPTY)
+        }
+        if (requiredBytes > 0L) {
+            val freeBytes = JvmPlaybackCacheDirectories.freeSpaceBytes(targetDirectory)
+            // 预留 1% 余量，避免复制到最后一刻因磁盘写满失败。
+            if (freeBytes < requiredBytes + requiredBytes / 100) {
+                return CacheDirectoryChangeResult.Failed(CacheDirectoryChangeFailure.INSUFFICIENT_SPACE)
+            }
+        }
+        return null
+    }
 
-        if (targetDirectory.isSameDirectory(cacheDirectory)) {
-            settingsManager.updateCacheFilePath(targetDirectory.absolutePath)
-            getCacheSize()
-        } else {
-            switchCacheDirectory(targetDirectory)
+    /**
+     * 把旧缓存目录迁移到新目录。
+     *
+     * @param sourceDirectory 旧缓存目录。
+     * @param targetDirectory 新缓存目录。
+     * @param totalBytes 旧缓存总字节数。
+     * @return true 表示迁移成功。
+     */
+    private suspend fun migrateCacheDirectory(
+        sourceDirectory: File,
+        targetDirectory: File,
+        totalBytes: Long,
+    ): Boolean {
+        val migrated = JvmCacheDirectoryMigrator.moveOrCopy(
+            sourceDirectory = sourceDirectory,
+            targetDirectory = targetDirectory,
+            totalBytes = totalBytes,
+            onProgress = { progress -> updateCacheMigrationProgress(progress) },
+        )
+        if (!migrated) {
+            return false
         }
-        true
+        // 迁移只搬走缓存条目内容，旧目录本身保留，这里不再删除旧目录。
+        return true
+    }
+
+    /**
+     * 尽力删除旧缓存目录。
+     *
+     * 删除失败通常是因为播放器仍持有文件句柄，记录到待清理列表，下次启动或下次切换时重试。
+     *
+     * @param directory 要删除的目录。
+     * @return true 表示目录已不存在或删除成功。
+     */
+    private suspend fun deleteDirectoryBestEffort(directory: File): Boolean {
+        if (!directory.exists()) {
+            return true
+        }
+        val deleted = runCatching { directory.deleteRecursively() }.getOrDefault(false)
+        if (!deleted) {
+            settingsManager.addPendingCacheCleanupPath(directory.absolutePath)
+        }
+        return deleted
     }
 
     /**
@@ -1603,7 +1811,6 @@ class JvmDownloadCacheController(
             // 目录切换后两个存储层都要重新绑定到新目录。
             cacheStore = JvmPlaybackCacheStore(directory, DEFAULT_CONTENT_TYPE)
             hlsCacheStore = JvmHlsCacheStore(directory, DEFAULT_CONTENT_TYPE)
-            settingsManager.updateCacheFilePath(directory.absolutePath)
             updateCacheSchedule(0f)
         }
         getCacheSize()

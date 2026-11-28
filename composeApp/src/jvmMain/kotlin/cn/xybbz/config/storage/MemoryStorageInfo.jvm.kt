@@ -27,12 +27,20 @@ actual fun getMemoryStorageInfo(
     contextWrapper: ContextWrapper,
     db: LocalDatabaseClient,
     downloadDb: DownloadDatabaseClient,
+    extraCachePaths: List<String>,
 ): MemoryStorageInfo {
     // JVM 端数据库文件位于持久数据库目录，包含主文件和 Room/SQLite 可能生成的附属文件。
     val databaseFiles = getLocalDatabaseFiles(contextWrapper) + getDownloadDatabaseFiles(contextWrapper)
+    val defaultCacheRoot = contextWrapper.cacheDirectory.absoluteFile
+    // 自定义缓存目录可能位于默认缓存根目录之外，需要单独计入缓存占用。
+    val extraCacheDirectories = extraCachePaths
+        .map { path -> File(path).absoluteFile }
+        .filterNot { file -> file.toNormalizedPath().startsWith(defaultCacheRoot.toNormalizedPath()) }
+        .distinctBy { file -> file.toNormalizedPath() }
     // 数据库和可重建缓存单独统计，应用数据统计时需要排除。
     val excludedPaths = databaseFiles.map { it.absoluteFile } +
-            contextWrapper.cacheDirectory.absoluteFile
+            defaultCacheRoot +
+            extraCacheDirectories
 
     // 应用数据分散在漫游数据、本地数据和音乐目录三处，分别统计后求和。
     val appDataRoots = topLevelRoots(
@@ -45,7 +53,7 @@ actual fun getMemoryStorageInfo(
 
     return MemoryStorageInfo(
         // 桌面端可重建缓存单独统计，后续清理入口可以复用该目录。
-        cacheSize = folderSize(contextWrapper.cacheDirectory),
+        cacheSize = folderSize(defaultCacheRoot) + extraCacheDirectories.sumOf { file -> folderSize(file) },
         // 应用数据按三处根目录分别统计，排除数据库和可重建缓存。
         appDataSize = appDataRoots.sumOf { root ->
             folderSizeExcluding(folder = root, excludedPaths = excludedPaths)

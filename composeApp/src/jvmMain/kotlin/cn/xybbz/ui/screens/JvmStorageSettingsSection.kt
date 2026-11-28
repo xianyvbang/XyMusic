@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -57,7 +58,10 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.formatStorageLabel
 import cn.xybbz.common.utils.openFolderInSystemFileManager
 import cn.xybbz.common.utils.parseStorageBytes
+import cn.xybbz.config.music.CacheMigrationPolicy
+import cn.xybbz.config.music.CacheMigrationProgress
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.XyDialogActionSpec
 import cn.xybbz.ui.components.XyDialogIcon
 import cn.xybbz.ui.components.XyDialogTone
 import cn.xybbz.ui.components.JvmSettingBaseRow
@@ -69,6 +73,7 @@ import cn.xybbz.ui.components.JvmSettingItemWidthFraction
 import cn.xybbz.ui.components.JvmSettingRowDescriptionStyle
 import cn.xybbz.ui.components.JvmSettingWideGroup
 import cn.xybbz.ui.components.rememberJvmFileKitDialogSettings
+import cn.xybbz.ui.components.dismiss
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.toExistingPlatformDirectoryOrNull
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
@@ -268,12 +273,62 @@ private fun JvmStorageLocationGroup(
     val restoreDefaultEnabled = !isDefaultPath
     // 打开目录失败时的提示文案，路径不存在或系统不支持时给出反馈。
     val openDirectoryFailedText = stringResource(Res.string.open_directory_failed)
+    // 迁移弹窗文案需要在 composable 作用域提前解析，局部函数内不能直接调用 stringResource。
+    val migrationTitle = stringResource(Res.string.jvm_cache_migration_title)
+    val migrationBody = stringResource(
+        Res.string.jvm_cache_migration_body,
+        memoryManagementViewModel.musicCacheSize,
+    )
+    val migrateText = stringResource(Res.string.jvm_cache_migration_migrate)
+    val keepOldText = stringResource(Res.string.jvm_cache_migration_keep)
+    val deleteOldText = stringResource(Res.string.jvm_cache_migration_delete)
+    val isMigrating = memoryManagementViewModel.isMigratingCacheDirectory
+    val migrationProgress = memoryManagementViewModel.cacheMigrationProgress
 
     // 在系统文件管理器中打开当前歌曲缓存目录，失败时提示用户检查路径。
     fun openCacheDirectory() {
         if (!openFolderInSystemFileManager(memoryManagementViewModel.musicCachePath)) {
             MessageUtils.sendPopTip(openDirectoryFailedText)
         }
+    }
+
+    // 旧缓存非空时让用户决定迁移、保留还是清理；空缓存直接切换，避免无意义弹窗。
+    // 调整目录与恢复默认目录共用同一套策略选择，避免恢复默认时静默删除旧缓存。
+    fun confirmCacheMigration(onPolicySelected: (CacheMigrationPolicy) -> Unit) {
+        var dialog: AlertDialogObject? = null
+        dialog = AlertDialogObject(
+            title = migrationTitle,
+            body = migrationBody,
+            tone = XyDialogTone.Info,
+            icon = XyDialogIcon.Ask,
+            kicker = Res.string.jvm_memory_management_screen_text_20,
+            actions = listOf(
+                XyDialogActionSpec(
+                    text = migrateText,
+                    primary = true,
+                    onClick = {
+                        dialog?.dismiss()
+                        onPolicySelected(CacheMigrationPolicy.MIGRATE)
+                    },
+                ),
+                XyDialogActionSpec(
+                    text = keepOldText,
+                    onClick = {
+                        dialog?.dismiss()
+                        onPolicySelected(CacheMigrationPolicy.KEEP_OLD)
+                    },
+                ),
+                XyDialogActionSpec(
+                    text = deleteOldText,
+                    onClick = {
+                        dialog?.dismiss()
+                        onPolicySelected(CacheMigrationPolicy.DELETE_OLD)
+                    },
+                ),
+            ),
+            onDismissRequest = {},
+        )
+        dialog?.show()
     }
 
     // 打开系统目录选择器：用户取消时返回 null，此时不修改当前缓存目录。
@@ -283,54 +338,115 @@ private fun JvmStorageLocationGroup(
                 currentPath = memoryManagementViewModel.musicCachePath,
                 dialogSettings = cacheDirectoryDialogSettings,
             )?.let { selectedPath ->
-                memoryManagementViewModel.changeMusicCacheDirectory(selectedPath)
+                if (memoryManagementViewModel.musicCacheBytes > 0L) {
+                    confirmCacheMigration { policy ->
+                        memoryManagementViewModel.changeMusicCacheDirectory(selectedPath, policy)
+                    }
+                } else {
+                    memoryManagementViewModel.changeMusicCacheDirectory(
+                        selectedPath,
+                        CacheMigrationPolicy.KEEP_OLD,
+                    )
+                }
             }
         }
     }
 
-    JvmSettingGroup(title = stringResource(Res.string.jvm_memory_management_screen_text_25)) {
-        // 目录行直接展示完整路径，行尾依次提供“调整”“恢复默认”与“打开目录”三个操作。
-        // 路径类设置项信息较长，宽度放宽到整行宽度的三分之二，便于完整展示目录。
-        // 已经是默认目录时禁用恢复操作，避免无意义的重复还原。
-        JvmSettingItemWidthFraction(fraction = 2f / 3f) {
-            JvmSettingBaseRow(
-                icon = Res.drawable.folder_managed_24px,
-                title = cachePathTitle,
-                description = memoryManagementViewModel.musicCachePath.ifBlank {
-                    stringResource(Res.string.jvm_memory_management_screen_text_29)
-                },
-                descriptionStyle = JvmSettingRowDescriptionStyle.Path,
-                minHeight = 72.dp,
-                horizontalPadding = XyTheme.dimens.contentPadding,
-                verticalPadding = XyTheme.dimens.outerVerticalPadding,
-                iconSelected = true,
-                trailing = {
-                    // 三个操作按钮横向排列，与存储分类行的按钮保持同样的视觉样式。
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        JvmStorageActionPill(
-                            text = stringResource(Res.string.adjust),
-                            onClick = ::chooseCacheDirectory,
-                        )
-                        JvmStorageActionPill(
-                            text = stringResource(Res.string.restore_default),
-                            enabled = restoreDefaultEnabled,
-                            onClick = {
-                                memoryManagementViewModel.restoreDefaultMusicCacheDirectory()
-                            },
-                        )
-                        JvmStorageActionPill(
-                            text = stringResource(Res.string.open_directory),
-                            // 路径为空时没有可打开的目录，禁用该操作。
-                            enabled = memoryManagementViewModel.musicCachePath.isNotBlank(),
-                            onClick = ::openCacheDirectory,
-                        )
-                    }
-                },
-            )
+    // 恢复默认目录与调整目录保持同一套策略：旧缓存非空时先询问，避免静默删除用户缓存。
+    fun restoreDefaultCacheDirectory() {
+        if (memoryManagementViewModel.musicCacheBytes > 0L) {
+            confirmCacheMigration { policy ->
+                memoryManagementViewModel.restoreDefaultMusicCacheDirectory(policy)
+            }
+        } else {
+            memoryManagementViewModel.restoreDefaultMusicCacheDirectory(CacheMigrationPolicy.KEEP_OLD)
         }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(JvmSettingGroupVerticalGap)) {
+        JvmSettingGroup(title = stringResource(Res.string.jvm_memory_management_screen_text_25)) {
+            // 目录行直接展示完整路径，行尾依次提供“调整”“恢复默认”与“打开目录”三个操作。
+            // 路径类设置项信息较长，宽度放宽到整行宽度的三分之二，便于完整展示目录。
+            // 已经是默认目录时禁用恢复操作，避免无意义的重复还原。
+            JvmSettingItemWidthFraction(fraction = 2f / 3f) {
+                JvmSettingBaseRow(
+                    icon = Res.drawable.folder_managed_24px,
+                    title = cachePathTitle,
+                    description = memoryManagementViewModel.musicCachePath.ifBlank {
+                        stringResource(Res.string.jvm_memory_management_screen_text_29)
+                    },
+                    descriptionStyle = JvmSettingRowDescriptionStyle.Path,
+                    minHeight = 72.dp,
+                    horizontalPadding = XyTheme.dimens.contentPadding,
+                    verticalPadding = XyTheme.dimens.outerVerticalPadding,
+                    iconSelected = true,
+                    trailing = {
+                        // 三个操作按钮横向排列，与存储分类行的按钮保持同样的视觉样式。
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            JvmStorageActionPill(
+                                text = stringResource(Res.string.adjust),
+                                // 迁移期间禁止再次切换目录，避免并发修改缓存存储层。
+                                enabled = !isMigrating,
+                                onClick = ::chooseCacheDirectory,
+                            )
+                            JvmStorageActionPill(
+                                text = stringResource(Res.string.restore_default),
+                                enabled = restoreDefaultEnabled && !isMigrating,
+                                // 恢复默认同样需要先确认旧缓存处理方式，避免静默删除缓存目录。
+                                onClick = ::restoreDefaultCacheDirectory,
+                            )
+                            JvmStorageActionPill(
+                                text = stringResource(Res.string.open_directory),
+                                // 路径为空时没有可打开的目录，禁用该操作。
+                                enabled = memoryManagementViewModel.musicCachePath.isNotBlank() && !isMigrating,
+                                onClick = ::openCacheDirectory,
+                            )
+                        }
+                    },
+                )
+            }
+        }
+        // 迁移进度单独占一行，避免塞进 FlowRow 后被压缩成窄条。
+        if (migrationProgress != null) {
+            JvmCacheMigrationProgressRow(progress = migrationProgress)
+        }
+    }
+}
+
+/**
+ * 缓存迁移进度行：展示当前迁移百分比和进度条。
+ *
+ * @param progress 当前迁移进度。
+ */
+@Composable
+private fun JvmCacheMigrationProgressRow(progress: CacheMigrationProgress) {
+    val percent = (progress.fraction * 100).toInt()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = XyTheme.dimens.contentPadding,
+                vertical = XyTheme.dimens.outerVerticalPadding,
+            ),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
+    ) {
+        XyTextSub(
+            text = stringResource(Res.string.jvm_cache_migration_progress, percent),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+        LinearProgressIndicator(
+            progress = { progress.fraction },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+        )
     }
 }
 

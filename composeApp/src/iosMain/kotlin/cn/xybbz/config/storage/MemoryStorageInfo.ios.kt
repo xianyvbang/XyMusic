@@ -8,6 +8,7 @@ actual fun getMemoryStorageInfo(
     contextWrapper: ContextWrapper,
     db: LocalDatabaseClient,
     downloadDb: DownloadDatabaseClient,
+    extraCachePaths: List<String>,
 ): MemoryStorageInfo = MemoryStorageInfo()
 
 actual fun clearPlatformCache(contextWrapper: ContextWrapper) = Unit
